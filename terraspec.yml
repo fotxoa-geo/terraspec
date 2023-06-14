@@ -1,0 +1,9 @@
+name: terraspec
+channels:
+  - conda-forge
+dependencies:
+  - gdal=3.5.2
+  - python=3.10.9
+  - geopandas=0.12.2
+  - tqdm
+  - p_tqdm
