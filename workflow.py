@@ -17,6 +17,7 @@ def main():
                         default=False)
     parser.add_argument('-lvl', '--level', type=str, help='level of classification to use', default='level_1')
 
+
     args = parser.parse_args()
     wavelength_file = 'wavelengths//' + args.wavelength_file + '_wavelengths.txt'
     base_directory = os.path.join(args.base_root_directory, 'terraspec')
@@ -29,7 +30,7 @@ def main():
     cursor_print(intro)
 
     if args.mode in ['simulation']:
-        run_sim_workflow(os.path.join(base_directory, 'simulation'))
+        run_sim_workflow(os.path.join(base_directory, 'simulation'), dry_run=args.dry_run)
 
     if args.mode in ['slpit']:
         print("slpit coming soon!")
