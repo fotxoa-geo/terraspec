@@ -196,7 +196,7 @@ def build_geographic(dimensions: int, output_directory:str, spectra_starting_col
 
 
 def get_sim_parameters():
-    cols = 5
+    cols = 1
     level = 'level_1'
     spectral_bundles = 1000
     emit_wvls, emit_fwhm = spectra.load_wavelengths(sensor='emit')

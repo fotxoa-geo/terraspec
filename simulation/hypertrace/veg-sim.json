@@ -51,7 +51,7 @@
             "inversion"
         ],
         "noisefile": [
-            "./hypertrace/hypertrace-data/noise/emit_noise.txt"
+            "./simulation/hypertrace/hypertrace-data/noise/emit_noise.txt"
         ],
         "observer_azimuth": [
             0
@@ -60,7 +60,7 @@
             0
         ],
         "surface_file": [
-            "./hypertrace/hypertrace-data/priors/emit/emit.mat"
+            "./simulation/hypertrace/hypertrace-data/priors/emit/emit.mat"
         ],
         "localtime": [15.75,16,17,18,19,20]
     },
@@ -91,13 +91,13 @@
                 },
                 "radiative_transfer_engines": {
                     "vswir": {
-                        "aerosol_template_path": "./hypertrace/hypertrace-data/aerosol_template.json",
-                        "earth_sun_distance_file": "./hypertrace/hypertrace-data/earth_sun_distance.txt",
-                        "emulator_aux_file": "../sRTMnet_v100/sRTMnet_v100_aux.npz",
-                        "emulator_file": "../sRTMnet_v100/sRTMnet_v100",
-                        "engine_base_dir": "../6sv-2.1",
+                        "aerosol_template_path": "./simulation/hypertrace/hypertrace-data/aerosol_template.json",
+                        "earth_sun_distance_file": "./simulation/hypertrace/hypertrace-data/earth_sun_distance.txt",
+                        "emulator_aux_file": "~/EMIT/sRTMnet_v100/sRTMnet_v100_aux.npz",
+                        "emulator_file": "~/EMIT/sRTMnet_v100/sRTMnet_v100",
+                        "engine_base_dir": "~/EMIT/6sv-2.1",
                         "engine_name": "sRTMnet",
-                        "irradiance_file": "./hypertrace/hypertrace-data/prism_optimized_irr.dat",
+                        "irradiance_file": "./simulation/hypertrace/hypertrace-data/prism_optimized_irr.dat",
                         "statevector_names": [
                             "H2OSTR",
                             "AOT550"
@@ -153,9 +153,9 @@
             }
         }
     },
-    "lutdir": "../veg-sim-data/output/hypertrace/luts/sRTMnet",
-    "outdir": "../veg-sim-data/output/hypertrace/veg-simulation-atmospheres",
-    "reflectance_file": "../veg-sim-data/output/convex_hull__n_dims_4_spectra",
+    "lutdir": "~/terraspec/simulation/output/hypertrace/luts/sRTMnet",
+    "outdir": "~/terraspec/simulation/output/hypertrace/veg-simulation-atmospheres",
+    "reflectance_file": "~/terraspec/simulation/output/convex_hull__n_dims_4_spectra",
     "rtm_template_file": "/dev/null",
-    "wavelength_file": "./wavelengths/emit_wavelengths.txt"
+    "wavelength_file": "./utils/wavelengths/emit_wavelengths.txt"
 }

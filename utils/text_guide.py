@@ -37,7 +37,7 @@ def query_yes_no(question, default="yes"):
 
 def query_sim_mode(question, default=""):
     cursor_print(question)
-    valid_responses = ["clean", "build", "unmix", "figures"]
+    valid_responses = ["clean", "build", "hypertrace","unmix", "figures"]
 
     choice = input().lower()
 

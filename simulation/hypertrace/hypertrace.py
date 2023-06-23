@@ -17,6 +17,7 @@ from isofit.utils.apply_oe import write_modtran_template
 from isofit.core.common import envi_header
 import argparse
 import ast
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -512,7 +513,6 @@ def main():
         config = json.load(f)
 
     isofit_config = config["isofit"]
-
     
     # # Do hypertrace
     do_hypertrace(isofit_config=isofit_config, wavelength_file=args.wavelength_file,
@@ -527,9 +527,11 @@ def main():
                   calibration_uncertainty_file=args.calibration_uncertainty_file,
                   n_calibration_draws=args.calibration_draws, calibration_scale=args.calibration_scale,
                   create_lut=args.create_lut, overwrite=args.overwrite)
-
-
-logger = logging.getLogger(__name__)
+    
+    #print(os.getcwd())
+    #print()
+    #print(args)
+    logger = logging.getLogger(__name__)
 
 if __name__ == '__main__':
     main()
