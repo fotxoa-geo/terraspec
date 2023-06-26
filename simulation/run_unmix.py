@@ -96,7 +96,7 @@ class runs:
         self.em_libraries_output = os.path.join(self.output_directory, "endmember_libraries")
 
         # model parameters
-        self.num_cmb = ['--max_combinations 10']
+        self.num_cmb = ['--max_combinations 10', '--max_combinations 100', '--max_combinations 500', '--max_combinations 1000']
         self.normalization = ['--normalization brightness', '--normalization none', '--normalization 1500']
         self.num_em = ['--num_endmembers 5', '--num_endmembers 10', '--num_endmembers 20', '--num_endmembers 30']
         self.mc_runs = ['--n_mc 50', '--n_mc 25', '--n_mc 10', '--n_mc 5']
@@ -130,7 +130,7 @@ class runs:
         # Start unmixing process with all options
 
         if mode == 'mesma':
-            options = product(self.normalization, self.num_cmb + [None], self.mc_runs + [None])
+            options = product(self.normalization, self.num_cmb, self.mc_runs + [None])
         else:
             options = product(self.normalization, self.num_em + [None], self.mc_runs + [None])
 
@@ -159,7 +159,7 @@ class runs:
 
     def convex_hulls(self, mode:str):
         if mode == 'mesma':
-            options = product(self.normalization, self.num_cmb + [None], self.mc_runs + [None])
+            options = product(self.normalization, self.num_cmb, self.mc_runs + [None])
         else:
             options = product(self.normalization, self.num_em + [None], self.mc_runs + [None])
 
@@ -214,5 +214,5 @@ def run_unmix_workflow(base_directory, dry_run):
     #all_runs.convex_hulls(mode='sma-best')
     all_runs.convex_hulls(mode='mesma')
     #all_runs.latin_hypercubes_sma(mode='sma-best')
-    #all_runs.latin_hypercubes_sma(mode='mesma')
+    all_runs.latin_hypercubes_sma(mode='mesma')
     #all_runs.hypertrace_sma()
