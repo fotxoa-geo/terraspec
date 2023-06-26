@@ -4,12 +4,14 @@ from simulation.clean_libraries import run_clean_workflow
 from simulation.build_reflectance_files import run_build_reflectance
 from simulation.run_unmix import run_unmix_workflow
 from simulation.run_hypertrace import run_hypertrace_workflow
+from simulation.build_tables import run_build_tables
+from simulation.paper_figures import run_figures
 
 
 def run_sim_workflow(base_directory, dry_run):
     msg = f"You have entered simulation mode! " \
-          f"\nThere are four options to chose from: " \
-          f"\n\tclean, build, hypertrace, unmix, figures"
+          f"\nThere are various options to chose from: " \
+          f"\n\tclean, build, hypertrace, unmix, figures, tables"
 
     cursor_print(msg)
     user_input = query_sim_mode('\nPlease indicate the desired mode: ', default="yes")
@@ -33,8 +35,13 @@ def run_sim_workflow(base_directory, dry_run):
     if user_input == 'unmix':
         run_unmix_workflow(base_directory=base_directory, dry_run=dry_run)
 
+    # build csv report tables and latex tables
+    if user_input == 'tables':
+        run_build_tables(base_directory=base_directory)
+
     # run the figure set
     if user_input == 'figures':
-        print('figuresss')
+        run_figures(base_directory=base_directory, sensor='emit')
+
 
 
