@@ -7,3 +7,5 @@ dependencies:
   - geopandas=0.12.2
   - tqdm
   - p_tqdm
+  - xlrd
+  - grpcio=1.42.0

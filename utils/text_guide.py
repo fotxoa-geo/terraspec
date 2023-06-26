@@ -37,7 +37,7 @@ def query_yes_no(question, default="yes"):
 
 def query_sim_mode(question, default=""):
     cursor_print(question)
-    valid_responses = ["clean", "build", "unmix", "figures"]
+    valid_responses = ["clean", "build", "unmix", "tables", "figures"]
 
     choice = input().lower()
 
@@ -49,6 +49,20 @@ def query_sim_mode(question, default=""):
 
     return choice
 
+
+def query_slpit_mode(question, default=""):
+    cursor_print(question)
+    valid_responses = ["download", 'build', 'geoprocess', 'unmix', 'figures', 'expenses']
+
+    choice = input().lower()
+
+    while choice not in valid_responses:
+        choice = input("Please enter your selection: ")
+
+        if choice not in choice:
+            print("Invalid selection. Please try again.")
+
+    return choice
 
 def cursor_print(string):
     for c in string:

@@ -1,5 +1,5 @@
 from spectral.io import envi
-from osgeo import gdal
+from osgeo import gdal, osr
 import os
 
 
@@ -50,9 +50,46 @@ def save_envi(output_file, meta, grid, ds=None, ul=None):
         header['wavelength'] = list(meta['wavelength'])
         del header['band names']
         outDataset = envi.create_image(output_file, header, ext='', force=True)
+
     else:
         outDataset = envi.create_image(output_file, meta, ext='', force=True)
 
     mm = outDataset.open_memmap(interleave='bip', writable=True)
     mm[...] = grid
     del mm
+
+
+def rgb_quicklook(envi_file, output_directory):
+    basename = os.path.basename(envi_file).split("_")[4]
+    driver = gdal.GetDriverByName("GTiff")
+    out_ras = os.path.join(output_directory, 'emit_rfl_' + basename + '.tif')
+
+    ds = gdal.Open(envi_file, gdal.GA_ReadOnly)
+    prj = ds.GetProjection()
+
+    ds_array = ds.ReadAsArray().transpose((1, 2, 0))
+    outRaster = driver.Create(out_ras, ds_array.shape[1], ds_array.shape[0], 3, gdal.GDT_Byte)
+
+    originX, pixelWidth, b, originY, d, pixelHeight = ds.GetGeoTransform()
+    outRaster.SetGeoTransform((originX, pixelWidth, 0, originY, 0, pixelHeight))
+
+    rgb_wvls = [470.0304, 574.20905, 656.1857]
+    load_order = {
+        470.0304: 2,
+        574.20905: 1,
+        656.1857: 0}
+
+    for _b, b in enumerate(range(0, ds_array.shape[2])):
+        band_wvl = float(ds.GetRasterBand(_b + 1).GetDescription().split(" ")[0])
+
+        if band_wvl in rgb_wvls:
+            outband = outRaster.GetRasterBand(load_order[band_wvl] + 1)
+            band_select = ds_array[:, :, _b]
+            band_select *= 255.0 / band_select.max()
+            outband.WriteArray(band_select)
+            outband.SetNoDataValue(0)
+
+    # # setteing srs from input tif file.
+    outRasterSRS = osr.SpatialReference(wkt=prj)
+    outRaster.SetProjection(outRasterSRS.ExportToWkt())
+    outband.FlushCache()

@@ -3,9 +3,9 @@ import sys
 import json
 import itertools
 import logging
-from hypertrace.hypertrace import mkabs
+from simulation.hypertrace.hypertrace import mkabs
 from sys import platform
-from run_unmix import execute_call
+from simulation.run_unmix import execute_call
 import subprocess
 from utils.create_tree import create_directory
 
