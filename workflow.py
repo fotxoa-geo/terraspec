@@ -15,7 +15,7 @@ def main():
     parser.add_argument('-dry', '--dry_run', type=bool, help=' Set the dry run parameter to True to print unmix call',
                         default=False)
     parser.add_argument('-lvl', '--level', type=str, help='level of classification to use', default='level_1')
-
+    parser.add_argument('-sns', '--sensor', type=str, help='specify sensor to use', default='emit', choices=['emit', 'aviris-ng'])
     args = parser.parse_args()
 
     base_directory = os.path.join(args.base_root_directory, 'terraspec')
@@ -31,7 +31,7 @@ def main():
         run_sim_workflow(os.path.join(base_directory, 'simulation'), dry_run=args.dry_run)
 
     if args.mode in ['slpit']:
-        run_slpit_workflow(os.path.join(base_directory, 'slpit'), dry_run=args.dry_run)
+        run_slpit_workflow(os.path.join(base_directory, 'slpit'), dry_run=args.dry_run, sensor=args.sensor)
 
     if args.mode in ['tetracorder']:
         print('tc coming soon!')

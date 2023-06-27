@@ -6,6 +6,7 @@ from simulation.run_unmix import run_unmix_workflow
 from simulation.run_hypertrace import run_hypertrace_workflow
 from simulation.build_tables import run_build_tables
 from simulation.paper_figures import run_figures
+from simulation.paper_figures_mesma import run_figures as mesf
 
 
 def run_sim_workflow(base_directory, dry_run):
@@ -42,6 +43,7 @@ def run_sim_workflow(base_directory, dry_run):
     # run the figure set
     if user_input == 'figures':
         run_figures(base_directory=base_directory, sensor='emit')
+        mesf(base_directory=base_directory, sensor='emit')
 
 
 

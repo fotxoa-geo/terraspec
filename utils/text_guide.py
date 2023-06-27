@@ -1,5 +1,9 @@
 import sys
 import time
+from glob import glob
+import os
+import subprocess
+
 
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
@@ -52,7 +56,7 @@ def query_sim_mode(question, default=""):
 
 def query_slpit_mode(question, default=""):
     cursor_print(question)
-    valid_responses = ["download", 'build', 'geoprocess', 'unmix', 'figures', 'expenses']
+    valid_responses = ["download", 'build', 'geoprocess', 'extract', 'unmix', 'figures', 'expenses']
 
     choice = input().lower()
 
@@ -64,8 +68,35 @@ def query_slpit_mode(question, default=""):
 
     return choice
 
+
 def cursor_print(string):
     for c in string:
         sys.stdout.write(c)
         sys.stdout.flush()
         time.sleep(0.02)
+
+
+def input_date(msg, gis_directory):
+    while True:
+        for c in msg:
+            sys.stdout.write(c)
+            sys.stdout.flush()
+            time.sleep(0.02)
+        date = input()
+
+        envi = glob(os.path.join(gis_directory, 'emit-data', 'envi', '*' + date + '*_radiance'))
+
+        if envi and date != "":
+            break
+        else:
+            sys.stdout.write("TerraSpec could not find ENVI files for the requested date.\n"
+                             "Please verify your date and your saved path.\n")
+
+    return date, envi
+
+
+def execute_call(cmd_list, dry_run=False):
+    if dry_run:
+        print(cmd_list)
+    else:
+        subprocess.call(cmd_list)

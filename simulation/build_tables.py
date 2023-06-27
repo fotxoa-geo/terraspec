@@ -148,11 +148,11 @@ class tables:
 
 
 def run_build_tables(base_directory):
-    # run_tables = tables(base_directory=base_directory)
-    # run_tables.unmix_error_table(mode='sma-best')
-    # run_tables.unmix_unceratinty_table(mode='sma-best')
-    # run_tables.unmix_error_table(mode='mesma')
-    # run_tables.unmix_unceratinty_table(mode='mesma')
+    run_tables = tables(base_directory=base_directory)
+    run_tables.unmix_error_table(mode='sma-best')
+    run_tables.unmix_unceratinty_table(mode='sma-best')
+    run_tables.unmix_error_table(mode='mesma')
+    run_tables.unmix_unceratinty_table(mode='mesma')
     #run_tables.atmosphere_table()
     #  run_tables.geographic_table(mode='spatial')
 

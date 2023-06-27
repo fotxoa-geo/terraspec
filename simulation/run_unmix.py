@@ -2,6 +2,7 @@ import os
 import subprocess
 from sys import platform
 from utils.create_tree import create_directory
+from utils.text_guide import execute_call
 from utils.envi import get_meta, save_envi
 from utils.spectra_utils import spectra
 from glob import glob
@@ -23,13 +24,6 @@ def create_uncertainty(uncertainty_file: str, wvls):
                                                 bands=wvls, wvls=True)
     output = os.path.join(os.path.dirname(uncertainty_file), 'reflectance_uncertainty.hdr')
     save_envi(output_file=output, meta=uncertainty_meta, grid=uncertainty_array)
-
-
-def execute_call(cmd_list, dry_run=False):
-    if dry_run:
-        print(cmd_list)
-    else:
-        subprocess.call(cmd_list)
 
 
 def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list, output_dest:str):

@@ -7,6 +7,16 @@ import pandas as pd
 import time
 from p_tqdm import p_map
 from utils.envi import get_meta, save_envi
+from utils import asdreader
+from glob import glob
+import geopandas as gpd
+
+
+def get_dd_coords(coord):
+    dd_mm = float(str(coord).split(".")[0][-2:] + "." + str(coord).split(".")[1])/60
+    dd_dd = float(str(coord).split(".")[0][:-2])
+    dd = dd_dd + dd_mm
+    return dd
 
 
 class spectra:
@@ -29,6 +39,18 @@ class spectra:
         # Convolve spectra
         refl_convolve = isc.resample_spectrum(x=df_row[1].values[spectra_starting_col:], wl=asd_wvl, wl2=wvl, fwhm2=fwhm,
                                               fill=False)
+        return refl_convolve
+
+    @classmethod
+    def convolve_asdfile(cls, asd_file, wvl, fwhm):
+        # Load asd data
+        data = asdreader.reader(asd_file)
+        asd_wl = data.wavelengths
+        asd_refl = np.round(data.reflectance, 4)
+
+        # Convolve spectra
+        refl_convolve = isc.resample_spectrum(x=asd_refl, wl=asd_wl, wl2=wvl, fwhm2=fwhm, fill=False)
+
         return refl_convolve
 
     @classmethod
@@ -197,3 +219,62 @@ class spectra:
                          spectral_bundles=spectral_bundles, cols=cols, output_directory=output_directory,
                          wvls=wvls, name=mode + '__n_dims_' + str(dimensions), spectra_starting_col=spectra_starting_col)
 
+    @classmethod
+    def get_reflectance_endmember(cls, df_row, plot_directory:str, team_name_key:str):
+        file_num = df_row[0]
+        em_classification = df_row[1]
+        species = df_row[2]
+        plot_name = os.path.basename(plot_directory)
+        file_name = os.path.join(plot_directory, team_name_key + "_" + f"{file_num:05d}.asd")
+        asd = asdreader.reader(file_name)
+        asd_refl = asd.reflectance
+        asd_gps = asd.get_gps()
+        latitude_ddmm, longitude_ddmm, elevation, utc_time = asd_gps[0], asd_gps[1], asd_gps[2], asd_gps[3]
+        utc_time = str(utc_time[0]) + ":" + str(utc_time[1]) + ":" + str(utc_time[2])
+
+        try:
+            dd_lat = get_dd_coords(latitude_ddmm)
+            dd_long = get_dd_coords(longitude_ddmm) * -1  # used to correct longitude
+
+        except:
+            dd_lat = 'unk'
+            dd_long = 'unk'
+
+        return [plot_name, file_name, em_classification, species, dd_long, dd_lat, elevation, utc_time] + list(asd_refl)
+
+    @classmethod
+    def get_reflectance_transect(cls, file, plot_directory:str, team_name_key:str):
+        plot_name = os.path.basename(plot_directory)
+        asd = asdreader.reader(file)
+        asd_refl = asd.reflectance
+        asd_gps = asd.get_gps()
+        latitude_ddmm, longitude_ddmm, elevation, utc_time = asd_gps[0], asd_gps[1], asd_gps[2], asd_gps[3]
+        utc_time = str(utc_time[0]) + ":" + str(utc_time[1]) + ":" + str(utc_time[2])
+        file_num = int(os.path.basename(file).split(".")[0].split("_")[1])
+        try:
+            dd_lat = get_dd_coords(latitude_ddmm)
+            dd_long = get_dd_coords(longitude_ddmm) * -1  # used to correct longitude
+
+        except:
+            dd_lat = 'unk'
+            dd_long = 'unk'
+
+        return [plot_name, file, file_num, dd_long, dd_lat, elevation, utc_time] + list(asd_refl)
+
+    @classmethod
+    def get_all_ems(cls,output_directory: str, instrument: str):
+        spectral_endmembers = glob(os.path.join(output_directory, 'spectral_endmembers', '*' + instrument + ".csv"))
+        emit_transect_endmembers = glob(os.path.join(output_directory, 'spectral_transects', 'endmembers', '*' + instrument + ".csv"))
+        all_ems = spectral_endmembers + emit_transect_endmembers
+
+        return all_ems
+
+    @classmethod
+    def df_to_shapefile(cls,df, base_directory: str, out_name):
+        df_shp = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.longitude, df.latitude), crs="EPSG:4326")
+        df_shp.to_file(os.path.join(base_directory, "gis", out_name + '.shp'), driver='ESRI Shapefile')
+
+    @classmethod
+    def save_df_em(df, output, instrument):
+        df = df.sort_values('level_1')
+        df.to_csv(output.replace(" ", "") + '-' + instrument + '.csv', index=False)

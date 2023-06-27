@@ -1,0 +1,386 @@
+import time
+import numpy as np
+from glob import glob
+import os
+from utils.slpit_download import load_pickle
+import pandas as pd
+from utils import asdreader
+from functools import partial
+from p_tqdm import p_map
+import requests
+from utils.create_tree import create_directory
+from utils.spectra_utils import spectra
+from utils.envi import get_meta, save_envi
+from utils.text_guide import cursor_print, query_yes_no
+
+
+class build_libraries:
+    def __init__(self, base_directory: str, sensor:str):
+
+        self.base_directory = base_directory
+        self.output_directory = os.path.join(base_directory, 'output')
+
+        # load wavelengths
+        self.wvls, self.fwhm = spectra.load_wavelengths(sensor=sensor)
+
+        # create output directories
+        create_directory(os.path.join(self.output_directory, 'spectral_endmembers'))
+        create_directory(os.path.join(self.output_directory, 'spectral_transects'))
+        create_directory(os.path.join(self.output_directory, 'spectral_transects', 'transect'))
+        create_directory(os.path.join(self.output_directory, 'spectral_transects', 'endmembers'))
+        create_directory(os.path.join(self.output_directory, 'plot_pictures'))
+        create_directory(os.path.join(self.output_directory, 'plot_pictures', 'spectral_transects'))
+        create_directory(os.path.join(self.output_directory, 'plot_pictures', 'spectral_endmembers'))
+
+        # team names keys - corresponds to suffix in ASD files
+        self.team_keys = {
+            'spectral': 'SP'}
+
+        # input data directories
+        self.spectral_em_directory = os.path.join(self.base_directory, 'data', 'spectral_endmembers')
+        self.spectral_transect_directory = os.path.join(self.base_directory, 'data', 'spectral_transects')
+
+        # instrument to indicate wavelengths in output folder
+        self.instrument = sensor
+
+        # output data directories
+        self.output_transect_directory = os.path.join(self.output_directory, 'spectral_transects', 'transect')
+        self.output_transect_em_directory = os.path.join(self.output_directory, 'spectral_transects', 'endmembers')
+
+    def build_emit_transects(self):
+        # the transect spectra
+        records = load_pickle('emit_slpit')
+
+        print("loading... Spectral Transects")
+        for i in records:
+            plot_name = f"{i['team_names'].capitalize()} - {i['plot_num']:03d}"
+            plot_directory = os.path.join(self.spectral_transect_directory, plot_name)
+            plot_pic_url = i['landscape_pic']
+            date = i['sample_date']
+            emit_date = i['overpass_date']
+
+            img_data = requests.get(plot_pic_url).content
+            with open(os.path.join(self.output_directory, 'plot_pictures', 'spectral_transects', plot_name + '.jpg'),
+                      'wb') as handler:
+                handler.write(img_data)
+
+            # white ref table
+            df_white_ref = pd.json_normalize(i['white_ref'])
+            df_white_ref = df_white_ref.iloc[:, 14:]
+
+            # em table
+            df_transect_em = pd.json_normalize(i['emit_transect_endmembers'])
+            df_transect_em = df_transect_em.iloc[:, 14:]
+
+            # get all asd files from folder
+            all_asd_files = sorted(glob(os.path.join(plot_directory, '*.asd')))
+
+            transect_spectra = []
+            for asd_file in all_asd_files:
+                file_num = int(os.path.basename(asd_file).split(".")[0].split("_")[1])
+
+                # check if file is in white ref or em
+                if file_num in df_transect_em.asd_file_num.values:
+                    pass
+                else:
+
+                    # keep only the good white ref files
+                    if file_num in df_white_ref.filenumber.values:
+                        good_white_ref = df_white_ref[df_white_ref['my_element_2'] == 'good'].copy()
+
+                        # ignore bad white ref files
+                        if file_num in good_white_ref.filenumber.values:
+                            transect_spectra.append(asd_file)
+                        else:
+                            pass
+                    else:
+                        transect_spectra.append(asd_file)
+
+            results_refl = p_map(partial(spectra.get_reflectance_transect, plot_directory=plot_directory,
+                                         team_name_key=self.team_keys[i['team_names']]), transect_spectra,
+                                 **{
+                                     "desc": "\t\t processing plot: " + plot_name + " ...",
+                                     "ncols": 150})
+
+            asd = asdreader.reader(results_refl[0][1])
+            df_results = pd.DataFrame(results_refl)
+            df_results.columns = ["plot_name", "file_name", "file_num", "longitude", "latitude", "elevation",
+                                  "utc_time"] + list(asd.wavelengths)
+            df_results = df_results.sort_values('file_num')
+            df_results.insert(3, "white_ref", 0)
+            df_results.insert(4, "line_num", 0)
+            df_results = df_results.copy()
+            df_results['utc_time'] = pd.to_datetime(df_results['utc_time'], format='%H:%M:%S')
+
+            adjusted_dfs = []
+
+            for line_num in df_white_ref.line_num.unique():
+                df_select = df_white_ref.loc[
+                    (df_white_ref['line_num'] == line_num) & (df_white_ref['my_element_2'] == 'good')].copy()
+
+                if len(list(df_select.white_ref_space.unique())) > 1:
+                    line_num_max = df_select.filenumber.max()
+                    line_num_min = df_select.filenumber.min()
+
+                    df_select = df_select.rename({
+                                                     'filenumber': 'file_num'}, axis=1)  # new method
+
+                    df_query = df_results[
+                        (df_results['file_num'] >= line_num_min) & (df_results['file_num'] <= line_num_max)].copy()
+                    df_query['line_num'] = line_num
+                    df_query = pd.merge(df_query, df_select, left_on='file_num', right_on='file_num', how='left')
+                    df_query['white_ref'] = df_query['white_ref_space']
+
+                    # this drops the join since we already have the values saved
+                    df_query = df_query.iloc[:, :-3]
+
+                    # we are not using middle white ref atm
+                    df_query = df_query[df_query.white_ref != 'middle']
+
+                    # get white refs ; begin and end
+                    df_begin = df_query[df_query['white_ref'] == 'begin'].copy()
+                    df_begin_spectra = np.mean(df_begin.iloc[:, 9:].to_numpy(), axis=0)
+
+                    df_end = df_query[df_query['white_ref'] == 'end'].copy()
+                    df_end_spectra = np.mean(df_end.iloc[:, 9:].to_numpy(), axis=0)
+
+                    # get times
+                    df_begin_time = df_begin.iloc[:, 8].to_frame()
+                    df_begin_time['second'] = df_begin_time['utc_time'].dt.strftime('%S').astype(int)
+                    df_begin_time['minute'] = df_begin_time['utc_time'].dt.strftime('%M').astype(int)
+                    df_begin_time['hour'] = df_begin_time['utc_time'].dt.strftime('%H').astype(int)
+                    df_begin_time['total_seconds'] = df_begin_time.second + (df_begin_time.minute * 60) + (
+                                df_begin_time.hour * 3600)
+
+                    df_end_time = df_end.iloc[:, 8].to_frame()
+                    df_end_time['second'] = df_end_time['utc_time'].dt.strftime('%S').astype(int)
+                    df_end_time['minute'] = df_end_time['utc_time'].dt.strftime('%M').astype(int)
+                    df_end_time['hour'] = df_end_time['utc_time'].dt.strftime('%H').astype(int)
+                    df_end_time['total_seconds'] = df_end_time.second + (df_end_time.minute * 60) + (
+                                df_end_time.hour * 3600)
+
+                    # get only transect spectra - no white ref
+                    df_spectra = df_query[df_query['white_ref'].isnull()].copy()
+                    df_spectra = df_spectra.reset_index(drop=True)
+                    df_spectra_array = df_spectra.iloc[:, 9:].to_numpy()
+
+                    # change in white ref
+                    delta_white_ref = df_end_spectra - df_begin_spectra
+                    delta_time = np.array(df_end_time.total_seconds.values - df_begin_time.total_seconds.values).mean()
+                    slope = delta_white_ref / delta_time
+
+                    # create an empty zero array to save reflectance
+                    spectra_grid = np.zeros((df_spectra_array.shape[0], df_spectra_array.shape[1]))
+
+                    # perform spectra white ref correction
+                    for _row, row in enumerate(spectra_grid):
+                        for _col, col in enumerate(row):
+                            adjustment = df_begin_spectra[_col] + (delta_time * slope[_col])
+                            spectra_grid[_row, _col] = df_spectra_array[_row, _col] / adjustment
+
+                    df_corrected = pd.DataFrame(spectra_grid)
+                    df_adjusted = pd.concat([df_spectra.iloc[:, :9], df_corrected], axis=1)
+
+                    df_adjusted.columns = df_spectra.columns
+                    df_adjusted = df_adjusted.drop('white_ref', axis=1)
+                    df_adjusted['utc_time'] = df_adjusted['utc_time'].dt.strftime('%H:%M:%S')
+                    df_adjusted.insert(0, "date", date)
+                    df_adjusted = df_adjusted.rename({
+                                                         'line_num_x': 'line_num'}, axis=1)  # new method
+                    adjusted_dfs.append(df_adjusted)
+
+                else:
+                    # get white ref; # this is where we forget to take end white spectra
+                    line_num_max = df_select.filenumber.max()
+                    df_query = df_results[(df_results['file_num'] > line_num_max)].copy()
+                    df_query['line_num'] = line_num
+                    df_query = df_query.drop('white_ref', axis=1)
+                    df_query['date'] = date
+                    adjusted_dfs.append(df_query)
+                    print("\t\t no white ref correction available on: ", plot_name, line_num)
+
+            df_corrected_all = pd.concat(adjusted_dfs)
+            df_corrected_all.to_csv(os.path.join(self.output_transect_directory, plot_name + '- transect.csv'),
+                                    index=False)
+
+            # convolve wavelengths to user specified instrument
+            results_convolve = p_map(partial(spectra.convolve_asdfile,  wvl=self.wvls, fwhm=self.fwhm),
+                                     df_corrected_all.file_name.values.tolist(),
+                                     **{
+                                         "desc": "\t\t\tconvulsing plot: " + plot_name + " ...",
+                                         "ncols": 150})
+
+            # save files as envi files
+            spectra_grid = np.zeros((len(results_convolve), 1, len(self.wvls)))
+
+            # fill spectral data
+            for _row, row in enumerate(results_convolve):
+                spectra_grid[_row, :, :] = row
+
+            # save the spectra
+            print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
+            meta_spectra = get_meta(lines=len(results_convolve), samples=spectra_grid.shape[1], bands=self.wvls,
+                                    wvls=True)
+            output_raster = os.path.join(self.output_transect_directory,
+                                         plot_name.replace(" ", "") + "-reflectance-emit_date-" + emit_date.replace('-',
+                                                                                                                    '') + ".hdr")
+            save_envi(output_raster, meta_spectra, spectra_grid)
+            time.sleep(3)
+            print("done")
+
+    def build_emit_endmembers(self):
+        # transect endmembers
+        records = load_pickle('emit_slpit')
+
+        print("loading... Spectral Transects Endmembers")
+        all_ems = ['NPV', 'PV', 'Soil']
+        for i in records:
+            plot_name = f"{i['team_names'].capitalize()} - {i['plot_num']:03d}"
+            plot_directory = os.path.join(self.spectral_transect_directory, plot_name)
+            date = i['sample_date']
+            if os.path.isfile(os.path.join(self.output_transect_em_directory,
+                                           plot_name.replace(" ", "") + '-' + self.instrument + '.csv')):
+                continue
+
+            # em table
+            df_transect_em = pd.json_normalize(i['emit_transect_endmembers'])
+            df_transect_em = df_transect_em.iloc[:, 14:]
+            df_transect_em = df_transect_em.loc[df_transect_em['em_condition'] != 'bad'].copy()
+            df_transect_em = df_transect_em.loc[df_transect_em['endmembers'] != 'Flower'].copy()
+
+            # get all asd files from folder
+            all_asd_files = sorted(glob(os.path.join(plot_directory, '*.asd')))
+
+            endmember_spectra = []
+            for asd_file in all_asd_files:
+                file_num = int(os.path.basename(asd_file).split(".")[0].split("_")[1])
+
+                # check if file is in white ref or em
+                if file_num in df_transect_em.asd_file_num.values:
+                    endmember_spectra.append(asd_file)
+
+                else:
+                    pass
+
+            results = p_map(partial(spectra.get_reflectance_transect, plot_directory=plot_directory,
+                                    team_name_key=self.team_keys[i['team_names']]), endmember_spectra,
+                            **{
+                                "desc": "\t\t processing plot: " + plot_name + " ...",
+                                "ncols": 150})
+
+            asd = asdreader.reader(results[0][1])
+            df_results = pd.DataFrame(results)
+            df_results.columns = ["plot_name", "file_name", "file_num", "longitude", "latitude", "elevation",
+                                  "utc_time"] + list(asd.wavelengths)
+            df_results.insert(0, "date", date)
+            df_results.insert(3, "line_num", '')
+            df_results.insert(4, "level_1", '')
+            df_results.insert(5, "species", '')
+
+            for file_num in df_results.file_num.values:
+                if file_num in df_transect_em.asd_file_num.values:
+                    em_clas = df_transect_em.loc[df_transect_em['asd_file_num'] == file_num, 'endmembers'].iloc[0]
+                    line_num = df_transect_em.loc[df_transect_em['asd_file_num'] == file_num, 'transect_line_num'].iloc[
+                        0]
+                    species = df_transect_em.loc[df_transect_em['asd_file_num'] == file_num, 'species'].iloc[0]
+
+                    df_results.loc[df_results['file_num'] == file_num, ['line_num', 'level_1',
+                                                                        'species']] = line_num, em_clas, species
+
+            df_results = df_results.sort_values("level_1")
+            df_results.to_csv(os.path.join(self.output_transect_em_directory, plot_name.replace(" ", "") + '-asd.csv'),
+                              index=False)
+
+            # convolve wavelengths to user specified instrument
+            results_convolve = p_map(partial(spectra.convolve_asdfile, wvl=self.wvls, fwhm=self.fwhm),
+                                     df_results.file_name.values.tolist(),
+                                     **{
+                                         "desc": "\t\t\tconvulsing plot: " + plot_name + " ...",
+                                         "ncols": 150})
+            df_convolve = pd.DataFrame(results_convolve)
+            df_convolve.columns = list(self.wvls)
+            df_convolve = pd.concat([df_results.iloc[:, :10].reset_index(drop=True), df_convolve], axis=1)
+
+            # add
+            df_ems = pd.read_csv(os.path.join(self.output_directory, 'all-endmembers-emit.csv'))
+
+            # this row assumes that 3 em are presentl if not add 10 of the missing one
+            if len(sorted(list(df_convolve.level_1.unique()))) == 3:
+                pass
+            else:
+                plot_ems = sorted(list(df_convolve.level_1.unique()))
+                em_difference = sorted(list(set(all_ems) - set(plot_ems)))
+                # append missing endmembers - from site
+                ems_to_append = []
+                for em in em_difference:
+                    df_em = df_ems.loc[df_ems['level_1'] == em].copy()
+                    df_rand = df_em.sample(n=30, random_state=13, ignore_index=True)
+                    ems_to_append.append(df_rand)
+                    print('adding 30 ', em, ' to plot:', plot_name)
+
+                # if list is empty do nothing
+                if not ems_to_append:
+                    pass
+                else:
+                    df_append = pd.concat(ems_to_append, ignore_index=True)
+                    df_append.columns = df_convolve.columns
+                    df_convolve = pd.concat([df_convolve, df_append], ignore_index=True)
+                    df_convolve['plot_name'] = plot_name
+
+            df_convolve = df_convolve.sort_values("level_1")
+            df_convolve.to_csv(os.path.join(self.output_transect_em_directory,
+                                            plot_name.replace(" ", "") + '-' + self.instrument + '.csv'), index=False)
+
+    def build_em_collection(self):
+        # merge all endmembers - instrument based wavelengths
+        emit_ems = spectra.get_all_ems(output_directory=self.output_directory, instrument=self.instrument)
+        asd_ems = spectra.get_all_ems(output_directory=self.output_directory, instrument='asd')
+
+        # dataframes of instrument
+        df = pd.concat((pd.read_csv(f) for f in emit_ems), ignore_index=True)
+        df.to_csv(os.path.join(self.output_directory, "all-endmembers-" + self.instrument + ".csv"), index=False)
+
+        # merge all endmembers - asd based wavelengths
+        df = pd.concat((pd.read_csv(f) for f in asd_ems), ignore_index=True)
+        df.to_csv(os.path.join(self.output_directory, "all-endmembers-asd.csv"), index=False)
+
+        # merge all transect spectra
+        emit_transects = glob(os.path.join(self.output_transect_directory, "*transect.csv"))
+        df = pd.concat((pd.read_csv(f) for f in emit_transects), ignore_index=True)
+        df.to_csv(os.path.join(self.output_directory, "all-transect-asd.csv"), index=False)
+
+    def build_gis_data(self):
+        print("Building spectral endmember gis shapefile data...", sep=' ', end='', flush=True)
+        df = pd.read_csv(os.path.join(self.output_directory, 'all-endmembers-' + self.instrument + '.csv'))
+        df = df.iloc[:, :9]
+        df = df.replace('unk', np.nan)
+        df = df.interpolate(method='nearest')
+        spectra.df_to_shapefile(df, base_directory=self.base_directory, out_name='emit_global_spectral_lib')
+
+        df = pd.read_csv(os.path.join(self.output_directory, 'all-transect-asd.csv'))
+        df = df.iloc[:, :8]
+        df = df.replace('unk', np.nan)
+        df = df.interpolate(method='nearest')
+        spectra.df_to_shapefile(df, base_directory=self.base_directory, out_name='emit_global_transect')
+        time.sleep(3)
+        print("done")
+
+
+def run_build_workflow(base_directory, sensor):
+    msg = f"Please move all ASD Files from the ASD Computer " \
+          f"to the following location: {os.path.join(base_directory, 'data')}\n" \
+          f"Folder names should be based on the following naming convention:\n" \
+          f"\tTeam_Plot-Number (e.g., Spectral - 001; Team = Spectral; Plot-Number: 001"
+
+    cursor_print(msg)
+    user_input = query_yes_no('\nHave the ASD files been relocated?', default="yes")
+
+    if user_input:
+
+        lib = build_libraries(base_directory=base_directory, sensor=sensor)
+        lib.build_emit_transects()
+        lib.build_emit_endmembers()
+        lib.build_em_collection()
+        lib.build_gis_data()
+    else:
+        raise RuntimeError("ASD files have not been moved. Please move ASD files and re-run algorithm.")
