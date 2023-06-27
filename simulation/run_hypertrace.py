@@ -25,12 +25,12 @@ n_cores = '40'
 def build_surface(wavelength_file: str):
     # create output directory for surface file
     sensor = os.path.basename(wavelength_file).split("_")[0]
-    outpath = os.path.join(f'simulation/hypertrace/hypertrace-data/priors/', sensor)
+    outpath = os.path.join(f'./simulation/hypertrace/hypertrace-data/priors/', sensor)
     create_directory(outpath)
 
     # build surface mat file
-    surface_model(config_path=f'simulation/hypertrace/surface/surface_20221020.json',
-                  wavelength_path=f'utils/wavelengths',
+    surface_model(config_path=f'./simulation/hypertrace/surface/surface_20221020.json',
+                  wavelength_path=f'./utils/wavelengths/{sensor}_wavelengths.txt',
                   output_path=os.path.join(outpath, sensor + '.mat'))
 
 
@@ -45,6 +45,13 @@ def hypertrace_workflow(dry_run: bool, clean: bool, configfile: str):
         config = json.load(f)
 
     wavelength_file = mkabs(config["wavelength_file"])
+    if os.path.isfile(wavelength_file):
+
+        print(wavelength_file)
+    else:
+        "error"
+
+
     reflectance_file = mkabs(config["reflectance_file"])
     if "libradtran_template_file" in config:
         raise Exception("`libradtran_template_file` is deprecated. Use `rtm_template_file` instead.")
@@ -78,7 +85,7 @@ def hypertrace_workflow(dry_run: bool, clean: bool, configfile: str):
         logger.info("Running config: %s", argd)
 
         atm_aod_h2o = json.dumps(json.dumps(argd["atm_aod_h2o"]))
-        base_call = f'./hypertrace/hypertrace.py -wvls {wavelength_file} -refl {reflectance_file} -rtm {rtm_template_file} -lutd {lutdir} -od {outdir} ' \
+        base_call = f'./simulation/hypertrace/hypertrace.py -wvls {wavelength_file} -refl {reflectance_file} -rtm {rtm_template_file} -lutd {lutdir} -od {outdir} ' \
                     f'-surface {argd["surface_file"]} -noise {argd["noisefile"]} -type {argd["atm_aod_h2o"][0]} ' \
                     f'-aod {str(argd["atm_aod_h2o"][1])} -h2o {str(argd["atm_aod_h2o"][2])} -time {str(argd["localtime"])} -configs {configfile}'
 
@@ -93,4 +100,4 @@ def hypertrace_workflow(dry_run: bool, clean: bool, configfile: str):
 
 def run_hypertrace_workflow():
     build_surface(wavelength_file='./utils/wavelengths/emit_wavelengths.txt')
-    hypertrace_workflow(dry_run=True, clean=False, configfile=os.path.join('simulation', 'hypertrace', 'veg-sim.json'))
+    hypertrace_workflow(dry_run=False, clean=False, configfile=os.path.join('simulation', 'hypertrace', 'veg-sim.json'))

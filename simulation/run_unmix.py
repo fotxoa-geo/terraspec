@@ -28,12 +28,11 @@ def create_uncertainty(uncertainty_file: str, wvls):
 
 def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list, output_dest:str):
 
-    base_call = f'julia -p {n_cores} ../SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
-                f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column 8 ' \
-                f'--refl_scale 1 --write_complete_fractions 1 ' \
-                f'{" ".join(parameters)}'
+    base_call = f'julia -p {n_cores} ~/EMIT/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
+                f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column 8 --refl_scale 1 ' \
+                f'{" ".join(parameters)} '
 
-    execute_call(['sbatch', '-N', "1", '-c', n_cores, '--mem', "180G", '--wrap', f'{base_call}'], dry_run)
+    execute_call(['sbatch', '-N', "1", '-c', n_cores, '--mem', "80G", '--wrap', f'{base_call}'], dry_run)
 
 
 def hypertrace_unmix(base_directory: str, mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list):
@@ -67,7 +66,7 @@ def hypertrace_unmix(base_directory: str, mode: str, reflectance_file: str, em_f
     # path to reflectance uncertainty file
     uncertainty_file = os.path.join(os.path.dirname(reflectance_file), "reflectance_uncertainty")
 
-    base_call = f'julia -p {n_cores} ../SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
+    base_call = f'julia -p {n_cores} ~/EMIT/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
                 f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column 8 ' \
                 f'--reflectance_uncertainty_file {uncertainty_file} ' \
                 f'{" ".join(parameters)}'
@@ -91,8 +90,7 @@ class runs:
         self.em_libraries_output = os.path.join(self.output_directory, "endmember_libraries")
 
         # model parameters
-        self.num_cmb = ['--max_combinations 10', '--max_combinations 100', '--max_combinations 500',
-                        '--max_combinations 1000']
+        self.num_cmb = ['--max_combinations 10', '--max_combinations 100', '--max_combinations 500', '--max_combinations 1000']
         self.normalization = ['--normalization brightness', '--normalization none', '--normalization 1500']
         self.num_em = ['--num_endmembers 5', '--num_endmembers 10', '--num_endmembers 20', '--num_endmembers 30']
         self.mc_runs = ['--n_mc 50', '--n_mc 25', '--n_mc 10', '--n_mc 5']
@@ -110,7 +108,7 @@ class runs:
         for reflectance_file in reflectance_files:
             basename = os.path.basename(reflectance_file)
 
-            site = os.path.basename(reflectance_file).split("_")[0]
+            site = os.path.basename(reflectance_file)
 
             # output destination
             output_dest = os.path.join(self.base_directory, "output", 'spatial', site + "_" + mode + " ".join(self.optimal_parameters)).replace(
@@ -126,7 +124,7 @@ class runs:
         # Start unmixing process with all options
 
         if mode == 'mesma':
-            options = product(self.normalization, self.num_cmb + [None], self.mc_runs + [None])
+            options = product(self.normalization, self.num_cmb, self.mc_runs + [None])
         else:
             options = product(self.normalization, self.num_em + [None], self.mc_runs + [None])
 
@@ -155,7 +153,7 @@ class runs:
 
     def convex_hulls(self, mode:str):
         if mode == 'mesma':
-            options = product(self.normalization, self.num_cmb + [None], self.mc_runs + [None])
+            options = product(self.normalization, self.num_cmb, self.mc_runs + [None])
         else:
             options = product(self.normalization, self.num_em + [None], self.mc_runs + [None])
 
@@ -206,9 +204,9 @@ class runs:
 
 def run_unmix_workflow(base_directory, dry_run):
     all_runs = runs(base_directory=base_directory, dry_run=dry_run)
-    all_runs.geographic_sma(mode='sma-best')
-    all_runs.convex_hulls(mode='sma-best')
+    #all_runs.geographic_sma(mode='sma-best')
+    #all_runs.convex_hulls(mode='sma-best')
     all_runs.convex_hulls(mode='mesma')
-    all_runs.latin_hypercubes_sma(mode='sma-best')
+    #all_runs.latin_hypercubes_sma(mode='sma-best')
     all_runs.latin_hypercubes_sma(mode='mesma')
-    all_runs.hypertrace_sma()
+    #all_runs.hypertrace_sma()

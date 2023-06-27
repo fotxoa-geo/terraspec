@@ -14,7 +14,7 @@
     "OSSL": "visnir.data.csv",
     "MEYER-OKIN" : "geofilter_meyer.csv",
     "ASTER": "folder",
-    "NGSA": "National Geochemical Survey of Australia VNIR-SWIR spectra.csv",
+    "NGSA": "National Geochemical Survey of Australia VNIR-SWIR spectra.CSV",
     "SSL-IR": "Eyal_SL.xlsx"
   },
 

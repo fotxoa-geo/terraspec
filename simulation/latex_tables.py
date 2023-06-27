@@ -30,7 +30,7 @@ class latex:
 
         # remove reduntant information
         cols = df_select.columns.tolist()
-        to_remove = cols[5:17]
+        to_remove = cols[6:17]
         df_select = df_select.loc[:, ~df_select.columns.isin(to_remove)]
         df_select = df_select[['scenario', 'dims', 'normalization', 'num_em', 'mc_runs', 'combined_npv', 'combined_pv', 'combined_soil']]
         df_select = df_select.astype({'num_em': 'int', 'mc_runs': 'int'})
@@ -66,8 +66,8 @@ class latex:
             print(df_select.to_latex(index=False))
 
     def summary_table(self):
-        df_unmix = pd.read_csv(os.path.join(self.fig_directory, "unmix_error_report.csv"))
-        df_uncertainty = pd.read_csv(os.path.join(self.fig_directory, "unmix_uncertainty_report.csv"))
+        df_unmix = pd.read_csv(os.path.join(self.fig_directory, "sma-best_unmix_error_report.csv"))
+        df_uncertainty = pd.read_csv(os.path.join(self.fig_directory, "sma-best_unmix_uncertainty_report.csv"))
         df_atmos = pd.read_csv(os.path.join(self.fig_directory, "atmosphere_error_report.csv"))
         df_atmos.solar_zenith = df_atmos.solar_zenith.round()
         df_atmos['solar_zenith'] = df_atmos['solar_zenith'].astype('int')
@@ -118,5 +118,5 @@ class latex:
 def run_latex_tables(base_directory: str):
     latex_class = latex(base_directory=base_directory)
     latex_class.optimal_parameters(mode='sma-best')
-    latex_class.atmosphere_table()
+    #latex_class.atmosphere_table()
     latex_class.summary_table()

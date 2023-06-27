@@ -75,7 +75,6 @@ def cursor_print(string):
         sys.stdout.flush()
         time.sleep(0.02)
 
-
 def input_date(msg, gis_directory):
     while True:
         for c in msg:
@@ -100,3 +99,4 @@ def execute_call(cmd_list, dry_run=False):
         print(cmd_list)
     else:
         subprocess.call(cmd_list)
+
