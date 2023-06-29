@@ -69,6 +69,20 @@ def query_slpit_mode(question, default=""):
     return choice
 
 
+def query_tetracorder_mode(question, default=""):
+    cursor_print(question)
+    valid_responses = ['build', 'figures']
+
+    choice = input().lower()
+
+    while choice not in valid_responses:
+        choice = input("Please enter your selection: ")
+
+        if choice not in choice:
+            print("Invalid selection. Please try again.")
+
+    return choice
+
 def cursor_print(string):
     for c in string:
         sys.stdout.write(c)

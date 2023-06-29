@@ -85,6 +85,15 @@ def build_hypercubes(dimensions: int, max_dimension: int, spectra_starting_col:i
 
     spectral_bundles, cols, level, wvls = get_sim_parameters()
 
+    # save unmix library as envi
+    spectra.df_to_envi(df=df_unmix, spectral_starting_column=spectra_starting_col, wvls=wvls,
+                       output_raster=os.path.join(em_libraries_output,
+                                                  'latin_hypercube__n_dims_' + str(dimensions) + '_unmix_library.hdr'))
+
+    # save simulation library as envi
+    spectra.df_to_envi(df=df_sim, spectral_starting_column=spectra_starting_col, wvls=wvls,
+                       output_raster=os.path.join(sim_libraries_output, 'latin_hypercube__n_dims_' + str(dimensions) + '_simulation_library.hdr'))
+
     # simulate the reflectance
     spectra.simulate_reflectance(df_sim=df_sim, df_unmix=df_unmix, dimensions=dimensions,
                                  sim_libraries_output=sim_libraries_output, mode='latin_hypercube', level=level,
@@ -131,6 +140,14 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int)
 
     # get simulation parameters
     spectral_bundles, cols, level, wvls = get_sim_parameters()
+
+    # save unmix library as envi
+    spectra.df_to_envi(df=df_unmix, spectral_starting_column=spectra_starting_col, wvls=wvls,
+                       output_raster=os.path.join(em_libraries_output, 'convex_hull__n_dims_' + str(dimensions) + '_unmix_library.hdr'))
+
+    # save simulation library as envi
+    spectra.df_to_envi(df=df_sim, spectral_starting_column=spectra_starting_col, wvls=wvls,
+                       output_raster=os.path.join(sim_libraries_output, 'convex_hull__n_dims_' + str(dimensions) + '_simulation_library.hdr'))
 
     # # simulate the reflectance
     spectra.simulate_reflectance(df_sim=df_sim, df_unmix=df_unmix, dimensions=dimensions,

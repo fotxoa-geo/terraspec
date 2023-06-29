@@ -5,6 +5,7 @@ from utils.text_guide import cursor_print
 import subprocess
 from simulation.sim_workflow import run_sim_workflow
 from slpit.slpit_workflow import run_slpit_workflow
+from tetracorder.tetracorder_workflow import run_tetracorder_workflow
 
 
 def main():
@@ -34,7 +35,7 @@ def main():
         run_slpit_workflow(os.path.join(base_directory, 'slpit'), dry_run=args.dry_run, sensor=args.sensor)
 
     if args.mode in ['tetracorder']:
-        print('tc coming soon!')
+        run_tetracorder_workflow(base_directory=base_directory, sensor=args.sensor)
 
 
 if __name__ == '__main__':
