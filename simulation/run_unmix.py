@@ -10,6 +10,7 @@ from itertools import product
 from osgeo import gdal
 from p_tqdm import p_map
 from functools import partial
+import time
 
 level_arg = 'level_1'
 n_cores = '40'
@@ -27,13 +28,17 @@ def create_uncertainty(uncertainty_file: str, wvls):
 
 
 def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list, output_dest:str):
-
+    
     base_call = f'julia -p {n_cores} ~/EMIT/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
                 f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column 8 --refl_scale 1 ' \
                 f'{" ".join(parameters)} '
 
-    execute_call(['sbatch', '-N', "1", '-c', n_cores, '--mem', "80G", '--wrap', f'{base_call}'], dry_run)
-
+    #execute_call(['sbatch', '-N', "1", '-c', n_cores,'--mem', "80G", '--wrap', f'{base_call}'], dry_run)
+    sbatch_cmd = f"sbatch -N 1 -c {n_cores} --mem 80G --wrap='{base_call}'"
+    output = subprocess.check_output(sbatch_cmd, shell=True, text=True)
+    job_id = output.strip()
+    
+    return job_id
 
 def hypertrace_unmix(base_directory: str, mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list):
     # create results directory
@@ -104,7 +109,8 @@ class runs:
         # Start unmixing process
         reflectance_files = glob(os.path.join(self.output_directory, '*withold--*spectra'))
         create_directory((os.path.join(self.base_directory, "output", 'spatial')))
-
+        
+        meta_runs = []
         for reflectance_file in reflectance_files:
             basename = os.path.basename(reflectance_file)
 
@@ -117,8 +123,12 @@ class runs:
             # get em file
             em_file = os.path.join(self.em_libraries_output, "_".join(basename.split("__")[0:1]) + '__n_dims_4_unmix_library.csv')
 
-            call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=em_file,
+            call = call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=em_file,
                        parameters=self.optimal_parameters, output_dest=output_dest)
+
+            meta_runs.append([call] + self.optimal_parameters + [mode] + [em_file] + [reflectance_file])
+
+        return meta_runs
 
     def latin_hypercubes_sma(self, mode:str):
         # Start unmixing process with all options
@@ -132,7 +142,8 @@ class runs:
 
         # create results directory
         create_directory((os.path.join(self.base_directory, "output", mode)))
-
+        
+        meta_runs = []
         for simulation_parameters in all_sma_runs:
             dfs = glob(os.path.join(self.em_libraries_output, '*latin_hypercube_*.csv'))
 
@@ -148,8 +159,12 @@ class runs:
                                            output_name + "_" + mode + " ".join(simulation_parameters)).replace(
                                             "--", "_").replace(" ", "_").replace("__", "_")
 
-                call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=df,
+                call = call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=df,
                            parameters=simulation_parameters, output_dest=output_dest)
+
+                meta_runs.append([call] + simulation_parameters + [mode] + [df] + [reflectance_file])
+        
+        return meta_runs
 
     def convex_hulls(self, mode:str):
         if mode == 'mesma':
@@ -161,7 +176,8 @@ class runs:
 
         # create results directory
         create_directory((os.path.join(self.base_directory, "output", mode)))
-
+        
+        meta_runs = []
         for simulation_parameters in all_sma_runs:
             dfs = glob(os.path.join(self.em_libraries_output, '*convex_hull_*.csv'))
             for df in dfs:
@@ -175,8 +191,12 @@ class runs:
                                            output_name + "_" + mode + " ".join(simulation_parameters)).replace(
                                             "--", "_").replace(" ", "_").replace("__", "_")
 
-                call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=df,
-                           parameters=simulation_parameters, output_dest=output_dest)
+                call = call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=df,
+                        parameters=simulation_parameters, output_dest=output_dest)
+                
+                meta_runs.append([call] + simulation_parameters + [mode] + [df] + [reflectance_file])
+
+        return meta_runs 
 
     def hypertrace_sma(self):
         # start hypertrace unmixing
@@ -201,12 +221,19 @@ class runs:
                              reflectance_file=reflectance_file, em_file=hyp_em_lib,
                              parameters=self.simulation_parameters)
 
+    def export_metadata_runs(self, meta_list:list):
+        with open(os.path.join(self.output_directory, 'meta_runs_slurm.txt'), 'w') as f:
+            for line in meta_list:
+                f.write("%s\n" % line)
 
 def run_unmix_workflow(base_directory, dry_run):
     all_runs = runs(base_directory=base_directory, dry_run=dry_run)
-    #all_runs.geographic_sma(mode='sma-best')
-    #all_runs.convex_hulls(mode='sma-best')
-    all_runs.convex_hulls(mode='mesma')
-    #all_runs.latin_hypercubes_sma(mode='sma-best')
-    all_runs.latin_hypercubes_sma(mode='mesma')
+    geo = all_runs.geographic_sma(mode='sma-best')
+    sma_convex = all_runs.convex_hulls(mode='sma-best')
+    mesma_convex = all_runs.convex_hulls(mode='mesma')
+    lh_sma = all_runs.latin_hypercubes_sma(mode='sma-best')
+    lh_mesma = all_runs.latin_hypercubes_sma(mode='mesma')
+
+    meta_list = geo + sma_convex + mesma_convex + lh_sma + lh_mesma 
+    all_runs.export_metadata_runs(meta_list=meta_list)
     #all_runs.hypertrace_sma()
