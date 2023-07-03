@@ -134,3 +134,15 @@ def envi_tiff_rgb(envi_file, output_directory):
     outband.FlushCache()
 
 
+def envi_to_array(envi_file):
+    ds = gdal.Open(envi_file, gdal.GA_ReadOnly)
+    array = ds.ReadAsArray().transpose((1, 2, 0))
+
+    return array
+
+
+def load_band_names(file):
+    ds = gdal.Open(file, gdal.GA_ReadOnly)
+    bands = {ds.GetRasterBand(i).GetDescription(): i for i in range(1, ds.RasterCount + 1)}
+
+    return list(bands.keys())

@@ -59,6 +59,10 @@ class build_libraries:
             date = i['sample_date']
             emit_date = i['overpass_date']
 
+            if os.path.isfile(os.path.join(self.output_transect_directory,
+                                           plot_name.replace(" ", "") + '-' + self.instrument + '.csv')):
+                continue
+
             img_data = requests.get(plot_pic_url).content
             with open(os.path.join(self.output_directory, 'plot_pictures', 'spectral_transects', plot_name + '.jpg'),
                       'wb') as handler:
@@ -210,6 +214,12 @@ class build_libraries:
                                          "desc": "\t\t\tconvulsing plot: " + plot_name + " ...",
                                          "ncols": 150})
 
+            # save outputs as emit resolutions csv's
+            df_convolve = pd.DataFrame(results_convolve)
+            df_convolve.columns = list(self.wvls)
+            df_convolve = pd.concat([df_results.iloc[:, :9].reset_index(drop=True), df_convolve], axis=1)
+            df_convolve.to_csv(os.path.join(self.output_transect_directory, plot_name + '- transect-' + self.instrument + '.csv'), index=False)
+
             # save files as envi files
             spectra_grid = np.zeros((len(results_convolve), 1, len(self.wvls)))
 
@@ -301,13 +311,13 @@ class build_libraries:
             df_convolve.columns = list(self.wvls)
             df_convolve = pd.concat([df_results.iloc[:, :10].reset_index(drop=True), df_convolve], axis=1)
 
-            # add
-            df_ems = pd.read_csv(os.path.join(self.output_directory, 'all-endmembers-emit.csv'))
-
             # this row assumes that 3 em are presentl if not add 10 of the missing one
             if len(sorted(list(df_convolve.level_1.unique()))) == 3:
                 pass
             else:
+                # add
+                df_ems = pd.read_csv(os.path.join(self.output_directory, 'all-endmembers-emit.csv'))
+
                 plot_ems = sorted(list(df_convolve.level_1.unique()))
                 em_difference = sorted(list(set(all_ems) - set(plot_ems)))
                 # append missing endmembers - from site
@@ -336,18 +346,23 @@ class build_libraries:
         emit_ems = spectra.get_all_ems(output_directory=self.output_directory, instrument=self.instrument)
         asd_ems = spectra.get_all_ems(output_directory=self.output_directory, instrument='asd')
 
-        # dataframes of instrument
+        # dataframes of all endmembers
         df = pd.concat((pd.read_csv(f) for f in emit_ems), ignore_index=True)
         df.to_csv(os.path.join(self.output_directory, "all-endmembers-" + self.instrument + ".csv"), index=False)
+        spectra.df_to_envi(df=df, spectral_starting_column=10, wvls=self.wvls,
+                           output_raster=os.path.join(self.output_directory, "all-endmembers-" + self.instrument + ".hdr"))
 
         # merge all endmembers - asd based wavelengths
         df = pd.concat((pd.read_csv(f) for f in asd_ems), ignore_index=True)
         df.to_csv(os.path.join(self.output_directory, "all-endmembers-asd.csv"), index=False)
 
-        # merge all transect spectra
-        emit_transects = glob(os.path.join(self.output_transect_directory, "*transect.csv"))
+        # merge all transect spectra - emit
+        emit_transects = glob(os.path.join(self.output_transect_directory, "*transect-" + self.instrument + ".csv"))
         df = pd.concat((pd.read_csv(f) for f in emit_transects), ignore_index=True)
-        df.to_csv(os.path.join(self.output_directory, "all-transect-asd.csv"), index=False)
+        df.to_csv(os.path.join(self.output_directory, "all-transect-emit.csv"), index=False)
+        spectra.df_to_envi(df=df, spectral_starting_column=9, wvls=self.wvls,
+                           output_raster=os.path.join(self.output_directory, "all-transect-" + self.instrument + ".hdr"))
+
 
     def build_gis_data(self):
         print("Building spectral endmember gis shapefile data...", sep=' ', end='', flush=True)
@@ -357,7 +372,7 @@ class build_libraries:
         df = df.interpolate(method='nearest')
         spectra.df_to_shapefile(df, base_directory=self.base_directory, out_name='emit_global_spectral_lib')
 
-        df = pd.read_csv(os.path.join(self.output_directory, 'all-transect-asd.csv'))
+        df = pd.read_csv(os.path.join(self.output_directory, 'all-transect-' + self.instrument + '.csv'))
         df = df.iloc[:, :8]
         df = df.replace('unk', np.nan)
         df = df.interpolate(method='nearest')
@@ -378,8 +393,8 @@ def run_build_workflow(base_directory, sensor):
     if user_input:
 
         lib = build_libraries(base_directory=base_directory, sensor=sensor)
-        lib.build_emit_transects()
-        lib.build_emit_endmembers()
+        #lib.build_emit_transects()
+        #lib.build_emit_endmembers()
         lib.build_em_collection()
         lib.build_gis_data()
     else:

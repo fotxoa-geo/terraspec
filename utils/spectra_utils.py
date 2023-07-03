@@ -275,6 +275,25 @@ class spectra:
         df_shp.to_file(os.path.join(base_directory, "gis", out_name + '.shp'), driver='ESRI Shapefile')
 
     @classmethod
-    def save_df_em(df, output, instrument):
+    def save_df_em(cls, df, output, instrument):
         df = df.sort_values('level_1')
         df.to_csv(output.replace(" ", "") + '-' + instrument + '.csv', index=False)
+
+    @classmethod
+    def df_to_envi(cls, df, spectral_starting_column:int, wvls, output_raster):
+
+        df_array = df.iloc[:, spectral_starting_column:].to_numpy()
+        spectra_grid = np.zeros((df_array.shape[0], 1, len(wvls)))
+
+        # fill spectral data
+        for _row, row in enumerate(df_array):
+            spectra_grid[_row, :, :] = row
+
+        # save the spectra
+        print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
+        meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=wvls,
+                                wvls=True)
+        save_envi(output_raster, meta_spectra, spectra_grid)
+
+
+
