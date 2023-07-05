@@ -81,7 +81,7 @@ def build_hypercubes(dimensions: int, max_dimension: int, spectra_starting_col:i
         os.path.join(em_libraries_output, 'latin_hypercube__n_dims_' + str(dimensions) + '_unmix_library.csv'),
         index=False)
 
-    df_sim = pd.concat([df, df_unmix]).drop_duplicates(keep=False)
+    df_sim = pd.concat([df, df_unmix]).drop_duplicates(keep=False).sort_values("level_1")
 
     spectral_bundles, cols, level, wvls = get_sim_parameters()
 
@@ -136,7 +136,7 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int)
         os.path.join(em_libraries_output, 'convex_hull__n_dims_' + str(dimensions) + '_unmix_library.csv'),
         index=False)
 
-    df_sim = pd.concat([df, df_unmix]).drop_duplicates(keep=False)
+    df_sim = pd.concat([df, df_unmix]).drop_duplicates(keep=False).sort_values("level_1")
 
     # get simulation parameters
     spectral_bundles, cols, level, wvls = get_sim_parameters()
@@ -200,7 +200,7 @@ def build_geographic(dimensions: int, output_directory:str, spectra_starting_col
         df_sim_soil = df_sim.loc[(df_sim['level_1'] == 'soil') & (df_sim['dataset'] == dataset)].copy().reset_index(
             drop=True)
         df_sim_pv_npv = df_sim.loc[(df_sim['level_1'] != 'soil')].copy().reset_index(drop=True)
-        df_sim = pd.concat([df_sim_pv_npv, df_sim_soil]).drop_duplicates(keep=False)
+        df_sim = pd.concat([df_sim_pv_npv, df_sim_soil]).drop_duplicates(keep=False).sort_values("level_1")
 
         # get simulation parameters
         spectral_bundles, cols, level, wvls = get_sim_parameters()

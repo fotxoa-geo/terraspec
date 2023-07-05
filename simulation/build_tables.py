@@ -1,4 +1,6 @@
 import os
+import time
+
 import pandas as pd
 from glob import glob
 from p_tqdm import p_umap
@@ -7,10 +9,12 @@ from isofit.core.sunposition import sunpos
 from datetime import datetime, timezone, timedelta
 from utils.results_utils import load_fraction_files, error_processing, uncertainty_processing, load_data
 from utils.create_tree import create_directory
+from utils.results_utils import param_search
 from osgeo import gdal
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from simulation.latex_tables import run_latex_tables
+import ast
 
 class tables:
     def __init__(self, base_directory: str):
@@ -155,6 +159,6 @@ def run_build_tables(base_directory):
     run_tables.unmix_unceratinty_table(mode='mesma')
     run_tables.atmosphere_table()
     run_tables.geographic_table(mode='spatial')
-
+    
     # print latex tables
     run_latex_tables(base_directory=base_directory)

@@ -30,7 +30,7 @@ def create_uncertainty(uncertainty_file: str, wvls):
 def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list, output_dest:str):
     
     base_call = f'julia -p {n_cores} ~/EMIT/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
-                f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column 8 --refl_scale 1 ' \
+                f'{level_arg} {"$SLURM_JOB_ID___" + output_dest} --mode {mode} --spectral_starting_column 8 --refl_scale 1 ' \
                 f'{" ".join(parameters)} '
 
     #execute_call(['sbatch', '-N', "1", '-c', n_cores,'--mem', "80G", '--wrap', f'{base_call}'], dry_run)
