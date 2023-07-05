@@ -92,8 +92,6 @@ def hypertrace_workflow(dry_run: bool, clean: bool, configfile: str):
         job_name = "py-hyper:time:" + str(argd["localtime"]) + '-aod:' + str(argd["atm_aod_h2o"][1]) + '-h2o' + str(argd["atm_aod_h2o"][2])
 
         #execute_call(['sbatch', '-N', '1', '-c', n_cores, '--mem', '180G', '--job-name', job_name, '--wrap', f'python {base_call}'], dry_run)
-            # execute_call(['srun', '-N', '1', '-c', n_cores, '--mem', '180G', '--job-name', job_name, '--pty', f'python {base_call}'], dry_run)
-            # subprocess.call(['srun', '-N', '1', '-c', n_cores, '--mem', '180G', '--pty', f'python {base_call}'])
         subprocess.call([f'srun -N 1 -c 40 --mem 180G --pty  python {base_call}'], shell=True)  # this works
     logging.info("Workflow completed successfully.")
 

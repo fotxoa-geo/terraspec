@@ -547,4 +547,4 @@ def run_figures(base_directory, sensor):
     fig_class.normalization_figure()
     fig_class.size_endmembers_figure()
     fig_class.uncertainty_figure()
-    #fig_class.atmosphere()
+    fig_class.atmosphere()

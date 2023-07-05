@@ -40,6 +40,7 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
     
     return job_id
 
+
 def hypertrace_unmix(base_directory: str, mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list):
     # create results directory
     create_directory((os.path.join(base_directory, "output", 'hypertrace', 'fractions')))
@@ -132,6 +133,7 @@ class runs:
 
     def latin_hypercubes_sma(self, mode:str):
         # Start unmixing process with all options
+        print(f"commencing latin hypercube {mode} spectral unmixing...")
 
         if mode == 'mesma':
             options = product(self.normalization, self.num_cmb, self.mc_runs + [None])
@@ -167,6 +169,7 @@ class runs:
         return meta_runs
 
     def convex_hulls(self, mode:str):
+        print(f"commencing convex hull {mode} spectral unmixing...")
         if mode == 'mesma':
             options = product(self.normalization, self.num_cmb, self.mc_runs + [None])
         else:
@@ -200,6 +203,7 @@ class runs:
 
     def hypertrace_sma(self):
         # start hypertrace unmixing
+        print(f"commencing hypertrace spectral unmixing...")
 
         # load em library for hypertrace unmixing
         hyp_em_lib = os.path.join(self.output_directory, "endmember_libraries", 'convex_hull__n_dims_4_unmix_library.csv')
@@ -219,7 +223,7 @@ class runs:
         for reflectance_file in estimated_reflectances:
             hypertrace_unmix(base_directory=self.base_directory, mode='sma-best', dry_run=self.dry_run,
                              reflectance_file=reflectance_file, em_file=hyp_em_lib,
-                             parameters=self.simulation_parameters)
+                             parameters=self.optimal_parameters)
 
     def export_metadata_runs(self, meta_list:list):
         with open(os.path.join(self.output_directory, 'meta_runs_slurm.txt'), 'w') as f:
@@ -236,4 +240,4 @@ def run_unmix_workflow(base_directory, dry_run):
 
     meta_list = geo + sma_convex + mesma_convex + lh_sma + lh_mesma 
     all_runs.export_metadata_runs(meta_list=meta_list)
-    #all_runs.hypertrace_sma()
+    all_runs.hypertrace_sma()
