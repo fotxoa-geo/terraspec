@@ -6,6 +6,8 @@ dependencies:
   - python=3.10.9
   - geopandas=0.12.2
   - tqdm
-  - p_tqdm
   - xlrd
-  - grpcio=1.42.0
+  - tensorflow=2.8.0
+  - pip:
+      - isofit==2.9.8
+      - p_tqdm

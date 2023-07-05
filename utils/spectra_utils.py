@@ -99,6 +99,31 @@ class spectra:
         return df_pca
 
     @classmethod
+    def increment_synthetic_reflectance(cls, data, em_fraction, seed, wvls, spectra_start):
+        np.random.seed(seed)
+
+        # calculate the fractions
+        remaining_fraction = 1 - em_fraction
+        npv_frac = np.random.uniform(0, remaining_fraction)
+        pv_frac = remaining_fraction - npv_frac
+        fractions = [npv_frac, pv_frac, em_fraction]
+
+        # crate grid to store reflectance
+        col_spectra = np.zeros((data.shape[0], len(wvls)))
+
+        # create grid to store index
+        col_index = np.zeros((data.shape[0], 3)).astype(int)
+
+        for _row, row in enumerate(data):
+            col_index[_row, :] = list(map(int, [row[0][0], row[1][0], row[2][0]]))
+            col_spectra[_row, :] = (row[0][spectra_start:].astype(dtype=float) * npv_frac) + \
+                                      (row[1][spectra_start:].astype(dtype=float) * pv_frac) + \
+                                      (row[2][spectra_start:].astype(dtype=float) * em_fraction)
+
+        return fractions, col_index, col_spectra
+
+
+    @classmethod
     def synthetic_reflectance(cls, data):
         row_spectra = []
         row_fractions = []
