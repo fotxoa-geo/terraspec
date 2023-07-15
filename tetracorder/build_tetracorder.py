@@ -1,4 +1,6 @@
 import os
+import time
+
 from utils.create_tree import create_directory
 from utils.spectra_utils import spectra
 from utils.envi import envi_to_array, get_meta, save_envi, load_band_names
@@ -112,7 +114,8 @@ class tetracorder:
         df_soil = df_sim[df_sim['level_1'] == 'soil']
         min_soil_index = np.min(df_sim[df_sim['level_1'] == 'soil'].index)
 
-        positive_detection_index = soil_sa_sim_pure[min_soil_index:, mineral_index] != 0
+        positive_detection_index = (soil_sa_sim_pure[min_soil_index:, mineral_index] != 0) & (soil_sa_sim_pure[min_soil_index:, mineral_index] == np.max(soil_sa_sim_pure[min_soil_index:, mineral_index]))
+
         df_positive_soil = df_soil[positive_detection_index].reset_index(drop=True)
 
         # merge dataframes
@@ -134,7 +137,7 @@ class tetracorder:
         picked_spectra = [all_combinations[i] for i in picked_spectral_bundles_index]
 
         # create grids
-        cols = int(1/increment_size)
+        cols = int(1/increment_size) + 1
         fraction_grid = np.zeros((len(picked_spectral_bundles_index), cols, len(sorted(list(df_merge.level_1.unique())))))
         spectra_grid = np.zeros((len(picked_spectral_bundles_index), 100, len(self.wvls)))
         index_grid = np.zeros((len(picked_spectral_bundles_index), cols, len(sorted(list(df_merge.level_1.unique())))))

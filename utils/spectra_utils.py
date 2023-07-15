@@ -104,8 +104,8 @@ class spectra:
 
         # calculate the fractions
         remaining_fraction = 1 - em_fraction
-        npv_frac = np.random.uniform(0, remaining_fraction)
-        pv_frac = remaining_fraction - npv_frac
+        npv_frac = pv_frac = remaining_fraction/2
+
         fractions = [npv_frac, pv_frac, em_fraction]
 
         # crate grid to store reflectance

@@ -7,6 +7,7 @@ dependencies:
   - geopandas=0.12.2
   - tqdm
   - xlrd
+  - cudatoolkit=11.8.0
   - pip:
       - isofit==2.9.8
       - p_tqdm
@@ -14,4 +15,9 @@ dependencies:
       - zerionPy
       - earthaccess
       - tensorflow=2.8.0
+      - nvidia-cudnn-cu11==8.6.0.163
+      - pypdf
+      - netCDF4
+      - basemap
+      - openpyxl
 

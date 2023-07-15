@@ -7,7 +7,7 @@ from p_tqdm import p_umap
 from functools import partial
 from isofit.core.sunposition import sunpos
 from datetime import datetime, timezone, timedelta
-from utils.results_utils import load_fraction_files, error_processing, uncertainty_processing, load_data
+from utils.results_utils import load_fraction_files, error_processing, uncertainty_processing, load_data, performance_log
 from utils.create_tree import create_directory
 from utils.results_utils import param_search
 from osgeo import gdal
@@ -150,6 +150,14 @@ class tables:
         df = pd.DataFrame(results, columns=cols_df)
         df.to_csv(os.path.join(self.fig_directory, "geographic_error_report.csv"), index=False)
 
+    def performance_table(self):
+        outfiles = glob(os.path.join(self.output_directory, 'outlogs', '*.out'))
+
+        dfs = p_umap(performance_log, outfiles,
+                        **{"desc": f"\t\t processing performance tables...", "ncols": 150})
+        df_performance = pd.concat(dfs)
+        df_performance.to_csv(os.path.join(self.fig_directory, "computing_performance_report.csv"), index=False)
+
 
 def run_build_tables(base_directory):
     run_tables = tables(base_directory=base_directory)
@@ -159,7 +167,8 @@ def run_build_tables(base_directory):
     #run_tables.unmix_unceratinty_table(mode='mesma')
     #run_tables.atmosphere_table()
     #run_tables.geographic_table(mode='spatial')
-    run_tables.metadata_table_unmix()
+    #run_tables.metadata_table_unmix()
+    run_tables.performance_table()
 
     # print latex tables
-    run_latex_tables(base_directory=base_directory)
+    #run_latex_tables(base_directory=base_directory)

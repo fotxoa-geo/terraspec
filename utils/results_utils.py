@@ -1,10 +1,13 @@
+import time
 from glob import glob
 import os
+
+import pandas as pd
 from osgeo import gdal
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from scipy.stats import sem
 import numpy as np
-
+import re
 
 def load_fraction_files(base_directory: str, mode: str, search_kw: str):
     files = glob(os.path.join(base_directory, "output", mode, search_kw), recursive=True)
@@ -164,4 +167,40 @@ def uncertainty_processing(file, output_directory):
     del uncertainty_array
 
 
+def performance_log(out_file:str):
+
+    with open(out_file) as f:
+        lines = f.readlines()
+
+    start_times = []
+    end_times = []
+    elapsed_times = []
+
+    for line in lines:
+        # pattern for time
+        time_match = re.search(r"Elapsed Time: ([\d.e-]+), Start Time: ([\d.e-]+), End Time: ([\d.e-]+)", line.strip())
+        if time_match:
+            elapsed_time = float(time_match.group(1))
+            start_time = float(time_match.group(2))
+            end_time = float(time_match.group(3))
+            elapsed_times.append(elapsed_time)
+            start_times.append(start_time)
+            end_times.append(end_time)
+
+        argument_match = re.search(r'Arguments:\s*\(([^)]+)\)', line.strip())
+        if argument_match:
+            argument_string = argument_match.group(1)
+            arguments = dict(re.findall(r'(\w+)\s*=\s*([^,)]+)', argument_string))
+
+    start_times = [start - 1.0e9 for start in start_times]
+    end_times = [end - 1.0e9 for end in end_times]
+
+    try:
+        df = pd.DataFrame([arguments], columns=arguments.keys())
+        df['elapsed_time'] = np.max(np.array(end_times)) - np.min(np.array(start_times))
+        df['worker_time'] = np.mean(np.array(elapsed_times))
+
+        return df
+    except:
+        print(out_file, "had an error...")
 

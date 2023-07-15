@@ -34,7 +34,7 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
                 f'{" ".join(parameters)} '
 
     #execute_call(['sbatch', '-N', "1", '-c', n_cores,'--mem', "80G", '--wrap', f'{base_call}'], dry_run)
-    sbatch_cmd = f"sbatch -N 1 -c {n_cores} --mem 80G --wrap='{base_call}'"
+    sbatch_cmd = f"sbatch -N 1 -c {n_cores} --mem 80G --output={} --wrap='{base_call}'"
     output = subprocess.check_output(sbatch_cmd, shell=True, text=True)
     job_id = output.strip()
     
@@ -90,6 +90,7 @@ class runs:
 
         self.base_directory = base_directory
         self.output_directory = os.path.join(base_directory, 'output')
+        create_directory(os.path.join(self.output_directory, 'outlogs'))
 
         # load em libraries output
         self.em_libraries_output = os.path.join(self.output_directory, "endmember_libraries")
