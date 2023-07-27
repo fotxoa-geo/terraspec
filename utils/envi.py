@@ -109,7 +109,7 @@ def envi_tiff_rgb(envi_file, output_directory):
     outRaster.SetGeoTransform((originX, pixelWidth, 0, originY, 0, pixelHeight))
 
     rgb_wvls = [470.0304, 574.20905, 656.1857]
-    load_order = { 470.0304: 2, 574.20905: 1, 656.1857: 0}
+    load_order = {470.0304: 2, 574.20905: 1, 656.1857: 0}
 
     for _b, b in enumerate(range(0, ds_array.shape[2])):
         band_wvl = float(ds.GetRasterBand(_b + 1).GetDescription().split(" ")[0])
@@ -133,6 +133,30 @@ def envi_tiff_rgb(envi_file, output_directory):
     outRaster.SetProjection(outRasterSRS.ExportToWkt())
     outband.FlushCache()
 
+
+def envi_tiff(envi_file, output_directory):
+    basename = os.path.basename(envi_file)
+    driver = gdal.GetDriverByName("GTiff")
+    out_ras = os.path.join(output_directory, basename + '.tif')
+    ds = gdal.Open(envi_file, gdal.GA_ReadOnly)
+    prj = ds.GetProjection()
+
+    ds_array = ds.ReadAsArray().transpose((1, 2, 0))
+    outRaster = driver.Create(out_ras, ds_array.shape[1], ds_array.shape[0], 4, gdal.GDT_Byte)
+
+    originX, pixelWidth, b, originY, d, pixelHeight = ds.GetGeoTransform()
+    outRaster.SetGeoTransform((originX, pixelWidth, 0, originY, 0, pixelHeight))
+
+    for _b, b in enumerate(range(0, ds_array.shape[2])):
+        outband = outRaster.GetRasterBand(_b + 1)
+        band_select = ds_array[:, :, _b]
+        band_select[band_select != 0] = 255
+        outband.WriteArray(band_select)
+
+    # settings srs from input tif file.
+    outRasterSRS = osr.SpatialReference(wkt=prj)
+    outRaster.SetProjection(outRasterSRS.ExportToWkt())
+    outband.FlushCache()
 
 def envi_to_array(envi_file):
     ds = gdal.Open(envi_file, gdal.GA_ReadOnly)

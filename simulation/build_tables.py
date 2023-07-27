@@ -168,7 +168,7 @@ def run_build_tables(base_directory):
     #run_tables.atmosphere_table()
     #run_tables.geographic_table(mode='spatial')
     #run_tables.metadata_table_unmix()
-    run_tables.performance_table()
+    #run_tables.performance_table()
 
     # print latex tables
-    #run_latex_tables(base_directory=base_directory)
+    run_latex_tables(base_directory=base_directory)

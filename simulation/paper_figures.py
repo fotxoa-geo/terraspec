@@ -1,4 +1,6 @@
 import os
+import time
+
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.pyplot as plt
 from sys import platform
@@ -243,6 +245,7 @@ class figures:
     def atmosphere(self):
 
         df = pd.read_csv(os.path.join(self.fig_directory, "atmosphere_error_report.csv"))
+        df = df.loc[df['mode'] == 'sma-best'].copy()
         df_error = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_error_report.csv'))
         df_uncer = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_uncertainty_report.csv'))
 
@@ -264,6 +267,8 @@ class figures:
         fig.subplots_adjust(wspace=0.1, hspace=0.1)
 
         df_select = df.loc[(df['azimuth'] == 0) & (df['sensor_zenith'] == 180) & (df['aod'] != 0) & (df['h2o'] != 0)].copy()
+        print(df_select)
+        time.sleep(10000)
 
         for row in range(nrows):
             for col in range(ncols):
@@ -547,4 +552,4 @@ def run_figures(base_directory, sensor):
     fig_class.normalization_figure()
     fig_class.size_endmembers_figure()
     fig_class.uncertainty_figure()
-    #fig_class.atmosphere()
+    fig_class.atmosphere()
