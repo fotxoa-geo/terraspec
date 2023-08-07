@@ -134,9 +134,9 @@ class latex:
         df_uncertainty = pd.read_csv(os.path.join(self.fig_directory, "sma-best_unmix_uncertainty_report.csv"))
         df_unmix_mesma = pd.read_csv(os.path.join(self.fig_directory, "mesma_unmix_error_report.csv"))
         df_uncertainty_mesma = pd.read_csv(os.path.join(self.fig_directory, "mesma_unmix_uncertainty_report.csv"))
-        #df_atmos = pd.read_csv(os.path.join(self.fig_directory, "atmosphere_error_report.csv"))
-        #df_atmos.solar_zenith = df_atmos.solar_zenith.round()
-        #df_atmos['solar_zenith'] = df_atmos['solar_zenith'].astype('int')
+        df_atmos = pd.read_csv(os.path.join(self.fig_directory, "atmosphere_error_report.csv"))
+        df_atmos.solar_zenith = df_atmos.solar_zenith.round()
+        df_atmos['solar_zenith'] = df_atmos['solar_zenith'].astype('int')
 
         rows = []
 
@@ -157,9 +157,9 @@ class latex:
                                        (df_uncertainty['num_em'] == 30) & (df_uncertainty['mc_runs'] == 25) &
                                        (df_uncertainty['scenario'] == 'convex') & (df_uncertainty['dims'] == 4)].copy()
 
-        rows.append(['No Atmosphere-SMA',df_select_unmix.combined_npv.values[0], np.round(df_select_uncer.npv_uncer.values[0],2),
-                     df_select_unmix.combined_pv.values[0], np.round(df_select_uncer.pv_uncer.values[0],2),
-                     df_select_unmix.combined_soil.values[0], np.round(df_select_uncer.soil_uncer.values[0],2)])
+        rows.append(['No Atmosphere-SMA',df_select_unmix.combined_npv.values[0], '± '+ str(np.round(df_select_uncer.npv_uncer.values[0],2)),
+                     df_select_unmix.combined_pv.values[0], '± ' + str(np.round(df_select_uncer.pv_uncer.values[0],2)),
+                     df_select_unmix.combined_soil.values[0], '± '+ str(np.round(df_select_uncer.soil_uncer.values[0],2))])
 
         # mesma --------------------------------------------------
         df_mesma = df_unmix_mesma.loc[(df_unmix_mesma['normalization'] == 'brightness') &
@@ -178,29 +178,38 @@ class latex:
                                        (df_uncertainty_mesma['cmbs'] == 100) & (df_uncertainty_mesma['mc_runs'] == 25) &
                                        (df_uncertainty_mesma['scenario'] == 'convex') & (df_uncertainty_mesma['dims'] == 4)].copy()
 
-        rows.append(['No Atmosphere-MESMA', df_mesma.combined_npv.values[0], np.round(df_select_uncer_mesma.npv_uncer.values[0],2),
-                     df_mesma.combined_pv.values[0], np.round(df_select_uncer_mesma.pv_uncer.values[0],2),
-                     df_mesma.combined_soil.values[0], np.round(df_select_uncer_mesma.soil_uncer.values[0],2)])
+        rows.append(['No Atmosphere-MESMA', df_mesma.combined_npv.values[0], '± '+ str(np.round(df_select_uncer_mesma.npv_uncer.values[0],2)),
+                     df_mesma.combined_pv.values[0], '± '+ str(np.round(df_select_uncer_mesma.pv_uncer.values[0],2)),
+                     df_mesma.combined_soil.values[0], '± '+ str(np.round(df_select_uncer_mesma.soil_uncer.values[0],2))])
 
         # get atmospheric runs
-        #atmopspheres = [[0.05, 0.75], [0.4, 4.0]]
-        #atmosphere_scenarios = ['Clear Atmosphere and Low Water Content', 'Non-Clear Atmosphere and High Water Content']
-        #
-        # for _atmos, atmos in enumerate(atmopspheres):
-        #     df_select = df_atmos.loc[(df_atmos['aod'] == atmos[0]) & (df_atmos['h2o'] == atmos[1]) & (df_atmos['solar_zenith'] == 13)].copy()
-        #     # combine mae(rmse) for table
-        #     df_select['combined_npv'] = df_select['npv_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_select[
-        #         'npv_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
-        #     df_select['combined_pv'] = df_select['pv_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_select[
-        #         'pv_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
-        #     df_select['combined_soil'] = df_select['soil_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_select[
-        #         'soil_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
-        #     rows.append([atmosphere_scenarios[_atmos], df_select.combined_npv.values[0], np.round(df_select['npv_sma-uncertainty'].values[0],2),
-        #                  df_select.combined_pv.values[0], np.round(df_select['pv_sma-uncertainty'].values[0],2),
-        #                  df_select.combined_soil.values[0], np.round(df_select['soil_sma-uncertainty'].values[0],2)])
+        atmopspheres = [[0.05, 0.75], [0.4, 4.0]]
+        atmosphere_scenarios = ['Clear Atmosphere and Low Water Content', 'Non-Clear Atmosphere and High Water Content']
+
+        for _atmos, atmos in enumerate(atmopspheres):
+            if atmos == 'Clear Atmosphere and Low Water Content':
+                sza = 13
+            else:
+                sza = 57
+            df_select = df_atmos.loc[(df_atmos['aod'] == atmos[0]) & (df_atmos['h2o'] == atmos[1]) & (df_atmos['solar_zenith'] == sza)].copy()
+
+            # combine mae(rmse) for table
+            df_select['combined_npv'] = df_select['npv_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_select[
+                'npv_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
+            df_select['combined_pv'] = df_select['pv_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_select[
+                'pv_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
+            df_select['combined_soil'] = df_select['soil_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_select[
+                'soil_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
+
+            for _row, row in df_select.iterrows():
+                rows.append([atmosphere_scenarios[_atmos] + ' - ' + row['mode'].upper(),
+                             row.combined_npv, '± '+ str(np.round(row['npv_sma-uncertainty'],2)),
+                             row.combined_pv, '± ' + str(np.round(row['pv_sma-uncertainty'],2)),
+                             row.combined_soil, '± ' + str(np.round(row['soil_sma-uncertainty'],2))])
 
         df_table = pd.DataFrame(rows)
-        print(df_table.to_latex(index=False))
+        formatted_df = df_table.reset_index(drop=True).applymap(format_float)
+        print(formatted_df.to_latex(index=False, escape=False))
 
     def time_table(self):
         df_time = pd.read_csv(os.path.join(self.fig_directory, "computing_performance_report.csv"))
@@ -238,6 +247,6 @@ def run_latex_tables(base_directory: str):
     latex_class = latex(base_directory=base_directory)
     #latex_class.optimal_parameters()
     latex_class.atmosphere_table()
-    #latex_class.summary_table()
+    latex_class.summary_table()
     latex_class.time_table()
     latex_class.baseline_setings()
