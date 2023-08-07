@@ -40,7 +40,7 @@ class emit:
         nc_files = glob(os.path.join(self.gis_directory, 'emit-data', 'nc_files', '*.nc'))
         for i in nc_files:
             basename = os.path.basename(i).split(".")[0]
-            base_call = f'python ./slpit/emit_utils/reformat.py {i} {os.path.join(self.gis_directory, "emit-data", "envi")} --orthorectify --overwrite'
+            base_call = f'python ./slpit/emit_utils/reformat.py {i} {os.path.join(self.gis_directory, "emit-data", "envi")} --orthorectify'
 
             subprocess.call(['sbatch', '-N', '1', '-c', '40', '--mem', '180G', '--wrap', f'{base_call}'])
 
