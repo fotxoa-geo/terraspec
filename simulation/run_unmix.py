@@ -91,6 +91,7 @@ class runs:
 
         self.base_directory = base_directory
         self.output_directory = os.path.join(base_directory, 'output')
+        create_directory(os.path.join(self.output_directory, 'outlogs'))
 
         # load em libraries output
         self.em_libraries_output = os.path.join(self.output_directory, "endmember_libraries")

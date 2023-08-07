@@ -21,13 +21,10 @@ def bin_sums(x, y, bin_width:float):
         y_select = y[mask]
         y_select = y_select[~np.isnan(y_select)]
 
-        if i == 1.0:
-            continue
-        else:
-            mae_calc = np.mean(y_select)
-            mae.append(mae_calc)
-            mid_point = ((i + (i + bin_width)) / 2)
-            x_vals.append(mid_point)
+        mae_calc = np.mean(y_select)
+        mae.append(mae_calc)
+        mid_point = ((i + (i + bin_width)) / 2)
+        x_vals.append(i)
 
     return x_vals, mae
 
@@ -52,7 +49,7 @@ class tetracorder_figures:
         sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_spectra_sa_mineral'))[:, 0, :]
         soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_sa_mineral'))[:, 0, :]
 
-        soil_sa_sim_pure[soil_sa_sim_pure == 0] == np.nan
+        soil_sa_sim_pure[soil_sa_sim_pure == 0] = np.nan
 
         # correct spectral abundance- y dimension is the minerals
         error_grid = np.zeros((np.shape(sim_sa_arrary)[0], np.shape(sim_sa_arrary)[1]))
@@ -116,14 +113,97 @@ class tetracorder_figures:
                 counter += 1
         plt.savefig(os.path.join(self.fig_directory, 'tetracorder_mae_' + xaxis + '.png'), dpi=300, bbox_inches='tight')
 
-    def mineral_incremenent_fig(self, xaxis:str):
+    def phil_figure(self, xaxis:str):
+        # load simulation data - truncate the sa files from augmentation; no unmix here!
+        sim_index_array = envi_to_array(os.path.join(self.output_directory, 'Calcite_increment_0_index'))[0, :, :]
+        sim_fractions_array = envi_to_array(os.path.join(self.output_directory, 'Calcite_increment_0_fractions'))[0, :, :]
+        sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, 'Calcite_increment_0_spectra_sa_mineral'))[0, :21, :]
+        soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'Calcite_increment_sim_library_sa_mineral'))[:, 0, :]
+
+        #soil_sa_sim_pure[soil_sa_sim_pure == 0.] = np.nan
+
+        sim_lib = envi_to_array(os.path.join(self.sim_output, 'simulation_libraries', 'convex_hull__n_dims_4_simulation_library'))
+
+        # correct spectral abundance- y dimension is the minerals
+        error_grid = np.zeros((np.shape(sim_sa_arrary)[0], np.shape(sim_sa_arrary)[1]))
+
+        for _row, row in enumerate(sim_sa_arrary):
+            for _col, col in enumerate(row):
+                soil_fractions = sim_fractions_array[_col, 2]
+
+                soil_index = sim_index_array[_col, 2]
+
+                if np.round(soil_fractions, 2) == 0:
+                    sa_c = 0
+                else:
+                    sa_c = sim_sa_arrary[ _col, :]/np.round(soil_fractions, 2)
+
+                error = np.absolute(sa_c - soil_sa_sim_pure[int(soil_index), :])
+                error_grid[_col, :] = error
+
+        # create figure
+        fig = plt.figure(constrained_layout=True, figsize=(12, 6))
+        ncols = 5
+        nrows = 2
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0, hspace=0, figure=fig)
+        minor_tick_spacing = 0.1
+        major_tick_spacing = 0.25
+        counter = 0
+
+        for row in range(nrows):
+            for col in range(ncols):
+                ax = fig.add_subplot(gs[row, col])
+                ax.set_title(self.bands[counter])
+                ax.set_xlabel(f'{xaxis}')
+                ax.grid('on', linestyle='--')
+                ax.xaxis.set_minor_locator(ticker.MultipleLocator(minor_tick_spacing))
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(major_tick_spacing))
+                ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
+                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
+
+                # get soil index
+                soil_index = int(sim_index_array[0,2])
+                picked_soil_sa = soil_sa_sim_pure[soil_index]
+                txtstr = r'SA$_{pure}$: %.3f' % picked_soil_sa[counter]
+
+                if col == 0:
+                    ax.set_ylabel('MAE')
+
+                if col != 0:
+                    ax.set_yticklabels([])
+
+                abs_error = error_grid[:, counter]
+                if xaxis == 'npv':
+                    fractions = sim_fractions_array[:, 0]
+
+                if xaxis == 'pv':
+                    fractions = sim_fractions_array[:, 1]
+
+                if xaxis == 'soil':
+                    fractions = sim_fractions_array[:, 2]
+
+                x_vals, mae = bin_sums(x=fractions, y=abs_error, bin_width=0.05)
+
+                ax.plot(x_vals, mae, label=txtstr)
+                ax.set_ylim(-0.1, 0.15)
+                ax.set_xlim(-0.01, 1.05)
+                ax.legend()
+
+                ax.set_aspect(1. / ax.get_data_ratio())
+
+                counter += 1
+        plt.savefig(os.path.join(self.fig_directory, 'calcite_mae_soil0_' + xaxis + '.png'), dpi=300, bbox_inches='tight')
+
+    def mineral_incremenent_fig(self, xaxis: str):
         # load simulation data - truncate the sa files from augmentation; no unmix here!
         sim_index_array = envi_to_array(os.path.join(self.output_directory, 'Calcite_increment_0_index'))
         sim_fractions_array = envi_to_array(os.path.join(self.output_directory, 'Calcite_increment_0_fractions'))
-        sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, 'Calcite_increment_0_spectra_sa_mineral'))[:, :20, :]
-        soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'Calcite_increment_sim_library_sa_mineral'))[:, 0, :]
+        sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, 'Calcite_increment_0_spectra_sa_mineral'))[:,
+                        :21, :]
+        soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'Calcite_increment_sim_library_sa_mineral'))[
+                           :, 0, :]
 
-        soil_sa_sim_pure[soil_sa_sim_pure == 0] == np.nan
+        soil_sa_sim_pure[soil_sa_sim_pure == 0] = np.nan
 
         # correct spectral abundance- y dimension is the minerals
         error_grid = np.zeros((np.shape(sim_sa_arrary)[0], np.shape(sim_sa_arrary)[1], np.shape(sim_sa_arrary)[2]))
@@ -137,7 +217,7 @@ class tetracorder_figures:
                 if np.round(soil_fractions, 2) == 0:
                     sa_c = 0
                 else:
-                    sa_c = sim_sa_arrary[_row, _col, :]/np.round(soil_fractions, 2)
+                    sa_c = sim_sa_arrary[_row, _col, :] / np.round(soil_fractions, 2)
 
                 error = np.absolute(sa_c - soil_sa_sim_pure[int(soil_index), :])
                 error_grid[_row, _col, :] = error
@@ -193,5 +273,6 @@ def run_figure_workflow(base_directory):
     ems = ['npv', 'pv', 'soil']
     tc = tetracorder_figures(base_directory=base_directory)
     for em in ems:
+        tc.phil_figure(xaxis=em)
         tc.simulation_fig(xaxis=em)
         tc.mineral_incremenent_fig(xaxis=em)

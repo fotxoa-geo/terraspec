@@ -1,4 +1,6 @@
 import os
+import time
+
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.pyplot as plt
 from sys import platform
@@ -243,6 +245,7 @@ class figures:
     def atmosphere(self):
 
         df = pd.read_csv(os.path.join(self.fig_directory, "atmosphere_error_report.csv"))
+        df = df.loc[df['mode'] == 'sma-best'].copy()
         df_error = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_error_report.csv'))
         df_uncer = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_uncertainty_report.csv'))
 
@@ -264,6 +267,7 @@ class figures:
         fig.subplots_adjust(wspace=0.1, hspace=0.1)
 
         df_select = df.loc[(df['azimuth'] == 0) & (df['sensor_zenith'] == 180) & (df['aod'] != 0) & (df['h2o'] != 0)].copy()
+        print(df_select)
 
         for row in range(nrows):
             for col in range(ncols):
@@ -280,7 +284,8 @@ class figures:
 
                 if row == 0:  # aod
                     ax.set_title(self.ems[col].title(), fontsize=self.title_fontsize)
-                    for _aod, aods in sorted(list(enumerate(df_select.aod.unique()))):
+
+                    for _aod, aods in enumerate(sorted(list(df_select.aod.unique()))):
                         df_results1 = df_select.loc[(df_select['aod'] == aods) & (df_select['h2o'] == 0.75)].copy()
                         df_results1 = df_results1.sort_values('solar_zenith')
 
@@ -319,7 +324,7 @@ class figures:
 
                 if row == 1:  # h20
                     ax.set_xlabel("Solar Zenith Angle (°)", fontsize=self.axis_label_fontsize)
-                    for _h2o, h2os in sorted(list(enumerate(df_select.h2o.unique()))):
+                    for _h2o, h2os in enumerate(sorted(list(df_select.h2o.unique()))):
                         if h2os == 0:
                             continue
                         df_results = df_select.loc[(df_select['h2o'] == h2os) & (df_select['aod'] == 0.05)].copy()
@@ -363,6 +368,135 @@ class figures:
                     ax.set_yticklabels([])
 
         plt.savefig(os.path.join(self.fig_directory, "atmosphere_error_sun_angles.png"), bbox_inches="tight", dpi=400)
+
+    def atmosphere_mesma(self):
+
+        df = pd.read_csv(os.path.join(self.fig_directory, "atmosphere_error_report.csv"))
+        df = df.loc[df['mode'] == 'mesma'].copy()
+        df_error = pd.read_csv(os.path.join(self.fig_directory, 'mesma_unmix_error_report.csv'))
+        df_uncer = pd.read_csv(os.path.join(self.fig_directory, 'mesma_unmix_uncertainty_report.csv'))
+
+        # call the optimization data; mc = 25, em = 30,
+        df_uncer_opt = df_uncer.loc[(df_uncer['normalization'] == 'brightness') & (df_uncer['cmbs'] == 100) &
+                                    (df_uncer['mc_runs'] == 25) & (df_uncer['scenario'] == 'convex')
+                                    & (df_uncer['dims'] == 4)].copy()
+
+        # call the uncertainty data; mc = 25, em =30
+        df_optimized = df_error.loc[(df_error['normalization'] == 'brightness') & (df_error['cmbs'] == 100) &
+                                    (df_error['mc_runs'] == 25) & (df_error['scenario'] == 'convex')
+                                    & (df_error['dims'] == 4)].copy()
+
+        # create 3x3 figure
+        ncols = 3  # for each em
+        nrows = 2  # top row zenith, middle water, aod; x-axis solar angle
+
+        fig, axs = plt.subplots(nrows, ncols, figsize=(self.fig_width, self.fig_height))
+        fig.subplots_adjust(wspace=0.1, hspace=0.1)
+
+        df_select = df.loc[(df['azimuth'] == 0) & (df['sensor_zenith'] == 180) & (df['aod'] != 0) & (df['h2o'] != 0)].copy()
+        print(df_select)
+
+        for row in range(nrows):
+            for col in range(ncols):
+                ax = axs[row, col]
+
+                ax.grid('on', linestyle='--')
+                ax.set_ylim(0, 0.22)
+                ax.set_xlim(0, 60)
+                ax.tick_params(axis='both', which='major', labelsize=self.major_axis_fontsize)
+                ax.tick_params(axis='both', which='minor', labelsize=self.minor_axis_fontsize)
+                ax.set_aspect(1. / ax.get_data_ratio())
+                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+                capsize = [8, 6, 4]
+
+                if row == 0:  # aod
+                    ax.set_title(self.ems[col].title(), fontsize=self.title_fontsize)
+
+                    for _aod, aods in enumerate(sorted(list(df_select.aod.unique()))):
+                        df_results1 = df_select.loc[(df_select['aod'] == aods) & (df_select['h2o'] == 0.75)].copy()
+                        df_results1 = df_results1.sort_values('solar_zenith')
+
+                        if col == 0:
+                            ax.set_ylabel('MAE', fontsize=self.axis_label_fontsize)
+                            plot_error = df_results1.npv_mae
+                            plot_uncer = df_results1['npv_sma-uncertainty']
+
+                            optimized_error = df_optimized['npv_mae']
+                            optimized_uncex = df_uncer_opt['npv_uncer']
+
+                        elif col == 1:
+                            plot_error = df_results1.pv_mae
+                            plot_uncer = df_results1['pv_sma-uncertainty']
+
+                            optimized_error = df_optimized['pv_mae']
+                            optimized_uncex = df_uncer_opt['pv_uncer']
+
+                        else:
+                            plot_error = df_results1.soil_mae
+                            plot_uncer = df_results1['soil_sma-uncertainty']
+
+                            optimized_error = df_optimized['soil_mae']
+                            optimized_uncex = df_uncer_opt['soil_uncer']
+
+                        ax.errorbar(df_results1.solar_zenith, plot_error, yerr=plot_uncer / 25,
+                                    label=f'AOD: {aods:.2f}', solid_capstyle='projecting', capsize=capsize[_aod])
+
+                        if aods == 0.4:
+                            ax.errorbar(df_results1.solar_zenith, [optimized_error.values[0]] * df_results1.solar_zenith.shape[0],
+                                        yerr=optimized_uncex/25, solid_capstyle='projecting', capsize=2, label='Optimized SMA')
+                        ax.set_xticklabels([])
+
+                        if col == 2:
+                            ax.legend(fontsize=self.axis_label_fontsize, title='H$_2$O (g/cm$^2$): 0.75')
+
+                if row == 1:  # h20
+                    ax.set_xlabel("Solar Zenith Angle (°)", fontsize=self.axis_label_fontsize)
+                    for _h2o, h2os in enumerate(sorted(list(df_select.h2o.unique()))):
+                        if h2os == 0:
+                            continue
+                        df_results = df_select.loc[(df_select['h2o'] == h2os) & (df_select['aod'] == 0.05)].copy()
+                        df_results = df_results.sort_values('solar_zenith')
+                        if col == 0:
+                            ax.set_ylabel('MAE', fontsize=self.axis_label_fontsize)
+                            plot_error = df_results.npv_mae
+                            plot_uncer = df_results['npv_sma-uncertainty']
+
+                            optimized_error = df_optimized['npv_mae']
+                            optimized_uncex = df_uncer_opt['npv_uncer']
+
+                        elif col == 1:
+                            plot_error = df_results.pv_mae
+                            plot_uncer = df_results['pv_sma-uncertainty']
+
+                            optimized_error = df_optimized['pv_mae']
+                            optimized_uncex = df_uncer_opt['pv_uncer']
+
+                        else:
+                            plot_error = df_results.soil_mae
+                            plot_uncer = df_results['soil_sma-uncertainty']
+
+                            optimized_error = df_optimized['soil_mae']
+                            optimized_uncex = df_uncer_opt['soil_uncer']
+
+                        ax.errorbar(df_results.solar_zenith, plot_error, yerr=plot_uncer / 25,
+                                    label=f'H$_2$O (g/cm$^2$): {h2os:.2f}', solid_capstyle='projecting', capsize=capsize[_aod])
+
+                        if h2os == 4:
+                            ax.errorbar(df_results.solar_zenith,
+                                        [optimized_error.values[0]] * df_results.solar_zenith.shape[0],
+                                        yerr=optimized_uncex / 25, solid_capstyle='projecting', capsize=2,
+                                        label='Optimized SMA')
+
+                    # add legend
+                    if col == 2:
+                        ax.legend(fontsize=self.axis_label_fontsize, title='AOD: 0.05')
+
+                if col != 0:
+                    ax.set_yticklabels([])
+
+        plt.savefig(os.path.join(self.fig_directory, "mesma_atmosphere_error_sun_angles.png"), bbox_inches="tight", dpi=400)
+
+
 
     def normalization_figure(self):
 
@@ -548,3 +682,4 @@ def run_figures(base_directory, sensor):
     fig_class.size_endmembers_figure()
     fig_class.uncertainty_figure()
     fig_class.atmosphere()
+    fig_class.atmosphere_mesma()
