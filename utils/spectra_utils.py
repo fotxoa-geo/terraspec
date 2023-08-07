@@ -10,6 +10,7 @@ from utils.envi import get_meta, save_envi
 from utils import asdreader
 from glob import glob
 import geopandas as gpd
+import matplotlib.pyplot as plt
 
 
 def get_dd_coords(coord):
@@ -312,13 +313,39 @@ class spectra:
 
         # fill spectral data
         for _row, row in enumerate(df_array):
-            spectra_grid[_row, :, :] = row
+            spectra_grid[_row, 0, :] = row
 
         # save the spectra
         print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
         meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=wvls,
                                 wvls=True)
         save_envi(output_raster, meta_spectra, spectra_grid)
+
+    @classmethod
+    def plot_asd_file(cls, asd_file, out_directory):
+        # Load asd data
+        data = asdreader.reader(asd_file)
+        asd_wl = data.wavelengths
+        try:
+            outfname = os.path.join(out_directory, os.path.basename(asd_file) + '.png')
+            if os.path.isfile(outfname):
+                pass
+
+            else:
+                asd_refl = data.reflectance
+
+                plt.plot(asd_wl, asd_refl, label=os.path.basename(asd_file))
+                plt.legend()
+                plt.ylabel("Reflectance (%)")
+                plt.xlabel("Wavelenghts (nm)")
+                plt.ylim([0, 1.1])
+
+                plt.savefig(outfname, bbox_inches='tight')
+                plt.clf()
+                plt.close()
+
+        except:
+            print(asd_file, out_directory)
 
 
 
