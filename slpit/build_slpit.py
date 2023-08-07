@@ -12,6 +12,7 @@ from utils.create_tree import create_directory
 from utils.spectra_utils import spectra
 from utils.envi import get_meta, save_envi
 from utils.text_guide import cursor_print, query_yes_no
+from utils.slpit_utils import slpit
 
 
 class build_libraries:
@@ -59,8 +60,7 @@ class build_libraries:
             date = i['sample_date']
             emit_date = i['overpass_date']
 
-            if os.path.isfile(os.path.join(self.output_transect_directory,
-                                           plot_name.replace(" ", "") + '-' + self.instrument + '.csv')):
+            if os.path.isfile(os.path.join(self.output_transect_directory, plot_name + '- transect-' + self.instrument + '.csv')):
                 continue
 
             img_data = requests.get(plot_pic_url).content
@@ -69,12 +69,10 @@ class build_libraries:
                 handler.write(img_data)
 
             # white ref table
-            df_white_ref = pd.json_normalize(i['white_ref'])
-            df_white_ref = df_white_ref.iloc[:, 14:]
+            df_white_ref = slpit.df_white_ref_table(record=i)
 
-            # em table
-            df_transect_em = pd.json_normalize(i['emit_transect_endmembers'])
-            df_transect_em = df_transect_em.iloc[:, 14:]
+            # # em table
+            df_transect_em = slpit.df_em_table(record=i)
 
             # get all asd files from folder
             all_asd_files = sorted(glob(os.path.join(plot_directory, '*.asd')))
@@ -170,7 +168,7 @@ class build_libraries:
 
                     # change in white ref
                     delta_white_ref = df_end_spectra - df_begin_spectra
-                    delta_time = np.array(df_end_time.total_seconds.values - df_begin_time.total_seconds.values).mean()
+                    delta_time = np.array(np.mean(df_end_time.total_seconds.values) - np.mean(df_begin_time.total_seconds.values))
                     slope = delta_white_ref / delta_time
 
                     # create an empty zero array to save reflectance
@@ -199,7 +197,8 @@ class build_libraries:
                     df_query = df_results[(df_results['file_num'] > line_num_max)].copy()
                     df_query['line_num'] = line_num
                     df_query = df_query.drop('white_ref', axis=1)
-                    df_query['date'] = date
+                    df_query.insert(0, "date", date)
+                    df_query['utc_time'] = df_query['utc_time'].dt.strftime('%H:%M:%S')
                     adjusted_dfs.append(df_query)
                     print("\t\t no white ref correction available on: ", plot_name, line_num)
 
@@ -210,14 +209,12 @@ class build_libraries:
             # convolve wavelengths to user specified instrument
             results_convolve = p_map(partial(spectra.convolve_asdfile,  wvl=self.wvls, fwhm=self.fwhm),
                                      df_corrected_all.file_name.values.tolist(),
-                                     **{
-                                         "desc": "\t\t\tconvulsing plot: " + plot_name + " ...",
-                                         "ncols": 150})
+                                     **{"desc": "\t\t\tconvulsing plot: " + plot_name + " ...", "ncols": 150})
 
             # save outputs as emit resolutions csv's
             df_convolve = pd.DataFrame(results_convolve)
             df_convolve.columns = list(self.wvls)
-            df_convolve = pd.concat([df_results.iloc[:, :9].reset_index(drop=True), df_convolve], axis=1)
+            df_convolve = pd.concat([df_corrected_all.iloc[:, :9].reset_index(drop=True), df_convolve], axis=1)
             df_convolve.to_csv(os.path.join(self.output_transect_directory, plot_name + '- transect-' + self.instrument + '.csv'), index=False)
 
             # save files as envi files
@@ -253,8 +250,7 @@ class build_libraries:
                 continue
 
             # em table
-            df_transect_em = pd.json_normalize(i['emit_transect_endmembers'])
-            df_transect_em = df_transect_em.iloc[:, 14:]
+            df_transect_em = slpit.df_em_table(record=i)
             df_transect_em = df_transect_em.loc[df_transect_em['em_condition'] != 'bad'].copy()
             df_transect_em = df_transect_em.loc[df_transect_em['endmembers'] != 'Flower'].copy()
 
@@ -358,9 +354,9 @@ class build_libraries:
 
         # merge all transect spectra - emit
         emit_transects = glob(os.path.join(self.output_transect_directory, "*transect-" + self.instrument + ".csv"))
-        df = pd.concat((pd.read_csv(f) for f in emit_transects), ignore_index=True)
-        df.to_csv(os.path.join(self.output_directory, "all-transect-emit.csv"), index=False)
-        spectra.df_to_envi(df=df, spectral_starting_column=9, wvls=self.wvls,
+        df_transect = pd.concat((pd.read_csv(f) for f in emit_transects), ignore_index=True)
+        df_transect.to_csv(os.path.join(self.output_directory, "all-transect-emit.csv"), index=False)
+        spectra.df_to_envi(df=df_transect, spectral_starting_column=9, wvls=self.wvls,
                            output_raster=os.path.join(self.output_directory, "all-transect-" + self.instrument + ".hdr"))
 
 
@@ -382,20 +378,28 @@ class build_libraries:
 
 
 def run_build_workflow(base_directory, sensor):
-    msg = f"Please move all ASD Files from the ASD Computer " \
+    msg = f"Please move all .asd Files from the ASD Computer " \
           f"to the following location: {os.path.join(base_directory, 'data')}\n" \
           f"Folder names should be based on the following naming convention:\n" \
           f"\tTeam_Plot-Number (e.g., Spectral - 001; Team = Spectral; Plot-Number: 001"
 
     cursor_print(msg)
-    user_input = query_yes_no('\nHave the ASD files been relocated?', default="yes")
+    user_input = query_yes_no('\nWould you like plots for all .asd files?', default="yes")
 
     if user_input:
+        transect_directories = sorted(glob(os.path.join(base_directory, 'data', 'spectral_transects', "*", ""), recursive=True))
+        create_directory(os.path.join(base_directory, 'figures', 'asd_file_plots'))
+        for directory in transect_directories:
+            asd_files = glob(os.path.join(directory, '*.asd'))
+            plot_name = os.path.basename(os.path.dirname(directory))
+            create_directory(os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name))
+            p_map(partial(spectra.plot_asd_file, out_directory=os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name)),
+                  asd_files,
+                  **{"desc": "\t\t plotting asd files: " + plot_name + "...", "ncols": 150})
 
+    else:
         lib = build_libraries(base_directory=base_directory, sensor=sensor)
-        #lib.build_emit_transects()
-        #lib.build_emit_endmembers()
+        lib.build_emit_transects()
+        lib.build_emit_endmembers()
         lib.build_em_collection()
         lib.build_gis_data()
-    else:
-        raise RuntimeError("ASD files have not been moved. Please move ASD files and re-run algorithm.")
