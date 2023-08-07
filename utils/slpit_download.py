@@ -1,5 +1,7 @@
 import os
 import datetime
+import time
+
 from zerionPy import IFB
 import pickle
 import earthaccess
@@ -45,7 +47,7 @@ def load_pickle(filename):
 
 
 def download_emit(base_directory):
-    auth = earthaccess.login(strategy="interactive", persist=True)
+    auth = earthaccess.login(strategy="interactive")
 
     create_directory(os.path.join(base_directory, 'gis', 'emit-data'))
     create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'nc_files'))
@@ -64,12 +66,11 @@ def download_emit(base_directory):
         results = earthaccess.search_data(short_name="EMITL2ARFL", version="001", cloud_hosted=True,
                                               bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
                                               temporal=("2022-08", today), count=-1)
-
         files = earthaccess.download(results, os.path.join(base_directory, 'gis', 'emit-data', 'nc_files'))
 
 
 def run_download_scripts(base_directory):
-    #download_emit(base_directory=base_directory)
+    download_emit(base_directory=base_directory)
     emit_slpit_recrods = get_iform_records(server_name=server_name, client_key=ck, secret_key=sk, profile_id=profile_id,
                                            page_id=emit_transects_page_id)
     save_pickle(emit_slpit_recrods, 'emit_slpit')
