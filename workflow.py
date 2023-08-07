@@ -10,7 +10,7 @@ from tetracorder.tetracorder_workflow import run_tetracorder_workflow
 
 def main():
     parser = argparse.ArgumentParser(description='Run Terraspec')
-    parser.add_argument('-bd', '--base_root_directory', type=str, help='Specify project directory (e.g., where outputs will save')
+    parser.add_argument('-bd', '--base_root_directory', type=str, default='~', help='Specify project directory (e.g., where outputs will save')
     parser.add_argument("-mode", type=str, help="set the run mode", default="convolve",
                         choices=['simulation', 'slpit', 'tetracorder'])
     parser.add_argument('-dry', '--dry_run', type=bool, help=' Set the dry run parameter to True to print unmix call',

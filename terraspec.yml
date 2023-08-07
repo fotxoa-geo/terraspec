@@ -13,5 +13,5 @@ dependencies:
       - matplotlib
       - zerionPy
       - earthaccess
-      - tensorflow=2.8.0
+      - tensorflow==2.8.0
 

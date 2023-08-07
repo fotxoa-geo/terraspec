@@ -19,7 +19,7 @@ if "win" not in platform:
     os.environ['PATH'] = path
 
 level_arg = 'level_1'
-n_cores = '40'
+n_cores = '12'
 
 
 def build_surface(wavelength_file: str):
@@ -91,8 +91,8 @@ def hypertrace_workflow(dry_run: bool, clean: bool, configfile: str):
 
         job_name = "py-hyper:time:" + str(argd["localtime"]) + '-aod:' + str(argd["atm_aod_h2o"][1]) + '-h2o' + str(argd["atm_aod_h2o"][2])
 
-        #execute_call(['sbatch', '-N', '1', '-c', n_cores, '--mem', '180G', '--job-name', job_name, '--wrap', f'python {base_call}'], dry_run)
-        subprocess.call([f'srun -N 1 -c 40 --mem 180G --pty  python {base_call}'], shell=True)  # this works
+        execute_call(['sbatch', '-A', 'geog', '--partition', 'normal', '-N', '1', '-c', '40', '--mem', '80G', '--job-name', job_name, '--wrap', f'python {base_call}'], dry_run)
+        #subprocess.call([f'srun -N 1 -c 40 --mem 180G --pty  python {base_call}'], shell=True)  # this works
     logging.info("Workflow completed successfully.")
 
 

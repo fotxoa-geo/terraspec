@@ -118,5 +118,5 @@ class latex:
 def run_latex_tables(base_directory: str):
     latex_class = latex(base_directory=base_directory)
     latex_class.optimal_parameters(mode='sma-best')
-    #latex_class.atmosphere_table()
+    latex_class.atmosphere_table()
     latex_class.summary_table()

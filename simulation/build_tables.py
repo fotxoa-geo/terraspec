@@ -65,7 +65,10 @@ class tables:
         for file in fraction_files:
             basename = os.path.basename(file)
             truth_array, estimated_array = load_data(true_file, file)
-
+            
+            # get mode 
+            mode = basename.split("_")[0]
+            
             # get hypertrace run parameters
             atmosphere = basename.split("_")[1][4:]
             altitude = basename.split("_")[2].replace("-", ".")
@@ -121,12 +124,12 @@ class tables:
                 errors.append([rmse, mae, sma_un])
 
             error_flat = [item for sublist in errors for item in sublist]
-            row = [str(atmosphere), float(altitude), float(doy), float(long), float(lat), float(azimuth),
+            row = [mode, str(atmosphere), float(altitude), float(doy), float(long), float(lat), float(azimuth),
                    float(sensor_zenith), float(time_str), float(elev), float(aod), float(h2o),
                    float(sza)] + error_flat
             df_rows.append(row)
 
-        col_names = ['atmosphere', 'altitude', 'doy', 'long', 'lat', 'azimuth', 'sensor_zenith',
+        col_names = ['mode','atmosphere', 'altitude', 'doy', 'long', 'lat', 'azimuth', 'sensor_zenith',
                      'time', 'elev', 'aod', 'h2o', "solar_zenith",
                      'npv_rmse', 'npv_mae', 'npv_sma-uncertainty',
                      'pv_rmse', 'pv_mae', 'pv_sma-uncertainty',
