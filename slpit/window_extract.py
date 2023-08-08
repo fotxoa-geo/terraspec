@@ -1,4 +1,6 @@
 import argparse
+import os
+print(os.getcwd())
 from osgeo import gdal
 import math
 from utils.envi import get_meta, save_envi

@@ -82,7 +82,7 @@ class emit:
         reflectance_files = glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_reflectance'))
 
         for reflectance_file in reflectance_files:
-            base_call = f'python /slpit/window_extract.py -rfl_img {reflectance_file} -w_size {window_size} ' \
+            base_call = f'python ./slpit/window_extract.py -rfl_img {reflectance_file} -w_size {window_size} ' \
                         f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis_directory, "emit-data-clip")} '
 
             # make call to clipping file using os run
@@ -92,7 +92,7 @@ class emit:
         reflectance_uncer_files = glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_reflectance_uncertainty'))
 
         for reflectance_uncer_file in reflectance_uncer_files:
-            base_call = f'python /slpit/window_extract.py -rfl_img {reflectance_uncer_file} -w_size {window_size} ' \
+            base_call = f'python ./slpit/window_extract.py -rfl_img {reflectance_uncer_file} -w_size {window_size} ' \
                         f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis_directory, "emit-data-clip")} '
 
             # make call to clipping file using os run
