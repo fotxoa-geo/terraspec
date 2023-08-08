@@ -70,7 +70,7 @@ def main():
                 window[window == -0.1] = -9999.0
                 meta = get_meta(lines=window.shape[0], samples=window.shape[1], bands=wvls, wvls=True)
                 output_name = os.path.join(args.output_directory, plot.replace(" ", "") + '_' + acquisition_type + '_' + date_acquisition + ".hdr")
-                save_envi(output_name, meta, window.transpose((1,2,0)), ds, ul=[ox + (col - args.padding) * pw, oy + (row - args.padding) * ph])
+                save_envi(output_name, meta, window.transpose((1,2,0)), ds, ul=[ox + (pixel_x - args.padding) * pw, oy + (pixel_y - args.padding) * ph])
 
                 print(plot, 'successfully saved ', output_name)
 
