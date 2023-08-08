@@ -8,6 +8,11 @@ from p_tqdm import p_map
 from functools import partial
 import subprocess
 
+# path fix for linux
+path = os.environ['PATH']
+path = path.replace('\Library\\bin;', ':')
+os.environ['PATH'] = path
+
 class emit:
     def __init__(self, base_directory: str):
         self.base_directory = base_directory
@@ -25,11 +30,6 @@ class emit:
         self.gis_directory = os.path.join(base_directory, 'gis')
 
     def nc_to_envi(self):
-        # path fix for linux
-        path = os.environ['PATH']
-        path = path.replace('\Library\\bin;', ':')
-        os.environ['PATH'] = path
-
         msg = f"\nTerraSpec has created the following directory: {os.path.join(self.base_directory, 'gis', 'emit-data', 'envi')}\n" \
               f"ENVI files along with corresponding HDR files will be stored here."
         cursor_print(msg)
