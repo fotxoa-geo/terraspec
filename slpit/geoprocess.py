@@ -73,36 +73,35 @@ class emit:
                     break
             else:
                 sys.stdout.write(
-                    f"Please move envi files to: {os.path.join(self.base_directory, 'gis', 'emit-data')}\n")
+                    f"Please move envi files to: {os.path.join(self.gis_directory, 'emit-data')}\n")
 
     def clip_emit(self, window_size: int, pad: int, dry_run: bool):
-        msg = f"\nTerraSpec has created the following directory: {os.path.join(self.base_directory, 'gis', 'emit-data-clip')}\n"\
+        msg = f"\nTerraSpec has created the following directory: {os.path.join(self.gis_directory, 'emit-data-clip')}\n"\
               f"ENVI files clipped to plot extents along with corresponding HDR files will be stored here."
         cursor_print(msg)
 
         # get plot center points from ipad - these are the plot centers
         shapefile = os.path.join(self.gis_directory, "Observation.shp")
 
-        df = pd.DataFrame(gp.read_file(shapefile))
+        # get emit reflectance files
+        reflectance_files = glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_reflectance'))
 
-        # submit clip command for each center point
-        for index, row in df.iterrows():
-            plot = row['Name'].replace(" ", "")
-            lon = row['geometry'].x
-            lat = row['geometry'].y
-            emit_overpass_date = datetime.strptime(row['EMIT Overp'], "%b %d, %Y at %H:%M:%S %p").strftime('%Y%m%d')
+        for reflectance_file in reflectance_files:
+            base_call = f'python ./slpit/window_extract.py -rfl_img {reflectance_file} -w_size {window_size} ' \
+                        f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis, "emit-data-clip")} '
 
-            # get emit image using the overpass date
-            reflectance_files = glob(
-                os.path.join(self.gis_directory, 'emit-data', 'envi', '*' + emit_overpass_date + '*_reflectance'))
-            out_name = os.path.join(self.base_directory, 'gis', 'emit-data-clip',
-                                    plot + "_" + emit_overpass_date + ".hdr")
-            for reflectance_file in reflectance_files:
-                base_call = f'python ./slpit/window_extract.py -rfl_img {reflectance_file} -w_size {window_size} ' \
-                            f'-pad {pad} -lon {lon} -lat {lat} -out_name {out_name} '
+            # make call to clipping file using os run
+            execute_call(['sbatch', '-N', "1", '-c', '40', '--mem', "180G", '--wrap', f'{base_call}'], dry_run)
 
-                # make call to clipping file using os run
-                execute_call(['sbatch', '-N', "1", '-c', '40', '--mem', "180G", '--wrap', f'{base_call}'], dry_run)
+        # get emit reflectance uncertainties
+        reflectance_uncer_files = glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_reflectance_uncertainty'))
+
+        for reflectance_uncer_file in reflectance_uncer_files:
+            base_call = f'python ./slpit/window_extract.py -rfl_img {reflectance_uncer_file} -w_size {window_size} ' \
+                        f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis, "emit-data-clip")} '
+
+            # make call to clipping file using os run
+            execute_call(['sbatch', '-N', "1", '-c', '40', '--mem', "180G", '--wrap', f'{base_call}'], dry_run)
 
 
 def run_geoprocess_utils(base_directory, nc_to_envi:bool):
