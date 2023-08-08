@@ -1,8 +1,9 @@
-import os
 import argparse
 from osgeo import gdal
 import math
-from utils.spectra_utils import get_meta, save_envi, spectra
+from utils.envi import get_meta, save_envi
+from utils.spectra_utils import spectra
+import os
 from spectral.io import envi
 import pandas as pd
 import geopandas as gp
