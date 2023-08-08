@@ -7,6 +7,7 @@ from glob import glob
 from p_tqdm import p_map
 from functools import partial
 import subprocess
+import time
 
 # path fix for linux
 #path = os.environ['PATH']
@@ -85,8 +86,9 @@ class emit:
         reflectance_uncertainty_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_reflectance_uncertainty')))
 
         # get mask files
-        mask_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_mask[!_band_mask]')))
-
+        mask_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_mask')))
+        mask_files = [file for file in mask_files if '_band_mask' not in file]
+        
         current_dir = os.path.dirname(os.path.abspath(__file__))
         window_extract_path = os.path.join(current_dir, 'window_extract.py')
 

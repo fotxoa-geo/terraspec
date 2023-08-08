@@ -61,9 +61,9 @@ def main():
             # get pixel value and its neighboors
             window = ds.ReadAsArray(pixel_x, pixel_y, args.padding *2 +1, args.padding *2 +1)#.transpose((1,2,0))
 
-            if np.any(window == 0):
+            if np.any(window == 0) and acquisition_type != 'MASK':
                 print(plot, " has at least one pixel of fill values")
-            elif np.all(window == 0):
+            elif np.all(window == 0) and acquisition_type != 'MASK':
                 print(plot, " has all fill values")
             else:
                 # make array an envi array for unmixing
