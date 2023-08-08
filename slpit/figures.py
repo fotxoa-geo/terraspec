@@ -88,7 +88,7 @@ class figures:
                 if ax == ax3:
 
                     # plot average of all EMIT files across time
-                    reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data-clip', '*'+ plot.replace("Spectral", "SPEC").replace(" ", "") + '*[!.xml][!.csv][!.hdr]')))
+                    reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data-clip', '*'+ plot.replace("Spectral", "SPEC").replace(" ", "") + '_RFL' + '*[!.xml][!.csv][!.hdr]')))
 
                     # plot average of SLPIT
                     refl_file_asd = glob(os.path.join(self.output_directory, 'spectral_transects', 'transect',
@@ -104,18 +104,20 @@ class figures:
 
                     ax.set_title(f'Field Sample Date: {slpit_date}')
                     for i in reflectance_files:
-                        acquisition_date = os.path.basename(i).split("_")[2][:8]
+                        acquisition_date = os.path.basename(i).split("_")[2]
 
                         df_refl = gdal.Open(i, gdal.GA_ReadOnly)
                         refl_array = df_refl.ReadAsArray().transpose((1, 2, 0))
                         y_hat = np.mean(refl_array, axis=(0, 1))
                         mae = mean_absolute_error(y[self.good_emit_bands], y_hat[self.good_emit_bands])
-                        if mae <= 0.05:
-                            acquisition_datetime = datetime.strptime(acquisition_date, "%Y%m%d")
+
+                        if mae <= 0.10:
+                            acquisition_datetime = datetime.strptime(acquisition_date, "%Y%m%dT%H%M%S")
+                            formatted_datetime = acquisition_datetime.strftime("%Y-%m-%d %I:%M %p")
                             delta = slpit_datetime - acquisition_datetime
                             days = np.absolute(delta.days)
                             if days <= 50:
-                                ax.plot(self.wvls, np.mean(refl_array, axis=(0, 1)), label=f'{acquisition_date} (± {days})  MAE: {mae:.2f}', linewidth=0.75)
+                                ax.plot(self.wvls, np.mean(refl_array, axis=(0, 1)), label=f'{formatted_datetime} (± {days})  MAE: {mae:.2f}', linewidth=0.75)
                         else:
                             pass
 
