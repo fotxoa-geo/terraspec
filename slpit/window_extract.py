@@ -3,52 +3,19 @@ import os
 from osgeo import gdal
 import math
 import sys
-sys.path.append('~/EMIT/terraspec/')
+import numpy as np 
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+utils_path = os.path.join(current_dir, '..')
+sys.path.append(utils_path)
+
+
 from utils.envi import get_meta, save_envi
 from utils.spectra_utils import spectra
 import os
 from spectral.io import envi
 import pandas as pd
 import geopandas as gp
-
-def get_index(x: float, y: float, ox: float, oy: float, pw: float, ph: float) -> tuple:
-    """
-    Gets the row (i) and column (j) indices in an NumPy 2D array for a given
-    pair of coordinates.
-
-    Parameters
-    ----------
-    x : float
-        x (longitude) coordinate
-    y : float
-        y (latitude) coordinate
-    ox : float
-        Raster x origin (minimum x coordinate)
-    oy : float
-        Raster y origin (maximum y coordinate)
-    pw : float
-        Raster pixel width
-    ph : float
-        Raster pixel height
-
-    Returns
-    -------
-    Two-element tuple with the column and row indices.
-
-    Notes
-    -----
-    This function is based on: https://gis.stackexchange.com/a/92015/86131.
-
-    Both x and y coordinates must be within the raster boundaries. Otherwise,
-    the index will not correspond to the actual values or will be out of
-    bounds.
-    """
-    # make sure pixel height is positive
-
-    i = int(math.floor((y - oy) / ph))
-    j = int(math.floor((x - ox) / pw))
-
-    return i, j
 
 
 def main():
@@ -65,13 +32,13 @@ def main():
     ds = gdal.Open(args.reflectance_image, gdal.GA_ReadOnly)
     ox, pw, xskew, oy, yskew, ph = ds.GetGeoTransform()
     nd_value = ds.GetRasterBand(1).GetNoDataValue()
-    arr = envi.open(args.rfl_img + '.hdr').open_memmap(interlave='bip')
 
     # get wavelengths
     wvls, fwhm = spectra.load_wavelengths(sensor=args.sensor)
 
     # load shapefile
     df = pd.DataFrame(gp.read_file(args.shapefile))
+    df = df.sort_values('Name')
 
     # get image date
     date_acquisition = os.path.basename(args.reflectance_image).split("_")[4]
@@ -85,34 +52,30 @@ def main():
         lon = row['geometry'].x
         lat = row['geometry'].y
 
-        # check if lon lat is within image
+        # check if lon lat is within image with index
         pixel_x = int((lon - ox) / pw)
         pixel_y = int((lat - oy) / ph)
 
         if 0 <= pixel_x < image_width and 0 <= pixel_y < image_height:
-            # get index
-            row, col = get_index(lon, lat, ox, oy, pw, ph)
 
             # get pixel value and its neighboors
-            window = ds.ReadAsArray(row - args.padding, col - args.padding, args.padding *2 +1, args.padding *2 +1)
-            window[window == -0.1] = -9999.0
+            window = ds.ReadAsArray(pixel_x, pixel_y, args.padding *2 +1, args.padding *2 +1)#.transpose((1,2,0))
 
-            if window.size == 0:
-                print('empty array')
-                print(args.output_name)
-            elif window[0, 0, 0] == 0:
-                print("no data values?")
-                print(args.output_name)
+            if np.any(window == 0):
+                print(plot, " has at least one pixel of fill values")
+            elif np.all(window == 0):
+                print(plot, " has all fill values")
             else:
                 # make array an envi array for unmixing
+                window[window == -0.1] = -9999.0
                 meta = get_meta(lines=window.shape[0], samples=window.shape[1], bands=wvls, wvls=True)
-                output_name = os.path.join(args.output_directory, plot + '_' + acquisition_type + '_' + date_acquisition + ".hdr")
-                save_envi(output_name, meta, window, ds, ul=[ox + (col - args.padding) * pw, oy + (row - args.padding) * ph])
+                output_name = os.path.join(args.output_directory, plot.replace(" ", "") + '_' + acquisition_type + '_' + date_acquisition + ".hdr")
+                save_envi(output_name, meta, window.transpose((1,2,0)), ds, ul=[ox + (col - args.padding) * pw, oy + (row - args.padding) * ph])
 
-                print('successfully saved ', output_name)
+                print(plot, 'successfully saved ', output_name)
 
         else:
-            print('plot is not within image')
+            print(plot, ' is not within image', os.path.basename(args.reflectance_image))
 
 
 if __name__ == '__main__':

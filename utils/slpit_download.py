@@ -1,7 +1,7 @@
 import os
 import datetime
 import time
-
+from dateutil.relativedelta import relativedelta
 from zerionPy import IFB
 import pickle
 import earthaccess
@@ -55,9 +55,15 @@ def download_emit(base_directory):
     # get plot center points from ipad
     shapefile = os.path.join(base_directory, 'gis', "Observation.shp")
     today = datetime.datetime.today().strftime('%Y-%m')
+    today_date = datetime.datetime.strptime(today, '%Y-%m')
+    next_month_date = today_date + relativedelta(months=1)
+    next_month_str = next_month_date.strftime('%Y-%m')
 
     df = pd.DataFrame(gp.read_file(shapefile))
+    df = df.sort_values('Name')
+
     for index, row in df.iterrows():
+        plot = row['Name']
         lon = row['geometry'].x
         lat = row['geometry'].y
 
@@ -65,7 +71,10 @@ def download_emit(base_directory):
 
         results = earthaccess.search_data(short_name="EMITL2ARFL", version="001", cloud_hosted=True,
                                               bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
-                                              temporal=("2022-08", today), count=-1)
+                                              temporal=("2022-08", next_month_str), count=-1)
+        
+        if plot == 'SPEC - 028':
+            print(results)
         files = earthaccess.download(results, os.path.join(base_directory, 'gis', 'emit-data', 'nc_files'))
 
 
