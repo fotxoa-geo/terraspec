@@ -1,8 +1,9 @@
 import argparse
 import os
-print(os.getcwd())
 from osgeo import gdal
 import math
+import sys
+sys.path.append('~/EMIT/terraspec/')
 from utils.envi import get_meta, save_envi
 from utils.spectra_utils import spectra
 import os
