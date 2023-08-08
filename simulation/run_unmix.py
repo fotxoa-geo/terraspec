@@ -29,10 +29,11 @@ def create_uncertainty(uncertainty_file: str, wvls):
         save_envi(output_file=output, meta=uncertainty_meta, grid=uncertainty_array)
 
 
-def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list, output_dest:str):
+def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list, output_dest:str, scale:str,
+               uncertainty_file=None):
     
     base_call = f'julia -p {n_cores} ~/EMIT/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
-                f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column 8 --refl_scale 1 ' \
+                f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column 8 --refl_scale {scale} ' \
                 f'{" ".join(parameters)} '
 
     #execute_call(['sbatch', '-N', "1", '-c', n_cores,'--mem', "80G", '--wrap', f'{base_call}'], dry_run)
@@ -106,6 +107,9 @@ class runs:
         self.optimal_parameters_sma = ['--num_endmembers 30', '--n_mc 25', '--normalization brightness']
         self.optimal_parameters_mesma = ['--max_combinations 100', '--n_mc 25', '--normalization brightness']
 
+        # set scale to 1 reflectance
+        self.scale = '1'
+
     def geographic_sma(self, mode:str):
         print("commencing geographic spectral unmixing...")
 
@@ -126,7 +130,7 @@ class runs:
             em_file = os.path.join(self.em_libraries_output, "_".join(basename.split("__")[0:1]) + '__n_dims_4_unmix_library.csv')
 
             call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=em_file,
-                       parameters=self.optimal_parameters, output_dest=output_dest)
+                       parameters=self.optimal_parameters, output_dest=output_dest, scale=self.scale)
 
 
     def latin_hypercubes(self, mode:str):
@@ -159,7 +163,7 @@ class runs:
                                             "--", "_").replace(" ", "_").replace("__", "_")
 
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=df,
-                           parameters=simulation_parameters, output_dest=output_dest)
+                           parameters=simulation_parameters, output_dest=output_dest, scale=self.scale)
 
         
 
@@ -189,7 +193,7 @@ class runs:
                                             "--", "_").replace(" ", "_").replace("__", "_")
 
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=df,
-                        parameters=simulation_parameters, output_dest=output_dest)
+                        parameters=simulation_parameters, output_dest=output_dest, scale=self.scale)
                 
 
 

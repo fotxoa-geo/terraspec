@@ -1,121 +1,100 @@
 import os
 import subprocess
-import time
 from itertools import product
-from sys import platform
-from figures import load_wavelengths
 import pandas as pd
-from convolve import create_directory
-import logging
 from glob import glob
+from simulation.run_unmix import call_unmix
+from utils.create_tree import create_directory
+from utils.text_guide import cursor_print
+from utils.spectra_utils import spectra
+import geopandas as gp
+from datetime import datetime
 
-
-level_arg = 'level_1'
-n_cores = '40'
-
-def execute_call(cmd_list, dry_run=False):
-    if dry_run:
-        print(cmd_list)
-    else:
-        subprocess.call(cmd_list)
-
-
-def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list, output_dest: str):
-    base_call = f'julia -p {n_cores} ~/EMIT/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
-                f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column 8 --refl_scale 1 ' \
-                f'{" ".join(parameters)} '
-
-    # execute_call(['sbatch', '-N', "1", '-c', n_cores,'--mem', "80G", '--wrap', f'{base_call}'], dry_run)
-    sbatch_cmd = f"sbatch -N 1 -c {n_cores} --mem 80G --wrap='{base_call}'"
-    subprocess.check_output(sbatch_cmd, shell=True, text=True)
-
-
-class unmix:
-    def __init__(self, base_directory: str, normalization=[], num_em =[], mc_runs=[], num_cmb=[], wavelength_file='',
-                 dry_run = False):
+class unmix_runs:
+    def __init__(self, base_directory: str,  dry_run=False):
 
         self.base_directory = base_directory
-        self.output_directory = os.path.join(base_directory, 'spectral-surveying', 'output')
+        self.output_directory = os.path.join(base_directory, 'output')
         self.spectral_transect_directory = os.path.join(self.output_directory, 'spectral_transects', 'transect')
         self.spectral_em_directory = os.path.join(self.output_directory, 'spectral_transects', 'endmembers')
-        self.gis_directory = os.path.join(base_directory, 'spectral-surveying', 'gis')
+        self.gis_directory = os.path.join(base_directory, 'gis')
 
-        # load model parameters
-        self.normalization = normalization
-        self.num_em = num_em
-        self.mc_runs = mc_runs
-        self.num_cmb = num_cmb
+        # simulation parameters for spatial and hypertrace unmix
+        self.optimal_parameters_sma = ['--num_endmembers 20', '--n_mc 25', '--normalization brightness']
+        self.optimal_parameters_mesma = ['--max_combinations 100', '--n_mc 25', '--normalization brightness']
 
         # load wavelengths
-        self.wvls, self.fwhm = load_wavelengths(wavelength_file)
+        self.wvls, self.fwhm = spectra.load_wavelengths(sensor='emit')
 
         # load dry run parameter
         self.dry_run = dry_run
 
-    def sma(self, mode='sma-best'):
+        # set scale to 1 reflectance
+        self.scale = '0.5'
+
+        # emit global library
+        terraspec_base = os.path.join(base_directory, "..")
+        em_sim_directory = os.path.join(terraspec_base, 'simulation', 'output', 'endmember_libraries')
+        self.emit_global = os.path.join(em_sim_directory, 'convex_hull__n_dims_4_unmix_library.csv')
+
+
+    def unmix_calls(self, mode:str):
         # Start unmixing process
-        print("commencing... spectral unmixing")
+        cursor_print(f"commencing... {mode}")
 
-        # get plot reflectances
-        reflectance_files = sorted(glob(os.path.join(self.spectral_transect_directory, '*reflectance-emit_date*[!.hdr]')))
+        # load shapefile
+        df = pd.DataFrame(gp.read_file(os.path.join(self.gis_directory, "Observation.shp")))
+        df = df.sort_values('Name')
 
-         # loop counter
-        count = 0
-        meta_rows = []
-        for reflectance_file in reflectance_files:
-            # site info
-            plot_num = '-'.join(os.path.basename(reflectance_file).split("-")[:2])
+        # create directory
+        create_directory(os.path.join(self.output_directory, mode))
 
-            # unmix parameters ; every possible combination
-            sma_options = product(self.normalization, self.num_em, self.mc_runs)
-            all_sma_runs = [[e for e in result if e is not None] for result in sma_options]
+        for index, row in df.iterrows():
+            plot = row['Name']
 
-            # em transect file
-            em_file = os.path.join(self.spectral_em_directory, plot_num + '-emit.csv')
+            image_acquisition_time_ipad = row['EMIT Overp']
+            input_datetime = datetime.strptime(image_acquisition_time_ipad, "%b %d, %Y at %I:%M:%S %p")
+            emit_filetime = input_datetime.strftime("%Y%m%dT%H%M")
 
-            # get cropped emit reflectance file
-            emit_refl_file = glob(os.path.join(self.gis_directory, 'emit-data-clip', 'SPEC-' + plot_num.split("-")[1] + "_*[!.hdr!.aux.xml]"))
-            if os.path.isfile(em_file):
-                df_em = pd.read_csv(em_file)
-                total_number_of_ems = len(df_em.index)
+            reflectance_img_emit = glob(os.path.join(self.gis_directory, 'emit-data-clip', f'*{plot.replace(" ", "")}_RFL_{emit_filetime}*[!.xml][!.hdr]'))
+            reflectance_uncer_img_emit = glob(os.path.join(self.gis_directory, 'emit-data-clip',f'*{plot.replace(" ", "")}_RFLUNCERT_{emit_filetime}*[!.xml][!.hdr]'))
+            em_local = os.path.join(self.spectral_em_directory, plot.replace("SPEC", 'Spectral').replace(" ", "") + '-emit.csv')
+            asd_reflectance = glob(os.path.join(self.spectral_transect_directory, f'*{plot.replace("SPEC", "Spectral").replace(" ", "")}*[!.xml][!.hdr]'))
 
-                for simulation_parameters in all_sma_runs:
+            if os.path.isfile(em_local):
+                if mode == 'mesma':
+                    simulation_parameters = self.optimal_parameters_mesma
+                else:
+                    simulation_parameters = self.optimal_parameters_sma
 
-                    # get information about run for metadata
-                    split_run_params = ' '.join(simulation_parameters).replace('--', '').split(" ")
+                output_dest = os.path.join(self.output_directory, mode)
 
-                    if 'num_endmembers' in split_run_params:
-                        number_em_sim = split_run_params[split_run_params.index('num_endmembers') + 1]
+                # unmix asd with local library
+                call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=em_local,
+                           parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'asd-local_' + plot.replace(" ", "")),
+                           scale=self.scale)
 
-                    if 'normalization' in split_run_params:
-                        brightness = split_run_params[split_run_params.index('normalization') + 1]
+                # unmix asd with global library
+                call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=self.emit_global,
+                           parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'asd-local_' + plot.replace(" ", "")),
+                           scale=self.scale)
 
-                    if 'n_mc' in split_run_params:
-                        n_mc = split_run_params[split_run_params.index('n_mc') + 1]
+                # emit pixels unmixed with local em
+                call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=em_local,
+                           parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'emit-local_' + plot.replace(" ", "")),
+                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0])
 
-                    # check for number of ems; if number is smaller unmix with global library
-                    #if total_number_of_ems < int(number_em_sim):
-                    #    em_file = self.em_file_emit
-
-                    # asd unmixing
-                    count += 1
-                    call_unmix(base_directory=self.output_directory, mode=mode, dry_run=self.dry_run,
-                               reflectance_file=reflectance_file, em_file=em_file,
-                               parameters=simulation_parameters, output_name='asd-' + plot_num)
-
-                    # # spaceborne unmixing
-                    count += 1
-                    call_unmix(base_directory=self.output_directory, mode=mode, dry_run=self.dry_run,
-                        reflectance_file=emit_refl_file[0], em_file=em_file, parameters=simulation_parameters, output_name='emit-' + plot_num)
-
-                    meta_rows.append(['ground-' + plot_num, em_file, brightness, int(number_em_sim), int(n_mc)])
-                    meta_rows.append(['emit-' + plot_num, em_file, brightness, int(number_em_sim), int(n_mc)])
+                # emit pixels unmixed with global
+                call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=self.emit_global,
+                           parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'emit-local_' + plot.replace(" ", "")),
+                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0])
 
             else:
-                print(em_file + " does not exist!")
-                raise FileNotFoundError
+                print(em_local, " does not exist.")
 
-        df_meta = pd.DataFrame(meta_rows)
-        df_meta.columns = ['output_name', 'em_file', 'brightness', 'num_em', 'n_mc']
-        df_meta.to_csv(os.path.join(self.output_directory, 'unmix-metadata.csv'), index=False)
-        print('total simulations: ', count)
+
+
+def run_slipt_unmix(base_directory, dry_run):
+    all_runs = unmix_runs(base_directory, dry_run)
+    all_runs.unmix_calls(mode='sma-best')
+    all_runs.unmix_calls(mode='mesma')
