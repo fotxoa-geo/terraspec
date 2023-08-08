@@ -1,4 +1,3 @@
-
 from utils.create_tree import create_directory
 from utils.text_guide import cursor_print, query_yes_no, input_date, execute_call
 from utils.envi import envi_tiff_rgb
@@ -8,15 +7,6 @@ from glob import glob
 from p_tqdm import p_map
 from functools import partial
 import subprocess
-import pandas as pd
-import geopandas as gp
-from datetime import datetime
-
-# path fix for linux
-path = os.environ['PATH']
-path = path.replace('\Library\\bin;', ':')
-os.environ['PATH'] = path
-
 
 class emit:
     def __init__(self, base_directory: str):
@@ -35,6 +25,11 @@ class emit:
         self.gis_directory = os.path.join(base_directory, 'gis')
 
     def nc_to_envi(self):
+        # path fix for linux
+        path = os.environ['PATH']
+        path = path.replace('\Library\\bin;', ':')
+        os.environ['PATH'] = path
+
         msg = f"\nTerraSpec has created the following directory: {os.path.join(self.base_directory, 'gis', 'emit-data', 'envi')}\n" \
               f"ENVI files along with corresponding HDR files will be stored here."
         cursor_print(msg)
