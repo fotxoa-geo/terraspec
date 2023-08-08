@@ -81,15 +81,24 @@ class emit:
         # get emit reflectance files
         reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_reflectance')))
 
+        # get emit uncertainty files
+        reflectance_uncertainty_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_reflectance_uncertainty')))
+
+        # get mask files
+        mask_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_mask[!_band_mask]')))
+
         current_dir = os.path.dirname(os.path.abspath(__file__))
         window_extract_path = os.path.join(current_dir, 'window_extract.py')
 
-        for reflectance_file in reflectance_files:
-            acquisition_date = os.path.basename(reflectance_file).split("_")[4]
-            base_call = f'python {window_extract_path} -rfl_img {reflectance_file} -w_size {window_size} ' \
+        all_files = reflectance_files + reflectance_uncertainty_files + mask_files
+
+        for file in all_files:
+            acquisition_date = os.path.basename(file).split("_")[4]
+            acquisition_type = os.path.basename(file).split("_")[2]
+            base_call = f'python {window_extract_path} -rfl_img {file} -w_size {window_size} ' \
                         f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis_directory, "emit-data-clip")} '
 
-            sbatch_cmd = f"sbatch -N 1 -c 40 --mem 80G --output {acquisition_date+'.out'} --wrap='{base_call}'"
+            sbatch_cmd = f"sbatch -N 1 -c 40 --mem 80G --output {acquisition_date + '_' + acquisition_type + '.out'} --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
 

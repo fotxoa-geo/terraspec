@@ -14,7 +14,7 @@ import matplotlib.image as mpimg
 from pypdf import PdfMerger
 from utils.create_tree import create_directory
 from utils.spectra_utils import spectra
-
+from datetime import datetime
 
 class figures:
     def __init__(self, base_directory: str):
@@ -97,18 +97,33 @@ class figures:
                     refl_array_asd = df_refl_asd.ReadAsArray().transpose((1, 2, 0))
                     y = np.mean(refl_array_asd, axis=0).ravel()
 
+                    # get date from slpit
+                    df_transect = transect_data.loc[transect_data['plot_name'] == plot].copy()
+                    slpit_date = df_transect['date'].unique()[0]
+                    slpit_datetime = datetime.strptime(df_transect['date'].unique()[0], "%Y-%m-%d")
+
+                    ax.set_title(f'Field Sample Date: {slpit_date}')
                     for i in reflectance_files:
-                        acquisition_date = os.path.basename(i).split("_")[2]
+                        acquisition_date = os.path.basename(i).split("_")[2][:8]
+
                         df_refl = gdal.Open(i, gdal.GA_ReadOnly)
                         refl_array = df_refl.ReadAsArray().transpose((1, 2, 0))
                         y_hat = np.mean(refl_array, axis=(0, 1))
                         mae = mean_absolute_error(y[self.good_emit_bands], y_hat[self.good_emit_bands])
-                        ax.plot(self.wvls, np.mean(refl_array, axis=(0, 1)), label=acquisition_date + f" MAE: {mae:.2f}", linewidth=0.75)
+                        if mae <= 0.05:
+                            acquisition_datetime = datetime.strptime(acquisition_date, "%Y%m%d")
+                            delta = slpit_datetime - acquisition_datetime
+                            days = np.absolute(delta.days)
+                            if days <= 50:
+                                ax.plot(self.wvls, np.mean(refl_array, axis=(0, 1)), label=f'{acquisition_date} (± {days})  MAE: {mae:.2f}', linewidth=0.75)
+                        else:
+                            pass
 
-                    ax.plot(self.wvls, np.mean(refl_array_asd, axis=0).ravel(), color='black', label='ASD',
+                    ax.plot(self.wvls, np.mean(refl_array_asd, axis=0).ravel(), color='black', label=f'ASD',
                             linewidth=1.5)
 
                     ax.set_xlabel('Wavelength (nm)')
+                    ax.set_ylabel('Reflectance (%)')
                     ax.set_ylim(0, 1)
                     ax.set_xlim(320, 2550)
                     ax.legend()
