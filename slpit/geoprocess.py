@@ -88,7 +88,7 @@ class emit:
 
         for reflectance_file in reflectance_files:
             base_call = f'python ./slpit/window_extract.py -rfl_img {reflectance_file} -w_size {window_size} ' \
-                        f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis, "emit-data-clip")} '
+                        f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis_directory, "emit-data-clip")} '
 
             # make call to clipping file using os run
             execute_call(['sbatch', '-N', "1", '-c', '40', '--mem', "180G", '--wrap', f'{base_call}'], dry_run)
@@ -98,7 +98,7 @@ class emit:
 
         for reflectance_uncer_file in reflectance_uncer_files:
             base_call = f'python ./slpit/window_extract.py -rfl_img {reflectance_uncer_file} -w_size {window_size} ' \
-                        f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis, "emit-data-clip")} '
+                        f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis_directory, "emit-data-clip")} '
 
             # make call to clipping file using os run
             execute_call(['sbatch', '-N', "1", '-c', '40', '--mem', "180G", '--wrap', f'{base_call}'], dry_run)
