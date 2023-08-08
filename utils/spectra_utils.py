@@ -19,6 +19,8 @@ def get_dd_coords(coord):
     dd = dd_dd + dd_mm
     return dd
 
+# bad wavelength regions
+bad_wv_regions = [[0, 440], [1310, 1490], [1770, 2050], [2440, 2880]]
 
 class spectra:
     "spectra class allows for different calls for instrument and asd wavelengths"
@@ -34,6 +36,24 @@ class spectra:
             wl *= 1000
             fwhm *= 1000
         return wl, fwhm
+
+    @classmethod
+    def get_good_bands_mask(cls, wavelengths, wavelength_pairs:None):
+        wavelengths = np.array(wavelengths)
+        if wavelength_pairs is None:
+            wavelength_pairs = bad_wv_regions
+        good_bands = np.ones(len(wavelengths)).astype(bool)
+
+        for wvp in wavelength_pairs:
+            wvl_diff = wavelengths - wvp[0]
+            wvl_diff[wvl_diff < 0] = np.nanmax(wvl_diff)
+            lower_index = np.nanargmin(wvl_diff)
+
+            wvl_diff = wvp[1] - wavelengths
+            wvl_diff[wvl_diff < 0] = np.nanmax(wvl_diff)
+            upper_index = np.nanargmin(wvl_diff)
+            good_bands[lower_index:upper_index + 1] = False
+        return good_bands
 
     @classmethod
     def convolve(cls, df_row, wvl, fwhm, asd_wvl, spectra_starting_col):

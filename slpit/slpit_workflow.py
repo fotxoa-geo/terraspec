@@ -3,6 +3,7 @@ from utils.text_guide import cursor_print, query_slpit_mode
 from utils.slpit_download import run_download_scripts
 from slpit.geoprocess import run_geoprocess_utils, run_geoprocess_extract
 from slpit.build_slpit import run_build_workflow
+from slpit.figures import run_figures
 
 
 def run_slpit_workflow(base_directory:str, dry_run, sensor):
@@ -34,7 +35,7 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
     # if user_input == 'unmix':
     #     run_unmix_workflow(base_directory=base_directory, dry_run=dry_run)
     #
-    # # run the figure set
-    # if user_input == 'figures':
-    #     print('figuresss')
+    # run the figure set
+    if user_input == 'figures':
+        run_figures(base_directory=base_directory)
 
