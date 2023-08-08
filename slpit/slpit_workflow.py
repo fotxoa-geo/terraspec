@@ -8,7 +8,7 @@ from slpit.build_slpit import run_build_workflow
 def run_slpit_workflow(base_directory:str, dry_run, sensor):
     msg = f"You have entered SLPIT mode! " \
           f"\nThere are various options to chose from: " \
-          f"\n\tdownload, build, geoprocess, extract ,unmix, figures, expenses"
+          f"\n\tdownload, envi, build, geoprocess, extract ,unmix, figures, expenses"
 
     cursor_print(msg)
     user_input = query_slpit_mode('\nPlease indicate the desired mode: ', default="yes")

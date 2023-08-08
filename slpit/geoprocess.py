@@ -26,6 +26,8 @@ class emit:
 
         # create output directories
         create_directory(os.path.join(base_directory, 'gis', 'emit-data'))
+        create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'nc_files'))
+        create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'envi'))
         create_directory(os.path.join(base_directory, 'gis', 'rgb-quick-look'))
         create_directory(os.path.join(base_directory, 'gis', 'emit-data-clip'))
 
