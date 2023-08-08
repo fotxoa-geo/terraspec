@@ -81,22 +81,28 @@ class emit:
         # get emit reflectance files
         reflectance_files = glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_reflectance'))
 
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        window_extract_path = os.path.join(current_dir, 'window_extract.py')
+        working_directory = '~/EMIT/terraspec'
+
         for reflectance_file in reflectance_files:
-            base_call = f'python ~EMIT/terraspec/slpit/window_extract.py -rfl_img {reflectance_file} -w_size {window_size} ' \
+            base_call = f'python {window_extract_path} -rfl_img {reflectance_file} -w_size {window_size} ' \
                         f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis_directory, "emit-data-clip")} '
 
-            # make call to clipping file using os run
-            execute_call(['sbatch', '-N', "1", '-c', '40', '--mem', "180G", '--wrap', f'{base_call}'], dry_run)
+            sbatch_cmd = f"sbatch -N 1 -c 40 --mem 80G --chdir={working_directory} --wrap='{base_call}'"
+            subprocess.check_output(sbatch_cmd, shell=True, text=True)
+
+
 
         # get emit reflectance uncertainties
         reflectance_uncer_files = glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_reflectance_uncertainty'))
 
-        for reflectance_uncer_file in reflectance_uncer_files:
-            base_call = f'python ~/EMIT/terraspec/slpit/window_extract.py -rfl_img {reflectance_uncer_file} -w_size {window_size} ' \
-                        f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis_directory, "emit-data-clip")} '
-
-            # make call to clipping file using os run
-            execute_call(['sbatch', '-N', "1", '-c', '40', '--mem', "180G", '--wrap', f'{base_call}'], dry_run)
+        # for reflectance_uncer_file in reflectance_uncer_files:
+        #     base_call = f'python ~/EMIT/terraspec/slpit/window_extract.py -rfl_img {reflectance_uncer_file} -w_size {window_size} ' \
+        #                 f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis_directory, "emit-data-clip")} '
+        #
+        #     # make call to clipping file using os run
+        #     execute_call(['sbatch', '-N', "1", '-c', '40', '--mem', "180G", '--wrap', f'{base_call}'], dry_run)
 
 
 def run_geoprocess_utils(base_directory, nc_to_envi:bool):
