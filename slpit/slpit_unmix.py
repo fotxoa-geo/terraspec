@@ -78,7 +78,7 @@ class unmix_runs:
 
                 # unmix asd with global library
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=self.emit_global,
-                           parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'asd-local_' + plot.replace(" ", "")),
+                           parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'asd-global_' + plot.replace(" ", "")),
                            scale=self.scale,  spectra_starting_column=self.spectra_starting_column_global)
 
                 # emit pixels unmixed with local em
@@ -89,7 +89,7 @@ class unmix_runs:
 
                 # emit pixels unmixed with global
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=self.emit_global,
-                           parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'emit-local_' + plot.replace(" ", "")),
+                           parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'emit-global_' + plot.replace(" ", "")),
                            scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
                            spectra_starting_column=self.spectra_starting_column_global)
 
