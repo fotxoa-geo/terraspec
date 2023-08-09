@@ -30,10 +30,10 @@ def create_uncertainty(uncertainty_file: str, wvls):
 
 
 def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list, output_dest:str, scale:str,
-               uncertainty_file=None):
+               spectra_starting_column:str, uncertainty_file=None):
     
     base_call = f'julia -p {n_cores} ~/EMIT/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
-                f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column 8 --refl_scale {scale} ' \
+                f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
                 f'{" ".join(parameters)} '
 
     #execute_call(['sbatch', '-N', "1", '-c', n_cores,'--mem', "80G", '--wrap', f'{base_call}'], dry_run)
@@ -109,6 +109,7 @@ class runs:
 
         # set scale to 1 reflectance
         self.scale = '1'
+        self.spectra_starting_col_julia = '8'
 
     def geographic_sma(self, mode:str):
         print("commencing geographic spectral unmixing...")
@@ -130,7 +131,8 @@ class runs:
             em_file = os.path.join(self.em_libraries_output, "_".join(basename.split("__")[0:1]) + '__n_dims_4_unmix_library.csv')
 
             call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=em_file,
-                       parameters=self.optimal_parameters, output_dest=output_dest, scale=self.scale)
+                       parameters=self.optimal_parameters, output_dest=output_dest, scale=self.scale,
+                       spectra_starting_column=self.spectra_starting_col_julia)
 
 
     def latin_hypercubes(self, mode:str):
@@ -163,7 +165,8 @@ class runs:
                                             "--", "_").replace(" ", "_").replace("__", "_")
 
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=df,
-                           parameters=simulation_parameters, output_dest=output_dest, scale=self.scale)
+                           parameters=simulation_parameters, output_dest=output_dest, scale=self.scale,
+                           spectra_starting_column=self.spectra_starting_col_julia)
 
         
 
@@ -193,7 +196,8 @@ class runs:
                                             "--", "_").replace(" ", "_").replace("__", "_")
 
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=df,
-                        parameters=simulation_parameters, output_dest=output_dest, scale=self.scale)
+                        parameters=simulation_parameters, output_dest=output_dest, scale=self.scale,
+                           spectra_starting_column=self.spectra_starting_col_julia)
                 
 
 

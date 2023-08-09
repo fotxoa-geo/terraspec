@@ -36,6 +36,8 @@ class unmix_runs:
         terraspec_base = os.path.join(base_directory, "..")
         em_sim_directory = os.path.join(terraspec_base, 'simulation', 'output', 'endmember_libraries')
         self.emit_global = os.path.join(em_sim_directory, 'convex_hull__n_dims_4_unmix_library.csv')
+        self.spectra_starting_column_local = '11'
+        self.spectra_starting_column_global = '8'
 
 
     def unmix_calls(self, mode:str):
@@ -72,22 +74,24 @@ class unmix_runs:
                 # unmix asd with local library
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=em_local,
                            parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'asd-local_' + plot.replace(" ", "")),
-                           scale=self.scale)
+                           scale=self.scale,  spectra_starting_column=self.spectra_starting_column_local)
 
                 # unmix asd with global library
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=self.emit_global,
-                           parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'asd-local_' + plot.replace(" ", "")),
-                           scale=self.scale)
+                           parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'asd-global_' + plot.replace(" ", "")),
+                           scale=self.scale,  spectra_starting_column=self.spectra_starting_column_global)
 
                 # emit pixels unmixed with local em
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=em_local,
                            parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'emit-local_' + plot.replace(" ", "")),
-                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0])
+                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
+                           spectra_starting_column=self.spectra_starting_column_local)
 
                 # emit pixels unmixed with global
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=self.emit_global,
-                           parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'emit-local_' + plot.replace(" ", "")),
-                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0])
+                           parameters=simulation_parameters, output_dest=os.path.join(output_dest, 'emit-global_' + plot.replace(" ", "")),
+                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
+                           spectra_starting_column=self.spectra_starting_column_global)
 
             else:
                 print(em_local, " does not exist.")
