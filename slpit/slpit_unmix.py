@@ -97,7 +97,6 @@ class unmix_runs:
                 print(em_local, " does not exist.")
 
 
-
 def run_slipt_unmix(base_directory, dry_run):
     all_runs = unmix_runs(base_directory, dry_run)
     all_runs.unmix_calls(mode='sma-best')
