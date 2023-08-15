@@ -53,13 +53,13 @@ def main():
         lat = row['geometry'].y
 
         # check if lon lat is within image with index
-        pixel_x = int((lon - ox) / pw)
-        pixel_y = int((lat - oy) / ph)
+        pixel_x = int(np.floor((lon - ox) / pw))
+        pixel_y = int(np.floor((lat - oy) / ph))
 
         if 0 <= pixel_x < image_width and 0 <= pixel_y < image_height:
 
             # get pixel value and its neighboors
-            window = ds.ReadAsArray(pixel_x, pixel_y, args.padding *2 +1, args.padding *2 +1)#.transpose((1,2,0))
+            window = ds.ReadAsArray(pixel_x-args.padding, pixel_y-args.padding, args.padding *2 +1, args.padding *2 +1)#.transpose((1,2,0))
 
             if np.any(window == 0) and acquisition_type != 'MASK':
                 print(plot, " has at least one pixel of fill values")

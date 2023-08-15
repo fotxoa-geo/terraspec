@@ -79,7 +79,7 @@ def download_emit(base_directory):
 
 
 def run_download_scripts(base_directory):
-    download_emit(base_directory=base_directory)
+    #download_emit(base_directory=base_directory)
     emit_slpit_recrods = get_iform_records(server_name=server_name, client_key=ck, secret_key=sk, profile_id=profile_id,
                                            page_id=emit_transects_page_id)
     save_pickle(emit_slpit_recrods, 'emit_slpit')

@@ -21,7 +21,7 @@ class unmix_runs:
 
         # simulation parameters for spatial and hypertrace unmix
         self.optimal_parameters_sma = ['--num_endmembers 20', '--n_mc 25', '--normalization brightness']
-        self.optimal_parameters_mesma = ['--max_combinations 100', '--n_mc 25', '--normalization brightness']
+        self.optimal_parameters_mesma = ['--max_combinations 1000', '--n_mc 25', '--normalization brightness']
 
         # load wavelengths
         self.wvls, self.fwhm = spectra.load_wavelengths(sensor='emit')
