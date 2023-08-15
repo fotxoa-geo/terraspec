@@ -1,7 +1,7 @@
 from spectral.io import envi
 from osgeo import gdal, osr
 import os
-
+import numpy as np
 
 def get_meta(lines: int, samples: int, bands, wvls: bool):
     if wvls:
@@ -57,7 +57,6 @@ def save_envi(output_file, meta, grid, ds=None, ul=None):
     mm = outDataset.open_memmap(interleave='bip', writable=True)
     mm[...] = grid
     del mm
-
 
 def rgb_quicklook(envi_file, output_directory):
     basename = os.path.basename(envi_file).split("_")[4]
@@ -170,3 +169,33 @@ def load_band_names(file):
     bands = {ds.GetRasterBand(i).GetDescription(): i for i in range(1, ds.RasterCount + 1)}
 
     return list(bands.keys())
+
+
+def augment_envi(file, wvls, out_raster):
+    ds = gdal.Open(file, gdal.GA_ReadOnly)
+    ds_array = envi_to_array(file)
+
+    if ds.RasterYSize == 3:
+        spectra_grid = np.zeros((100, 100, len(wvls)))
+    else:
+        spectra_grid = np.zeros((ds.RasterYSize, 100, len(wvls)))
+
+    for _row, row in enumerate(ds_array):
+        for _col, col in enumerate(row):
+            spectra_grid[_row, _col, :] = ds_array[_row, _col, :]
+
+    meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=wvls,
+                            wvls=True)
+    save_envi(out_raster, meta_spectra, spectra_grid)
+
+
+def read_metadata(hdr_file):
+    metadata = {}
+    with open(hdr_file, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if '=' in line:
+                key, value = line.split('=', 1)
+                metadata[key.strip()] = value.strip()
+    return metadata
+

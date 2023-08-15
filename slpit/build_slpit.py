@@ -228,9 +228,7 @@ class build_libraries:
             print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
             meta_spectra = get_meta(lines=len(results_convolve), samples=spectra_grid.shape[1], bands=self.wvls,
                                     wvls=True)
-            output_raster = os.path.join(self.output_transect_directory,
-                                         plot_name.replace(" ", "") + "-reflectance-emit_date-" + emit_date.replace('-',
-                                                                                                                    '') + ".hdr")
+            output_raster = os.path.join(self.output_transect_directory, plot_name.replace(" ", "") + ".hdr")
             save_envi(output_raster, meta_spectra, spectra_grid)
             time.sleep(3)
             print("done")
@@ -337,6 +335,22 @@ class build_libraries:
             df_convolve.to_csv(os.path.join(self.output_transect_em_directory,
                                             plot_name.replace(" ", "") + '-' + self.instrument + '.csv'), index=False)
 
+            # save files as envi files
+            spectra_grid = np.zeros((len(results_convolve), 1, len(self.wvls)))
+
+            # fill spectral data
+            for _row, row in enumerate(results_convolve):
+                spectra_grid[_row, :, :] = row
+
+            # save the spectra
+            print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
+            meta_spectra = get_meta(lines=len(results_convolve), samples=spectra_grid.shape[1], bands=self.wvls,
+                                    wvls=True)
+            output_raster = os.path.join(self.output_transect_em_directory, plot_name.replace(" ", "") + '-' + self.instrument + ".hdr")
+            save_envi(output_raster, meta_spectra, spectra_grid)
+            time.sleep(3)
+            print("done")
+
     def build_em_collection(self):
         # merge all endmembers - instrument based wavelengths
         emit_ems = spectra.get_all_ems(output_directory=self.output_directory, instrument=self.instrument)
@@ -358,7 +372,6 @@ class build_libraries:
         df_transect.to_csv(os.path.join(self.output_directory, "all-transect-emit.csv"), index=False)
         spectra.df_to_envi(df=df_transect, spectral_starting_column=9, wvls=self.wvls,
                            output_raster=os.path.join(self.output_directory, "all-transect-" + self.instrument + ".hdr"))
-
 
     def build_gis_data(self):
         print("Building spectral endmember gis shapefile data...", sep=' ', end='', flush=True)

@@ -1,9 +1,8 @@
 import os
 import time
-
 from utils.create_tree import create_directory
 from utils.spectra_utils import spectra
-from utils.envi import envi_to_array, get_meta, save_envi, load_band_names
+from utils.envi import envi_to_array, get_meta, save_envi, load_band_names, augment_envi
 from utils.text_guide import cursor_print
 import numpy as np
 import pandas as pd
@@ -11,22 +10,9 @@ from p_tqdm import p_map
 from functools import partial
 from glob import glob
 import itertools
+import geopandas as gp
+from datetime import datetime
 
-
-def augment_envi(envi_file, wvls, directory):
-    ds_array = envi_to_array(envi_file)
-
-    # augment for tetracorder read
-    spectra_grid = np.zeros((ds_array.shape[0], 100, len(wvls)))
-
-    for _row, row in enumerate(ds_array):
-        spectra_grid[_row, 0, :] = ds_array[_row, :, :]
-
-    meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=wvls,
-                            wvls=True)
-
-    output_raster = os.path.join(directory, os.path.basename(envi_file) + '.hdr')
-    save_envi(output_raster, meta_spectra, spectra_grid)
 
 
 class tetracorder:
@@ -49,6 +35,7 @@ class tetracorder:
 
     def reconstruct_soil_simulation(self):
         cursor_print('reconstructing soil from simulation...')
+
         # reconstructed soil from simulated reflectance
         simulation_fractions_array = envi_to_array(os.path.join(self.simulation_output_directory, 'convex_hull__n_dims_4_fractions'))
         simulation_index_array = envi_to_array(os.path.join(self.simulation_output_directory, 'convex_hull__n_dims_4_index'))
@@ -170,38 +157,45 @@ class tetracorder:
 
         p_map(save_envi, output_files, meta_docs, grids, **{"desc": "\t\t saving envi files...", "ncols": 150})
 
-    def build_slpit_pixels(self):
-        cursor_print('reconstructing slpit pixels...')
-        emit_clip_files = glob(os.path.join(self.base_directory, 'slpit', 'gis', 'emit-data-clip', '*[!.hdr][!.aux][!.xml]'))
+    def augment_slpit_pixels(self):
+        cursor_print('augmenting slpit pixels...')
+        transect_files = glob(os.path.join(self.base_directory, 'slpit', 'output', 'spectral_transects', 'transect', '*[!.csv][!.hdr][!.aux][!.xml]'))
+        em_files = glob(os.path.join(self.base_directory, 'slpit', 'output', 'spectral_transects', 'endmembers', '*[!.csv][!.hdr][!.aux][!.xml]'))
 
-        # save emit clip files as envi files
-        spectra_grid = np.zeros((len(emit_clip_files * 9), 1, len(self.wvls)))
+        # load shapefile
+        df = pd.DataFrame(gp.read_file(os.path.join(self.base_directory, 'slpit', 'gis', "Observation.shp")))
+        df = df.sort_values('Name')
 
-        counter = 0
-        meta_data = []
-        for i in emit_clip_files:
-            refl_array = envi_to_array(i)
-            site = os.path.basename(i)
+        for index, row in df.iterrows():
+            plot = row['Name']
 
-            for _row, row in enumerate(refl_array):
-                for _col, col in enumerate(row):
-                    spectra_grid[counter, 0, :] = refl_array[_row, _col, :]
-                    counter += 1
-                    meta_data.append([_row, _col, site])
+            image_acquisition_time_ipad = row['EMIT Overp']
+            input_datetime = datetime.strptime(image_acquisition_time_ipad, "%b %d, %Y at %I:%M:%S %p")
+            emit_filetime = input_datetime.strftime("%Y%m%dT%H%M")
+            reflectance_img_emit = glob(os.path.join(self.base_directory, 'slpit', 'gis', 'emit-data-clip',
+                                                     f'*{plot.replace(" ", "")}_RFL_{emit_filetime}*[!.xml][!.hdr]'))
 
-        meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls,
-                                wvls=True)
-        output_raster = os.path.join(self.slpit_output_directory, 'pixels' + '_' + self.sensor + ".hdr")
-        save_envi(output_raster, meta_spectra, spectra_grid)
+            basename = os.path.basename(reflectance_img_emit[0])
+            output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_pixels_augmented.hdr")
+            augment_envi(file=reflectance_img_emit[0], wvls=self.wvls, out_raster=output_raster)
 
-        df_meta = pd.DataFrame(meta_data)
-        df_meta.columns = ['row', 'column', 'site']
-        df_meta.to_csv(os.path.join(self.slpit_output_directory, 'emit_pixel_meta.csv'), index=False)
-        print("\t- done")
+        for i in transect_files:
+            basename = os.path.basename(i)
+            output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_transect_augmented.hdr")
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster)
 
-    def augment_reflectance(self):
+        for i in em_files:
+            basename = os.path.basename(i)
+            output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_ems_augmented.hdr")
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster)
+
+        cursor_print("\t- done")
+
+    def augment_simulation(self):
         cursor_print('augmenting data for tetracorder...')
         print()
+        cursor_print('\t loading simulation data...')
+
         # load simulation library - 4 dimension; convex hull
         simulation_lib = os.path.join(self.simulation_output_directory, 'simulation_libraries', 'convex_hull__n_dims_4_simulation_library')
 
@@ -217,36 +211,21 @@ class tetracorder:
         # reconstructed soil from unmix library and fractions
         unmix_soil = os.path.join(self.tetra_data_directory, "unmixing-soil")
 
-        # reconstructed soil atmosphere - the best case scenario ???
+        files_to_augment = [simulation_lib, simulation_refl, simulation_soil, unmix_lib, unmix_soil]
 
-        # load reflectance atmosphere - the best case scenario ???
+        for i in files_to_augment:
+            basename = os.path.basename(i)
+            output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_simulation_augmented.hdr")
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster)
 
-        # load endmember file - slipit
-        slpit_em = os.path.join(self.slpit_output_directory, 'all-endmembers-emit')
-
-        # load transect spectra
-        slpit_transect = os.path.join(self.slpit_output_directory, 'all-transect-emit')
-
-        # load emit pixels
-        slpit_pixels = os.path.join(self.slpit_output_directory, 'pixels' + '_' + self.sensor)
-
-        #increment library
-        increment_library = os.path.join(self.tetra_output_directory, 'Calcite_increment_sim_library')
-
-        # files_to_augment = [simulation_lib, simulation_refl, simulation_soil, unmix_lib, unmix_soil,
-        #                     slpit_em, slpit_transect, slpit_pixels] #increment_library]
-        files_to_augment = [increment_library]
-
-        p_map(partial(augment_envi, directory=os.path.join(self.tetra_output_directory, 'augmented'), wvls=self.wvls),
-              files_to_augment, **{"desc": "\t\t augmenting simulation files: ", "ncols": 150})
-        print("\t- done")
+        cursor_print("\t- done")
 
 
 def run_tetracorder_build(base_directory, sensor):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
-    tc.build_increment_instances(increment_size=0.05, mineral_index=0)
+    #tc.build_increment_instances(increment_size=0.05, mineral_index=0)
     #tc.reconstruct_soil_simulation()
     #tc.reconstruct_soil_sma()
-    #tc.build_slpit_pixels()
-    tc.augment_reflectance()
+    tc.augment_slpit_pixels()
+    tc.augment_simulation()
 
