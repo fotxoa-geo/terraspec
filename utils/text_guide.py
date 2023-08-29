@@ -97,7 +97,7 @@ def input_date(msg, gis_directory):
             time.sleep(0.02)
         date = input()
 
-        envi = glob(os.path.join(gis_directory, 'emit-data', 'envi', '*' + date + '*_radiance'))
+        envi = glob(os.path.join(gis_directory, 'emit-data', 'envi', '*' + date + '*_reflectance'))
 
         if envi and date != "":
             break
