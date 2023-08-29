@@ -22,6 +22,27 @@ def get_dd_coords(coord):
 # bad wavelength regions
 bad_wv_regions = [[0, 440], [1310, 1490], [1770, 2050], [2440, 2880]]
 
+
+def gps_asd(latitude_ddmm, longitude_ddmm, file):
+    try:
+        dd_lat = get_dd_coords(latitude_ddmm)
+        dd_long = get_dd_coords(longitude_ddmm) * -1  # used to correct longitude
+
+    except:
+        gdf = gpd.read_file('gis/Observation.shp')
+        gdf['longitude'] = gdf['geometry'].x
+        gdf['latitude'] = gdf['geometry'].y
+        plot_name = os.path.basename(os.path.dirname(file)).replace('Spectral', 'SPEC')
+        df = gdf.drop(columns='geometry')
+
+        long = df.loc[(df['Name'] == plot_name), 'longitude'].iloc[0]
+        lat = df.loc[(df['Name'] == plot_name), 'latitude'].iloc[0]
+
+        dd_lat = lat
+        dd_long = long
+
+    return dd_lat, dd_long
+
 class spectra:
     "spectra class allows for different calls for instrument and asd wavelengths"
     def __init__(self):
@@ -278,13 +299,7 @@ class spectra:
         latitude_ddmm, longitude_ddmm, elevation, utc_time = asd_gps[0], asd_gps[1], asd_gps[2], asd_gps[3]
         utc_time = str(utc_time[0]) + ":" + str(utc_time[1]) + ":" + str(utc_time[2])
 
-        try:
-            dd_lat = get_dd_coords(latitude_ddmm)
-            dd_long = get_dd_coords(longitude_ddmm) * -1  # used to correct longitude
-
-        except:
-            dd_lat = 'unk'
-            dd_long = 'unk'
+        dd_lat, dd_long = gps_asd(latitude_ddmm=latitude_ddmm, longitude_ddmm=longitude_ddmm, file=file_name)
 
         return [plot_name, file_name, em_classification, species, dd_long, dd_lat, elevation, utc_time] + list(asd_refl)
 
@@ -295,15 +310,16 @@ class spectra:
         asd_refl = asd.reflectance
         asd_gps = asd.get_gps()
         latitude_ddmm, longitude_ddmm, elevation, utc_time = asd_gps[0], asd_gps[1], asd_gps[2], asd_gps[3]
-        utc_time = str(utc_time[0]) + ":" + str(utc_time[1]) + ":" + str(utc_time[2])
-        file_num = int(os.path.basename(file).split(".")[0].split("_")[1])
-        try:
-            dd_lat = get_dd_coords(latitude_ddmm)
-            dd_long = get_dd_coords(longitude_ddmm) * -1  # used to correct longitude
 
-        except:
-            dd_lat = 'unk'
-            dd_long = 'unk'
+        if int(utc_time[0]) + int(utc_time[1]) + int(utc_time[2]) == 0:
+            file_time = asd.get_save_time()
+            utc_time = str(file_time[2]) + ":" + str(file_time[1]) + ":" + str(file_time[0])
+        else:
+            utc_time = str(utc_time[0]) + ":" + str(utc_time[1]) + ":" + str(utc_time[2])
+
+        file_num = int(os.path.basename(file).split(".")[0].split("_")[1])
+
+        dd_lat, dd_long = gps_asd(latitude_ddmm=latitude_ddmm, longitude_ddmm=longitude_ddmm, file=file)
 
         return [plot_name, file, file_num, dd_long, dd_lat, elevation, utc_time] + list(asd_refl)
 

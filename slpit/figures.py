@@ -167,12 +167,21 @@ class figures:
                         delta = slpit_datetime - acquisition_datetime
                         days = np.absolute(delta.days)
 
-                        if days <= 40:
-                            base_label = f'{formatted_datetime} (±{days:02d} days)  SZA : {str(int(geometry_results_emit[1]))}°'
-                            ax.plot(self.wvls,  np.mean(refl_array, axis=(0, 1)), label=base_label, linewidth=0.75)
+                        cloud_mask = glob(os.path.join(self.gis_directory, 'emit-data-clip', f'*{plot.replace("Spectral", "SPEC").replace(" ", "")}_MASK_{acquisition_date}'))
+                        ds_cloud = gdal.Open(cloud_mask[0], gdal.GA_ReadOnly)
+                        cloud_array = ds_cloud.ReadAsArray().transpose((1, 2, 0))
 
-                            if field_emit_date == acquisition_date[:-2]:
-                                bold_label = base_label
+                        if days <= 100:
+                            cloud_check = np.any(cloud_array == 1)
+
+                            if cloud_check:
+                                pass
+                            else:
+                                base_label = f'{formatted_datetime} (±{days:02d} days)  SZA : {str(int(geometry_results_emit[1]))}°'
+                                ax.plot(self.wvls,  np.mean(refl_array, axis=(0, 1)), label=base_label, linewidth=1)
+
+                                # if field_emit_date == acquisition_date[:-2]:
+                                #     bold_label = base_label
 
                     geometry_results_slpit_min = sunpos(field_slpit_date_min, np.mean(df_transect.latitude),
                                                        np.mean(df_transect.longitude), np.mean(df_transect.elevation))
@@ -191,10 +200,10 @@ class figures:
 
                     legend = ax.legend()
 
-                    # make emit field date bold
-                    for handle, text in zip(legend.legendHandles, legend.get_texts()):
-                        if text.get_text() == bold_label:
-                            text.set_fontweight('bold')
+                    # # make emit field date bold
+                    # for handle, text in zip(legend.legendHandles, legend.get_texts()):
+                    #     if text.get_text() == bold_label:
+                    #         text.set_fontweight('bold')
 
                 if ax == ax4:
                     df_spectra = em_data[(em_data['plot_name'] == plot) & ((em_data['level_1'] == 'NPV'))].copy()
