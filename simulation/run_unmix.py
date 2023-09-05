@@ -36,9 +36,9 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
                 f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
                 f'{" ".join(parameters)} '
 
-    #execute_call(['sbatch', '-N', "1", '-c', n_cores,'--mem', "80G", '--wrap', f'{base_call}'], dry_run)
-    sbatch_cmd = f"sbatch -N 1 -c {n_cores} --mem 80G --wrap='{base_call}'"
-    subprocess.check_output(sbatch_cmd, shell=True, text=True)
+    execute_call(['sbatch', '-N', "1", '-c', n_cores,'--mem', "80G", '--wrap', f'{base_call}'], dry_run)
+    #sbatch_cmd = f"sbatch -N 1 -c {n_cores} --mem 80G --wrap='{base_call}'"
+    #subprocess.check_output(sbatch_cmd, shell=True, text=True)
     
 
 
