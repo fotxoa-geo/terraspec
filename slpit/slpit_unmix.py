@@ -54,14 +54,15 @@ class unmix_runs:
         for index, row in df.iterrows():
             plot = row['Name']
 
-            image_acquisition_time_ipad = row['EMIT Overp']
-            input_datetime = datetime.strptime(image_acquisition_time_ipad, "%b %d, %Y at %I:%M:%S %p")
-            emit_filetime = input_datetime.strftime("%Y%m%dT%H%M")
+            emit_filetime = row['EMIT Date']
+            #input_datetime = datetime.strptime(image_acquisition_time_ipad, "%b %d, %Y at %I:%M:%S %p")
+            #emit_filetime = input_datetime.strftime("%Y%m%dT%H%M")
 
             reflectance_img_emit = glob(os.path.join(self.gis_directory, 'emit-data-clip', f'*{plot.replace(" ", "")}_RFL_{emit_filetime}*[!.xml][!.hdr]'))
             reflectance_uncer_img_emit = glob(os.path.join(self.gis_directory, 'emit-data-clip',f'*{plot.replace(" ", "")}_RFLUNCERT_{emit_filetime}*[!.xml][!.hdr]'))
             em_local = os.path.join(self.spectral_em_directory, plot.replace("SPEC", 'Spectral').replace(" ", "") + '-emit.csv')
-            asd_reflectance = glob(os.path.join(self.spectral_transect_directory, f'*{plot.replace("SPEC", "Spectral").replace(" ", "")}*[!.xml][!.hdr]'))
+            asd_reflectance = glob(os.path.join(self.spectral_transect_directory, f'*{plot.replace("SPEC", "Spectral").replace(" ", "")}*'))
+            print(os.path.join(self.spectral_transect_directory, f'*{plot.replace("SPEC", "Spectral").replace(" ", "")}'))
 
             if os.path.isfile(em_local):
                 if mode == 'mesma':
