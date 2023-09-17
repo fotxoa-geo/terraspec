@@ -677,9 +677,9 @@ def run_figures(base_directory, sensor):
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs)
 
-    fig_class.em_reduction_visulatization()
-    fig_class.normalization_figure()
-    fig_class.size_endmembers_figure()
-    fig_class.uncertainty_figure()
+    #fig_class.em_reduction_visulatization()
+    #fig_class.normalization_figure()
+    #fig_class.size_endmembers_figure()
+    #fig_class.uncertainty_figure()
     fig_class.atmosphere()
     fig_class.atmosphere_mesma()
