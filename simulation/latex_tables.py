@@ -5,7 +5,8 @@ import numpy as np
 import os
 import ast
 from sklearn.metrics import r2_score
-
+from sklearn.linear_model import LinearRegression
+from utils.results_utils import r2_calculations
 
 # Custom formatter for two decimal places
 def format_float(val):
@@ -64,35 +65,114 @@ class latex:
     def baseline_setings(self):
         sma_table = os.path.join(self.fig_directory, "sma-best_unmix_error_report.csv")
         mesma_table = os.path.join(self.fig_directory, "mesma_unmix_error_report.csv")
+        sma_uncert_table = os.path.join(self.fig_directory, "sma-best_unmix_uncertainty_report.csv")
+        mesma_uncer_table = os.path.join(self.fig_directory, "mesma_unmix_uncertainty_report.csv")
+
         df_sma = pd.read_csv(sma_table)
         df_sma.insert(0, 'mode', 'SMA')
         df_mesma = pd.read_csv(mesma_table)
         df_mesma.insert(0, 'mode', 'MESMA')
         df = pd.concat([df_sma, df_mesma], ignore_index=True)
 
+        df_sma_uncer = pd.read_csv(sma_uncert_table)
+        df_sma_uncer.insert(0, 'mode', 'SMA')
+        df_mesma_uncer = pd.read_csv(mesma_uncer_table)
+        df_mesma_uncer.insert(0, 'mode', 'MESMA')
+        df_uncer = pd.concat([df_sma_uncer, df_mesma_uncer], ignore_index=True)
+
+        df_uncer = df_uncer.replace('convex', "Convex Hull")
+        df_uncer = df_uncer.replace('latin', 'Latin Hypercube')
+        df_uncer = df_uncer.replace('brightness', 'Brightness')
+
         df = df.replace('convex', "Convex Hull")
         df = df.replace('latin', 'Latin Hypercube')
         df = df.replace('brightness', 'Brightness')
 
         # select parameters for mesma and sma
-        df_select = df.loc[(df['normalization'] == 'none') & (df['mc_runs'].isnull())].copy()
-        df_select = df_select.loc[(df_select['cmbs'] == 10) | (df_select['cmbs'].isnull())].copy()
-        df_select = df_select.loc[(df_select['num_em'].isnull())].copy()
-
+        df_base = df.loc[((df['normalization'] == 'none') & (df['mc_runs']== 25)) & ((df['cmbs'] == 100) | (df['cmbs'].isnull())) & ((df['num_em']==3) | df['num_em'].isnull())].copy()
+        df_opt = df.loc[((df['normalization'] == 'Brightness') & (df['mc_runs']== 25)) & ((df['cmbs'] == 100) | (df['cmbs'].isnull())) & ((df['num_em']==30) | df['num_em'].isnull())].copy()
         modes = ['SMA', "MESMA"]
         scenarios = ['Latin Hypercube', 'Convex Hull']
+
         for i in modes:
-            df_mode = df_select.loc[(df_select['mode'] == i)].copy()
+            df_base_mode = df_base.loc[(df_base['mode'] == i)].copy()
+            df_opt_mode = df_opt.loc[(df_opt['mode'] == i)].copy()
+            print(f'Baseline {i} MAE :', np.round(np.average(df_base_mode['npv_mae']), 2), np.round(np.average(df_base_mode['pv_mae']),2),
+                  np.round(np.average(df_base_mode['soil_mae']), 2))
+            print(f'Optimized {i} MAE :', np.round(np.average(df_opt_mode['npv_mae']), 2),
+                  np.round(np.average(df_opt_mode['pv_mae']), 2),
+                  np.round(np.average(df_opt_mode['soil_mae']), 2))
 
-            for scenario in scenarios:
-                df_scenario = df_mode.loc[(df_mode['scenario'] == scenario)].copy()
+        df_sma_num_ems = df.loc[(df['normalization'] == 'Brightness') & (df['mc_runs']== 25) & (df['mode']=='SMA')].copy()
+        num_ems = []
+        npv_mae = []
+        pv_mae = []
+        soil_mae = []
 
-                y_vars = ['npv_mae', 'pv_mae', 'soil_mae']
+        for i in sorted(list(df_sma_num_ems.num_em.unique())):
+            df_num_em = df_sma_num_ems.loc[(df_sma_num_ems['num_em'] == i)].copy()
+            num_ems.append(i)
+            npv_mae.append(np.round(np.average(df_num_em['npv_mae'] ),2))
+            pv_mae.append(np.round(np.average(df_num_em['pv_mae'] ), 2))
+            soil_mae.append(np.round(np.average(df_num_em['soil_mae'] ), 2))
 
-                for y_var in y_vars:
-                    x = df_scenario['dims']
-                    y = df_scenario[y_var]
-                    print(i, scenario, y_var, 'r$^2$ = ', np.round(r2_score(x, y),2))
+        print('The relationship between n and MAE for NPV OPT: ', r2_calculations(num_ems, npv_mae))
+        print('The relationship between n and MAE for PV OPT: ',  r2_calculations(num_ems, pv_mae))
+        print('The relationship between n and MAE for Soil OPT: ',  r2_calculations(num_ems, soil_mae))
+
+        dims = []
+        npv_mae = []
+        pv_mae = []
+        soil_mae = []
+
+        for i in sorted(list(df_base.dims.unique())):
+            df_num_em = df_base.loc[(df_base['dims'] == i)].copy()
+            dims.append(i)
+            npv_mae.append(np.round(np.average(df_num_em['npv_mae']), 2))
+            pv_mae.append(np.round(np.average(df_num_em['pv_mae']), 2))
+            soil_mae.append(np.round(np.average(df_num_em['soil_mae']), 2))
+
+        print('The relationship between d and MAE for NPV BASE: ', r2_calculations(dims, npv_mae))
+        print('The relationship between d and MAE for PV BASE: ', r2_calculations(dims, pv_mae))
+        print('The relationship between d and MAE for Soil BASE: ', r2_calculations(dims, soil_mae))
+        print('_______________________________________________________________')
+        print('\n')
+        print('This begins the Brightness adjustments section')
+        df_opt_norm = df.loc[(df['mc_runs'] == 25) & ((df['cmbs'] == 100) | (df['cmbs'].isnull())) & ((df['num_em'] == 30) | df['num_em'].isnull())].copy()
+
+
+        for x in modes:
+            df_opt_norm_mode = df_opt_norm.loc[(df_opt_norm['mode'] == x)].copy()
+
+            for norm in sorted(list(df_opt_norm_mode.normalization.unique())):
+                df_norm_select = df_opt_norm_mode.loc[(df_opt_norm_mode['normalization'] == norm)].copy()
+
+                print(f'Optimized {x,norm} MAE :', np.round(np.average(df_norm_select['npv_mae']), 2),
+                      np.round(np.average(df_norm_select['pv_mae']), 2),
+                      np.round(np.average(df_norm_select['soil_mae']), 2))
+        print('_______________________________________________________________')
+        print('\n')
+        print('This begins the Monte Carlo uncertainty sections')
+        df_mc = df.loc[((df['normalization'] == 'Brightness')) & ((df['cmbs'] == 100) | (df['cmbs'].isnull())) & ((df['num_em'] == 30) | df['num_em'].isnull())].copy()
+
+        for x in sorted(list(df_mc.mc_runs.unique())):
+            dc_mc_select = df_mc.loc[(df_mc['mc_runs'] == x)].copy()
+
+            for i in modes:
+                df_mc_mode_select = dc_mc_select.loc[(dc_mc_select['mode'] == i)].copy()
+                print(f'Optimized {i} ; MC Runs{x} MAE :', np.round(np.average(df_mc_mode_select['npv_mae']), 2),
+                      np.round(np.average(df_mc_mode_select['pv_mae']), 2),
+                      np.round(np.average(df_mc_mode_select['soil_mae']), 2))
+
+        df_mc_unc = df_uncer.loc[((df_uncer['normalization'] == 'Brightness')) & ((df_uncer['cmbs'] == 100) | (df_uncer['cmbs'].isnull())) & ((df_uncer['num_em'] == 30) | df_uncer['num_em'].isnull())].copy()
+        for x in sorted(list(df_mc_unc.mc_runs.unique())):
+            dc_mc_unc_select = df_mc_unc.loc[(df_mc_unc['mc_runs'] == x)].copy()
+
+            for i in modes:
+                df_mc_unc_mode_select = dc_mc_unc_select.loc[(dc_mc_unc_select['mode'] == i)].copy()
+                print(f'Optimized {i} ; MC Runs {x} UNCER :', np.round(np.average(df_mc_unc_mode_select['npv_uncer']), 2),
+                      np.round(np.average(df_mc_unc_mode_select['pv_uncer']), 2),
+                      np.round(np.average(df_mc_unc_mode_select['soil_uncer']), 2))
 
     def atmosphere_table(self):
         table = os.path.join(self.fig_directory, "atmosphere_error_report.csv")
@@ -106,8 +186,19 @@ class latex:
         df['solar_zenith'] = df['solar_zenith'].astype('int')
 
         atmospheres_to_plot = [[0.05, 0.75], [0.05, 4.0], [0.4, 0.75], [0.4, 4.0]]
-        atmosphere_scenarios = ['Clear Atmosphere and Low Water Content', 'Clear Atmosphere and High Water Content',
-                                'Non-Clear Atmosphere and Low Water Content', 'Non-Clear Atmosphere and High Water Content']
+
+        sma_uncert_table = os.path.join(self.fig_directory, "sma-best_unmix_uncertainty_report.csv")
+        mesma_uncer_table = os.path.join(self.fig_directory, "mesma_unmix_uncertainty_report.csv")
+
+        df_sma_uncer = pd.read_csv(sma_uncert_table)
+        df_sma_uncer.insert(0, 'mode', 'SMA')
+        df_mesma_uncer = pd.read_csv(mesma_uncer_table)
+        df_mesma_uncer.insert(0, 'mode', 'MESMA')
+        df_uncer = pd.concat([df_sma_uncer, df_mesma_uncer], ignore_index=True)
+
+        df_uncer = df_uncer.replace('convex', "Convex Hull")
+        df_uncer = df_uncer.replace('latin', 'Latin Hypercube')
+        df_uncer = df_uncer.replace('brightness', 'Brightness')
 
         for _table, table in enumerate(atmospheres_to_plot):
             df_select = df.loc[(df['aod'] == table[0]) & (df['h2o'] == table[1])].copy()
@@ -123,11 +214,80 @@ class latex:
 
             df_select = df_select[['mode','aod', 'h2o', 'solar_zenith', 'combined_npv', 'combined_pv', 'combined_soil']]
             df_select = df_select.sort_values('mode', ascending=False)
-            df_select.insert(0, 'Scenario', atmosphere_scenarios[_table])
             formatted_df = df_select.reset_index(drop=True).applymap(format_float)
-            formatted_df.loc[1:, 'Scenario'] = ''
 
             print(formatted_df.to_latex(index=False, escape=False))
+
+            print('_______________________________________________________________')
+            print('\n')
+            print('This begins the atmosphere parameters')
+
+        for aod in sorted(list(df.aod.unique())):
+            df_aod = df.loc[(df['aod'] == aod)]
+            print(f'AOD {aod} MAE;', np.round(np.average(df_aod['npv_mae']), 2),
+                  np.round(np.average(df_aod['pv_mae']), 2),
+                  np.round(np.average(df_aod['soil_mae']), 2))
+
+        for h2o in sorted(list(df.h2o.unique())):
+            df_h2o = df.loc[(df['h2o'] == h2o)]
+            print(f'h2o {h2o} MAE;', np.round(np.average(df_h2o['npv_mae']), 2),
+                  np.round(np.average(df_h2o['pv_mae']), 2),
+                  np.round(np.average(df_h2o['soil_mae']), 2))
+
+        for sza in sorted(list(df.solar_zenith.unique())):
+            df_sza = df.loc[(df['solar_zenith'] == sza)]
+            print(f'sza {sza} MAE;', np.round(np.average(df_sza['npv_mae']), 2),
+                  np.round(np.average(df_sza['pv_mae']), 2),
+                  np.round(np.average(df_sza['soil_mae']), 2))
+
+        print('\n')
+        print('This is related to uncertainty....')
+
+        for aod in sorted(list(df.aod.unique())):
+            df_aod = df.loc[(df['aod'] == aod)]
+            print(f'AOD {aod} MAE;', np.round(np.average(df_aod['npv_sma-uncertainty']), 2),
+                  np.round(np.average(df_aod['pv_sma-uncertainty']), 2),
+                  np.round(np.average(df_aod['soil_sma-uncertainty']), 2))
+
+        for h2o in sorted(list(df.h2o.unique())):
+            df_h2o = df.loc[(df['h2o'] == h2o)]
+            print(f'h2o {h2o} MAE;', np.round(np.average(df_h2o['npv_sma-uncertainty']), 2),
+                  np.round(np.average(df_h2o['pv_sma-uncertainty']), 2),
+                  np.round(np.average(df_h2o['soil_sma-uncertainty']), 2))
+
+        for sza in sorted(list(df.solar_zenith.unique())):
+            df_sza = df.loc[(df['solar_zenith'] == sza)]
+            print(f'sza {sza} MAE;', np.round(np.average(df_sza['npv_sma-uncertainty']), 2),
+                  np.round(np.average(df_sza['pv_sma-uncertainty']), 2),
+                  np.round(np.average(df_sza['soil_sma-uncertainty']), 2))
+
+        print('\n')
+        print("Uncertainty proportions")
+        df_uncer = df_uncer.loc[((df_uncer['mc_runs'] == 25) & (df_uncer['dims'] == 4) & (df_uncer['scenario'] == 'Convex Hull')& (df_uncer['normalization'] == 'Brightness')) & ((df_uncer['cmbs'] == 100) | (df_uncer['cmbs'].isnull())) & ((df_uncer['num_em'] == 30) | df_uncer['num_em'].isnull())]
+
+        for i in ['SMA', 'MESMA']:
+            df_uncer_mode = df_uncer.loc[(df_uncer['mode'] == i)]
+            df_atmos_mode = df.loc[(df['mode'] == i)]
+
+            # uncertainty from unmixing
+            npv_uncer = np.average(df_uncer_mode['npv_uncer'])
+            pv_uncer = np.average(df_uncer_mode['pv_uncer'])
+            soil_uncer = np.average(df_uncer_mode['soil_uncer'])
+
+            # uncertainty from atmosphere
+            npv_uncer_atmos = np.average(df_atmos_mode['npv_sma-uncertainty'])
+            pv_uncer_atmos = np.average(df_atmos_mode['pv_sma-uncertainty'])
+            soil_uncer_atmos = np.average(df_atmos_mode['soil_sma-uncertainty'])
+
+            atmosphers_uncer = [npv_uncer_atmos, pv_uncer_atmos, soil_uncer_atmos]
+            unmix_uncer = [npv_uncer, pv_uncer, soil_uncer]
+            ems = ['NPV', 'PV', 'Soil']
+
+            for _x, x in enumerate(atmosphers_uncer):
+                atmosp_propotion = (unmix_uncer[_x] - x)/x
+                print(f'{i} {ems[_x]} UNCER;', np.round(atmosp_propotion,2))
+
+
 
     def summary_table(self):
         df_unmix = pd.read_csv(os.path.join(self.fig_directory, "sma-best_unmix_error_report.csv"))
@@ -217,36 +377,141 @@ class latex:
                            'spectral_starting_column', 'truncate_end_columns', 'reflectance_uncertainty_file',
                            'n_mc', 'mode', 'refl_nodata', 'refl_scale', 'normalization', 'combination_type',
                            'max_combinations', 'num_endmembers', 'write_complete_fractions', 'optimizer', 'start_line',
-                           'end_line', 'endmember_classes', 'log_file', 'elapsed_time', 'worker_time']
+                           'end_line', 'endmember_classes', 'log_file', 'spectra_per_s',  'total_time', 'error',
+                           'worker_count', 'node']
 
         df_time = df_time.replace('"', '', regex=True)
         df_time['reflectance_file'] = df_time['reflectance_file'].apply(os.path.basename)
+        df_time['endmember_file'] = df_time['endmember_file'].apply(os.path.basename)
         df_time.drop(columns=['endmember_file', 'endmember_class_header', 'output_file_base',
                                 'spectral_starting_column', 'truncate_end_columns', 'reflectance_uncertainty_file',
                                 'refl_nodata', 'refl_scale', 'write_complete_fractions', 'optimizer', 'start_line',
                               'end_line', 'endmember_classes', 'log_file',], inplace=True)
-        df_time['scenario'] = df_time['reflectance_file'].apply(lambda path: os.path.basename(path).split('__')[0])
-        df_time['elapsed_time'] = df_time['elapsed_time'].astype(float)
+
+        df_time['scenario'] = df_time['reflectance_file'].apply(lambda path: '-'.join(os.path.basename(path).split('_')[:2]))
+        df_time['spectra_per_s'] = df_time['spectra_per_s'].astype(float)
         df_time['num_endmembers'] = df_time['num_endmembers'].apply(lambda x: ast.literal_eval(x)[0])
-        values_to_keep = ['latin_hypercube', 'convex_hull']
-        filtered_df = df_time.loc[df_time['scenario'].isin(values_to_keep)]
-        filtered_df['dims'] = filtered_df['reflectance_file'].apply(lambda path: int(os.path.basename(path).split('_')[-2]))
-        df_select = filtered_df.loc[(filtered_df['normalization'] == 'brightness') & (filtered_df['n_mc'] == 25) & (filtered_df['dims'] == 4)].copy()
-        df_select = df_select.loc[(df_select['num_endmembers'] == 30) | (df_select['num_endmembers'] == 3)].copy()
-        df_select = df_select.loc[(df_select['max_combinations'] == 100) | (df_select['max_combinations'] == -1)].copy()
+        df_time['dims'] = df_time['reflectance_file'].apply(lambda path: os.path.basename(path).split('_')[:5][4])
+        df_time = df_time.loc[(df_time['error'] == 0)].copy()
+        # get baseline - both convex hull and latin hypercube
+        df_avg_baseline = df_time.loc[((df_time['normalization'] == 'none') & (df_time['n_mc'] == 25) & (df_time['num_endmembers'] == 3)) &
+                                      ((df_time['max_combinations'] == 100) | (df_time['max_combinations'] == -1))].copy()
+        df_avg_baseline_mesma = df_avg_baseline.loc[(df_avg_baseline['mode'] == 'mesma')].copy()
+        df_avg_baseline_sma = df_avg_baseline.loc[(df_avg_baseline['mode'] == 'sma-best')].copy()
+        print('\t Average Baseline MESMA (spec/s) : ', np.round(np.average(df_avg_baseline_mesma['spectra_per_s']), 2), 's; Worker Count: ', np.average(df_avg_baseline_mesma['worker_count']))
+        print('\t Average Baseline SMA (spec/s) : ', np.round(np.average(df_avg_baseline_sma['spectra_per_s']), 2),'s; Worker Count: ', np.average(df_avg_baseline_sma['worker_count']))
 
-        filtered_df = df_select.loc[~((df_select['mode'] == 'sma-best') & (df_select['max_combinations'] == -1) & (
-                    df_select['num_endmembers'] == 3))]
-        filtered_df['elapsed_time'] = filtered_df['elapsed_time'].round(2)
+        # get optimal settings - both convex and latin hypercube
+        df_avg_optimal = df_time.loc[((df_time['normalization'] == 'brightness') & (df_time['n_mc'] == 25)) &
+            ((df_time['max_combinations'] == 100) | (df_time['max_combinations'] == -1)) & ((df_time['num_endmembers'] == 30) | (df_time['num_endmembers'] == 3))].copy()
 
-        print(filtered_df)
+        df_avg_optimal_mesma = df_avg_optimal.loc[(df_avg_optimal['mode'] == 'mesma')].copy()
+        df_avg_optimal_sma = df_avg_optimal.loc[(df_avg_optimal['mode'] == 'sma-best') & (df_avg_optimal['num_endmembers'] == 30)].copy()
 
+        print('\t Average Optimal MESMA (spec/s) : ', np.round(np.average(df_avg_optimal_mesma['spectra_per_s']), 2),'s; Worker Count: ', np.average(df_avg_optimal_mesma['worker_count']))
+        print('\t Average Baseline SMA (spec/s) : ', np.round(np.average(df_avg_optimal_sma['spectra_per_s']), 2), 's; Worker Count: ', np.average(df_avg_optimal_sma['worker_count']))
+
+        # optimal settings - all values of number of endmembers (n) for sma
+        df_avg_sma_num_em = df_time.loc[(df_time['normalization'] == 'brightness') & (df_time['n_mc'] == 25) & (df_time['max_combinations'] == -1)].copy()
+        num_em = []
+        avg_time_per_em = []
+
+        for i in sorted(list(df_avg_sma_num_em.num_endmembers.unique())):
+            df_select = df_avg_sma_num_em.loc[(df_avg_sma_num_em['num_endmembers'] == i)].copy()
+            num_em.append(i)
+            avg_elapsed_time = np.round(np.average(df_select['spectra_per_s']), 2)
+            avg_time_per_em.append(avg_elapsed_time)
+
+        X = np.array(num_em)
+        y = np.array(avg_time_per_em)
+        X = X.reshape(-1,1)
+        model = LinearRegression()
+        model.fit(X, y)
+        slope = model.coef_[0]
+        intercept = model.intercept_
+        y_pred = model.predict(X)
+
+        print('The r^2 value between n and time is : ', np.round(r2_score(avg_time_per_em, y_pred),2))
+
+        # optimal settings - combinations increase for MESMA
+        df_avg_mesma_cmb = df_time.loc[(df_time['normalization'] == 'brightness') & (df_time['n_mc'] == 25) & (
+                    df_time['max_combinations'] != -1)].copy()
+
+        num_cmb = []
+        avg_time_per_cmb = []
+
+        for i in sorted(list(df_avg_mesma_cmb.max_combinations.unique())):
+            df_select = df_avg_mesma_cmb.loc[(df_avg_mesma_cmb['max_combinations'] == i)].copy()
+            num_cmb.append(i)
+            avg_elapsed_time = np.round(np.average(df_select['spectra_per_s']), 2)
+            avg_time_per_cmb.append(avg_elapsed_time)
+
+        X = np.array(num_cmb)
+        y = np.array(avg_time_per_cmb)
+        X = X.reshape(-1, 1)
+        model = LinearRegression()
+        model.fit(X, y)
+        slope = model.coef_[0]
+        intercept = model.intercept_
+        y_pred = model.predict(X)
+
+        print('The r^2 value between number of combinations and time is : ', np.round(r2_score(avg_time_per_cmb, y_pred), 2))
+
+        # optimal settings - find variations in normalization methods ; SMA
+        df_avg_sma_normalization = df_time.loc[(df_time['n_mc'] == 25) & (df_time['num_endmembers'] == 30)].copy()
+        for i in sorted(list(df_avg_sma_normalization.normalization.unique())):
+            df_select = df_avg_sma_normalization.loc[(df_avg_sma_normalization['normalization'] == i)].copy()
+            print(f'Average Normalization {i} SMA (spec/s) : ', np.round(np.average(df_select['spectra_per_s']), 2),
+                  's; Worker Count: ', np.average(df_select['worker_count']))
+
+        # optimal settings - find variations in normalization methods MESMA
+        df_avg_mesma_normalization = df_time.loc[(df_time['n_mc'] == 25) & (df_time['max_combinations'] == 100)].copy()
+        for i in sorted(list(df_avg_mesma_normalization.normalization.unique())):
+            df_select = df_avg_mesma_normalization.loc[(df_avg_mesma_normalization['normalization'] == i)].copy()
+            print(f'Average Normalization {i} MESMA (spec/s) : ', np.round(np.average(df_select['spectra_per_s']), 2),
+                  's; Worker Count: ', np.average(df_select['worker_count']))
+
+        # monte carlo run increases with opt settings
+        df_avg_mc_runs_sma = df_time.loc[(df_time['normalization'] == 'brightness') & (df_time['num_endmembers'] == 30)].copy()
+        mc_runs = []
+        sma_mc_times = []
+        for i in sorted(list(df_avg_mc_runs_sma.n_mc.unique())):
+            df_select = df_avg_mc_runs_sma.loc[(df_avg_mc_runs_sma['n_mc'] == i)].copy()
+            mc_runs.append(i)
+            avg_elapsed_time = np.round(np.average(df_select['spectra_per_s']), 2)
+            sma_mc_times.append(avg_elapsed_time)
+
+        print(mc_runs)
+        print(sma_mc_times)
+
+        # monte carlo runs increase with opt settings mesma
+        df_avg_mc_runs_mesma = df_time.loc[
+            (df_time['normalization'] == 'brightness') & (df_time['num_endmembers'] == 3) & (df_time['max_combinations'] == -1)].copy()
+        mc_runs = []
+        mesma_mc_times = []
+        for i in sorted(list(df_avg_mc_runs_mesma.n_mc.unique())):
+            df_select = df_avg_mc_runs_mesma.loc[(df_avg_mc_runs_mesma['n_mc'] == i)].copy()
+            mc_runs.append(i)
+            avg_elapsed_time = np.round(np.average(df_select['spectra_per_s']), 2)
+            mesma_mc_times.append(avg_elapsed_time)
+
+        print(mc_runs)
+        print(mesma_mc_times)
+
+    def library_results(self):
+        df = pd.read_csv(os.path.join(self.output_directory, 'convolved', 'geofilter_convolved.csv'))
+
+        for lib in df.dataset.unique():
+            df_lib = df.loc[(df['dataset'] == lib)].copy()
+            print(f'Lib {lib}', df_lib.level_1.value_counts())
 
 
 def run_latex_tables(base_directory: str):
     latex_class = latex(base_directory=base_directory)
-    #latex_class.optimal_parameters()
-    latex_class.atmosphere_table()
-    latex_class.summary_table()
+    # latex_class.optimal_parameters()
+    # latex_class.atmosphere_table()
+    # latex_class.summary_table()
     latex_class.time_table()
-    latex_class.baseline_setings()
+    # latex_class.baseline_setings()
+
+    #latex_class.library_results()
