@@ -291,6 +291,6 @@ def convolve_library(base_directory, output_directory, geo_filter: bool):
 
 
 def run_clean_workflow(base_directory, output_directory, geo_filter: bool):
-    #process_all_data(base_directory=base_directory, output_directory=output_directory)
+    process_all_data(base_directory=base_directory, output_directory=output_directory)
     geofilter_data(base_directory=base_directory, output_directory=output_directory)
     convolve_library(geo_filter=geo_filter, output_directory=output_directory, base_directory=base_directory)
