@@ -45,6 +45,7 @@ class tables:
     def unmix_unceratinty_table(self, mode:str):
         uncertainty_files = load_fraction_files(self.base_directory, mode, '*_fractional_cover_uncertainty')
         uncertainty_files = [i for i in uncertainty_files if not ('withold' in i)]
+        
         results = p_umap(partial(uncertainty_processing,output_directory=self.output_directory), uncertainty_files,
                          **{"desc": f"\t\t processing {mode} uncertainty tables...", "ncols": 150})
 
@@ -52,6 +53,7 @@ class tables:
                    'npv_std', 'pv_std', 'soil_std',  'npv_stde', 'pv_stde', 'soil_stde']
 
         df = pd.DataFrame(results, columns=cols_df)
+        print(df)
         df.to_csv(os.path.join(self.fig_directory,  mode + "_unmix_uncertainty_report.csv"), index=False)
 
     def atmosphere_table(self):
@@ -158,6 +160,7 @@ class tables:
 
         dfs = p_umap(performance_log, outfiles,
                         **{"desc": f"\t\t processing performance tables...", "ncols": 150})
+        
         df_performance = pd.concat(dfs)
         df_performance.to_csv(os.path.join(self.fig_directory, "computing_performance_report.csv"), index=False)
 
@@ -171,7 +174,7 @@ def run_build_tables(base_directory):
     #run_tables.atmosphere_table()
     #run_tables.geographic_table(mode='spatial')
     #run_tables.metadata_table_unmix()
-    #run_tables.performance_table()
+    run_tables.performance_table()
 
     # print latex tables
-    run_latex_tables(base_directory=base_directory)
+    #run_latex_tables(base_directory=base_directory)
