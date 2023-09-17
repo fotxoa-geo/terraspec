@@ -65,6 +65,7 @@ class unmix_runs:
             em_local = os.path.join(self.spectral_em_directory, plot.replace("SPEC", 'Spectral').replace(" ", "") + '-emit.csv')
             asd_reflectance = glob(os.path.join(self.spectral_transect_directory, f'*{plot.replace("SPEC", "Spectral").replace(" ", "")}'))
             
+
             if os.path.isfile(em_local):
                 if mode == 'mesma':
                     simulation_parameters = [self.optimal_parameters_mesma, self.non_opt_mesma] 

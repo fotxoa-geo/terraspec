@@ -208,7 +208,7 @@ def geofilter_data(base_directory, output_directory):
         df = df[df['Exist'] == True].drop(['Exist'], axis=1)
         df.drop(columns=df.columns[-2:], axis=1, inplace=True)
 
-        if ds_name == 'SR' or ds_name == 'DP': # these are the SHIFT domain box
+        if ds_name == 'SR' or ds_name == 'DP' or ds_name == 'SSL-IR': # these are the SHIFT domain box
             df.to_csv(os.path.join(output_directory, 'geofilter', 'geofilter_' + ds_name + '.csv'), index=False)
         else:
             points = gp.GeoDataFrame(df, geometry=gp.points_from_xy(df.longitude, df.latitude), crs="EPSG:4326")
@@ -272,7 +272,7 @@ def convolve_library(base_directory, output_directory, geo_filter: bool):
     df_merge = df_merge.drop_duplicates()
     df_merge = df_merge[~df_merge[df_merge.columns[7]].isnull()] # this gets rid of no data
     df_merge = df_merge.drop_duplicates(subset=[df_merge.columns[7]], keep='first') # drops duplicates in first spectral row
-    df_merge = df_merge.drop_duplicates(subset=['fname'], keep='first') # drops duplicates using fname
+    df_merge = df_merge.drop_duplicates(subset=['fname'], keep='first').sort_values("level_1") # drops duplicates using fname
 
     if geo_filter:
         df_merge.to_csv(os.path.join(output_directory, "convolved", "geofilter_convolved.csv"),
@@ -291,6 +291,6 @@ def convolve_library(base_directory, output_directory, geo_filter: bool):
 
 
 def run_clean_workflow(base_directory, output_directory, geo_filter: bool):
-    process_all_data(base_directory=base_directory, output_directory=output_directory)
+    #process_all_data(base_directory=base_directory, output_directory=output_directory)
     geofilter_data(base_directory=base_directory, output_directory=output_directory)
     convolve_library(geo_filter=geo_filter, output_directory=output_directory, base_directory=base_directory)
