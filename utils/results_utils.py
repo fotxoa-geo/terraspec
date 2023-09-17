@@ -172,35 +172,44 @@ def performance_log(out_file:str):
     with open(out_file) as f:
         lines = f.readlines()
 
-    start_times = []
-    end_times = []
-    elapsed_times = []
+    total_seconds = []
+    error_flag = 0
+    worker_counter = 0
 
     for line in lines:
         # pattern for time
-        time_match = re.search(r"Elapsed Time: ([\d.e-]+), Start Time: ([\d.e-]+), End Time: ([\d.e-]+)", line.strip())
+        time_match = re.search(r"seconds:\s+([\d.]+)", line.strip())
         if time_match:
-            elapsed_time = float(time_match.group(1))
-            start_time = float(time_match.group(2))
-            end_time = float(time_match.group(3))
-            elapsed_times.append(elapsed_time)
-            start_times.append(start_time)
-            end_times.append(end_time)
+            pixel_s = float(time_match.group(1))
+            total_seconds.append(pixel_s)
+            worker_counter += 1
 
         argument_match = re.search(r'Arguments:\s*\(([^)]+)\)', line.strip())
+        
         if argument_match:
             argument_string = argument_match.group(1)
             arguments = dict(re.findall(r'(\w+)\s*=\s*([^,)]+)', argument_string))
+        
+        error_match = re.search(r'GDALError \(CE_Failure, code 10\):', line.strip())
+        
+        if error_match:
+            error_flag = 1
 
-    start_times = [start - 1.0e9 for start in start_times]
-    end_times = [end - 1.0e9 for end in end_times]
+        host_name_match = re.search(r'Unmixing was processed on: (.+)' , line.strip())
+        if host_name_match:
+            cpu_host = str(host_name_match.group(1))
+    
+    if worker_counter != 1000:
+        error_flag = 1
+    
+    
+    df = pd.DataFrame([arguments], columns=arguments.keys())
+    df['spectra_per_s'] = worker_counter/(np.sum(total_seconds)/40)
+    df['total_time'] = np.sum(total_seconds)
+    df['error'] = error_flag
+    df['worker_count'] = worker_counter
+    df['node'] = cpu_host
+        
+    return df
 
-    try:
-        df = pd.DataFrame([arguments], columns=arguments.keys())
-        df['elapsed_time'] = np.max(np.array(end_times)) - np.min(np.array(start_times))
-        df['worker_time'] = np.mean(np.array(elapsed_times))
-
-        return df
-    except:
-        print(out_file, "had an error...")
 
