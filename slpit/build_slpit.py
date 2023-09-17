@@ -48,6 +48,12 @@ class build_libraries:
         self.output_transect_directory = os.path.join(self.output_directory, 'spectral_transects', 'transect')
         self.output_transect_em_directory = os.path.join(self.output_directory, 'spectral_transects', 'endmembers')
 
+        # import the simulation outputs
+        terraspec_base = os.path.join(base_directory, "..")
+        em_sim_directory = os.path.join(terraspec_base, 'simulation', 'output')
+        self.emit_global = os.path.join(em_sim_directory, 'convolved','geofilter_convolved.csv')
+        self.convex_global = os.path.join(em_sim_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library.csv')
+
     def build_emit_transects(self):
         # the transect spectra
         records = load_pickle('emit_slpit')
@@ -389,6 +395,33 @@ class build_libraries:
         time.sleep(3)
         print("done")
 
+    def build_derivative_library(self):
+        print('Loading EMIT global library...')
+        df_global = pd.read_csv(os.path.join(self.emit_global))
+        global_results = p_map(partial(spectra.first_derivative, spectral_starting_col=7, wvls=self.wvls), df_global.iterrows(),
+                               **{"desc": "\t\t\tcalculating first derivative: global library", "ncols": 150})
+        df_results = pd.DataFrame(global_results)
+        df_derivative = pd.concat([df_global.iloc[:, :7].reset_index(drop=True), df_results], axis=1)
+        df_derivative.columns = df_global.columns
+        df_derivative.to_csv(os.path.join(self.output_directory, 'emit-global_first_derivative.csv'), index=False)
+
+        print('EMIT convex hull 4d...')
+        df_convex = pd.read_csv(self.convex_global)
+        convex_results = p_map(partial(spectra.first_derivative, spectral_starting_col=7, wvls=self.wvls), df_convex.iterrows(),
+                               **{"desc": "\t\t\tcalculating first derivative: convex hull library", "ncols": 150})
+        df_results = pd.DataFrame(convex_results)
+        df_derivative = pd.concat([df_convex.iloc[:, :7].reset_index(drop=True), df_results], axis=1)
+        df_derivative.columns = df_convex.columns
+        df_derivative.to_csv(os.path.join(self.output_directory, 'convex-hull_4d_first_derivative.csv'), index=False)
+
+        print("loading plot 3....")
+        df_plot = pd.read_csv(os.path.join(self.output_transect_em_directory, 'Spectral-003-emit.csv'))
+        plot_results = p_map(partial(spectra.first_derivative, spectral_starting_col=10, wvls=self.wvls), df_plot.iterrows(),
+                               **{"desc": "\t\t\tcalculating first derivative: plot 003", "ncols": 150})
+        df_results = pd.DataFrame(plot_results)
+        df_derivative = pd.concat([df_plot.iloc[:, :10].reset_index(drop=True), df_results], axis=1)
+        df_derivative.columns = df_plot.columns
+        df_derivative.to_csv(os.path.join(self.output_directory, 'SPEC-003-fd.csv'), index=False)
 
 def run_build_workflow(base_directory, sensor):
     msg = f"Please move all .asd Files from the ASD Computer " \
@@ -412,7 +445,8 @@ def run_build_workflow(base_directory, sensor):
 
     else:
         lib = build_libraries(base_directory=base_directory, sensor=sensor)
-        lib.build_emit_transects()
-        lib.build_emit_endmembers()
-        lib.build_em_collection()
-        lib.build_gis_data()
+        #lib.build_emit_transects()
+        #lib.build_emit_endmembers()
+        #lib.build_em_collection()
+        #lib.build_gis_data()
+        lib.build_derivative_library()

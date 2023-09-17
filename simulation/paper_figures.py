@@ -80,15 +80,6 @@ class figures:
                 if col != 0:
                     ax.set_yticklabels([])
 
-        # call the optimization data; mc = 25, em = 30,
-        df_uncer_opt = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['num_em'] == 30) &(df_uncer['mc_runs'] == 25) & (df_uncer['scenario'] == 'convex')].copy()
-        df_uncer_opt = df_uncer_opt.sort_values('dims')
-
-        # call the uncertainty data; mc = 25, em =30
-        df_optimized = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == 30) &
-                                    (df_error['mc_runs'] == 25) & (df_error['scenario'] == 'convex')].copy()
-        df_optimized = df_optimized.sort_values('dims')
-
         # filter the data by normalization
         for em in sorted(list(df_error.num_em.unique())):
             df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == em) & (
@@ -113,30 +104,24 @@ class figures:
                     for col in range(ncols):
                         ax = axs[row, col]
 
-                        label = str(int(em)) + 'EM'
+                        label = str(int(em)) + ' EM'
                         if scenario == 'latin' and row == 0:
                             ax.errorbar(df_select1.dims, df_select1[error_mae[col]],
                                         yerr=df_select_unc1[error_options[col]] / 25,
                                         label=label, solid_capstyle='projecting', capsize=capsize[col])
 
-                            if em == 30:
-                                ax.errorbar(df_optimized.dims, df_optimized[error_mae[col]],
-                                            yerr=df_uncer_opt[error_options[col]] / 25,
-                                            solid_capstyle='projecting', capsize=2, label='Optimized SMA')
-                                if col == 0:
-                                    ax.set_ylabel('MAE\n(Latin Hypercube)', fontsize=self.axis_label_fontsize)
+                            if col == 0:
+                                ax.set_ylabel('MAE\n(Latin Hypercube)', fontsize=self.axis_label_fontsize)
 
                         if scenario == 'convex' and row == 1:
                             ax.errorbar(df_select1.dims, df_select1[error_mae[col]],
                                         yerr=df_select_unc1[error_options[col]] / 25,
                                         label=label, solid_capstyle='projecting', capsize=capsize[col])
 
-                            if em == 30:
-                                ax.errorbar(df_optimized.dims, df_optimized[error_mae[col]],
-                                            yerr=df_uncer_opt[error_options[col]] / 25,
-                                            solid_capstyle='projecting', capsize=2, label='Optimized SMA')
-                                if col == 0:
-                                    ax.set_ylabel('MAE\n(Convex Hull)', fontsize=self.axis_label_fontsize)
+
+
+                            if col == 0:
+                                ax.set_ylabel('MAE\n(Convex Hull)', fontsize=self.axis_label_fontsize)
 
                         if row == 1 and col == 1:
                             ax.legend()
@@ -156,16 +141,6 @@ class figures:
         # create 3x2 figure
         ncols = 3  # for each em
         nrows = 2  # top row normal, middle water, aod; x-axis solar angle
-
-        # call the optimization data; mc = 25, em = 30,
-        df_uncer_opt = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['num_em'] == 30) &
-                                    (df_uncer['mc_runs'] == 25) & (df_uncer['scenario'] == 'convex')].copy()
-        df_uncer_opt = df_uncer_opt.sort_values('dims')
-
-        # call the uncertainty data; mc = 25, em =30
-        df_optimized = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == 30) &
-                                    (df_error['mc_runs'] == 25) & (df_error['scenario'] == 'convex')].copy()
-        df_optimized = df_optimized.sort_values('dims')
 
         fig, axs = plt.subplots(nrows, ncols, figsize=(self.fig_width, self.fig_height))
         fig.subplots_adjust(wspace=0.1, hspace=0.1)
@@ -192,6 +167,8 @@ class figures:
 
         # filter the data by normalization
         for mc_runs in sorted(list(df_error.mc_runs.unique())):
+            if mc_runs == 1:
+                continue
             df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == 30) & (df_error['mc_runs'] == mc_runs)].copy()
             df_select_unc = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['num_em']== 30) & (df_uncer['mc_runs'] == mc_runs)].copy()
 
@@ -217,23 +194,15 @@ class figures:
                             ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select_unc1[error_options[col]] / 25,
                                         label=label, solid_capstyle='projecting', capsize=capsize[col])
 
-                            if mc_runs == 50:
-                                ax.errorbar(df_optimized.dims, df_optimized[error_mae[col]],
-                                            yerr=df_uncer_opt[error_options[col]] / 25,
-                                            solid_capstyle='projecting', capsize=2, label='Optimized SMA')
-                                if col == 0:
-                                    ax.set_ylabel('MAE\n(Latin Hypercube)', fontsize=self.axis_label_fontsize)
+                            if col == 0:
+                                ax.set_ylabel('MAE\n(Latin Hypercube)', fontsize=self.axis_label_fontsize)
 
                         if scenario == 'convex' and row == 1:
                             ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select_unc1[error_options[col]] / 25,
                                         label=label, solid_capstyle='projecting', capsize=capsize[col])
 
-                            if mc_runs == 50:
-                                ax.errorbar(df_optimized.dims, df_optimized[error_mae[col]],
-                                            yerr=df_uncer_opt[error_options[col]] / 25,
-                                            solid_capstyle='projecting', capsize=2, label='Optimized SMA')
-                                if col == 0:
-                                    ax.set_ylabel('MAE\n(Convex Hull)', fontsize=self.axis_label_fontsize)
+                            if col == 0:
+                                ax.set_ylabel('MAE\n(Convex Hull)', fontsize=self.axis_label_fontsize)
 
                         if row == 1 and col == 1:
                             ax.legend()
@@ -267,7 +236,6 @@ class figures:
         fig.subplots_adjust(wspace=0.1, hspace=0.1)
 
         df_select = df.loc[(df['azimuth'] == 0) & (df['sensor_zenith'] == 180) & (df['aod'] != 0) & (df['h2o'] != 0)].copy()
-        print(df_select)
 
         for row in range(nrows):
             for col in range(ncols):
@@ -394,7 +362,6 @@ class figures:
         fig.subplots_adjust(wspace=0.1, hspace=0.1)
 
         df_select = df.loc[(df['azimuth'] == 0) & (df['sensor_zenith'] == 180) & (df['aod'] != 0) & (df['h2o'] != 0)].copy()
-        print(df_select)
 
         for row in range(nrows):
             for col in range(ncols):
@@ -537,20 +504,10 @@ class figures:
                 if col != 0:
                     ax.set_yticklabels([])
 
-        # call the optimization data; mc = 25, em = 30,
-        df_uncer_opt = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['num_em'] == 30) &
-                                    (df_uncer['mc_runs'] == 25) & (df_uncer['scenario'] == 'convex')].copy()
-        df_uncer_opt = df_uncer_opt.sort_values('dims')
-
-        # call the uncertainty data; mc = 25, em =30
-        df_optimized = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == 30) &
-                                    (df_error['mc_runs'] == 25) & (df_error['scenario'] == 'convex')].copy()
-        df_optimized = df_optimized.sort_values('dims')
-
         # filter the data
         for norm_option in df_error.normalization.unique():
-            df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['num_em'].isnull()) & (df_error['mc_runs'] == 25)].copy()
-            df_select_unc = df_uncer.loc[(df_uncer['normalization'] == norm_option) & (df_uncer['num_em'].isnull()) & (df_uncer['mc_runs'] == 25)].copy()
+            df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['num_em'] == 30) & (df_error['mc_runs'] == 25)].copy()
+            df_select_unc = df_uncer.loc[(df_uncer['normalization'] == norm_option) & (df_uncer['num_em'] == 30) & (df_uncer['mc_runs'] == 25)].copy()
 
             # filter by scenario
             for scenario in df_select.scenario.unique():
@@ -573,21 +530,17 @@ class figures:
                             ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select_unc1[error_options[col]]/25,
                                         label=norm_option, solid_capstyle='projecting', capsize=capsize[col])
 
-                            if norm_option == 'No Normalization':
-                                ax.errorbar(df_optimized.dims, df_optimized[error_mae[col]], yerr=df_uncer_opt[error_options[col]]/25,
-                                            solid_capstyle='projecting', capsize=2, label='Optimized SMA')
-                                if col == 0:
-                                    ax.set_ylabel('MAE\n(Latin Hypercube)', fontsize=self.axis_label_fontsize)
+
+                            if col == 0:
+                                ax.set_ylabel('MAE\n(Latin Hypercube)', fontsize=self.axis_label_fontsize)
 
                         if scenario == 'convex' and row == 1:
                             ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select_unc1[error_options[col]]/25,
                                         label=norm_option, solid_capstyle='projecting', capsize=capsize[col])
 
-                            if norm_option == 'No Normalization':
-                                ax.errorbar(df_optimized.dims, df_optimized[error_mae[col]], yerr=df_uncer_opt[error_options[col]]/25,
-                                            solid_capstyle='projecting', capsize=2, label='Optimized SMA')
-                                if col == 0:
-                                    ax.set_ylabel('MAE\n(Convex Hull)', fontsize=self.axis_label_fontsize)
+
+                            if col == 0:
+                                ax.set_ylabel('MAE\n(Convex Hull)', fontsize=self.axis_label_fontsize)
 
                         if row == 1 and col == 1:
                             ax.legend()

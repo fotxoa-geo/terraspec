@@ -324,6 +324,22 @@ class spectra:
         return [plot_name, file, file_num, dd_long, dd_lat, elevation, utc_time] + list(asd_refl)
 
     @classmethod
+    def first_derivative(cls, df_row, spectral_starting_col, wvls):
+        spectral_sample = np.array(df_row[1].values[spectral_starting_col:])
+
+        first_derivative = []
+        for _i, i in enumerate(wvls):
+            # last position is a duplicate of previous ?
+            if _i == len(wvls) - 1:
+                first_derivative.append(first_derivative[-1])
+            else:
+                ds = spectral_sample[_i + 1] - spectral_sample[_i]
+                dx = wvls[_i + 1] - wvls[_i]
+                first_derivative.append(ds/dx)
+
+        return first_derivative
+
+    @classmethod
     def get_all_ems(cls,output_directory: str, instrument: str):
         spectral_endmembers = glob(os.path.join(output_directory, 'spectral_endmembers', '*' + instrument + ".csv"))
         emit_transect_endmembers = glob(os.path.join(output_directory, 'spectral_transects', 'endmembers', '*' + instrument + ".csv"))

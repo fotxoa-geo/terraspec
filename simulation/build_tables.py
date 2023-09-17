@@ -45,8 +45,7 @@ class tables:
     def unmix_unceratinty_table(self, mode:str):
         uncertainty_files = load_fraction_files(self.base_directory, mode, '*_fractional_cover_uncertainty')
         uncertainty_files = [i for i in uncertainty_files if not ('withold' in i)]
-        
-        results = p_umap(partial(uncertainty_processing,output_directory=self.output_directory), uncertainty_files,
+        results = p_umap(partial(uncertainty_processing, output_directory=self.output_directory), uncertainty_files,
                          **{"desc": f"\t\t processing {mode} uncertainty tables...", "ncols": 150})
 
         cols_df = ['scenario', 'normalization', 'num_em', 'cmbs', 'dims', 'mc_runs', 'npv_uncer', 'pv_uncer', 'soil_uncer',
@@ -167,14 +166,13 @@ class tables:
 
 def run_build_tables(base_directory):
     run_tables = tables(base_directory=base_directory)
-    #run_tables.unmix_error_table(mode='sma-best')
-    #run_tables.unmix_unceratinty_table(mode='sma-best')
-    #run_tables.unmix_error_table(mode='mesma')
-    #run_tables.unmix_unceratinty_table(mode='mesma')
+    # run_tables.unmix_error_table(mode='sma-best')
+    # run_tables.unmix_unceratinty_table(mode='sma-best')
+    # run_tables.unmix_error_table(mode='mesma')
+    # run_tables.unmix_unceratinty_table(mode='mesma')
     #run_tables.atmosphere_table()
     #run_tables.geographic_table(mode='spatial')
     #run_tables.metadata_table_unmix()
-    run_tables.performance_table()
-
+    #run_tables.performance_table()
     # print latex tables
     #run_latex_tables(base_directory=base_directory)

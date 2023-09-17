@@ -158,6 +158,8 @@ class figures:
 
         # filter the data by normalization
         for mc_runs in sorted(list(df_error.mc_runs.unique())):
+            if mc_runs == 1:
+                continue
             df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['cmbs'] == 100) & (df_error['mc_runs'] == mc_runs)].copy()
             df_select_unc = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['cmbs']== 100) & (df_uncer['mc_runs'] == mc_runs)].copy()
 
@@ -165,6 +167,8 @@ class figures:
             for scenario in df_select.scenario.unique():
                 df_select1 = df_select.loc[(df_select['scenario'] == scenario)].copy()
                 df_select1 = df_select1.sort_values('dims')  # sort by dimensions, lower to greater
+
+
 
                 df_select_unc1 = df_select_unc.loc[(df_select_unc['scenario'] == scenario)].copy()
                 df_select_unc1 = df_select_unc1.sort_values('dims')  # sort by dimensions, lower to greater

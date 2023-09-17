@@ -8,6 +8,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from scipy.stats import sem
 import numpy as np
 import re
+from sklearn.linear_model import LinearRegression
 
 def load_fraction_files(base_directory: str, mode: str, search_kw: str):
     files = glob(os.path.join(base_directory, "output", mode, search_kw), recursive=True)
@@ -126,13 +127,12 @@ def error_processing(file, output_directory):
 
 def uncertainty_processing(file, output_directory):
     basename = os.path.basename(file)
-    truth_base = basename.split("_")[0]
 
     ds_uncertainty = gdal.Open(file, gdal.GA_ReadOnly)
     uncertainty_array = ds_uncertainty.ReadAsArray().transpose((1, 2, 0))
     uncertainty = uncertainty_metrics(uncertainty_array)
 
-    truth_base = basename.split("_")[0]
+    scenario = basename.split("_")[0]
     dims = os.path.basename(file).split("_")[4]
 
     # get normalization parameters
@@ -163,7 +163,7 @@ def uncertainty_processing(file, output_directory):
     else:
         combs = np.nan
 
-    return [truth_base, normalization, num_em, combs, dims, mc_runs] + uncertainty
+    return [scenario, normalization, num_em, combs, dims, mc_runs] + uncertainty
     del uncertainty_array
 
 
@@ -213,3 +213,15 @@ def performance_log(out_file:str):
     return df
 
 
+def r2_calculations(x_vals, y_vals):
+    X = np.array(x_vals)
+    y = np.array(y_vals)
+    X = X.reshape(-1, 1)
+    model = LinearRegression()
+    model.fit(X, y)
+    slope = model.coef_[0]
+    intercept = model.intercept_
+    y_pred = model.predict(X)
+    r2 = r2_score(y_vals, y_pred)
+
+    return np.round(r2,2)
