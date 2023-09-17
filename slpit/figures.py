@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from p_tqdm import p_map
 from isofit.core.sunposition import sunpos
 import geopandas as gp
+from utils.results_utils import r2_calculations, load_data, error_metrics
 
 def fraction_file_info(fraction_file):
     name = os.path.basename(fraction_file)
@@ -55,7 +56,7 @@ class figures:
         create_directory(os.path.join(base_directory, "figures"))
 
         # ems
-        self.ems = ['npv', 'pv', 'soil']
+        self.ems = ['NPV', 'GV', 'Soil']
 
         # load teatracorder directory
         terraspec_base = os.path.join(base_directory, "..")
@@ -329,7 +330,8 @@ class figures:
         results_uncer = p_map(fraction_file_info, all_uncer_files, **{"desc": "\t\t retrieving mean uncertainty: ...", "ncols": 150})
         df_all_uncer = pd.DataFrame(results_uncer)
 
-        df_all_uncer.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization', 'npv', 'pv', 'soil', 'shade']
+        df_all_uncer.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization',
+                                'npv', 'pv', 'soil', 'shade']
 
         # # create figure
         fig = plt.figure(constrained_layout=True, figsize=(12, 12))
@@ -412,23 +414,232 @@ class figures:
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
                 mae = mean_absolute_error(x, y)
-                r2 = r2_score(x, y)
+                r2 = r2_calculations(x, y)
 
                 txtstr = '\n'.join((
                     r'RMSE: %.2f' % (rmse,),
                     r'MAE: %.2f' % (mae,),
                     r'CMB/EM: ' + str(n_cmbs),
                     r'MC: ' + str(n_mc),
-                    #r'R$^2$: %.2f' % (r2,),
+                    r'R$^2$: %.2f' % (r2,),
                     r'n = ' + str(len(x))))
 
                 props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
                         verticalalignment='top', bbox=props)
 
-        plt.savefig(os.path.join(self.fig_directory, 'regression.png'), format="png", dpi=300, bbox_inches="tight")
-        #plt.show()
+        plt.savefig(os.path.join(self.fig_directory, 'regression.png'), format="png", dpi=300, bbox_inches="tight")# load all fraction files
+
+
+    def sza_plot(self):
+        print('loading sza plot...')
+
+        df_rows = []
+        # gis shapefile
+        gdf = gp.read_file(os.path.join(self.gis_directory, "Observation.shp"))
+        df_gis = gdf.drop(columns='geometry')
+        df_gis['latitude'] = gdf['geometry'].apply(lambda geom: geom.y)
+        df_gis['longitude'] = gdf['geometry'].apply(lambda geom: geom.x)
+        df_gis = df_gis.sort_values('Name')
+
+        # transect data for elevation
+        transect_data = pd.read_csv(os.path.join(self.output_directory, 'all-transect-emit.csv'))
+
+        for index, row in df_gis.iterrows():
+            plot = row['Name']
+            emit_filetime = row['EMIT Date']
+
+            df_transect = transect_data.loc[transect_data['plot_name'] == plot.replace("SPEC", "Spectral")].copy()
+            acquisition_datetime_utc = datetime.strptime(emit_filetime, "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
+            geometry_results_emit = sunpos(acquisition_datetime_utc, row['latitude'], row['longitude'], np.mean(df_transect['elevation']))
+
+            frac_emit_sma = glob(os.path.join(self.output_directory, 'sma-best', f'emit-local__*{plot.replace("Spectral", "SPEC").replace(" ", "")}__*_fractional_cover'))
+            frac_slpit_sma = glob(os.path.join(self.output_directory, 'sma-best', f'asd-local__*{plot.replace("Spectral", "SPEC").replace(" ", "")}__*_fractional_cover'))
+
+            sma_slipt_array, sma_emit_array = load_data(frac_slpit_sma[0], frac_emit_sma[0])
+
+            frac_slpit_mesma = glob(os.path.join(self.output_directory, 'mesma', f'asd-local__*{plot.replace("Spectral", "SPEC").replace(" ", "")}__*_fractional_cover'))
+            frac_emit_mesma = glob(os.path.join(self.output_directory, 'mesma',
+                                                f'emit-local__*{plot.replace("Spectral", "SPEC").replace(" ", "")}__*_fractional_cover'))
+            mesma_slipt_array, mesma_emit_array = load_data(frac_slpit_mesma[0], frac_emit_mesma[0])
+
+            df_row = [plot, geometry_results_emit[1]]
+            for arrays in [(sma_slipt_array, sma_emit_array), (mesma_slipt_array, mesma_emit_array)]:
+                for _em, em in enumerate(self.ems):
+                    y = arrays[0][:, :, _em]
+                    y_hat = arrays[1][:,:, _em]
+
+                    mae = np.absolute(np.mean(y)) - np.absolute(np.mean(y_hat))
+                    df_row.append(np.absolute(mae))
+
+            df_rows.append(df_row)
+
+        df = pd.DataFrame(df_rows)
+        df.columns = ['plot', 'sza', 'sma-npv', 'sma-pv', 'sma-soil', 'mesma-npv', 'mesma-pv', 'mesma-soil']
+        df = df.sort_values('sza')
+
+        # # create figure
+        fig = plt.figure(constrained_layout=True, figsize=(12, 8))
+        ncols = 3
+        nrows = 2
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.025, hspace=0.0001, figure=fig)
+
+        for row in range(nrows):
+            for col in range(ncols):
+                ax = fig.add_subplot(gs[row, col])
+                ax.grid('on', linestyle='--')
+                ax.set_ylabel("Absolute Error")
+                ax.set_xlabel('Solar Zenith Angle (°)')
+
+                ax.set_xlim(0, 60)
+                ax.set_ylim(0, 0.5)
+
+                if col == 0 and row == 0:
+                    ax.set_title(f'NPV')
+                    l = df['sma-npv']
+                    marker = '.'
+
+                if col == 1 and row == 0:
+                    ax.set_title(f'GV')
+                    l = df['sma-pv']
+                    marker = '+'
+
+                if col == 2 and row == 0:
+                    ax.set_title(f'Soil')
+                    l = df['sma-soil']
+                    marker = 'x'
+
+                if col == 0 and row == 1:
+                    l = df['mesma-npv']
+                    marker = '.'
+
+                if col == 1 and row == 1:
+                    l = df['mesma-pv']
+                    marker = '+'
+
+                if col == 2 and row == 1:
+                    l = df['mesma-soil']
+                    marker = 'x'
+
+                x = df['sza']
+                ax.scatter(x, l, marker=marker)
+                r2 = r2_calculations(x, l)
+                txtstr = '\n'.join((
+                    r'R$^2$: %.2f' % (r2,),
+                    r'n = ' + str(len(x))))
+                props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
+                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
+                        verticalalignment='top', bbox=props)
+                ax.set_aspect(1. / ax.get_data_ratio())
+
+        plt.savefig(os.path.join(self.fig_directory, 'sza_mae.png'), format="png", dpi=300, bbox_inches="tight")
+
+
+
+    def local_slpit(self):
+        # load all fraction files
+        fraction_files_sma = sorted(glob(os.path.join(self.output_directory, 'sma-best', '*fractional_cover')))
+        fraction_files_mesma = sorted(glob(os.path.join(self.output_directory, 'mesma', '*fractional_cover')))
+        all_files = fraction_files_sma + fraction_files_mesma
+
+        results = p_map(fraction_file_info, all_files,
+                        **{"desc": "\t\t retrieving mean fractional cover: ...", "ncols": 150})
+        df_all = pd.DataFrame(results)
+        df_all.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization',
+                          'npv', 'pv', 'soil', 'shade']
+
+        # load all uncertainty files
+        uncer_files_sma = sorted(glob(os.path.join(self.output_directory, 'sma-best', '*fractional_cover_uncertainty')))
+        uncer_files_mesma = sorted(glob(os.path.join(self.output_directory, 'mesma', '*fractional_cover_uncertainty')))
+        all_uncer_files = uncer_files_sma + uncer_files_mesma
+
+        results_uncer = p_map(fraction_file_info, all_uncer_files,
+                              **{"desc": "\t\t retrieving mean uncertainty: ...", "ncols": 150})
+        df_all_uncer = pd.DataFrame(results_uncer)
+
+        df_all_uncer.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization',
+                                'npv', 'pv', 'soil', 'shade']
+
+        # # create figure
+        fig = plt.figure(constrained_layout=True, figsize=(12, 8))
+        ncols = 3
+        nrows = 2
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.025, hspace=0.0001, figure=fig)
+
+        # loop through figure columns
+        for row in range(nrows):
+            if row == 0:
+                df_select = df_all[(df_all['unmix_mode'] == 'sma-best') & (df_all['lib_mode'] == 'local')].copy()
+                df_uncer = df_all_uncer[
+                    (df_all_uncer['unmix_mode'] == 'sma-best') & (df_all_uncer['lib_mode'] == 'local')].copy()
+
+            if row == 1:
+                df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (
+                            df_all['num_mc'] == 25)].copy()
+                df_uncer = df_all_uncer[
+                    (df_all_uncer['unmix_mode'] == 'mesma') & (df_all_uncer['lib_mode'] == 'local') & (
+                                df_all_uncer['num_mc'] == 25)].copy()
+
+            for col in range(ncols):
+                ax = fig.add_subplot(gs[row, col])
+                ax.grid('on', linestyle='--')
+                ax.set_xlabel('SLPIT Fractions')
+                ax.set_ylabel("EMIT Fractions")
+
+                ax.set_aspect(1. / ax.get_data_ratio())
+
+                ax.set_title(f'{self.ems[col]}')
+                ax.set_xlim(0, 1)
+                ax.set_ylim(0, 1)
+
+                # plot 1 to 1 line
+                one_line = np.linspace(0, 1, 101)
+                ax.plot(one_line, one_line, color='red')
+
+                df_x = df_select[(df_select['instrument'] == 'asd')].copy().reset_index(drop=True)
+                df_y = df_select[(df_select['instrument'] == 'emit')].copy().reset_index(drop=True)
+                df_x_u = df_uncer[(df_uncer['instrument'] == 'asd')].copy().reset_index(drop=True)
+                df_y_u = df_uncer[(df_uncer['instrument'] == 'emit')].copy().reset_index(drop=True)
+
+                # plot fractional cover values
+                if col == 0:
+                    x = df_x['npv']
+                    y = df_y['npv']
+                    x_u = df_x_u['npv']
+                    y_u = df_y_u['npv']
+
+                elif col == 1:
+                    x = df_x['pv']
+                    y = df_y['pv']
+                    x_u = df_x_u['pv']
+                    y_u = df_y_u['pv']
+                else:
+                    x = df_x['soil']
+                    y = df_y['soil']
+                    x_u = df_x_u['soil']
+                    y_u = df_y_u['soil']
+
+                ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='o', markersize=8)
+
+                # Add error metrics
+                rmse = mean_squared_error(x, y, squared=False)
+                mae = mean_absolute_error(x, y)
+                r2 = r2_calculations(x, y)
+
+                txtstr = '\n'.join((
+                    r'MAE(RMSE): %.2f(%.2f)' % (mae,rmse),
+                    r'R$^2$: %.2f' % (r2,),
+                    r'n = ' + str(len(x))))
+
+                props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
+                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
+                        verticalalignment='top', bbox=props)
+
+        plt.savefig(os.path.join(self.fig_directory, 'regression_local.png'), format="png", dpi=300, bbox_inches="tight")
+
 def run_figures(base_directory):
     fig = figures(base_directory=base_directory)
-    fig.plot_summary()
+    #fig.plot_summary()
     fig.plot_rmse()
+    #fig.local_slpit()
+    fig.sza_plot()
