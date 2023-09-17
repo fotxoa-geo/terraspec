@@ -153,9 +153,9 @@
             }
         }
     },
-    "lutdir": "~/terraspec/simulation/output/hypertrace/luts/sRTMnet",
-    "outdir": "~/terraspec/simulation/output/hypertrace/veg-simulation-atmospheres",
-    "reflectance_file": "~/terraspec/simulation/output/convex_hull__n_dims_4_spectra",
+    "lutdir": "/data1/geog/gregokin/terraspec/simulation/output/hypertrace/luts/sRTMnet",
+    "outdir": "/data1/geog/gregokin/terraspec/simulation/output/hypertrace/veg-simulation-atmospheres",
+    "reflectance_file": "/data1/geog/gregokin/terraspec/simulation/output/convex_hull__n_dims_4_spectra",
     "rtm_template_file": "/dev/null",
     "wavelength_file": "./utils/wavelengths/emit_wavelengths.txt"
 }
