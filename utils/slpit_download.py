@@ -53,7 +53,7 @@ def download_emit(base_directory):
     create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'nc_files'))
 
     # get plot center points from ipad
-    shapefile = os.path.join(base_directory, 'gis', "Observation.shp")
+    shapefile = os.path.join('gis', "Observation.shp")
     today = datetime.datetime.today().strftime('%Y-%m')
     today_date = datetime.datetime.strptime(today, '%Y-%m')
     next_month_date = today_date + relativedelta(months=1)
@@ -72,9 +72,6 @@ def download_emit(base_directory):
         results = earthaccess.search_data(short_name="EMITL2ARFL", version="001", cloud_hosted=True,
                                               bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
                                               temporal=("2022-08", next_month_str), count=-1)
-        
-        if plot == 'SPEC - 028':
-            print(results)
         files = earthaccess.download(results, os.path.join(base_directory, 'gis', 'emit-data', 'nc_files'))
 
 
