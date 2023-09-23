@@ -77,7 +77,7 @@ class emit:
         cursor_print(msg)
 
         # get plot center points from ipad - these are the plot centers
-        shapefile = os.path.join(self.gis_directory, "Observation.shp")
+        shapefile = os.path.join('gis', "Observation.shp")
 
         # get emit reflectance files
         reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_reflectance')))
