@@ -1,7 +1,7 @@
 import os
-from utils.text_guide import cursor_print, query_slpit_mode
+from utils.text_guide import cursor_print, query_slpit_mode, query_yes_no
 from utils.slpit_download import run_download_emit, run_dowloand_slpit
-from slpit.geoprocess import run_geoprocess_utils, run_geoprocess_extract
+from slpit.geoprocess import run_geoprocess_utils, run_geoprocess_extract, run_nc_to_envi
 from slpit.build_slpit import run_build_workflow
 from slpit.figures import run_figures
 from slpit.slpit_unmix import run_slipt_unmix
@@ -43,7 +43,11 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
 
         # run the geoprocess on the emit imagery
         elif user_input == 'D':
-            run_geoprocess_utils(base_directory=base_directory, nc_to_envi=dry_run)
+            run_nc_to_envi(base_directory=base_directory)
+
+            rgb_input = query_yes_no(question='Would you like RGBs?')
+            if rgb_input:
+                run_geoprocess_utils(base_directory=base_directory)
 
         # extract the 3x3 windows
         elif user_input == 'E':
@@ -58,7 +62,7 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
             run_figures(base_directory=base_directory)
 
         elif user_input == "H":
-            print("Exiting the program.")
+            print("Returning to main menu.")
             break
         else:
             print("Invalid choice. Please choose a valid option.")

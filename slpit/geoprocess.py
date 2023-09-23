@@ -104,12 +104,14 @@ class emit:
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
 
-def run_geoprocess_utils(base_directory, nc_to_envi:bool):
+def run_geoprocess_utils(base_directory):
     geo = emit(base_directory=base_directory)
-
-    if nc_to_envi:
-        geo.nc_to_envi()
     geo.rgb_quick_look()
+
+
+def run_nc_to_envi(base_directory):
+    geo = emit(base_directory=base_directory)
+    geo.nc_to_envi()
 
 
 def run_geoprocess_extract(base_directory, dry_run: bool):
