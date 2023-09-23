@@ -445,8 +445,8 @@ def run_build_workflow(base_directory, sensor):
 
     else:
         lib = build_libraries(base_directory=base_directory, sensor=sensor)
-        #lib.build_emit_transects()
-        #lib.build_emit_endmembers()
-        #lib.build_em_collection()
-        #lib.build_gis_data()
+        lib.build_emit_transects()
+        lib.build_emit_endmembers()
+        lib.build_em_collection()
+        lib.build_gis_data()
         lib.build_derivative_library()
