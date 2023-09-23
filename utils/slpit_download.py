@@ -78,8 +78,10 @@ def download_emit(base_directory):
         files = earthaccess.download(results, os.path.join(base_directory, 'gis', 'emit-data', 'nc_files'))
 
 
-def run_download_scripts(base_directory):
+def run_download_emit(base_directory):
     download_emit(base_directory=base_directory)
+
+def run_dowloand_slpit():
     emit_slpit_recrods = get_iform_records(server_name=server_name, client_key=ck, secret_key=sk, profile_id=profile_id,
                                            page_id=emit_transects_page_id)
     save_pickle(emit_slpit_recrods, 'emit_slpit')
