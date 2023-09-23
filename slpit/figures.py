@@ -83,7 +83,7 @@ class figures:
         df_gis = df_gis.sort_values('Name')
 
         # fractional cover
-        for plot in sorted(list(transect_data.plot_name.unique())):
+        for plot in sorted(list(transect_data.plot_name.unique()), reverse=True):
             fig = plt.figure(figsize=(14, 8))
 
             fig.suptitle(plot)
