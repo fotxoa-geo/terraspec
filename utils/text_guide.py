@@ -87,7 +87,7 @@ def cursor_print(string):
     for c in string:
         sys.stdout.write(c)
         sys.stdout.flush()
-        time.sleep(0.02)
+        time.sleep(0.01)
 
 def input_date(msg, gis_directory):
     while True:
