@@ -16,6 +16,10 @@ class unmix_runs:
 
         self.base_directory = base_directory
         self.output_directory = os.path.join(base_directory, 'output')
+        create_directory(os.path.join(self.output_directory, 'outlogs'))
+        create_directory(os.path.join(self.output_directory, 'scratch'))
+
+        self.output_directory = os.path.join(base_directory, 'output')
         self.spectral_transect_directory = os.path.join(self.output_directory, 'spectral_transects', 'transect')
         self.spectral_em_directory = os.path.join(self.output_directory, 'spectral_transects', 'endmembers')
         self.gis_directory = os.path.join(base_directory, 'gis')
