@@ -1,4 +1,4 @@
-
+#!/bin/sh
 rfl_file=$1
 out_base=$2
 
