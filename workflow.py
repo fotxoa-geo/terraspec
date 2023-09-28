@@ -6,7 +6,7 @@ import subprocess
 from simulation.sim_workflow import run_sim_workflow
 from slpit.slpit_workflow import run_slpit_workflow
 from tetracorder.tetracorder_workflow import run_tetracorder_workflow
-
+import time
 def display_menu():
     print("Welcome to the Interactive Menu")
     print("A... Simulation")
@@ -48,7 +48,13 @@ def main():
             run_tetracorder_workflow(base_directory=base_directory, sensor=args.sensor)
 
         elif choice == "D":
-            print("Exiting the program.")
+            outro = "TerraSpec processes complete. Thank you for using Terraspec!"
+            cursor_print(outro)
+            time.sleep(1)
+            print()
+            f = open('utils/vault-boy.txt', 'r', encoding="utf8")
+
+            print(''.join([line for line in f]))
             break
         else:
             print("Invalid choice. Please choose a valid option.")
