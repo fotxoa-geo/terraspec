@@ -16,14 +16,18 @@ class unmix_runs:
 
         self.base_directory = base_directory
         self.output_directory = os.path.join(base_directory, 'output')
+        create_directory(os.path.join(self.output_directory, 'outlogs'))
+        create_directory(os.path.join(self.output_directory, 'scratch'))
+
+        self.output_directory = os.path.join(base_directory, 'output')
         self.spectral_transect_directory = os.path.join(self.output_directory, 'spectral_transects', 'transect')
         self.spectral_em_directory = os.path.join(self.output_directory, 'spectral_transects', 'endmembers')
         self.gis_directory = os.path.join(base_directory, 'gis')
 
         # simulation parameters for spatial and hypertrace unmix
         self.optimal_parameters_sma = ['--num_endmembers 20', '--n_mc 25', '--normalization brightness']
-        self.optimal_parameters_mesma = ['--max_combinations 1000', '--n_mc 25', '--normalization brightness']
-        self.non_opt_mesma = ['--max_combinations 1000', '--n_mc 1', '--normalization brightness']
+        self.optimal_parameters_mesma = ['--max_combinations 100', '--n_mc 25', '--normalization brightness']
+        self.non_opt_mesma = ['--max_combinations 100', '--n_mc 1', '--normalization brightness']
 
         # load wavelengths
         self.wvls, self.fwhm = spectra.load_wavelengths(sensor='emit')
@@ -41,13 +45,12 @@ class unmix_runs:
         self.spectra_starting_column_local = '11'
         self.spectra_starting_column_global = '8'
 
-
     def unmix_calls(self, mode:str):
         # Start unmixing process
         cursor_print(f"commencing... {mode}")
 
         # load shapefile
-        df = pd.DataFrame(gp.read_file(os.path.join(self.gis_directory, "Observation.shp")))
+        df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
         df = df.sort_values('Name')
 
         # create directory
@@ -57,14 +60,10 @@ class unmix_runs:
             plot = row['Name']
 
             emit_filetime = row['EMIT Date']
-            #input_datetime = datetime.strptime(image_acquisition_time_ipad, "%b %d, %Y at %I:%M:%S %p")
-            #emit_filetime = input_datetime.strftime("%Y%m%dT%H%M")
-
             reflectance_img_emit = glob(os.path.join(self.gis_directory, 'emit-data-clip', f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
             reflectance_uncer_img_emit = glob(os.path.join(self.gis_directory, 'emit-data-clip',f'*{plot.replace(" ", "")}_RFLUNCERT_{emit_filetime}'))
             em_local = os.path.join(self.spectral_em_directory, plot.replace("SPEC", 'Spectral').replace(" ", "") + '-emit.csv')
             asd_reflectance = glob(os.path.join(self.spectral_transect_directory, f'*{plot.replace("SPEC", "Spectral").replace(" ", "")}'))
-            
 
             if os.path.isfile(em_local):
                 if mode == 'mesma':
@@ -78,7 +77,6 @@ class unmix_runs:
                     # unmix asd with local library
                     out_param_string = " ".join(i)
                     out_param_name = plot.replace(" ", "") + "___" + out_param_string.replace('--','').replace('_', '-').replace(' ', '_')
-
 
                     call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=em_local,
                            parameters=i, output_dest=os.path.join(output_dest, 'asd-local___' + out_param_name),
