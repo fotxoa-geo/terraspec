@@ -163,17 +163,14 @@ class tetracorder:
         em_files = glob(os.path.join(self.base_directory, 'slpit', 'output', 'spectral_transects', 'endmembers', '*[!.csv][!.hdr][!.aux][!.xml]'))
 
         # load shapefile
-        df = pd.DataFrame(gp.read_file(os.path.join(self.base_directory, 'slpit', 'gis', "Observation.shp")))
+        df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
         df = df.sort_values('Name')
 
         for index, row in df.iterrows():
             plot = row['Name']
-
-            image_acquisition_time_ipad = row['EMIT Overp']
-            input_datetime = datetime.strptime(image_acquisition_time_ipad, "%b %d, %Y at %I:%M:%S %p")
-            emit_filetime = input_datetime.strftime("%Y%m%dT%H%M")
-            reflectance_img_emit = glob(os.path.join(self.base_directory, 'slpit', 'gis', 'emit-data-clip',
-                                                     f'*{plot.replace(" ", "")}_RFL_{emit_filetime}*[!.xml][!.hdr]'))
+            emit_filetime = row['EMIT Date']
+            reflectance_img_emit = glob(os.path.join('gis', 'emit-data-clip',
+                                                     f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
 
             basename = os.path.basename(reflectance_img_emit[0])
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_pixels_augmented.hdr")
