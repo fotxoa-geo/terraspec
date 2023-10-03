@@ -45,7 +45,7 @@ def main():
             run_slpit_workflow(os.path.join(base_directory, 'slpit'), dry_run=args.dry_run, sensor=args.sensor)
 
         elif choice == 'C':
-            run_tetracorder_workflow(base_directory=base_directory, sensor=args.sensor)
+            run_tetracorder_workflow(base_directory=os.path.join(base_directory, 'tetracorder'), sensor=args.sensor)
 
         elif choice == "D":
             outro = "TerraSpec processes complete. Thank you for using Terraspec!"
