@@ -1,5 +1,6 @@
 import os
 import datetime
+import subprocess
 import time
 from dateutil.relativedelta import relativedelta
 from zerionPy import IFB
@@ -8,6 +9,7 @@ import earthaccess
 import pandas as pd
 import geopandas as gp
 from utils.create_tree import create_directory
+from sys import platform
 
 
 # create object folder to store the pickle objects
@@ -78,7 +80,21 @@ def download_emit(base_directory):
 def run_download_emit(base_directory):
     download_emit(base_directory=base_directory)
 
+
+def sync_gdrive(base_directory):
+
+    if "linux" in platform:
+        output_directory = os.path.join(base_directory, 'data', 'spectral_transects')
+        create_directory(output_directory)
+        base_call = f"rclone copy gdrive:terraspec/slpit/data/spectral_transects {output_directory} -P"
+        subprocess.call(base_call, shell=True)
+    else:
+        print("Cannot sync between local machine! Upload data from ASD computer to google drive.")
+
+
 def run_dowloand_slpit():
     emit_slpit_recrods = get_iform_records(server_name=server_name, client_key=ck, secret_key=sk, profile_id=profile_id,
                                            page_id=emit_transects_page_id)
     save_pickle(emit_slpit_recrods, 'emit_slpit')
+
+

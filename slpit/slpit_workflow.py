@@ -1,6 +1,6 @@
 import os
 from utils.text_guide import cursor_print, query_slpit_mode, query_yes_no
-from utils.slpit_download import run_download_emit, run_dowloand_slpit
+from utils.slpit_download import run_download_emit, run_dowloand_slpit, sync_gdrive
 from slpit.geoprocess import run_geoprocess_utils, run_geoprocess_extract, run_nc_to_envi
 from slpit.build_slpit import run_build_workflow
 from slpit.figures import run_figures
@@ -36,6 +36,7 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
         # download SLPIT data
         elif user_input == 'B':
             run_dowloand_slpit()
+            sync_gdrive(base_directory)
 
         # build and convolve the libraries to specified instruments
         elif user_input == 'C':
