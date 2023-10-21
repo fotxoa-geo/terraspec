@@ -26,6 +26,7 @@ class emit:
         create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'envi'))
         create_directory(os.path.join(base_directory, 'gis', 'rgb-quick-look'))
         create_directory(os.path.join(base_directory, 'gis', 'emit-data-clip'))
+        create_directory(os.path.join(base_directory, 'gis', 'outlogs'))
 
         # define gis directory
         self.gis_directory = os.path.join(base_directory, 'gis')
@@ -34,13 +35,15 @@ class emit:
         msg = f"\nTerraSpec has created the following directory: {os.path.join(self.base_directory, 'gis', 'emit-data', 'envi')}\n" \
               f"ENVI files along with corresponding HDR files will be stored here."
         cursor_print(msg)
-
+        create_directory(os.path.join(self.gis, 'outlogs', 'nc_processes'))
         nc_files = glob(os.path.join(self.gis_directory, 'emit-data', 'nc_files', '*.nc'))
+
         for i in nc_files:
             basename = os.path.basename(i).split(".")[0]
+            nc_outfile = os.path.join(os.path.join(self.gis, 'outlogs', 'nc_processes', basename + '.out'))
             base_call = f'python ./slpit/emit_utils/reformat.py {i} {os.path.join(self.gis_directory, "emit-data", "envi")} --orthorectify'
 
-            subprocess.call(['sbatch', '-N', '1', '-c', '40', '--mem', '180G', '--wrap', f'{base_call}'])
+            subprocess.call(['sbatch', '-N', '1', '-c', '40', '--mem', '180G', '--output', nc_outfile, '--wrap', f'{base_call}'])
 
     def rgb_quick_look(self):
         msg = f"\nTerraSpec has created the following directory: {os.path.join(self.base_directory, 'gis', 'rgb-quick-look')}\n" \
@@ -94,13 +97,15 @@ class emit:
 
         all_files = reflectance_files + reflectance_uncertainty_files + mask_files
 
+        create_directory(os.path.join(self.gis, 'outlogs', 'extracts'))
+
         for file in all_files:
             acquisition_date = os.path.basename(file).split("_")[4]
             acquisition_type = os.path.basename(file).split("_")[2]
             base_call = f'python {window_extract_path} -rfl_img {file} -w_size {window_size} ' \
                         f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis_directory, "emit-data-clip")} '
-
-            sbatch_cmd = f"sbatch -N 1 -c 40 --mem 80G --output {acquisition_date + '_' + acquisition_type + '.out'} --wrap='{base_call}'"
+            outfile = os.path.join(self.gis, 'outlogs', 'extracts', acquisition_date + '_' + acquisition_type + '.out')
+            sbatch_cmd = f"sbatch -N 1 -c 40 --mem 80G --output {outfile} --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
 

@@ -18,9 +18,10 @@ def display_slpit_menu():
     print("C... Build Reflectance Files from ASD")
     print("D... Geoprocess NC to ENVI data")
     print("E... Extract ENVI Data from SLPIT Points")
-    print("F... Unmix Signals")
-    print("G... Process Figures")
-    print("H... Exit")
+    print("F... Sync extracted 3x3 windows")
+    print("G... Unmix Signals")
+    print("H... Process Figures")
+    print("I... Exit")
 
 
 def run_slpit_workflow(base_directory:str, dry_run, sensor):
@@ -53,17 +54,19 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
         # extract the 3x3 windows
         elif user_input == 'E':
             run_geoprocess_extract(base_directory=base_directory, dry_run=dry_run)
+
+        elif user_input =='F':
             sync_extracts(base_directory)
 
         # run unmixing code
-        elif user_input == 'F':
+        elif user_input == 'G':
             run_slipt_unmix(base_directory=base_directory, dry_run=dry_run)
 
         # run the figure set
-        elif user_input == 'G':
+        elif user_input == 'H':
             run_figures(base_directory=base_directory)
 
-        elif user_input == "H":
+        elif user_input == "I":
             print("Returning to main menu.")
             break
         else:
