@@ -1,6 +1,6 @@
 import os
 from utils.text_guide import cursor_print, query_slpit_mode, query_yes_no
-from utils.slpit_download import run_download_emit, run_dowloand_slpit, sync_gdrive
+from utils.slpit_download import run_download_emit, run_dowloand_slpit, sync_gdrive, sync_extracts
 from slpit.geoprocess import run_geoprocess_utils, run_geoprocess_extract, run_nc_to_envi
 from slpit.build_slpit import run_build_workflow
 from slpit.figures import run_figures
@@ -53,6 +53,7 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
         # extract the 3x3 windows
         elif user_input == 'E':
             run_geoprocess_extract(base_directory=base_directory, dry_run=dry_run)
+            sync_extracts(base_directory)
 
         # run unmixing code
         elif user_input == 'F':
