@@ -92,6 +92,16 @@ def sync_gdrive(base_directory):
         print("Cannot sync between local machine! Upload data from ASD computer to google drive.")
 
 
+def sync_extracts(base_directory):
+    if "linux" in platform:
+        output_directory = os.path.join(base_directory, 'gis', 'emit-data-clip')
+        create_directory(output_directory)
+        base_call = f"rclone copy {output_directory} gdrive:terraspec/slpit/gis/emit-data-clip/ -P"
+        subprocess.call(base_call, shell=True)
+    else:
+        print("Extracts are being done in cluster! Cannot sync between local machine.")
+
+
 def run_dowloand_slpit():
     emit_slpit_recrods = get_iform_records(server_name=server_name, client_key=ck, secret_key=sk, profile_id=profile_id,
                                            page_id=emit_transects_page_id)
