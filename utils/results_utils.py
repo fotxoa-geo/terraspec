@@ -202,7 +202,6 @@ def performance_log(out_file:str):
     if worker_counter != 1000:
         error_flag = 1
     
-    
     df = pd.DataFrame([arguments], columns=arguments.keys())
     df['spectra_per_s'] = worker_counter/(np.sum(total_seconds)/40)
     df['total_time'] = np.sum(total_seconds)

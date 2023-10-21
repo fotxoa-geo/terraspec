@@ -19,11 +19,12 @@ class tetracorder:
 
     def __init__(self, base_directory: str, sensor:str):
 
-        self.base_directory = base_directory
-        self.tetra_data_directory = os.path.join(base_directory, 'tetracorder', 'data')
-        self.tetra_output_directory = os.path.join(base_directory, 'tetracorder', 'output')
+        self.base_directory = os.path.join(base_directory, 'tetracorder')
+        self.tetra_data_directory = os.path.join(self.base_directory, 'data')
+        self.tetra_output_directory = os.path.join(self.base_directory, 'output')
         self.simulation_output_directory = os.path.join(base_directory, 'simulation', 'output')
         self.slpit_output_directory = os.path.join(base_directory, 'slpit', 'output')
+        self.slpit_gis_directory = os.path.join(base_directory, 'slpit', 'gis')
 
         # load wavelengths
         self.wvls, self.fwhm = spectra.load_wavelengths(sensor=sensor)
@@ -159,8 +160,8 @@ class tetracorder:
 
     def augment_slpit_pixels(self):
         cursor_print('augmenting slpit pixels...')
-        transect_files = glob(os.path.join(self.base_directory, 'slpit', 'output', 'spectral_transects', 'transect', '*[!.csv][!.hdr][!.aux][!.xml]'))
-        em_files = glob(os.path.join(self.base_directory, 'slpit', 'output', 'spectral_transects', 'endmembers', '*[!.csv][!.hdr][!.aux][!.xml]'))
+        transect_files = glob(os.path.join(self.slpit_output_directory, 'spectral_transects', 'transect', '*[!.csv][!.hdr][!.aux][!.xml]'))
+        em_files = glob(os.path.join(self.slpit_output_directory, 'spectral_transects', 'endmembers', '*[!.csv][!.hdr][!.aux][!.xml]'))
 
         # load shapefile
         df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
@@ -169,7 +170,7 @@ class tetracorder:
         for index, row in df.iterrows():
             plot = row['Name']
             emit_filetime = row['EMIT Date']
-            reflectance_img_emit = glob(os.path.join('gis', 'emit-data-clip',
+            reflectance_img_emit = glob(os.path.join(self.slpit_gis_directory, 'emit-data-clip',
                                                      f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
 
             basename = os.path.basename(reflectance_img_emit[0])

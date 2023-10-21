@@ -17,8 +17,6 @@ def display_menu():
 def main():
     parser = argparse.ArgumentParser(description='Run Terraspec')
     parser.add_argument('-bd', '--base_root_directory', type=str, default='~', help='Specify project directory (e.g., where outputs will save')
-    #parser.add_argument("-mode", type=str, help="set the run mode", default="convolve",
-    #                    choices=['simulation', 'slpit', 'tetracorder'])
     parser.add_argument('-dry', '--dry_run', type=bool, help=' Set the dry run parameter to True to print unmix call',
                         default=False)
     parser.add_argument('-lvl', '--level', type=str, help='level of classification to use', default='level_1')
@@ -45,7 +43,7 @@ def main():
             run_slpit_workflow(os.path.join(base_directory, 'slpit'), dry_run=args.dry_run, sensor=args.sensor)
 
         elif choice == 'C':
-            run_tetracorder_workflow(base_directory=os.path.join(base_directory, 'tetracorder'), sensor=args.sensor)
+            run_tetracorder_workflow(base_directory, sensor=args.sensor)
 
         elif choice == "D":
             outro = "TerraSpec processes complete. Thank you for using Terraspec!"
