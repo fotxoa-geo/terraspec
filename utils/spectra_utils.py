@@ -184,6 +184,66 @@ class spectra:
         return row_spectra, row_fractions, row_index
 
     @classmethod
+    def increment_reflectance(cls, class_names: list, simulation_table: str, level: str, spectral_bundles:int,
+                              increment_size:float, output_directory: str, wvls, name: str, spectra_starting_col:int):
+        ts = time.time()
+        # define seed for random sampling of spectral bundles
+        np.random.seed(13)
+
+        df = simulation_table
+        df = df.reset_index(drop=True)
+        df.insert(0, 'index', df.index)
+        class_lists = []
+
+        for em in class_names:
+            df_select = df.loc[df[level] == em].copy()
+            df_select = df_select.values.tolist()
+            class_lists.append(df_select)
+
+        all_combinations = list(itertools.product(*class_lists))
+
+        if len(all_combinations) < spectral_bundles:
+            index = np.random.choice(len(all_combinations), replace=False, size=len(all_combinations))
+        else:
+            index = np.random.choice(len(all_combinations), replace=False, size=spectral_bundles)
+
+        cols = int(1 / increment_size) + 1
+        spectra_all = [all_combinations[i] for i in index]
+        fraction_grid = np.zeros((len(index), cols, len(class_names)))
+        spectra_grid = np.zeros((len(index), cols, len(wvls)))
+        index_grid = np.zeros((len(index), cols, len(class_names)))
+
+        # spectra array - combinations x # of classes (each col is an em) x wavelengths
+        spec_array = np.array(spectra_all)
+
+        for _col, col in enumerate(range(0, cols)):
+            col_soil_frac = np.round(col * increment_size, 2)
+            col_fractions, col_index, col_spectra = spectra.increment_synthetic_reflectance(data=spec_array,
+                                                                                            wvls=wvls,
+                                                                                            em_fraction=col_soil_frac,
+                                                                                            seed=_col, spectra_start=spectra_starting_col)
+
+            fraction_grid[:, _col, :] = col_fractions
+            spectra_grid[:, _col, :] = col_spectra
+            index_grid[:, _col, :] = col_index
+
+        # save the datasets
+        refl_meta = get_meta(lines=len(index), samples=cols, bands=wvls, wvls=True)
+        index_meta = get_meta(lines=len(index), samples=cols, bands=class_names, wvls=False)
+        fraction_meta = get_meta(lines=len(index), samples=cols, bands=class_names, wvls=False)
+
+        # save index, spectra, fraction grid
+        output_files = [os.path.join(output_directory, name + '_index.hdr'),
+                        os.path.join(output_directory, name + '_spectra.hdr'),
+                        os.path.join(output_directory, name + '_fractions.hdr')]
+
+        meta_docs = [index_meta, refl_meta, fraction_meta]
+        grids = [index_grid, spectra_grid, fraction_grid]
+
+        p_map(save_envi, output_files, meta_docs, grids, **{"desc": "\t\t saving envi files...", "ncols": 150})
+        del index_grid, spectra_grid, fraction_grid
+
+    @classmethod
     def generate_reflectance(cls, class_names: list, simulation_table: str, level: str, spectral_bundles:int, cols:int,
                              output_directory: str, wvls, name: str, spectra_starting_col:int):
 
