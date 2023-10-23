@@ -34,12 +34,41 @@ class tetracorder:
         create_directory(os.path.join(self.tetra_output_directory, 'augmented'))
         create_directory(os.path.join(self.tetra_output_directory, 'spectral_abundance'))
 
+        self.augmented_dir = os.path.join(os.path.join(self.tetra_output_directory, 'augmented'))
+
+    def generate_tetracorder_reflectance(self):
+        cursor_print('generating reflectance')
+
+        df_sim = pd.read_csv(os.path.join(self.simulation_output_directory, 'simulation_libraries',
+                                          'convex_hull__n_dims_4_simulation_library.csv'))
+
+        spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
+                                      level='level_1', spectral_bundles=50000, increment_size=0.05,
+                                      output_directory=self.augmented_dir, wvls=self.wvls,
+                                      name='tetracorder', spectra_starting_col=7)
+
+    def hypertrace_tetracorder(self):
+        cursor_print('hypertrace: tetracorder')
+
+    def unmix_tetracorder(self):
+        cursor_print('unmixing tetracorder')
+
+        em_file = os.path.join(self.simulation_output_directory, 'endmember_libraries',
+                               'convex_hull__n_dims_4_unmix_library.csv')
+
+        optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization brightness']
+
+        reflectance_file = os.path.join(self.augmented_dir, 'tetracorder_spectra')
+        call_unmix(mode='sma-best', dry_run=False, reflectance_file=reflectance_file, em_file=em_file,
+                   parameters=optimal_parameters, output_dest=self.augmented_dir, scale='1',
+                   spectra_starting_column='8')
+
     def reconstruct_soil_simulation(self):
         cursor_print('reconstructing soil from simulation...')
 
         # reconstructed soil from simulated reflectance
-        simulation_fractions_array = envi_to_array(os.path.join(self.simulation_output_directory, 'convex_hull__n_dims_4_fractions'))
-        simulation_index_array = envi_to_array(os.path.join(self.simulation_output_directory, 'convex_hull__n_dims_4_index'))
+        simulation_fractions_array = envi_to_array(os.path.join(self.augmented_dir, 'tetracorder_fractions'))
+        simulation_index_array = envi_to_array(os.path.join(self.augmented_dir, 'tetracorder_index'))
         simulation_library_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
                                                          'convex_hull__n_dims_4_simulation_library'))
 
@@ -51,7 +80,7 @@ class tetracorder:
 
         meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls,
                                 wvls=True)
-        output_raster = os.path.join(self.tetra_data_directory, "simulated-soil.hdr")
+        output_raster = os.path.join(self.augmented_dir, "simulated-soil.hdr")
         save_envi(output_raster, meta_spectra, spectra_grid)
         print("\t- done")
 
@@ -157,23 +186,6 @@ class tetracorder:
 
         p_map(save_envi, output_files, meta_docs, grids, **{"desc": "\t\t saving envi files...", "ncols": 150})
 
-    def reflectance_increment(self):
-
-        df_sim = pd.read_csv(os.path.join(self.simulation_output_directory, 'simulation_libraries',
-                                          'convex_hull__n_dims_4_simulation_library.csv'))
-        em_file = os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library.csv')
-
-        spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
-                                      level='level_1', spectral_bundles=5, increment_size=0.05,
-                                      output_directory=self.simulation_output_directory, wvls=self.wvls,
-                                      name='tetracorder_reflectance', spectra_starting_col=8)
-        
-        # unmix
-        optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization brightness']
-
-        reflectance_file = os.path.join(self.tetra_output_directory, 'tetracorder')
-        call_unmix(mode='sma-best', dry_run=False, reflectance_file=reflectance_file, em_file=em_file, parameters=optimal_parameters, output_dest=self.tetra_output_directory, scale='1', spectra_starting_column='8')
-
     def augment_slpit_pixels(self):
         cursor_print('augmenting slpit pixels...')
         transect_files = glob(os.path.join(self.slpit_output_directory, 'spectral_transects', 'transect', '*[!.csv][!.hdr][!.aux][!.xml]'))
@@ -213,19 +225,10 @@ class tetracorder:
         # load simulation library - 4 dimension; convex hull
         simulation_lib = os.path.join(self.simulation_output_directory, 'simulation_libraries', 'convex_hull__n_dims_4_simulation_library')
 
-        # load simulated reflectance - 4 dimension; convex hull
-        simulation_refl = os.path.join(self.simulation_output_directory, 'convex_hull__n_dims_4_spectra')
-
-        # reconstructed soil from simulated reflectance
-        simulation_soil = os.path.join(self.tetra_data_directory, "simulated-soil")
-
         # load unmix library - 4 dimensions; convex hull
         unmix_lib = os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library')
 
-        # reconstructed soil from unmix library and fractions
-        unmix_soil = os.path.join(self.tetra_data_directory, "unmixing-soil")
-
-        files_to_augment = [simulation_lib, simulation_refl, simulation_soil, unmix_lib, unmix_soil]
+        files_to_augment = [simulation_lib, unmix_lib]
 
         for i in files_to_augment:
             basename = os.path.basename(i)
@@ -237,10 +240,11 @@ class tetracorder:
 
 def run_tetracorder_build(base_directory, sensor):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
-    tc.reflectance_increment()
+    tc.generate_tetracorder_reflectance()
+    tc.unmix_tetracorder()
     #tc.build_increment_instances(increment_size=0.05, mineral_index=0)
     #tc.reconstruct_soil_simulation()
     #tc.reconstruct_soil_sma()
-    tc.augment_slpit_pixels()
-    tc.augment_simulation()
+    #tc.augment_slpit_pixels()
+    #tc.augment_simulation()
 
