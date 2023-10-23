@@ -95,8 +95,7 @@ class tetracorder:
         soil_sa_sim_pure = envi_to_array(sa_sim_library)[:, 0, :]
         minerals = load_band_names(sa_sim_library)
 
-        df_sim = pd.read_csv(os.path.join(self.simulation_output_directory, 'simulation_libraries',
-                                            'convex_hull__n_dims_4_simulation_library.csv'))
+        df_sim = pd.read_csv(os.path.join(self.simulation_output_directory, 'simulation_libraries', 'convex_hull__n_dims_4_simulation_library.csv'))
 
         df_not_soil = df_sim[df_sim['level_1'] != 'soil']
         df_soil = df_sim[df_sim['level_1'] == 'soil']
