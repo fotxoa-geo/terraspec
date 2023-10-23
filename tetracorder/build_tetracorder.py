@@ -45,7 +45,7 @@ class tetracorder:
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
                                       level='level_1', spectral_bundles=50000, increment_size=0.05,
                                       output_directory=self.augmented_dir, wvls=self.wvls,
-                                      name='tetracorder', spectra_starting_col=7)
+                                      name='tetracorder', spectra_starting_col=8)
 
     def hypertrace_tetracorder(self):
         cursor_print('hypertrace: tetracorder')
@@ -240,7 +240,7 @@ class tetracorder:
 
 def run_tetracorder_build(base_directory, sensor):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
-    tc.generate_tetracorder_reflectance()
+    #tc.generate_tetracorder_reflectance()
     tc.unmix_tetracorder()
     #tc.build_increment_instances(increment_size=0.05, mineral_index=0)
     #tc.reconstruct_soil_simulation()
