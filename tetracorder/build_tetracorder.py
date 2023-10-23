@@ -160,7 +160,7 @@ class tetracorder:
     def reflectance_increment(self):
 
         df_sim = pd.read_csv(os.path.join(self.simulation_output_directory, 'simulation_libraries',
-                                          'convex_hull__n_dims_4_simulation_library'))
+                                          'convex_hull__n_dims_4_simulation_library.csv'))
         em_file = os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library.csv')
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
