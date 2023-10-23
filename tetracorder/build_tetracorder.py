@@ -164,17 +164,15 @@ class tetracorder:
         em_file = os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library.csv')
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
-                                      level='level_1', spectral_bundles=50000, increment_size=0.05,
+                                      level='level_1', spectral_bundles=5, increment_size=0.05,
                                       output_directory=self.simulation_output_directory, wvls=self.wvls,
-                                      name='tetracorder_reflectance', spectra_starting_col=7)
-
+                                      name='tetracorder_reflectance', spectra_starting_col=8)
+        
         # unmix
         optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization brightness']
 
-        # reflectance_file = os.path.join(self.simulation_output_directory, 'tetracorder_reflectance')
-        # call_unmix(mode='sma-best', dry_run=False, reflectance_file=reflectance_file, em_file=em_file,
-        #            parameters=optimal_parameters, output_dest=self.tetra_output_directory, scale='1',
-        #            spectra_starting_column='8')
+        reflectance_file = os.path.join(self.tetra_output_directory, 'tetracorder')
+        call_unmix(mode='sma-best', dry_run=False, reflectance_file=reflectance_file, em_file=em_file, parameters=optimal_parameters, output_dest=self.tetra_output_directory, scale='1', spectra_starting_column='8')
 
     def augment_slpit_pixels(self):
         cursor_print('augmenting slpit pixels...')
