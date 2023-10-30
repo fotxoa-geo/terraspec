@@ -12,7 +12,7 @@ from glob import glob
 import itertools
 import geopandas as gp
 from datetime import datetime
-from simulation.run_unmix import call_unmix
+from utils.unmix_utils import call_unmix
 
 
 class tetracorder:
