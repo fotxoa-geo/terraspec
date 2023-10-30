@@ -13,7 +13,7 @@ import itertools
 import geopandas as gp
 from datetime import datetime
 from simulation.run_unmix import call_unmix
-
+from simulation.run_hypertrace import hypertrace_workflow
 
 class tetracorder:
 
@@ -36,6 +36,9 @@ class tetracorder:
 
         self.augmented_dir = os.path.join(os.path.join(self.tetra_output_directory, 'augmented'))
 
+        create_directory(os.path.join(self.output_directory, 'outlogs'))
+        create_directory(os.path.join(self.output_directory, 'scratch'))
+
     def generate_tetracorder_reflectance(self):
         cursor_print('generating reflectance')
 
@@ -49,6 +52,8 @@ class tetracorder:
 
     def hypertrace_tetracorder(self):
         cursor_print('hypertrace: tetracorder')
+        hypertrace_workflow(dry_run=False, clean=False,
+                            configfile=os.path.join('simulation', 'hypertrace', 'tetracorder.json'))
 
     def unmix_tetracorder(self):
         cursor_print('unmixing tetracorder')
