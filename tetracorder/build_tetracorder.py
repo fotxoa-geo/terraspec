@@ -68,7 +68,7 @@ class tetracorder:
         call_unmix(mode='sma-best', dry_run=False, reflectance_file=reflectance_file, em_file=em_file,
                    parameters=optimal_parameters, output_dest=self.augmented_dir, scale='1',
                    spectra_starting_column='8')
-        
+
         print("loading hypertrace outputs...")
         estimated_reflectances = glob(os.path.join(self.augmented_dir, "hypertrace", '**', '*estimated-reflectance'), recursive=True)
         uncertainty_files = []
@@ -77,13 +77,13 @@ class tetracorder:
             uncertainty_files.append(uncertainty_file)
 
         p_map(partial(create_uncertainty, wvls=self.wvls), uncertainty_files, **{"desc": "\t\t saving new uncertainty files...", "ncols": 150})
-        
+
         for reflectance_file in estimated_reflectances:
             basename = hypertrace_meta(reflectance_file)
             new_reflectance_file = os.path.join(self.augmented_dir, basename)
             shutil.copyfile(reflectance_file, new_reflectance_file)
             shutil.copyfile(reflectance_file + '.hdr', new_reflectance_file + '.hdr')
-            
+
             uncertainty_file = os.path.join(os.path.dirname(reflectance_file), 'reflectance_uncertainty')
             new_uncertainty_file = os.path.join(self.augmented_dir, basename + '_uncer')
             shutil.copyfile(uncertainty_file, new_uncertainty_file)
@@ -102,11 +102,13 @@ class tetracorder:
         simulation_library_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
                                                          'convex_hull__n_dims_4_simulation_library'))
 
-        spectra_grid = np.zeros((simulation_fractions_array.shape[0], 1, len(self.wvls)))
+        spectra_grid = np.zeros((simulation_fractions_array.shape[0], simulation_fractions_array.shape[1], len(self.wvls)))
 
         for _row, row in enumerate(simulation_fractions_array):
-            picked_soil = int(simulation_index_array[_row, :, 2])
-            spectra_grid[_row, :, :] = simulation_library_array[picked_soil, :, :] * simulation_fractions_array[_row, :, 2]
+            for _col, col in enumerate(row):
+                picked_soil = int(simulation_index_array[_row, 0, 2])
+                soil_spectra = simulation_library_array[picked_soil, 0, :]
+                spectra_grid[_row, _col, :] = soil_spectra * simulation_fractions_array[_row, _col, 2]
 
         meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls,
                                 wvls=True)
@@ -117,7 +119,7 @@ class tetracorder:
     def reconstruct_soil_sma(self):
         cursor_print('reconstructing soil from sma...')
         # reconstructed soil from fractions and unmix library
-        complete_fractions_array = envi_to_array(os.path.join(self.simulation_output_directory, 'sma-best', 'convex_hull_n_dims_4_spectra_sma-best_normalization_brightness_num_endmembers_30_n_mc_25_complete_fractions'))
+        complete_fractions_array = envi_to_array(os.path.join(self.augmented_dir, 'sma-best', 'tetracorder_spectra_complete_fractions'))
 
         df_unmix = pd.read_csv(os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library.csv'))
         min_soil_index = np.min(df_unmix[df_unmix['level_1'] == 'soil'].index)
@@ -149,73 +151,6 @@ class tetracorder:
         save_envi(output_raster, meta_spectra, spectra_grid)
         print("\t- done")
 
-    def build_increment_instances(self, increment_size, mineral_index):
-        sa_sim_library = os.path.join(self.base_directory, 'tetracorder', 'output', 'spectral_abundance', 'convex_hull__n_dims_4_simulation_library_sa_mineral')
-        soil_sa_sim_pure = envi_to_array(sa_sim_library)[:, 0, :]
-        minerals = load_band_names(sa_sim_library)
-
-        df_sim = pd.read_csv(os.path.join(self.simulation_output_directory, 'simulation_libraries', 'convex_hull__n_dims_4_simulation_library.csv'))
-
-        df_not_soil = df_sim[df_sim['level_1'] != 'soil']
-        df_soil = df_sim[df_sim['level_1'] == 'soil']
-        min_soil_index = np.min(df_sim[df_sim['level_1'] == 'soil'].index)
-
-        positive_detection_index = (soil_sa_sim_pure[min_soil_index:, mineral_index] != 0) & (soil_sa_sim_pure[min_soil_index:, mineral_index] == np.max(soil_sa_sim_pure[min_soil_index:, mineral_index]))
-
-        df_positive_soil = df_soil[positive_detection_index].reset_index(drop=True)
-
-        # merge dataframes
-        df_merge = pd.concat([df_not_soil, df_positive_soil], ignore_index=True)
-        spectra.df_to_envi(df=df_merge, spectral_starting_column=7, wvls=self.wvls,
-                           output_raster=os.path.join(self.tetra_output_directory, minerals[mineral_index] + '_increment_sim_library.hdr'))
-
-        df_merge.insert(0, 'index', df_merge.index)
-        class_lists = []
-
-        for em in sorted(list(df_merge.level_1.unique())):
-            df_select = df_merge.loc[df_merge['level_1'] == em].copy()
-            df_select = df_select.values.tolist()
-            class_lists.append(df_select)
-
-        all_combinations = list(itertools.product(*class_lists))
-        np.random.seed(13)
-        picked_spectral_bundles_index = np.random.choice(len(all_combinations), replace=False, size=1000)
-        picked_spectra = [all_combinations[i] for i in picked_spectral_bundles_index]
-
-        # create grids
-        cols = int(1/increment_size) + 1
-        fraction_grid = np.zeros((len(picked_spectral_bundles_index), cols, len(sorted(list(df_merge.level_1.unique())))))
-        spectra_grid = np.zeros((len(picked_spectral_bundles_index), 100, len(self.wvls)))
-        index_grid = np.zeros((len(picked_spectral_bundles_index), cols, len(sorted(list(df_merge.level_1.unique())))))
-
-        # spectra array - row = combinations; cols=  # of classes (each col is an em) ; by  wavelengths
-        spec_array = np.array(picked_spectra)
-
-        for _col, col in enumerate(range(0, cols)):
-            col_soil_frac = np.round(col * increment_size, 2)
-            col_fractions, col_index, col_spectra = spectra.increment_synthetic_reflectance(data=spec_array, wvls=self.wvls,
-                                                                                            em_fraction=col_soil_frac,
-                                                                                            seed=_col, spectra_start=8)
-
-            fraction_grid[:, _col, :] = col_fractions
-            spectra_grid[:, _col, :] = col_spectra
-            index_grid[:, _col, :] = col_index
-
-        # save arrays
-        refl_meta = get_meta(lines=len(picked_spectral_bundles_index), samples=100, bands=self.wvls, wvls=True)
-        index_meta = get_meta(lines=len(picked_spectral_bundles_index), samples=cols, bands=sorted(list(df_merge.level_1.unique())), wvls=False)
-        fraction_meta = get_meta(lines=len(picked_spectral_bundles_index), samples=cols, bands=sorted(list(df_merge.level_1.unique())), wvls=False)
-
-        # save index, spectra, fraction grid
-        output_files = [os.path.join(self.tetra_output_directory, minerals[mineral_index] + '_increment_' + str(increment_size)[-2] + '_index.hdr'),
-                        os.path.join(self.tetra_output_directory, 'augmented', minerals[mineral_index] + '_increment_' + str(increment_size)[-2] + '_spectra.hdr'),
-                        os.path.join(self.tetra_output_directory, minerals[mineral_index] + '_increment_' + str(increment_size)[-2] + '_fractions.hdr')]
-
-        meta_docs = [index_meta, refl_meta, fraction_meta]
-        grids = [index_grid, spectra_grid, fraction_grid]
-
-        p_map(save_envi, output_files, meta_docs, grids, **{"desc": "\t\t saving envi files...", "ncols": 150})
-
     def augment_slpit_pixels(self):
         cursor_print('augmenting slpit pixels...')
         transect_files = glob(os.path.join(self.slpit_output_directory, 'spectral_transects', 'transect', '*[!.csv][!.hdr][!.aux][!.xml]'))
@@ -223,6 +158,7 @@ class tetracorder:
 
         # load shapefile
         df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
+        print(df)
         df = df.sort_values('Name')
 
         for index, row in df.iterrows():
@@ -271,11 +207,9 @@ class tetracorder:
 def run_tetracorder_build(base_directory, sensor):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
     #tc.generate_tetracorder_reflectance()
-    tc.unmix_tetracorder()
-    #tc.hypertrace_tetracorder()
-    #tc.build_increment_instances(increment_size=0.05, mineral_index=0)
+    #tc.unmix_tetracorder()
     #tc.reconstruct_soil_simulation()
     #tc.reconstruct_soil_sma()
-    #tc.augment_slpit_pixels()
-    #tc.augment_simulation()
+    tc.augment_slpit_pixels()
+    tc.augment_simulation()
 
