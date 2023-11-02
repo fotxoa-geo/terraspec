@@ -6,41 +6,7 @@
                 0.05,
                 0.75
             ],
-            [
-                "ATM_MIDLAT_SUMMER",
-                0.05,
-                2.0
-            ],
-            [
-                "ATM_MIDLAT_SUMMER",
-                0.05,
-                4.0
-            ],
-            [
-                "ATM_MIDLAT_SUMMER",
-                0.1,
-                0.75
-            ],
-            [
-                "ATM_MIDLAT_SUMMER",
-                0.1,
-                2.0
-            ],
-            [
-                "ATM_MIDLAT_SUMMER",
-                0.1,
-                4.0
-            ],
-            [
-                "ATM_MIDLAT_SUMMER",
-                0.4,
-                0.75
-            ],
-            [
-                "ATM_MIDLAT_SUMMER",
-                0.4,
-                2.0
-            ],
+                    
             [
                 "ATM_MIDLAT_SUMMER",
                 0.4,
@@ -153,8 +119,8 @@
             }
         }
     },
-    "lutdir": "/data1/geog/gregokin/terraspec/simulation/output/hypertrace/luts/sRTMnet",
-    "outdir": "/data1/geog/gregokin/terraspec/simulation/output/hypertrace/tetracorder",
+    "lutdir": "/data1/geog/gregokin/terraspec/tetracorder/output/augmented/hypertrace/luts/sRTMnet",
+    "outdir": "/data1/geog/gregokin/terraspec/tetracorder/output/augmented/hypertrace/tetracorder",
     "reflectance_file": "/data1/geog/gregokin/terraspec/tetracorder/output/augmented/tetracorder_spectra",
     "rtm_template_file": "/dev/null",
     "wavelength_file": "./utils/wavelengths/emit_wavelengths.txt"

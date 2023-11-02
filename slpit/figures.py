@@ -463,7 +463,7 @@ class figures:
 
         df_rows = []
         # gis shapefile
-        gdf = gp.read_file(os.path.join(self.gis_directory, "Observation.shp"))
+        gdf = gp.read_file(os.path.join('gis', "Observation.shp"))
         df_gis = gdf.drop(columns='geometry')
         df_gis['latitude'] = gdf['geometry'].apply(lambda geom: geom.y)
         df_gis['longitude'] = gdf['geometry'].apply(lambda geom: geom.x)
@@ -599,14 +599,14 @@ class figures:
                 df_select = df_all[(df_all['unmix_mode'] == 'sma-best') & (df_all['lib_mode'] == 'local')].copy()
                 df_uncer = df_all_uncer[
                     (df_all_uncer['unmix_mode'] == 'sma-best') & (df_all_uncer['lib_mode'] == 'local')].copy()
-
+                
             if row == 1:
                 df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (
-                            df_all['num_mc'] == 25)].copy()
+                            df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 100)].copy()
                 df_uncer = df_all_uncer[
                     (df_all_uncer['unmix_mode'] == 'mesma') & (df_all_uncer['lib_mode'] == 'local') & (
-                                df_all_uncer['num_mc'] == 25)].copy()
-
+                                df_all_uncer['num_mc'] == 25) & (df_all_uncer['num_cmb_em'] == 100)].copy()
+                
             for col in range(ncols):
                 ax = fig.add_subplot(gs[row, col])
                 ax.grid('on', linestyle='--')
@@ -666,7 +666,7 @@ class figures:
 
 def run_figures(base_directory):
     fig = figures(base_directory=base_directory)
-    fig.plot_summary()
-    #fig.plot_rmse()
-    #fig.local_slpit()
-    #fig.sza_plot()
+    #fig.plot_summary()
+    fig.plot_rmse()
+    fig.local_slpit()
+    fig.sza_plot()
