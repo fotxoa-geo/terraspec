@@ -102,11 +102,13 @@ class tetracorder:
         simulation_library_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
                                                          'convex_hull__n_dims_4_simulation_library'))
 
-        spectra_grid = np.zeros((simulation_fractions_array.shape[0], 1, len(self.wvls)))
+        spectra_grid = np.zeros((simulation_fractions_array.shape[0], simulation_fractions_array.shape[1], len(self.wvls)))
 
         for _row, row in enumerate(simulation_fractions_array):
-            picked_soil = int(simulation_index_array[_row, :, 2])
-            spectra_grid[_row, :, :] = simulation_library_array[picked_soil, :, :] * simulation_fractions_array[_row, :, 2]
+            for _col, col in enumerate(row):
+                picked_soil = int(simulation_index_array[_row, 0, 2])
+                soil_spectra = simulation_library_array[picked_soil, 0, :]
+                spectra_grid[_row, _col, :] = soil_spectra * simulation_fractions_array[_row, _col, 2]
 
         meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls,
                                 wvls=True)
@@ -117,7 +119,7 @@ class tetracorder:
     def reconstruct_soil_sma(self):
         cursor_print('reconstructing soil from sma...')
         # reconstructed soil from fractions and unmix library
-        complete_fractions_array = envi_to_array(os.path.join(self.augmented_dir, 'sma-best', 'convex_hull_n_dims_4_spectra_sma-best_normalization_brightness_num_endmembers_30_n_mc_25_complete_fractions'))
+        complete_fractions_array = envi_to_array(os.path.join(self.augmented_dir, 'sma-best', 'tetracorder_spectra_complete_fractions'))
 
         df_unmix = pd.read_csv(os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library.csv'))
         min_soil_index = np.min(df_unmix[df_unmix['level_1'] == 'soil'].index)
@@ -156,6 +158,7 @@ class tetracorder:
 
         # load shapefile
         df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
+        print(df)
         df = df.sort_values('Name')
 
         for index, row in df.iterrows():
@@ -204,9 +207,9 @@ class tetracorder:
 def run_tetracorder_build(base_directory, sensor):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
     #tc.generate_tetracorder_reflectance()
-    tc.unmix_tetracorder()
-    tc.reconstruct_soil_simulation()
-    tc.reconstruct_soil_sma()
+    #tc.unmix_tetracorder()
+    #tc.reconstruct_soil_simulation()
+    #tc.reconstruct_soil_sma()
     tc.augment_slpit_pixels()
     tc.augment_simulation()
 
