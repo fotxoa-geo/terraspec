@@ -77,6 +77,9 @@ def hypertrace_workflow(dry_run: bool, clean: bool, configfile: str):
     # Create iterable config permutation object
     ht_iter = itertools.product(*hypertrace_config.values())
     logger.info("Starting Hypertrace workflow.")
+    
+    outlog_directory = os.path.join(os.path.dirname(os.path.dirname(config["outdir"])), 'hypertrace-outlogs')
+    create_directory(outlog_directory)
 
     for ht in ht_iter:
         argd = dict()
@@ -88,11 +91,11 @@ def hypertrace_workflow(dry_run: bool, clean: bool, configfile: str):
         base_call = f'./simulation/hypertrace/hypertrace.py -wvls {wavelength_file} -refl {reflectance_file} -rtm {rtm_template_file} -lutd {lutdir} -od {outdir} ' \
                     f'-surface {argd["surface_file"]} -noise {argd["noisefile"]} -type {argd["atm_aod_h2o"][0]} ' \
                     f'-aod {str(argd["atm_aod_h2o"][1])} -h2o {str(argd["atm_aod_h2o"][2])} -time {str(argd["localtime"])} -configs {configfile}'
+        
+        job_name = os.path.join(outlog_directory, 'hyper-time-' + str(argd["localtime"]) + '-aod-' + str(argd["atm_aod_h2o"][1]) + '-h2o-' + str(argd["atm_aod_h2o"][2]) + '.out')
 
-        job_name = "py-hyper:time:" + str(argd["localtime"]) + '-aod:' + str(argd["atm_aod_h2o"][1]) + '-h2o' + str(argd["atm_aod_h2o"][2])
-
-        execute_call(['sbatch', '-A', 'geog', '--partition', 'normal', '-N', '1', '-c', '40', '--mem', '80G', '--job-name', job_name, '--wrap', f'python {base_call}'], dry_run)
-        #subprocess.call([f'srun -N 1 -c 40 --mem 180G --pty  python {base_call}'], shell=True)  # this works
+        #execute_call(['sbatch', '-A', 'geog', '-N', '1', '-c', '1', '--mem', '250G', '--output', job_name, '--wrap', f'python {base_call}'], dry_run)
+        subprocess.call([f'srun -N 1 -c 40 --mem 180G --pty  python {base_call}'], shell=True)  # this works
     logging.info("Workflow completed successfully.")
 
 
