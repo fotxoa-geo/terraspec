@@ -1,4 +1,5 @@
 import os
+import shutil
 import time
 from utils.create_tree import create_directory
 from utils.spectra_utils import spectra
@@ -12,7 +13,7 @@ from glob import glob
 import itertools
 import geopandas as gp
 from datetime import datetime
-from simulation.run_unmix import call_unmix
+from utils.unmix_utils import call_unmix, call_hypertrace_unmix, hypertrace_meta, create_uncertainty
 from simulation.run_hypertrace import hypertrace_workflow
 
 class tetracorder:
@@ -79,6 +80,26 @@ class tetracorder:
         
         for reflectance_file in estimated_reflectances:
             hypertrace_unmix(base_directory=self.base_directory, mode='sma-best', dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=em_file, parameters=optimal_parameters)
+
+        print("loading hypertrace outputs...")
+        estimated_reflectances = glob(os.path.join(self.augmented_dir, "hypertrace", '**', '*estimated-reflectance'),recursive=True)
+        uncertainty_files = []
+
+        for reflectance_file in estimated_reflectances:
+            uncertainty_file = os.path.join(os.path.dirname(reflectance_file), 'posterior-uncertainty')
+            uncertainty_files.append(uncertainty_file)
+
+        p_map(partial(create_uncertainty, wvls=self.wvls), uncertainty_files, **{"desc": "\t\t saving new uncertainty files...", "ncols": 150})
+
+        for reflectance_file in estimated_reflectances:
+            basename = hypertrace_meta(reflectance_file)
+            new_reflectance_file = os.path.join(self.augmented_dir, basename)
+            shutil.copyfile(reflectance_file, new_reflectance_file)
+            shutil.copyfile(reflectance_file + '.hdr', new_reflectance_file + '.hdr')
+
+            call_hypertrace_unmix(mode='sma-best', dry_run=False, reflectance_file=new_reflectance_file, em_file=em_file,
+                                  parameters=optimal_parameters, output_dest=self.augmented_dir, scale='1',
+                                  spectra_starting_column='8')
 
     def reconstruct_soil_simulation(self):
         cursor_print('reconstructing soil from simulation...')
