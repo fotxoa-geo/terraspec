@@ -79,27 +79,19 @@ class tetracorder:
         p_map(partial(create_uncertainty, wvls=self.wvls), uncertainty_files, **{"desc": "\t\t saving new uncertainty files...", "ncols": 150})
         
         for reflectance_file in estimated_reflectances:
-            hypertrace_unmix(base_directory=self.base_directory, mode='sma-best', dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=em_file, parameters=optimal_parameters)
-
-        print("loading hypertrace outputs...")
-        estimated_reflectances = glob(os.path.join(self.augmented_dir, "hypertrace", '**', '*estimated-reflectance'),recursive=True)
-        uncertainty_files = []
-
-        for reflectance_file in estimated_reflectances:
-            uncertainty_file = os.path.join(os.path.dirname(reflectance_file), 'posterior-uncertainty')
-            uncertainty_files.append(uncertainty_file)
-
-        p_map(partial(create_uncertainty, wvls=self.wvls), uncertainty_files, **{"desc": "\t\t saving new uncertainty files...", "ncols": 150})
-
-        for reflectance_file in estimated_reflectances:
             basename = hypertrace_meta(reflectance_file)
             new_reflectance_file = os.path.join(self.augmented_dir, basename)
             shutil.copyfile(reflectance_file, new_reflectance_file)
             shutil.copyfile(reflectance_file + '.hdr', new_reflectance_file + '.hdr')
+            
+            uncertainty_file = os.path.join(os.path.dirname(reflectance_file), 'reflectance_uncertainty')
+            new_uncertainty_file = os.path.join(self.augmented_dir, basename + '_uncer')
+            shutil.copyfile(uncertainty_file, new_uncertainty_file)
+            shutil.copyfile(uncertainty_file + '.hdr' , new_uncertainty_file + '.hdr')
 
             call_hypertrace_unmix(mode='sma-best', dry_run=False, reflectance_file=new_reflectance_file, em_file=em_file,
                                   parameters=optimal_parameters, output_dest=self.augmented_dir, scale='1',
-                                  spectra_starting_column='8')
+                                  spectra_starting_column='8', uncertainty_file=new_uncertainty_file)
 
     def reconstruct_soil_simulation(self):
         cursor_print('reconstructing soil from simulation...')
@@ -279,7 +271,7 @@ class tetracorder:
 def run_tetracorder_build(base_directory, sensor):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
     #tc.generate_tetracorder_reflectance()
-    #tc.unmix_tetracorder()
+    tc.unmix_tetracorder()
     #tc.hypertrace_tetracorder()
     #tc.build_increment_instances(increment_size=0.05, mineral_index=0)
     #tc.reconstruct_soil_simulation()
