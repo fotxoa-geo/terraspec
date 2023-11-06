@@ -35,7 +35,7 @@ class emit:
         msg = f"\nTerraSpec has created the following directory: {os.path.join(self.base_directory, 'gis', 'emit-data', 'envi')}\n" \
               f"ENVI files along with corresponding HDR files will be stored here."
         cursor_print(msg)
-        create_directory(os.path.join(self.gis, 'outlogs', 'nc_processes'))
+        create_directory(os.path.join(self.gis_directory), 'outlogs', 'nc_processes')
         nc_files = glob(os.path.join(self.gis_directory, 'emit-data', 'nc_files', '*.nc'))
 
         for i in nc_files:
@@ -97,14 +97,14 @@ class emit:
 
         all_files = reflectance_files + reflectance_uncertainty_files + mask_files
 
-        create_directory(os.path.join(self.gis, 'outlogs', 'extracts'))
+        create_directory(os.path.join(self.gis_directory, 'outlogs', 'extracts'))
 
         for file in all_files:
             acquisition_date = os.path.basename(file).split("_")[4]
             acquisition_type = os.path.basename(file).split("_")[2]
             base_call = f'python {window_extract_path} -rfl_img {file} -w_size {window_size} ' \
                         f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis_directory, "emit-data-clip")} '
-            outfile = os.path.join(self.gis, 'outlogs', 'extracts', acquisition_date + '_' + acquisition_type + '.out')
+            outfile = os.path.join(self.gis_directory, 'outlogs', 'extracts', acquisition_date + '_' + acquisition_type + '.out')
             sbatch_cmd = f"sbatch -N 1 -c 40 --mem 80G --output {outfile} --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
