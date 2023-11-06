@@ -44,12 +44,11 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
     shutil.copyfile(reflectance_file, scrtch_rfl)
     shutil.copyfile(reflectance_file + '.hdr' , scrtch_hdr)
     shutil.copyfile(em_file, scrtch_csv)
-    
-    
+
     # the io bug call allows us to completely start all the runs 
     if io_bug is None:
         base_call = f'julia -p {n_cores} ~/EMIT/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
-                    f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
+                    f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} --' \
                     f'{" ".join(parameters)} '
         #subprocess.call([f'srun -N 1 -c 40 --mem 250G --pty {base_call}'], shell=True) 
         execute_call(['sbatch', '-N', '1', '-c', n_cores,'--mem', "80G", '--output', outlog_name, '--wrap', f'{base_call}'], dry_run)
@@ -68,6 +67,7 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
             execute_call(['sbatch', '-N', '1', '-c', n_cores,'--mem', "80G", '--output', outlog_name, '--wrap', f'{base_call}'], dry_run)
         else:
             pass
+
 
 def hypertrace_unmix(base_directory: str, mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list):
     # create results directory
@@ -193,8 +193,6 @@ class runs:
                                             "--", "_").replace(" ", "_").replace("__", "_")
 
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=df, parameters=simulation_parameters, output_dest=output_dest, scale=self.scale, spectra_starting_column=self.spectra_starting_col_julia, io_bug=io_bug)
-
-        
 
     def convex_hulls(self, mode:str, io_bug):
         print(f"commencing convex hull {mode} spectral unmixing...")
