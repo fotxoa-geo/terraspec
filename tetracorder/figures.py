@@ -104,8 +104,8 @@ class tetracorder_figures:
     def simulation_fig(self, xaxis:str):
 
         # load simulation data - truncate the sa files from augmentation; unmixing is ignored here!
-        sim_index_array = envi_to_array(os.path.join(self.output_directory, 'tetracorder_index'))
-        sim_fractions_array = envi_to_array(os.path.join(self.output_directory, 'tetracorder_fractions'))
+        sim_index_array = envi_to_array(os.path.join(self.output_directory, f'tetracorder_{xaxis}_index'))
+        sim_fractions_array = envi_to_array(os.path.join(self.output_directory, f'tetracorder_{xaxis}_fractions'))
 
         sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, 'tetracorder_spectra_simulation_augmented_abun_mineral'))[:, 0:11, :]
         soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_abun_mineral'))[:, 0, :]
@@ -118,16 +118,20 @@ class tetracorder_figures:
 
         atmospheres_abundances_corrected = []
         atmosphere_meta_information = []
-        #
-        # for i in atmospheres:
-        #     aod, h2o, sza = atmosphere_meta(i)
-        #     atmos_sa = envi_to_array(i)
-        #     atmosphere_error_grid = error_abundance_corrected(spectral_abundance_array=atmos_sa,
-        #                                                       pure_soil_array=soil_sa_sim_pure,
-        #                                                       fractions=sim_fractions_array, index=sim_index_array)
-        #     atmospheres_abundances_corrected.append(atmosphere_error_grid)
-        #     atmosphere_meta_information.append([aod, h2o, sza])
 
+        for i in atmospheres:
+            aod, h2o, sza = atmosphere_meta(i)
+            if float(aod) == 0.05 and float(h2o) == 0.75:
+
+                if int(sza) == 13 or int(sza) == 57:
+                    atmos_sa = envi_to_array(i)
+                    atmosphere_error_grid = error_abundance_corrected(spectral_abundance_array=atmos_sa,
+                                                                      pure_soil_array=soil_sa_sim_pure,
+                                                                      fractions=sim_fractions_array, index=sim_index_array)
+                    atmospheres_abundances_corrected.append(atmosphere_error_grid[0])
+                    atmosphere_meta_information.append([aod, h2o, sza])
+                else:
+                    pass
 
         # create figure
         fig = plt.figure(constrained_layout=True, figsize=(12, 6))
@@ -170,25 +174,33 @@ class tetracorder_figures:
 
                 x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_error, false_pos=mineral_false_positive, false_neg=mineral_false_negative,
                                        bin_width=0.10)
-                ax.plot(x_vals, mae, label='Baseline')
-                ax.set_ylim(0.0, 0.25)
+                l1 = ax.plot(x_vals, mae, label='Baseline')
+                ax.set_ylim(0.0, 1)
                 ax.set_xlim(-0.01, 1.05)
 
-                ax2 = plt.twinx()
-                ax2.plot(x_vals, percent_false_neg, label='% False Neg', color='r')
-                ax2.plot(x_vals, percent_false_pos, label='% False Pos', color='g')
-                #ax2.set_ylabel('Right Y-axis')
-                ax2.legend(loc='upper right')
+                ax2 = ax.twinx()
+                l2 = ax2.plot(x_vals, percent_false_neg, label='% False Neg', color='r', linestyle='dotted')
+                l3 = ax2.plot(x_vals, percent_false_pos, label='% False Pos', color='g', linestyle='dashed')
+                ax2.set_ylim(0.0, 1)
+                ax2.set_ylabel('% Detection')
 
-                # # plot the atmospheres
-                # for _i, i in enumerate(atmospheres):
-                #     atmosphere_error_grid = atmospheres_abundances_corrected[_i]
-                #     aod, h2o, sza = atmosphere_meta_information[_i]
-                #     atmos_abs_error = atmosphere_error_grid[:, :, counter]
-                #     x_vals_atm, mae_atm = bin_sums(x=fractions, y=atmos_abs_error, bin_width=0.10)
-                #     ax.plot(x_vals_atm, mae_atm, label=f'SZA: {str(sza)}, AOD: {aod}, H$_2$O: {h2o}')
+                if xaxis == 'soil':
+                    # plot the atmospheres
+                    for _i, i in enumerate(atmosphere_meta_information):
+                        atmosphere_error_grid = atmospheres_abundances_corrected[_i]
+                        aod, h2o, sza = atmosphere_meta_information[_i]
+                        atmos_abs_error = atmosphere_error_grid[:, :, counter]
+                        x_vals_atm, mae_atm, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=atmos_abs_error, false_pos=mineral_false_positive, false_neg=mineral_false_negative,bin_width=0.10)
+                        l4 = ax.plot(x_vals_atm, mae_atm, label=f'SZA: {str(sza)}, AOD: {aod}, H$_2$O: {h2o}')
 
-                ax.legend(prop={'size': 6})
+                # added these three lines
+                if xaxis == 'soil':
+                    lns = l1 + l2 + l3 + l4
+                    ax.set_ylim(0.0, 0.10)
+                else:
+                    lns = l1 + l2 + l3
+                labs = [l.get_label() for l in lns]
+                ax.legend(lns, labs, loc=0, prop={'size': 6})
                 ax.set_aspect(1. / ax.get_data_ratio())
 
                 counter += 1
@@ -372,7 +384,7 @@ class tetracorder_figures:
 
 def run_figure_workflow(base_directory):
 
-    ems = ['soil']
+    ems = [ 'soil']
     tc = tetracorder_figures(base_directory=base_directory)
     #tc.mineral_validation()
     #tc.mineral_error_soil()
