@@ -48,7 +48,7 @@ class tetracorder:
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
                                       level='level_1', spectral_bundles=10000, increment_size=0.10,
-                                      output_directory=self.augmented_dir, wvls=self.wvls,
+                                      output_directory= self.tetra_output_directory, wvls=self.wvls,
                                       name='tetracorder', spectra_starting_col=8)
 
     def hypertrace_tetracorder(self):
@@ -81,13 +81,11 @@ class tetracorder:
         for reflectance_file in estimated_reflectances:
             basename = hypertrace_meta(reflectance_file)
             new_reflectance_file = os.path.join(self.augmented_dir, basename)
-            shutil.copyfile(reflectance_file, new_reflectance_file)
-            shutil.copyfile(reflectance_file + '.hdr', new_reflectance_file + '.hdr')
+            augment_envi(file=new_reflectance_file, wvls=self.wvls, out_raster=new_reflectance_file + '.hdr')
 
             uncertainty_file = os.path.join(os.path.dirname(reflectance_file), 'reflectance_uncertainty')
             new_uncertainty_file = os.path.join(self.augmented_dir, basename + '_uncer')
-            shutil.copyfile(uncertainty_file, new_uncertainty_file)
-            shutil.copyfile(uncertainty_file + '.hdr' , new_uncertainty_file + '.hdr')
+            augment_envi(file=uncertainty_file, wvls=self.wvls, out_raster=new_uncertainty_file + '.hdr')
 
             call_hypertrace_unmix(mode='sma-best', dry_run=False, reflectance_file=new_reflectance_file, em_file=em_file,
                                   parameters=optimal_parameters, output_dest=self.augmented_dir, scale='1',
@@ -194,7 +192,13 @@ class tetracorder:
         # load unmix library - 4 dimensions; convex hull
         unmix_lib = os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library')
 
-        files_to_augment = [simulation_lib, unmix_lib]
+        # load atmospheres from hypertrace
+        atmospheres = glob(os.path.join(self.augmented_dir, '*atm_*'))
+
+        # simulation spectra
+        sim_spectra = os.path.join(self.tetra_output_directory, 'tetracorder_spectra')
+
+        files_to_augment = [simulation_lib, unmix_lib, sim_spectra]
 
         for i in files_to_augment:
             basename = os.path.basename(i)
@@ -210,6 +214,6 @@ def run_tetracorder_build(base_directory, sensor):
     #tc.unmix_tetracorder()
     #tc.reconstruct_soil_simulation()
     #tc.reconstruct_soil_sma()
-    tc.augment_slpit_pixels()
+    #tc.augment_slpit_pixels()
     tc.augment_simulation()
 
