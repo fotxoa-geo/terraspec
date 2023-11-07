@@ -222,10 +222,10 @@ class tetracorder:
 
 def run_tetracorder_build(base_directory, sensor):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
-    #tc.generate_tetracorder_reflectance()
-    #tc.unmix_tetracorder()
+    tc.generate_tetracorder_reflectance()
+    tc.unmix_tetracorder()
     #tc.reconstruct_soil_simulation()
     #tc.reconstruct_soil_sma()
     #tc.augment_slpit_pixels()
-    tc.augment_simulation()
+    #tc.augment_simulation()
 
