@@ -16,6 +16,7 @@ from datetime import datetime
 from utils.unmix_utils import call_unmix, call_hypertrace_unmix, hypertrace_meta, create_uncertainty
 from simulation.run_hypertrace import hypertrace_workflow
 
+
 class tetracorder:
 
     def __init__(self, base_directory: str, sensor:str):
@@ -74,10 +75,12 @@ class tetracorder:
 
         optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization brightness']
 
-        reflectance_file = os.path.join(self.augmented_dir, 'tetracorder_spectra')
-        call_unmix(mode='sma-best', dry_run=False, reflectance_file=reflectance_file, em_file=em_file,
-                   parameters=optimal_parameters, output_dest=self.augmented_dir, scale='1',
-                   spectra_starting_column='8')
+        reflectance_files = glob(os.path.join(self.tetra_output_directory, '*tetracorder_'))
+
+        for i in reflectance_files:
+            call_unmix(mode='sma-best', dry_run=False, reflectance_file=i, em_file=em_file,
+                       parameters=optimal_parameters, output_dest=self.augmented_dir, scale='1',
+                       spectra_starting_column='8')
 
         print("loading hypertrace outputs...")
         estimated_reflectances = glob(os.path.join(self.augmented_dir, "hypertrace", '**', '*estimated-reflectance'), recursive=True)
