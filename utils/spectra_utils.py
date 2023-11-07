@@ -141,14 +141,26 @@ class spectra:
         return df_pca
 
     @classmethod
-    def increment_synthetic_reflectance(cls, data, em_fraction, seed, wvls, spectra_start):
+    def increment_synthetic_reflectance(cls, data, em, em_fraction, seed, wvls, spectra_start):
         np.random.seed(seed)
 
         # calculate the fractions
-        remaining_fraction = 1 - em_fraction
-        npv_frac = pv_frac = remaining_fraction/2
+        if em == 'soil':
+            soil_frac = em_fraction
+            remaining_fraction = 1 - em_fraction
+            npv_frac = pv_frac = remaining_fraction/2
 
-        fractions = [npv_frac, pv_frac, em_fraction]
+        if em == 'npv':
+            npv_frac = em_fraction
+            remaining_fraction = 1 - em_fraction
+            soil_frac = pv_frac = remaining_fraction / 2
+
+        if em == 'pv':
+            pv_frac = em_fraction
+            remaining_fraction = 1 - em_fraction
+            npv_frac = soil_frac = remaining_fraction / 2
+
+        fractions = [npv_frac, pv_frac, soil_frac]
 
         # crate grid to store reflectance
         col_spectra = np.zeros((data.shape[0], len(wvls)))
@@ -160,7 +172,7 @@ class spectra:
             col_index[_row, :] = list(map(int, [row[0][0], row[1][0], row[2][0]]))
             col_spectra[_row, :] = (row[0][spectra_start:].astype(dtype=float) * npv_frac) + \
                                       (row[1][spectra_start:].astype(dtype=float) * pv_frac) + \
-                                      (row[2][spectra_start:].astype(dtype=float) * em_fraction)
+                                      (row[2][spectra_start:].astype(dtype=float) * soil_frac)
 
         return fractions, col_index, col_spectra
 
@@ -185,7 +197,8 @@ class spectra:
 
     @classmethod
     def increment_reflectance(cls, class_names: list, simulation_table: str, level: str, spectral_bundles:int,
-                              increment_size:float, output_directory: str, wvls, name: str, spectra_starting_col:int):
+                              increment_size:float, output_directory: str, wvls, name: str, spectra_starting_col:int,
+                              endmember:str):
         ts = time.time()
         # define seed for random sampling of spectral bundles
         np.random.seed(13)
@@ -217,10 +230,10 @@ class spectra:
         spec_array = np.array(spectra_all)
 
         for _col, col in enumerate(range(0, cols)):
-            col_soil_frac = np.round(col * increment_size, 2)
-            col_fractions, col_index, col_spectra = spectra.increment_synthetic_reflectance(data=spec_array,
+            col_frac = np.round(col * increment_size, 2)
+            col_fractions, col_index, col_spectra = spectra.increment_synthetic_reflectance(data=spec_array, em=endmember,
                                                                                             wvls=wvls,
-                                                                                            em_fraction=col_soil_frac,
+                                                                                            em_fraction=col_frac,
                                                                                             seed=_col, spectra_start=spectra_starting_col)
 
             fraction_grid[:, _col, :] = col_fractions
