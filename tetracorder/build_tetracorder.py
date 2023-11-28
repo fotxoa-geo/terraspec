@@ -103,33 +103,11 @@ class tetracorder:
                                   parameters=optimal_parameters, output_dest=self.augmented_dir, scale='1',
                                   spectra_starting_column='8', uncertainty_file=new_uncertainty_file)
 
-    def reconstruct_soil_simulation(self):
-        cursor_print('reconstructing soil from simulation...')
-
-        # reconstructed soil from simulated reflectance
-        simulation_fractions_array = envi_to_array(os.path.join(self.tetra_output_directory, 'tetracorder_soil_fractions'))
-        simulation_index_array = envi_to_array(os.path.join(self.tetra_output_directory, 'tetracorder_soil_index'))
-        simulation_library_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
-                                                         'convex_hull__n_dims_4_simulation_library'))
-
-        spectra_grid = np.zeros((simulation_fractions_array.shape[0], 100, len(self.wvls)))
-
-        for _row, row in enumerate(simulation_fractions_array):
-            for _col, col in enumerate(row):
-                picked_soil = int(simulation_index_array[_row, 0, 2])
-                soil_spectra = simulation_library_array[picked_soil, 0, :]
-                spectra_grid[_row, _col, :] = soil_spectra * simulation_fractions_array[_row, _col, 2]
-
-        meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls,
-                                wvls=True)
-        output_raster = os.path.join(self.augmented_dir, "simulated-soil.hdr")
-        save_envi(output_raster, meta_spectra, spectra_grid)
-        print("\t- done")
 
     def reconstruct_soil_sma(self):
         cursor_print('reconstructing soil from sma...')
         # reconstructed soil from fractions and unmix library
-        complete_fractions_array = envi_to_array(os.path.join(self.augmented_dir, 'sma-best', 'tetracorder_spectra_complete_fractions'))
+        complete_fractions_array = envi_to_array(os.path.join(self.augmented_dir, 'sma-best', 'tetracorder_soil_spectra_complete_fractions'))
 
         df_unmix = pd.read_csv(os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library.csv'))
         min_soil_index = np.min(df_unmix[df_unmix['level_1'] == 'soil'].index)
@@ -137,7 +115,7 @@ class tetracorder:
         unmix_library_array = envi_to_array(os.path.join(self.simulation_output_directory, 'endmember_libraries',
                                                    'convex_hull__n_dims_4_unmix_library'))
 
-        spectra_grid = np.zeros((complete_fractions_array.shape[0], 1, len(self.wvls)))
+        spectra_grid = np.zeros((complete_fractions_array.shape[0], complete_fractions_array.shape[1], len(self.wvls)))
 
         for _row, row in enumerate(complete_fractions_array):
             sma_soils = np.where(complete_fractions_array[_row, 0, : -1] != 0)[0]
@@ -168,7 +146,6 @@ class tetracorder:
 
         # load shapefile
         df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
-        print(df)
         df = df.sort_values('Name')
 
         for index, row in df.iterrows():
@@ -184,12 +161,14 @@ class tetracorder:
         for i in transect_files:
             basename = os.path.basename(i)
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_transect_augmented.hdr")
-            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster)
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True)
 
         for i in em_files:
             basename = os.path.basename(i)
+            df_em = pd.read_csv(i + '.csv')
+            soil_index = min(df_em.index[df_em['level_1'] == 'Soil'].tolist())
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_ems_augmented.hdr")
-            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster)
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True, em_index=soil_index)
 
         cursor_print("\t- done")
 
@@ -222,9 +201,9 @@ class tetracorder:
 def run_tetracorder_build(base_directory, sensor):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
     #tc.generate_tetracorder_reflectance()
-    tc.unmix_tetracorder()
-    tc.reconstruct_soil_simulation()
+    #tc.unmix_tetracorder()
+    #tc.reconstruct_soil_simulation()
     #tc.reconstruct_soil_sma()
-    #tc.augment_slpit_pixels()
-    tc.augment_simulation()
+    tc.augment_slpit_pixels()
+    #tc.augment_simulation()
 

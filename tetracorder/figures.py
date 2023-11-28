@@ -24,7 +24,8 @@ def bin_sums(x, y, false_pos, false_neg, bin_width:float):
     for col in range(x.shape[1]):
         fraction = x[0, col]
         vals = y[:, col]
-        mae_calc = np.mean(vals)
+        #vals[vals == 0] = np.nan
+        mae_calc = np.mean((vals))
         x_vals.append(fraction)
 
         mineral_false_neg = false_neg[:, col]
@@ -99,7 +100,7 @@ class tetracorder_figures:
         self.sa_outputs = os.path.join(base_directory, 'tetracorder', 'output', 'spectral_abundance')
         self.fig_directory = os.path.join(base_directory, 'tetracorder', 'figures')
 
-        self.bands = load_band_names(os.path.join(self.sa_outputs, 'simulated-soil_abun_mineral'))
+        self.bands = load_band_names(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_abun_mineral'))
 
     def simulation_fig(self, xaxis:str):
 
@@ -107,13 +108,14 @@ class tetracorder_figures:
         sim_index_array = envi_to_array(os.path.join(self.output_directory, f'tetracorder_{xaxis}_index'))
         sim_fractions_array = envi_to_array(os.path.join(self.output_directory, f'tetracorder_{xaxis}_fractions'))
 
-        sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, 'tetracorder_spectra_simulation_augmented_abun_mineral'))[:, 0:11, :]
+        sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{xaxis}_spectra_simulation_augmented_abun_mineral'))[:, 0:11, :]
         soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_abun_mineral'))[:, 0, :]
 
         atmospheres = glob(os.path.join(self.sa_outputs, '*atm_*0_abun_mineral'))
 
-        error_grid, false_positive_grid, false_negative_grid = error_abundance_corrected(spectral_abundance_array=sim_sa_arrary, pure_soil_array=soil_sa_sim_pure,
-                                               fractions=sim_fractions_array, index=sim_index_array)
+        error_grid, false_positive_grid, false_negative_grid = error_abundance_corrected(spectral_abundance_array=sim_sa_arrary,
+                                                                                         pure_soil_array=soil_sa_sim_pure,
+                                                                                         fractions=sim_fractions_array, index=sim_index_array)
         #error_grid[error_grid == 0] = np.nan
 
         atmospheres_abundances_corrected = []
@@ -175,28 +177,27 @@ class tetracorder_figures:
                 x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_error, false_pos=mineral_false_positive, false_neg=mineral_false_negative,
                                        bin_width=0.10)
                 l1 = ax.plot(x_vals, mae, label='Baseline')
-                ax.set_ylim(0.0, 1)
-                ax.set_xlim(-0.01, 1.05)
+                ax.set_ylim(0.0, 0.25)
+                ax.set_xlim(0.0, 1.05)
 
                 ax2 = ax.twinx()
-                l2 = ax2.plot(x_vals, percent_false_neg, label='% False Neg', color='r', linestyle='dotted')
-                l3 = ax2.plot(x_vals, percent_false_pos, label='% False Pos', color='g', linestyle='dashed')
+                l2 = ax2.plot(x_vals, np.absolute(percent_false_neg), label='% False Neg', color='r', linestyle='dotted')
+                l3 = ax2.plot(x_vals, np.absolute(percent_false_pos), label='% False Pos', color='g', linestyle='dashed')
                 ax2.set_ylim(0.0, 1)
                 ax2.set_ylabel('% Detection')
 
-                if xaxis == 'soil':
-                    # plot the atmospheres
-                    for _i, i in enumerate(atmosphere_meta_information):
-                        atmosphere_error_grid = atmospheres_abundances_corrected[_i]
-                        aod, h2o, sza = atmosphere_meta_information[_i]
-                        atmos_abs_error = atmosphere_error_grid[:, :, counter]
-                        x_vals_atm, mae_atm, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=atmos_abs_error, false_pos=mineral_false_positive, false_neg=mineral_false_negative,bin_width=0.10)
-                        l4 = ax.plot(x_vals_atm, mae_atm, label=f'SZA: {str(sza)}, AOD: {aod}, H$_2$O: {h2o}')
+                # if xaxis == 'soil':
+                #     # plot the atmospheres
+                #     for _i, i in enumerate(atmosphere_meta_information):
+                #         atmosphere_error_grid = atmospheres_abundances_corrected[_i]
+                #         aod, h2o, sza = atmosphere_meta_information[_i]
+                #         atmos_abs_error = atmosphere_error_grid[:, :, counter]
+                #         x_vals_atm, mae_atm, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=atmos_abs_error, false_pos=mineral_false_positive, false_neg=mineral_false_negative,bin_width=0.10)
+                #         l4 = ax.plot(x_vals_atm, mae_atm, label=f'SZA: {str(sza)}, AOD: {aod}, H$_2$O: {h2o}')
 
                 # added these three lines
                 if xaxis == 'soil':
-                    lns = l1 + l2 + l3 + l4
-                    ax.set_ylim(0.0, 0.10)
+                    lns = l1 + l2 + l3 # + l4
                 else:
                     lns = l1 + l2 + l3
                 labs = [l.get_label() for l in lns]
@@ -222,11 +223,12 @@ class tetracorder_figures:
             abundance_contact_probe = os.path.join(self.sa_outputs, f'{plot.replace(" ", "").replace("SPEC", "Spectral")}-emit_ems_augmented_abun_mineral')
             fractional_cover = os.path.join(self.slpit_output, 'sma-best', f'asd-local___{plot.replace(" ", "")}___num-endmembers_20_n-mc_25_normalization_brightness_fractional_cover')
 
+            print(abundance_emit)
             # load arrays
-            truth_array = envi_to_array(abundance_contact_probe)
-            truth_array[truth_array == 0] = np.nan
+            truth_array = envi_to_array(abundance_contact_probe)[0,0,:]
+            #truth_array[truth_array == 0] = np.nan
             estimated_array = envi_to_array(abundance_emit[0])
-            estimated_array[estimated_array == 0] = np.nan
+            #estimated_array[estimated_array == 0] = np.nan
 
             # load fractional cover
             plot_fractional_cover = np.average(envi_to_array(fractional_cover)[:, :, 2])
@@ -235,15 +237,10 @@ class tetracorder_figures:
             plot_estimated_abun = [plot]
             plot_soils = [plot, plot_fractional_cover]
 
-            # load df for em position key
-            em_csv = os.path.join(self.slpit_output, 'spectral_transects', 'endmembers', plot.replace(" ", "").replace('SPEC', 'Spectral') + '-emit.csv')
-            df_em = pd.read_csv(em_csv)
-            first_soil_index = df_em.index[df_em['level_1'] == 'Soil'].min()
-
             for _mineral, mineral in enumerate(self.bands):
-                truth_abun = np.nanmean(truth_array[first_soil_index:, 0, _mineral])
+                truth_abun = truth_array[_mineral]
                 plot_truth_abun.append(truth_abun)
-                estimated_abun = np.nanmean(estimated_array[:, 0:3, _mineral])
+                estimated_abun = np.mean(estimated_array[0:3, 0:3, _mineral])/plot_fractional_cover
                 plot_estimated_abun.append(estimated_abun)
 
             # append plot abundances to master rows
@@ -288,8 +285,8 @@ class tetracorder_figures:
                 ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
                 ax.yaxis.set_major_locator(ticker.MultipleLocator(major_tick_spacing))
                 ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
-                ax.set_xlim(0, 0.15)
-                ax.set_ylim(0, 0.15)
+                ax.set_xlim(-0.05, 0.25)
+                ax.set_ylim(-0.05, 0.25)
 
                 if col == 0:
                     ax.set_ylabel('EMIT Spectral Abundance')
@@ -384,11 +381,9 @@ class tetracorder_figures:
 
 def run_figure_workflow(base_directory):
 
-    ems = [ 'soil']
+    ems = ['npv', 'pv', 'soil']
     tc = tetracorder_figures(base_directory=base_directory)
     #tc.mineral_validation()
     #tc.mineral_error_soil()
     for em in ems:
-        #tc.phil_figure(xaxis=em)
         tc.simulation_fig(xaxis=em)
-        #tc.mineral_incremenent_fig(xaxis=em)
