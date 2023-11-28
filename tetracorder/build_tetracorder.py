@@ -48,17 +48,17 @@ class tetracorder:
                                           'convex_hull__n_dims_4_simulation_library.csv'))
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
-                                      level='level_1', spectral_bundles=10000, increment_size=0.10,
+                                      level='level_1', spectral_bundles=10000, increment_size=0.05,
                                       output_directory= self.tetra_output_directory, wvls=self.wvls,
                                       name='tetracorder_soil', spectra_starting_col=8, endmember='soil')
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
-                                      level='level_1', spectral_bundles=10000, increment_size=0.10,
+                                      level='level_1', spectral_bundles=10000, increment_size=0.05,
                                       output_directory=self.tetra_output_directory, wvls=self.wvls,
                                       name='tetracorder_npv', spectra_starting_col=8, endmember='npv')
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
-                                      level='level_1', spectral_bundles=10000, increment_size=0.10,
+                                      level='level_1', spectral_bundles=10000, increment_size=0.05,
                                       output_directory=self.tetra_output_directory, wvls=self.wvls,
                                       name='tetracorder_pv', spectra_starting_col=8, endmember='pv')
 
@@ -221,9 +221,9 @@ class tetracorder:
 
 def run_tetracorder_build(base_directory, sensor):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
-    #tc.generate_tetracorder_reflectance()
-    tc.unmix_tetracorder()
-    tc.reconstruct_soil_simulation()
+    tc.generate_tetracorder_reflectance()
+    #tc.unmix_tetracorder()
+    #tc.reconstruct_soil_simulation()
     #tc.reconstruct_soil_sma()
     #tc.augment_slpit_pixels()
     tc.augment_simulation()

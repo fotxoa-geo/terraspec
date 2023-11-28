@@ -99,7 +99,7 @@ class tetracorder_figures:
         self.sa_outputs = os.path.join(base_directory, 'tetracorder', 'output', 'spectral_abundance')
         self.fig_directory = os.path.join(base_directory, 'tetracorder', 'figures')
 
-        self.bands = load_band_names(os.path.join(self.sa_outputs, 'simulated-soil_abun_mineral'))
+        self.bands = load_band_names(os.path.join(self.sa_outputs, 'tetracorder_soil_spectra_simulation_augmented_abun_mineral'))
 
     def simulation_fig(self, xaxis:str):
 
@@ -107,7 +107,7 @@ class tetracorder_figures:
         sim_index_array = envi_to_array(os.path.join(self.output_directory, f'tetracorder_{xaxis}_index'))
         sim_fractions_array = envi_to_array(os.path.join(self.output_directory, f'tetracorder_{xaxis}_fractions'))
 
-        sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, 'tetracorder_spectra_simulation_augmented_abun_mineral'))[:, 0:11, :]
+        sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{xaxis}_spectra_simulation_augmented_abun_mineral'))[:, 0:21, :]
         soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_abun_mineral'))[:, 0, :]
 
         atmospheres = glob(os.path.join(self.sa_outputs, '*atm_*0_abun_mineral'))
