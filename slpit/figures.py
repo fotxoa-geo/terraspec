@@ -664,7 +664,7 @@ class figures:
 
 def run_figures(base_directory):
     fig = figures(base_directory=base_directory)
-    fig.plot_summary()
-    #fig.plot_rmse()
-    #fig.local_slpit()
-    #fig.sza_plot()
+    #fig.plot_summary()
+    fig.plot_rmse()
+    fig.local_slpit()
+    fig.sza_plot()
