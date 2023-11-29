@@ -9,7 +9,7 @@ import os
 import logging
 from typing import List
 from collections import OrderedDict
-import slpit.emit_utils.common_logs
+import emit_utils.common_logs
 import re
 import pandas as pd
 
