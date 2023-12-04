@@ -446,20 +446,20 @@ class tetracorder_figures:
         transect_data = pd.read_csv(os.path.join(self.slpit_output, 'all-transect-emit.csv'))
 
         for plot in sorted(list(transect_data.plot_name.unique()), reverse=True):
-            slpit_ems_abundance = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "") +
+            slpit_ems_records = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "") +
                                                     '*emit_ems_augmented_min'))
 
             slpit_ems_spectra = glob(os.path.join(self.aug_directory, '*' + plot.replace(" ", "") +
                                                     '*emit_ems_augmented'))
+            #
+            # slpit_transect_abundance = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "") +
+            #                  '*transect_augmented_min'))
+            #
+            # emit_spectral_abundance = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "").replace('Spectral', 'SPEC') +
+            #                  '*pixels_augmented_min'))
 
-            slpit_transect_abundance = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "") +
-                             '*transect_augmented_min'))
-
-            emit_spectral_abundance = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "").replace('Spectral', 'SPEC') +
-                             '*pixels_augmented_min'))
-
-            g1_em_records = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(slpit_ems_abundance[0])[0,0,1]), 'Record'].iloc[0]
-            g2_em_records = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(slpit_ems_abundance[0])[0,0,3]), 'Record'].iloc[0]
+            g1_em_records = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(slpit_ems_records[0])[0,0,1]), 'Record'].iloc[0]
+            g2_em_records = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(slpit_ems_records[0])[0,0,3]), 'Record'].iloc[0]
             plot_spectra = envi_to_array(slpit_ems_spectra[0])[0,0,:]
 
             for key, item in spectral_reference_library_files.items():
@@ -482,20 +482,25 @@ class tetracorder_figures:
 
                 for _f, (frac, filename, library_name, record) in enumerate(
                         zip(fractions, unique_file_names, library_names.tolist(), records.tolist())):
-                     if library_name == key and record in [g1_em_records, g2_em_records]:
+                     if library_name == key and record in [g1_em_records]:
                         for cont_feat in decoded_expert[filename.split('.depth.gz')[0].replace('/', '\\')]['features']:
                             if np.all(np.array(cont_feat['continuum']) < 0.8):
                                 cont, wl = cont_rem(wavelengths, library_reflectance[library_records.index(record), :],
                                                     cont_feat['continuum'])
-                                split_cont, wvls = cont_rem(wavelengths, plot_spectra,cont_feat['continuum'])
+                                split_cont, wvls = cont_rem(wavelengths, plot_spectra, cont_feat['continuum'])
                                 ax1.plot(wl, cont, label=f'{frac[0]} ||| {os.path.basename(unique_file_names[_f]).split(".depth.gz")[0]}')
-                                ax1.plot(wl, split_cont, label=f'SLPIT {frac[0]} ||| {os.path.basename(unique_file_names[_f]).split(".depth.gz")[0]}')
+                                ax1.plot(wvls, split_cont, label=f'SLPIT {frac[0]} ||| {os.path.basename(unique_file_names[_f]).split(".depth.gz")[0]}')
+                                ax3.axvspan(wvls[0], wl[-1], color='y', alpha=0.5, lw=0)
+
                             if np.all(np.array(cont_feat['continuum']) > 0.7):
+                                split_cont, wvls = cont_rem(wavelengths, plot_spectra, cont_feat['continuum'])
                                 cont, wl = cont_rem(wavelengths, library_reflectance[library_records.index(record), :],
                                                     cont_feat['continuum'])
                                 ax2.plot(wl, cont, label=frac[0])
+                                ax2.plot(wvls, split_cont, label=f'SLPIT {frac[0]}')
+                                ax3.axvspan(wvls[0], wl[-1], color='r', alpha=0.5, lw=0)
 
-                        ax3.plot(wavelengths, library_reflectance[library_records.index(record), :], label=frac[0])
+                        ax3.plot(wavelengths, library_reflectance[library_records.index(record), :], label=f'{os.path.basename(unique_file_names[_f]).split(".depth.gz")[0]}')
                         ax3.plot(wavelengths, plot_spectra, label='SLPIT')
                         ax3.legend()
 
