@@ -171,7 +171,7 @@ def load_band_names(file):
     return list(bands.keys())
 
 
-def augment_envi(file, wvls, out_raster, vertical_average=False, em_index=None):
+def  augment_envi(file, wvls, out_raster, vertical_average=False, em_index=None):
     ds = gdal.Open(file, gdal.GA_ReadOnly)
     ds_array = envi_to_array(file)
 
