@@ -646,6 +646,7 @@ class figures:
 
                 ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='o', markersize=8)
 
+                print(df_x)
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
                 mae = mean_absolute_error(x, y)
