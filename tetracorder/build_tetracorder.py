@@ -156,7 +156,7 @@ class tetracorder:
 
             basename = os.path.basename(reflectance_img_emit[0])
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_pixels_augmented.hdr")
-            augment_envi(file=reflectance_img_emit[0], wvls=self.wvls, out_raster=output_raster)
+            augment_envi(file=reflectance_img_emit[0],  vertical_average=True, wvls=self.wvls, out_raster=output_raster)
 
         for i in transect_files:
             basename = os.path.basename(i)
@@ -204,6 +204,6 @@ def run_tetracorder_build(base_directory, sensor):
     #tc.unmix_tetracorder()
     #tc.reconstruct_soil_simulation()
     #tc.reconstruct_soil_sma()
-    #tc.augment_slpit_pixels()
+    tc.augment_slpit_pixels()
     tc.augment_simulation()
 
