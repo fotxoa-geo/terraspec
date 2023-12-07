@@ -5,6 +5,7 @@ from matplotlib import cm
 import pandas as pd
 import numpy as np
 from utils.envi import envi_to_array, load_band_names
+from utils.create_tree import create_directory
 import os
 from matplotlib.ticker import FormatStrFormatter
 import matplotlib.ticker as ticker
@@ -20,7 +21,63 @@ from scipy.interpolate import interp1d
 import spectral.io.envi as envi
 from emit_utils.file_checks import envi_header
 import logging
+from utils.spectra_utils import spectra
+from pypdf import PdfMerger
+import matplotlib.image as mpimg
+from sklearn import metrics
+from sklearn.preprocessing import LabelEncoder
+import sns
+from mpl_toolkits.basemap import Basemap
 
+
+mineral_groupings = {'group.1um/copper_precipitate_greenslime': 'copper',
+                     'group.1um/fe2+_chlor+muscphy': 'chlorite',
+                     'group.1um/fe2+_goeth+musc' : 'goethite',
+                     'group.1um/fe2+fe3+_chlor+goeth.propylzone': 'goethite',
+                     'group.1um/fe2+generic_br33a_bioqtzmonz_epidote': 'goethite',
+                     'group.1um/fe2+generic_carbonate_siderite1': 'iron oxide',
+                     'group.1um/fe2+generic_nrw.cummingtonite': 'iron oxide',
+                     'group.1um/fe2+generic_nrw.hs-actinolite': 'iron oxide',
+                     'group.1um/fe2+generic_vbroad_br20': 'iron oxide',
+                     'group.1um/fe3+_goethite+qtz.medgr.gds240': 'goethite',
+                     'group.1um/fe3+_goethite.thincoat': 'goethite',
+                     'group.1um/fe3+_hematite.nano.BR34b2': 'hematite',
+                     'group.1um/fe3+_hematite.nano.BR34b2b': 'hematite',
+                     'group.1um/fe3+copper-hydroxide_pitchlimonite': 'iron oxide',
+                     'group.1um/fe3+mn_desert.varnish1': 'iron oxide',
+                     'group.2um/calcite+0.2Na-mont': 'calcite',
+                     'group.2um/calcite+0.5Ca-mont': 'calcite',
+                     'group.2um/calcite.25+dolom.25+Na-mont.5': 'calcite',
+                     'group.2um/carbonate_aragonite': 'carbonate',
+                     'group.2um/carbonate_calcite': 'calcite',
+                     'group.2um/carbonate_calcite+0.2Ca-mont': 'calcite',
+                     'group.2um/carbonate_calcite+0.3muscovite': 'calcite',
+                     'group.2um/carbonate_calcite0.7+kaol0.3': 'calcite',
+                     'group.2um/carbonate_dolo+.5ca-mont': 'dolomite',
+                     'group.2um/carbonate_dolomite': 'dolomite',
+                     'group.2um/chlorite-skarn': 'chlorite',
+                     'group.2um/kaolin+musc.intimat': 'kaolonite',
+                     'group.2um/kaolin.5+muscov.medAl': 'kaolonite',
+                     'group.2um/micagrp_lepidolite': 'mica',
+                     'group.2um/micagrp_muscovite-low-Al': 'muscovite',
+                     'group.2um/micagrp_muscovite-med-Al': 'muscovite',
+                     'group.2um/micagrp_vermiculite_WS682': 'vermiculite',
+                     'group.2um/organic_drygrass+.17Na-mont': 'npv',
+                     'group.2um/organic_vegetation-dry-grass-golden': 'pv',
+                     'group.2um/sioh_chalcedony': 'silicates',
+                     'group.2um/sioh_hydrated_basaltic_glass': 'silicates',
+                     'group.2um/smectite_montmorillonite_ca_swelling': 'montmorillonite',
+                     'group.2um/smectite_montmorillonite_na_highswelling': 'montmorillonite',
+                     'group.2um/smectite_nontronite_swelling': 'montmorillonite',
+                     'none': 'none'}
+
+def simplify_legend(handles, labels):
+    unique_labels = {}
+    for i, label in enumerate(labels):
+        if label not in unique_labels:
+            unique_labels[label] = handles[i]
+
+    return unique_labels
 
 def cont_rem(wavelengths, reflectance, feature):
     left_inds = np.where(np.logical_and(wavelengths >= feature[0], wavelengths <= feature[1]))[0]
@@ -38,7 +95,8 @@ def cont_rem(wavelengths, reflectance, feature):
     depths = reflectance[feature_inds] / continuum[feature_inds]
     return depths, wavelengths[feature_inds]
 
-def bin_sums(x, y, false_pos, false_neg, bin_width:float):
+
+def bin_sums(x, y, false_pos, false_neg):
     mae = []
     x_vals = []
     percent_false_pos = []
@@ -47,15 +105,14 @@ def bin_sums(x, y, false_pos, false_neg, bin_width:float):
     for col in range(x.shape[1]):
         fraction = x[0, col]
         vals = y[:, col]
-        #vals[vals == 0] = np.nan
-        mae_calc = np.mean((vals))
+        mae_calc = np.mean(vals)
         x_vals.append(fraction)
 
         mineral_false_neg = false_neg[:, col]
         mineral_false_pos = false_pos[:, col]
 
         mae.append(mae_calc)
-        percent_false_neg.append(np.sum(mineral_false_neg != 0)/mineral_false_neg.shape[0])
+        percent_false_neg.append(np.sum(mineral_false_neg != 0) / mineral_false_neg.shape[0])
         percent_false_pos.append(np.sum(mineral_false_pos != 0) / mineral_false_pos.shape[0])
 
     return x_vals, mae, percent_false_neg, percent_false_pos
@@ -74,19 +131,20 @@ def error_abundance_corrected(spectral_abundance_array, pure_soil_array, fractio
             soil_index = index[_row, 0, 2]
 
             # correct the abundances
-            if np.round(soil_fractions, 2) == 0:
+            if int(np.round(soil_fractions, 2)) == 0:
                 error_grid[_row, _col, :] = np.absolute(spectral_abundance_array[_row, _col, :] - pure_soil_array[int(soil_index), :])
             else:
-                sa_c = spectral_abundance_array[_row, _col, :]/ np.round(soil_fractions, 2)
-                error = np.absolute(sa_c - pure_soil_array[int(soil_index), :])
+                sa_c = spectral_abundance_array[_row, _col, :] / np.round(soil_fractions, 2)
+                error = sa_c - pure_soil_array[int(soil_index), :]
                 error_grid[_row, _col, :] = error
 
-            # fill out the detection grid
-            for _mineral, mineral in enumerate(pure_soil_array[int(soil_index), :]):
-                if pure_soil_array[int(soil_index), _mineral] == 0 and spectral_abundance_array[_row, _col, _mineral] != 0:
-                    false_positive_grid[_row, _col, _mineral] = 1
-                elif pure_soil_array[int(soil_index), _mineral] != 0 and spectral_abundance_array[_row, _col, _mineral] == 0:
-                    false_negative_grid[_row, _col, _mineral] = 1
+            # # fill out the detection grid
+            # for _mineral, mineral in enumerate(pure_soil_array[int(soil_index), :]):
+            #     if pure_soil_array[int(soil_index), _mineral] == 0 and spectral_abundance_array[row, _col, _mineral] != 0:
+            #         false_positive_grid[_row, _col, _mineral] = 1
+            #     elif pure_soil_array[int(soil_index), _mineral] != 0 and spectral_abundance_array[
+            #         _row, _col, _mineral] == 0:
+            #         false_negative_grid[_row, _col, _mineral] = 1
 
     return error_grid, false_positive_grid, false_negative_grid
 
@@ -100,8 +158,8 @@ def atmosphere_meta(atmosphere):
     time_dh = basename.split('_')[-6].replace('-', '.')
 
     hours = int(float(time_dh))
-    minutes = (float(time_dh) * 60) %60
-    seconds = (float(time_dh) * 3600) %60
+    minutes = (float(time_dh) * 60) % 60
+    seconds = (float(time_dh) * 3600) % 60
     hms = "%d%02d%02d" % (hours, minutes, seconds)
     # defaults from hypertrace runs
     latitude = 34.15
@@ -123,40 +181,25 @@ class tetracorder_figures:
         self.sa_outputs = os.path.join(base_directory, 'tetracorder', 'output', 'spectral_abundance')
         self.fig_directory = os.path.join(base_directory, 'tetracorder', 'figures')
 
-        self.bands = load_band_names(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_abun_mineral'))
+        self.bands = load_band_names(
+            os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_abun_mineral'))
 
-    def simulation_fig(self, xaxis:str):
+        create_directory(os.path.join(self.fig_directory, 'plot_minerals'))
+
+    def simulation_fig(self, xaxis: str):
 
         # load simulation data - truncate the sa files from augmentation; unmixing is ignored here!
         sim_index_array = envi_to_array(os.path.join(self.output_directory, f'tetracorder_{xaxis}_index'))
         sim_fractions_array = envi_to_array(os.path.join(self.output_directory, f'tetracorder_{xaxis}_fractions'))
 
-        sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{xaxis}_spectra_simulation_augmented_abun_mineral'))[:, 0:11, :]
+        sim_sa_arrary = envi_to_array(
+            os.path.join(self.sa_outputs, f'tetracorder_{xaxis}_spectra_simulation_augmented_abun_mineral'))[:, 0:21, :]
         soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_abun_mineral'))[:, 0, :]
 
-        atmospheres = glob(os.path.join(self.sa_outputs, '*atm_*0_abun_mineral'))
-
-        error_grid, false_positive_grid, false_negative_grid = error_abundance_corrected(spectral_abundance_array=sim_sa_arrary,
-                                                                                         pure_soil_array=soil_sa_sim_pure,
-                                                                                         fractions=sim_fractions_array, index=sim_index_array)
-        #error_grid[error_grid == 0] = np.nan
-
-        atmospheres_abundances_corrected = []
-        atmosphere_meta_information = []
-
-        for i in atmospheres:
-            aod, h2o, sza = atmosphere_meta(i)
-            if float(aod) == 0.05 and float(h2o) == 0.75:
-
-                if int(sza) == 13 or int(sza) == 57:
-                    atmos_sa = envi_to_array(i)
-                    atmosphere_error_grid = error_abundance_corrected(spectral_abundance_array=atmos_sa,
-                                                                      pure_soil_array=soil_sa_sim_pure,
-                                                                      fractions=sim_fractions_array, index=sim_index_array)
-                    atmospheres_abundances_corrected.append(atmosphere_error_grid[0])
-                    atmosphere_meta_information.append([aod, h2o, sza])
-                else:
-                    pass
+        error_grid, false_positive_grid, false_negative_grid = error_abundance_corrected(
+            spectral_abundance_array=sim_sa_arrary,
+            pure_soil_array=soil_sa_sim_pure,
+            fractions=sim_fractions_array, index=sim_index_array)
 
         # create figure
         fig = plt.figure(constrained_layout=True, figsize=(12, 6))
@@ -197,32 +240,15 @@ class tetracorder_figures:
                 if xaxis == 'soil':
                     fractions = sim_fractions_array[:, :, 2]
 
-                x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_error, false_pos=mineral_false_positive, false_neg=mineral_false_negative,
-                                       bin_width=0.10)
+                x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_error,
+                                                                             false_pos=mineral_false_positive,
+                                                                             false_neg=mineral_false_negative)
                 l1 = ax.plot(x_vals, mae, label='Baseline')
                 ax.set_ylim(0.0, 0.25)
                 ax.set_xlim(0.0, 1.05)
 
-                ax2 = ax.twinx()
-                l2 = ax2.plot(x_vals, np.absolute(percent_false_neg), label='% False Neg', color='r', linestyle='dotted')
-                l3 = ax2.plot(x_vals, np.absolute(percent_false_pos), label='% False Pos', color='g', linestyle='dashed')
-                ax2.set_ylim(0.0, 1)
-                ax2.set_ylabel('% Detection')
+                lns = l1
 
-                # if xaxis == 'soil':
-                #     # plot the atmospheres
-                #     for _i, i in enumerate(atmosphere_meta_information):
-                #         atmosphere_error_grid = atmospheres_abundances_corrected[_i]
-                #         aod, h2o, sza = atmosphere_meta_information[_i]
-                #         atmos_abs_error = atmosphere_error_grid[:, :, counter]
-                #         x_vals_atm, mae_atm, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=atmos_abs_error, false_pos=mineral_false_positive, false_neg=mineral_false_negative,bin_width=0.10)
-                #         l4 = ax.plot(x_vals_atm, mae_atm, label=f'SZA: {str(sza)}, AOD: {aod}, H$_2$O: {h2o}')
-
-                # added these three lines
-                if xaxis == 'soil':
-                    lns = l1 + l2 + l3 # + l4
-                else:
-                    lns = l1 + l2 + l3
                 labs = [l.get_label() for l in lns]
                 ax.legend(lns, labs, loc=0, prop={'size': 6})
                 ax.set_aspect(1. / ax.get_data_ratio())
@@ -242,16 +268,18 @@ class tetracorder_figures:
         for index, row in df.iterrows():
             plot = row['Name']
             emit_filetime = row['EMIT Date']
-            abundance_emit = glob(os.path.join(self.sa_outputs, f'*{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_abun_mineral'))
-            abundance_contact_probe = os.path.join(self.sa_outputs, f'{plot.replace(" ", "").replace("SPEC", "Spectral")}-emit_ems_augmented_abun_mineral')
-            fractional_cover = os.path.join(self.slpit_output, 'sma-best', f'asd-local___{plot.replace(" ", "")}___num-endmembers_20_n-mc_25_normalization_brightness_fractional_cover')
+            abundance_emit = glob(os.path.join(self.sa_outputs,
+                                               f'*{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_abun_mineral'))
+            abundance_contact_probe = os.path.join(self.sa_outputs,
+                                                   f'{plot.replace(" ", "").replace("SPEC", "Spectral")}-emit_ems_augmented_abun_mineral')
+            fractional_cover = os.path.join(self.slpit_output, 'sma-best',
+                                            f'asd-local___{plot.replace(" ", "")}___num-endmembers_20_n-mc_25_normalization_brightness_fractional_cover')
 
-            print(abundance_emit)
             # load arrays
-            truth_array = envi_to_array(abundance_contact_probe)[0,0,:]
-            #truth_array[truth_array == 0] = np.nan
+            truth_array = envi_to_array(abundance_contact_probe)[0, 0, :]
+            # truth_array[truth_array == 0] = np.nan
             estimated_array = envi_to_array(abundance_emit[0])
-            #estimated_array[estimated_array == 0] = np.nan
+            # estimated_array[estimated_array == 0] = np.nan
 
             # load fractional cover
             plot_fractional_cover = np.average(envi_to_array(fractional_cover)[:, :, 2])
@@ -263,7 +291,7 @@ class tetracorder_figures:
             for _mineral, mineral in enumerate(self.bands):
                 truth_abun = truth_array[_mineral]
                 plot_truth_abun.append(truth_abun)
-                estimated_abun = np.mean(estimated_array[0:3, 0:3, _mineral])/plot_fractional_cover
+                estimated_abun = np.mean(estimated_array[0, 0, _mineral]) / plot_fractional_cover
                 plot_estimated_abun.append(estimated_abun)
 
             # append plot abundances to master rows
@@ -317,7 +345,8 @@ class tetracorder_figures:
                 if col != 0:
                     ax.set_yticklabels([])
 
-                p = ax.scatter(df_truth[self.bands[counter]], df_est[self.bands[counter]], c=df_soil['soil_frac'], cmap='viridis', s=8)
+                p = ax.scatter(df_truth[self.bands[counter]], df_est[self.bands[counter]], c=df_soil['soil_frac'],
+                               cmap='viridis', s=8)
                 rmse = mean_squared_error(df_truth[self.bands[counter]], df_est[self.bands[counter]], squared=False)
                 mae = mean_absolute_error(df_truth[self.bands[counter]], df_est[self.bands[counter]])
                 r2 = r2_calculations(df_truth[self.bands[counter]], df_est[self.bands[counter]])
@@ -395,7 +424,7 @@ class tetracorder_figures:
                 df_mineral = pd.DataFrame({'soil_frac': soil_frac, 'error': error})
                 df_mineral = df_mineral.sort_values('soil_frac')
                 ax.scatter(df_mineral['soil_frac'], df_mineral['error'])
-                #ax.set_aspect('equal', adjustable='box')
+                # ax.set_aspect('equal', adjustable='box')
                 counter += 1
 
         plt.savefig(os.path.join(self.fig_directory, 'abundance_error_by_soil_cover.png'), dpi=300, bbox_inches='tight')
@@ -404,66 +433,128 @@ class tetracorder_figures:
 
     def tetracorder_libraries(self):
 
-        # TODO: Get these from....direct input?  Configuration file?
-        MINERAL_FRACTION_FILES = [ \
-            'calcite.group2.txt',
-            'chlorite.group2.txt',
-            'dolomite.group2.txt',
-            'goethite-all-for-reference.group1.txt',
-            'gypsum.group2.txt',
-            'hematite-all-for-reference.group1.txt',
-            'illite+muscovite.group2.txt',
-            'kaolinite.group2.txt',
-            'montmorillonite.group2.txt',
-            'vermiculite.group2.txt',
-        ]
+        # plot summary - merged
+        merger = PdfMerger()
 
-        SPECTRAL_REFERENCE_LIBRARY = { \
-            'splib06': os.path.join('utils', 'tetracorder', 's06emitd_envi'),
-            'sprlb06': os.path.join('utils', 'tetracorder', 'r06emitd_envi'),
-        }
+        # TODO: Get these from....direct input?  Configuration file?
+        MINERAL_FRACTION_FILES = ['calcite.group2.txt',
+                                  'chlorite.group2.txt',
+                                  'dolomite.group2.txt',
+                                  'goethite-all-for-reference.group1.txt',
+                                  'gypsum.group2.txt',
+                                  'hematite-all-for-reference.group1.txt',
+                                  'illite+muscovite.group2.txt',
+                                  'kaolinite.group2.txt',
+                                  'montmorillonite.group2.txt',
+                                  'vermiculite.group2.txt',
+                                  ]
+
+        SPECTRAL_REFERENCE_LIBRARY = {'splib06': os.path.join('utils', 'tetracorder', 's06emitd_envi'),
+                                       'sprlb06': os.path.join('utils', 'tetracorder', 'r06emitd_envi')}
 
         decoded_expert = tetracorder.decode_expert_system(os.path.join('utils', 'tetracorder', 'cmd.lib.setup.t5.27c1'),
                                                           log_file=None, log_level='INFO')
+
         mff = [os.path.join('utils', 'tetracorder', 'minerals', x) for x in MINERAL_FRACTION_FILES]
         mineral_fractions = tetracorder.read_mineral_fractions(mff)
-        unique_file_names, fractions, scaling, library_names, records, reference_band_depths = unique_file_fractions(mineral_fractions, decoded_expert)
+        unique_file_names, fractions, scaling, library_names, records, reference_band_depths = unique_file_fractions(
+            mineral_fractions, decoded_expert)
 
         df_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
         spectral_reference_library_files = SPECTRAL_REFERENCE_LIBRARY
         libraries = {}
 
-        ind = 0
-
-        # set up the figure
-        fig = plt.figure(figsize=(15,8))
-        gs = gridspec.GridSpec(2,3, figure=fig)
-        ax1 = fig.add_subplot(gs[0, 0])
-        ax2 = fig.add_subplot(gs[0, 1])
-        ax3 = fig.add_subplot(gs[1, :2])
-        ax4 = fig.add_subplot(gs[:, 2])
-
         transect_data = pd.read_csv(os.path.join(self.slpit_output, 'all-transect-emit.csv'))
+
+        emit_detections = []
+        slpit_detections = []
 
         for plot in sorted(list(transect_data.plot_name.unique()), reverse=True):
             slpit_ems_records = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "") +
-                                                    '*emit_ems_augmented_min'))
+                                                  '*emit_ems_augmented_min'))
 
             slpit_ems_spectra = glob(os.path.join(self.aug_directory, '*' + plot.replace(" ", "") +
-                                                    '*emit_ems_augmented'))
-            #
-            # slpit_transect_abundance = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "") +
-            #                  '*transect_augmented_min'))
-            #
-            # emit_spectral_abundance = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "").replace('Spectral', 'SPEC') +
-            #                  '*pixels_augmented_min'))
+                                                  '*emit_ems_augmented'))
 
-            g1_em_records = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(slpit_ems_records[0])[0,0,1]), 'Record'].iloc[0]
-            g2_em_records = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(slpit_ems_records[0])[0,0,3]), 'Record'].iloc[0]
-            plot_spectra = envi_to_array(slpit_ems_spectra[0])[0,0,:]
+            emit_records = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "").replace('Spectral', 'SPEC') +
+                                                        '*pixels_augmented_min'))
+
+            emit_window_spectra = glob(os.path.join(self.aug_directory, '*' + plot.replace(" ", "").replace('Spectral', 'SPEC') +
+                                                        '*pixels_augmented'))
+
+            mineral_records = []
+            mineral_records_emit = []
+
+            if int(envi_to_array(slpit_ems_records[0])[0, 0, 1]) != 0:
+                g1_em_records = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(slpit_ems_records[0])[0, 0, 1]), 'Record'].iloc[0]
+                mineral_records.append(g1_em_records)
+            else:
+                slpit_detections.append('none')
+
+            if int(envi_to_array(slpit_ems_records[0])[0, 0, 3]) != 0:
+                g2_em_records = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(slpit_ems_records[0])[0, 0, 3]), 'Record'].iloc[0]
+                mineral_records.append(g2_em_records)
+            else:
+                slpit_detections.append('none')
+
+            if int(envi_to_array(emit_records[0])[0, 0, 1]) != 0:
+                g1_em_records = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(emit_records[0])[0, 0, 1]), 'Record'].iloc[0]
+                mineral_records_emit.append(g1_em_records)
+            else:
+                emit_detections.append('none')
+
+            if int(envi_to_array(emit_records[0])[0, 0, 3]) != 0:
+                g2_em_records = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(emit_records[0])[0, 0, 3]), 'Record'].iloc[0]
+                mineral_records_emit.append(g2_em_records)
+            else:
+                emit_detections.append('none')
+
+            plot_spectra = envi_to_array(slpit_ems_spectra[0])[0, 0, :]
+            emit_spectra = envi_to_array(emit_window_spectra[0])[0, 0, :]
+
+            # set up the figure
+            fig = plt.figure(figsize=(15, 8))
+            gs = gridspec.GridSpec(2, 4, figure=fig)
+            map = fig.add_subplot(gs[0, 0])
+            ls = fig.add_subplot(gs[0, 1])
+            g1_s = fig.add_subplot(gs[0, 2])
+            g2_s = fig.add_subplot(gs[0, 3])
+            fs = fig.add_subplot(gs[1, :2])
+            g1_e = fig.add_subplot(gs[1, 2])
+            g2_e = fig.add_subplot(gs[1, 3])
+
+            emit_wvls, fwhm = spectra.load_wavelengths(sensor='emit')
+            g1_s.set_title('Continuum Removed Group 1 - SLPIT', fontsize=10)
+            g2_s.set_title('Continuum Removed Group 2 - SLPIT', fontsize=10)
+
+            g1_e.set_title('Continuum Removed Group 1 - EMIT', fontsize=10)
+            g2_e.set_title('Continuum Removed Group 2 - EMIT', fontsize=10)
+
+            # plot picture
+            fig.suptitle(plot, size=16)
+            ls.set_title('Landscape\nPicture')
+            pic_path = os.path.join(self.slpit_output, 'plot_pictures', 'spectral_transects', plot + '.jpg')
+            img = mpimg.imread(pic_path)
+            ls.imshow(img)
+            ls.axis('off')
+
+            # plot spectra
+            fs.set_title('Full Spectrum')
+            fs.plot(emit_wvls, plot_spectra, label='SLPIT', c='blue')
+            fs.plot(emit_wvls, emit_spectra, label='EMIT', c='orange')
+            fs.set_ylim(0,1)
+            fs.legend()
+
+            # plot map
+            map.set_title('Plot Map')
+            df_transect = transect_data.loc[transect_data['plot_name'] == plot].copy()
+            df_transect = df_transect[df_transect.longitude != 'unk']
+            m = Basemap(projection='merc', llcrnrlat=27, urcrnrlat=45,
+                        llcrnrlon=-125, urcrnrlon=-100, ax=map, epsg=4326)
+            m.arcgisimage(service='World_Imagery', xpixels=1000, ypixels=1000, dpi=300, verbose=True)
+            map.scatter(np.mean(df_transect.longitude), np.mean(df_transect.latitude), color='red', s=12)
 
             for key, item in spectral_reference_library_files.items():
-                ind += 1
                 library = envi.open(envi_header(item), item)
                 library_reflectance = library.spectra.copy()
                 library_records = [int(q) for q in library.metadata['record']]
@@ -478,53 +569,185 @@ class tetracorder_figures:
                 libraries[key] = {'reflectance': library_reflectance,
                                   'library_records': library_records, 'wavelengths': wavelengths}
 
-                band_depths = np.zeros(fractions.shape[0])
+                df_rows = []
+                for _f, (frac, filename, library_name, record) in enumerate(zip(fractions, unique_file_names, library_names.tolist(), records.tolist())):
+                    df_rows.append([_f, frac, filename, library_name, record])
 
-                for _f, (frac, filename, library_name, record) in enumerate(
-                        zip(fractions, unique_file_names, library_names.tolist(), records.tolist())):
-                     if library_name == key and record in [g1_em_records]:
+                df_lib = pd.DataFrame(df_rows)
+                df_lib.columns = ['_frac_index', 'fractions', 'filename', 'library_names', 'records']
+
+                plotted_slipit_library_reference = []
+
+                # plot data
+                for _record, slpit_record in enumerate(mineral_records):
+                    if slpit_record not in list(df_lib.records.unique()):
+                        continue
+                    library_name = df_lib.loc[df_lib['records'] == slpit_record, 'library_names'].iloc[0]
+
+                    if library_name == key:
+                        filename = df_lib.loc[df_lib['records'] == slpit_record, 'filename'].iloc[0]
+
+                        file_label = filename.split('.depth.gz')[0].replace('/', '\\').split(os.sep)[1]
+                        group = filename.split('.depth.gz')[0].replace('/', '\\').split(os.sep)[0]
+
+                        # plot the data
                         for cont_feat in decoded_expert[filename.split('.depth.gz')[0].replace('/', '\\')]['features']:
-                            if np.all(np.array(cont_feat['continuum']) < 0.8):
-                                cont, wl = cont_rem(wavelengths, library_reflectance[library_records.index(record), :],
+                            if group == 'group.1um':
+                                cont, wl = cont_rem(wavelengths, library_reflectance[library_records.index(slpit_record), :],
                                                     cont_feat['continuum'])
                                 split_cont, wvls = cont_rem(wavelengths, plot_spectra, cont_feat['continuum'])
-                                ax1.plot(wl, cont, label=f'{frac[0]} ||| {os.path.basename(unique_file_names[_f]).split(".depth.gz")[0]}')
-                                ax1.plot(wvls, split_cont, label=f'SLPIT {frac[0]} ||| {os.path.basename(unique_file_names[_f]).split(".depth.gz")[0]}')
-                                ax3.axvspan(wvls[0], wl[-1], color='y', alpha=0.5, lw=0)
+                                emit_cont, ewvls = cont_rem(wavelengths, emit_spectra, cont_feat['continuum'])
 
-                            if np.all(np.array(cont_feat['continuum']) > 0.7):
+                                g1_s.plot(wl, cont, label=f'{file_label}', c='black', linestyle='dotted')
+                                g1_s.plot(wvls, split_cont, label=f'SLPIT', c='orange')
+                                g1_s.plot(ewvls, emit_cont, label=f'EMIT', c='blue')
+
+                            if group == 'group.2um':
                                 split_cont, wvls = cont_rem(wavelengths, plot_spectra, cont_feat['continuum'])
-                                cont, wl = cont_rem(wavelengths, library_reflectance[library_records.index(record), :],
-                                                    cont_feat['continuum'])
-                                ax2.plot(wl, cont, label=frac[0])
-                                ax2.plot(wvls, split_cont, label=f'SLPIT {frac[0]}')
-                                ax3.axvspan(wvls[0], wl[-1], color='r', alpha=0.5, lw=0)
+                                cont, wl = cont_rem(wavelengths, library_reflectance[library_records.index(slpit_record), :], cont_feat['continuum'])
+                                emit_cont, ewvls = cont_rem(wavelengths, emit_spectra, cont_feat['continuum'])
 
-                        ax3.plot(wavelengths, library_reflectance[library_records.index(record), :], label=f'{os.path.basename(unique_file_names[_f]).split(".depth.gz")[0]}')
-                        ax3.plot(wavelengths, plot_spectra, label='SLPIT')
-                        ax3.legend()
+                                g2_s.plot(wl, cont, label=f'{file_label}', c='black', linestyle='dotted')
+                                g2_s.plot(wvls, split_cont, label=f'SLPIT', c='orange')
+                                g2_s.plot(ewvls, emit_cont, label=f'EMIT', c='blue')
 
-            handles, labels = ax1.get_legend_handles_labels()
-            order = np.argsort(labels)
-            handles = np.array(handles)[order].tolist()
-            labels = np.array(labels)[order].tolist()
-            ax4.legend(handles, labels)
-            ax4.axis('off')
+                # plot EMIT data
+                for _record, emit_record in enumerate(mineral_records_emit):
+                    if emit_record not in list(df_lib.records.unique()):
+                        continue
+                    library_name = df_lib.loc[df_lib['records'] == emit_record, 'library_names'].iloc[0]
 
-            ax1.set_title('Continuum Removed R1')
-            ax2.set_title('Continuum Removed R2')
-            ax3.set_title('Full Spectrum')
-            ax4.set_title('XRD Quantity || Mineral Name')
+                    if library_name == key:
+                        filename = df_lib.loc[df_lib['records'] == emit_record, 'filename'].iloc[0]
 
-            plt.savefig(r'G:\My Drive\test\test_tc.png')
-            time.sleep(1000)
+                        file_label = filename.split('.depth.gz')[0].replace('/', '\\').split(os.sep)[1]
+                        group = filename.split('.depth.gz')[0].replace('/', '\\').split(os.sep)[0]
+
+                        for cont_feat in decoded_expert[filename.split('.depth.gz')[0].replace('/', '\\')]['features']:
+
+                            if group == 'group.1um':
+                                cont, wl = cont_rem(wavelengths, library_reflectance[library_records.index(emit_record), :], cont_feat['continuum'])
+                                split_cont, wvls = cont_rem(wavelengths, plot_spectra, cont_feat['continuum'])
+                                emit_cont, ewvls = cont_rem(wavelengths, emit_spectra, cont_feat['continuum'])
+
+                                g1_e.plot(wl, cont, label=f'{file_label}', c='black', linestyle='dotted')
+                                g1_e.plot(wvls, split_cont, label=f'SLPIT', c='orange')
+                                g1_e.plot(ewvls, emit_cont, label=f'EMIT', c='blue')
+
+                            if group == 'group.2um':
+                                cont, wl = cont_rem(wavelengths, library_reflectance[library_records.index(emit_record), :], cont_feat['continuum'])
+                                split_cont, wvls = cont_rem(wavelengths, plot_spectra, cont_feat['continuum'])
+                                emit_cont, ewvls = cont_rem(wavelengths, emit_spectra, cont_feat['continuum'])
+
+                                g2_e.plot(wl, cont, label=f'{file_label}', c='black', linestyle='dotted')
+                                g2_e.plot(wvls, split_cont, label=f'SLPIT', c='orange')
+                                g2_e.plot(ewvls, emit_cont, label=f'EMIT', c='blue')
+
+            for ax in [g1_s, g2_s, g1_e, g2_e]:
+                handles, labels = ax.get_legend_handles_labels()
+                unique_labels = simplify_legend(handles, labels)
+                ax.legend(unique_labels.values(), unique_labels.keys(), prop={'size': 6})
+
+            plt.savefig(os.path.join(self.fig_directory, 'plot_minerals', plot + '.png'), format="png", dpi=300,
+                        bbox_inches="tight")
+            plt.savefig(os.path.join(self.fig_directory, 'plot_minerals', plot + '.pdf'), format="pdf", dpi=300,
+                        bbox_inches="tight")
+            plt.clf()
+            plt.close()
+            merger.append(os.path.join(self.fig_directory, 'plot_minerals', plot + '.pdf'))
+
+        # write pdf
+        merger.write(os.path.join(self.fig_directory, 'plot_minerals', 'plot_summary.pdf'))
+        merger.close()
+
+    def confusion_matrix(self, threshold=None, frac_cover=False):
+        df_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
+        transect_data = pd.read_csv(os.path.join(self.slpit_output, 'all-transect-emit.csv'))
+
+        emit_detections = []
+        slpit_detections = []
+
+        for plot in sorted(list(transect_data.plot_name.unique()), reverse=True):
+            slpit_ems_records = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "") +
+                                                  '*emit_ems_augmented_min'))
+
+            emit_records = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "").replace('Spectral', 'SPEC') +
+                                             '*pixels_augmented_min'))
+
+            fractional_cover = os.path.join(self.slpit_output, 'sma-best', f'asd-local___{plot.replace(" ", "").replace("Spectral", "SPEC")}___num-endmembers_20_n-mc_25_normalization_brightness_fractional_cover')
+
+            if frac_cover:
+                soil_frac_cover = np.mean(envi_to_array(fractional_cover)[:,:,2])
+                if soil_frac_cover > threshold:
+                    continue
+
+            # slpit data - g1
+            if int(envi_to_array(slpit_ems_records[0])[0, 0, 1]) != 0:
+                filename = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(slpit_ems_records[0])[0, 0, 1]), 'Filename'].iloc[0]
+                slpit_detections.append(mineral_groupings[filename])
+            else:
+                slpit_detections.append('none')
+
+            # slpit data - g2
+            if int(envi_to_array(slpit_ems_records[0])[0, 0, 3]) != 0:
+                filename = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(slpit_ems_records[0])[0, 0, 3]), 'Filename'].iloc[0]
+                slpit_detections.append(mineral_groupings[filename])
+            else:
+                slpit_detections.append('none')
+
+            # emit data - g1
+            if int(envi_to_array(emit_records[0])[0, 0, 1]) != 0:
+                filename = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(emit_records[0])[0, 0, 1]), 'Filename'].iloc[0]
+                emit_detections.append(mineral_groupings[filename])
+            else:
+                emit_detections.append('none')
+
+            if int(envi_to_array(emit_records[0])[0, 0, 3]) != 0:
+                filename = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(emit_records[0])[0, 0, 3]), 'Filename'].iloc[0]
+                emit_detections.append(mineral_groupings[filename])
+
+            else:
+                emit_detections.append('none')
+
+        print(list(sorted(set(emit_detections + slpit_detections))))
+        # write confusion matrix
+        label_encoder = LabelEncoder()
+        label_encoder.fit(slpit_detections + emit_detections)
+
+        actual_values_encoded = label_encoder.transform(slpit_detections)
+        predicted_values_encoded = label_encoder.transform(emit_detections)
+
+        # Get the class labels
+        class_labels = label_encoder.classes_
+        cm = metrics.confusion_matrix(actual_values_encoded, predicted_values_encoded)
+
+        plt.figure(figsize=(20, 18))
+        plt.grid(True)
+        plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+        plt.title('Confusion Matrix')
+        plt.colorbar()
+
+        tick_marks = np.arange(len(class_labels))
+        plt.xticks(tick_marks, class_labels, rotation=90)
+        plt.yticks(tick_marks, class_labels)
+
+        for i in range(len(class_labels)):
+            for j in range(len(class_labels)):
+                plt.text(j, i, str(cm[i][j]), ha='center', va='center', color='white', size=8)
+
+        plt.xlabel('EMIT')
+        plt.ylabel('SLPIT')
+        plt.tight_layout()
+
+        plt.savefig(os.path.join(self.fig_directory, 'mineral_confusion_matrix.png'), format="png", dpi=300,
+                        bbox_inches="tight")
 
 def run_figure_workflow(base_directory):
-
-    ems = ['npv', 'pv', 'soil']
+    ems = ['soil']
     tc = tetracorder_figures(base_directory=base_directory)
-    tc.tetracorder_libraries()
+    tc.confusion_matrix()
+    #tc.tetracorder_libraries()
     #tc.mineral_validation()
     #tc.mineral_error_soil()
-    # for em in ems:
-    #     tc.simulation_fig(xaxis=em)
+    #for em in ems:
+    #    tc.simulation_fig(xaxis=em)
