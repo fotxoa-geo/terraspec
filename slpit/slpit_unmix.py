@@ -25,9 +25,9 @@ class unmix_runs:
         self.gis_directory = os.path.join(base_directory, 'gis')
 
         # simulation parameters for spatial and hypertrace unmix
-        self.optimal_parameters_sma = ['--num_endmembers 20', '--n_mc 25', '--normalization brightness']
-        self.optimal_parameters_mesma = ['--max_combinations 100', '--n_mc 25', '--normalization brightness']
-        self.non_opt_mesma = ['--max_combinations 100', '--n_mc 1', '--normalization brightness']
+        self.optimal_parameters_sma = ['num_endmembers 20', '--n_mc 25', '--normalization brightness']
+        self.optimal_parameters_mesma = ['max_combinations 100', '--n_mc 25', '--normalization brightness']
+        self.non_opt_mesma = ['max_combinations 100', '--n_mc 1', '--normalization brightness']
 
         # load wavelengths
         self.wvls, self.fwhm = spectra.load_wavelengths(sensor='emit')
@@ -72,12 +72,12 @@ class unmix_runs:
                     simulation_parameters = [self.optimal_parameters_sma]
 
                 output_dest = os.path.join(self.output_directory, mode)
-                
+
                 for i in simulation_parameters:
                     # unmix asd with local library
                     out_param_string = " ".join(i)
                     out_param_name = plot.replace(" ", "") + "___" + out_param_string.replace('--','').replace('_', '-').replace(' ', '_')
-
+                    
                     call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=em_local,
                            parameters=i, output_dest=os.path.join(output_dest, 'asd-local___' + out_param_name),
                            scale=self.scale,  spectra_starting_column=self.spectra_starting_column_local)
@@ -104,6 +104,6 @@ class unmix_runs:
 
 
 def run_slipt_unmix(base_directory, dry_run):
-    all_runs = unmix_runs(base_directory, dry_run)
+    all_runs = unmix_runs(base_directory, False)
     all_runs.unmix_calls(mode='sma-best')
     all_runs.unmix_calls(mode='mesma')

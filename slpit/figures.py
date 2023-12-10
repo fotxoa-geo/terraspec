@@ -647,7 +647,11 @@ class figures:
                     x_u = df_x_u['soil']
                     y_u = df_y_u['soil']
 
-                ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='o', markersize=8)
+                cmap = plt.get_cmap('viridis') 
+                c = list(range(1, len(df_x['plot'].values) + 1))
+                ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='none', markersize=4, zorder=1) 
+                scatter = ax.scatter(x, y, c=c, cmap=cmap, edgecolor='black')
+
 
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
@@ -662,12 +666,13 @@ class figures:
                 props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
                         verticalalignment='top', bbox=props)
-
+        
+        fig.colorbar(scatter, label='Plot Number')
         plt.savefig(os.path.join(self.fig_directory, 'regression_local.png'), format="png", dpi=300, bbox_inches="tight")
 
 def run_figures(base_directory):
     fig = figures(base_directory=base_directory)
     #fig.plot_summary()
-    fig.plot_rmse()
+    #fig.plot_rmse()
     fig.local_slpit()
     fig.sza_plot()

@@ -35,12 +35,12 @@ class emit:
         msg = f"\nTerraSpec has created the following directory: {os.path.join(self.base_directory, 'gis', 'emit-data', 'envi')}\n" \
               f"ENVI files along with corresponding HDR files will be stored here."
         cursor_print(msg)
-        create_directory(os.path.join(self.gis_directory), 'outlogs', 'nc_processes')
+        create_directory(os.path.join(self.gis_directory, 'outlogs', 'nc_processes'))
         nc_files = glob(os.path.join(self.gis_directory, 'emit-data', 'nc_files', '*.nc'))
 
         for i in nc_files:
             basename = os.path.basename(i).split(".")[0]
-            nc_outfile = os.path.join(os.path.join(self.gis, 'outlogs', 'nc_processes', basename + '.out'))
+            nc_outfile = os.path.join(os.path.join(self.gis_directory, 'outlogs', 'nc_processes', basename + '.out'))
             base_call = f'python ./slpit/emit_utils/reformat.py {i} {os.path.join(self.gis_directory, "emit-data", "envi")} --orthorectify'
 
             subprocess.call(['sbatch', '-N', '1', '-c', '40', '--mem', '180G', '--output', nc_outfile, '--wrap', f'{base_call}'])
