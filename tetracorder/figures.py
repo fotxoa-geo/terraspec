@@ -115,6 +115,8 @@ def bin_sums(x, y, false_pos, false_neg):
         percent_false_neg.append(np.sum(mineral_false_neg != 0) / mineral_false_neg.shape[0])
         percent_false_pos.append(np.sum(mineral_false_pos != 0) / mineral_false_pos.shape[0])
 
+    print(mae)
+    print(x_vals)
     return x_vals, mae, percent_false_neg, percent_false_pos
 
 
@@ -135,7 +137,7 @@ def error_abundance_corrected(spectral_abundance_array, pure_soil_array, fractio
                 error_grid[_row, _col, :] = np.absolute(spectral_abundance_array[_row, _col, :] - pure_soil_array[int(soil_index), :])
             else:
                 sa_c = spectral_abundance_array[_row, _col, :] / np.round(soil_fractions, 2)
-                error = sa_c - pure_soil_array[int(soil_index), :]
+                error = np.absolute(sa_c - pure_soil_array[int(soil_index), :])
                 error_grid[_row, _col, :] = error
 
             # # fill out the detection grid
@@ -599,8 +601,8 @@ class tetracorder_figures:
                                 emit_cont, ewvls = cont_rem(wavelengths, emit_spectra, cont_feat['continuum'])
 
                                 g1_s.plot(wl, cont, label=f'{file_label}', c='black', linestyle='dotted')
-                                g1_s.plot(wvls, split_cont, label=f'SLPIT', c='orange')
-                                g1_s.plot(ewvls, emit_cont, label=f'EMIT', c='blue')
+                                g1_s.plot(wvls, split_cont, label=f'SLPIT', c='blue')
+                                g1_s.plot(ewvls, emit_cont, label=f'EMIT', c='orange')
 
                             if group == 'group.2um':
                                 split_cont, wvls = cont_rem(wavelengths, plot_spectra, cont_feat['continuum'])
@@ -608,8 +610,8 @@ class tetracorder_figures:
                                 emit_cont, ewvls = cont_rem(wavelengths, emit_spectra, cont_feat['continuum'])
 
                                 g2_s.plot(wl, cont, label=f'{file_label}', c='black', linestyle='dotted')
-                                g2_s.plot(wvls, split_cont, label=f'SLPIT', c='orange')
-                                g2_s.plot(ewvls, emit_cont, label=f'EMIT', c='blue')
+                                g2_s.plot(wvls, split_cont, label=f'SLPIT', c='blue')
+                                g2_s.plot(ewvls, emit_cont, label=f'EMIT', c='orange')
 
                 # plot EMIT data
                 for _record, emit_record in enumerate(mineral_records_emit):
@@ -631,8 +633,8 @@ class tetracorder_figures:
                                 emit_cont, ewvls = cont_rem(wavelengths, emit_spectra, cont_feat['continuum'])
 
                                 g1_e.plot(wl, cont, label=f'{file_label}', c='black', linestyle='dotted')
-                                g1_e.plot(wvls, split_cont, label=f'SLPIT', c='orange')
-                                g1_e.plot(ewvls, emit_cont, label=f'EMIT', c='blue')
+                                g1_e.plot(wvls, split_cont, label=f'SLPIT', c='blue')
+                                g1_e.plot(ewvls, emit_cont, label=f'EMIT', c='orange')
 
                             if group == 'group.2um':
                                 cont, wl = cont_rem(wavelengths, library_reflectance[library_records.index(emit_record), :], cont_feat['continuum'])
@@ -640,8 +642,8 @@ class tetracorder_figures:
                                 emit_cont, ewvls = cont_rem(wavelengths, emit_spectra, cont_feat['continuum'])
 
                                 g2_e.plot(wl, cont, label=f'{file_label}', c='black', linestyle='dotted')
-                                g2_e.plot(wvls, split_cont, label=f'SLPIT', c='orange')
-                                g2_e.plot(ewvls, emit_cont, label=f'EMIT', c='blue')
+                                g2_e.plot(wvls, split_cont, label=f'SLPIT', c='blue')
+                                g2_e.plot(ewvls, emit_cont, label=f'EMIT', c='orange')
 
             for ax in [g1_s, g2_s, g1_e, g2_e]:
                 handles, labels = ax.get_legend_handles_labels()
@@ -745,9 +747,9 @@ class tetracorder_figures:
 def run_figure_workflow(base_directory):
     ems = ['soil']
     tc = tetracorder_figures(base_directory=base_directory)
-    tc.confusion_matrix()
-    #tc.tetracorder_libraries()
+    #tc.confusion_matrix()
+    tc.tetracorder_libraries()
     #tc.mineral_validation()
     #tc.mineral_error_soil()
-    #for em in ems:
+    # for em in ems:
     #    tc.simulation_fig(xaxis=em)

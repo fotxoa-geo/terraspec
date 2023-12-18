@@ -24,6 +24,11 @@ def get_dd_coords(coord):
 bad_wv_regions = [[0, 440], [1310, 1490], [1770, 2050], [2440, 2880]]
 
 
+def load_white_ref_correction():
+    white_ref_array = np.loadtxt(os.path.join('utils', 'splib07a_Spectralon99WhiteRef_LSPHERE_ASDFRa_AREF.txt'), skiprows=1)
+
+    return white_ref_array
+
 def gps_asd(latitude_ddmm, longitude_ddmm, file):
     try:
         dd_lat = get_dd_coords(latitude_ddmm)
@@ -262,7 +267,6 @@ class spectra:
 
     @classmethod
     def row_reflectance(cls, col_size, columns, wavelengths, spectra_start, em, spectral_bundle, row_index):
-
         mixed_spectra = np.zeros((1, columns, len(wavelengths)))
         index = np.zeros((1, columns, 3))
         fractions = np.zeros((1, columns, 3))
@@ -438,9 +442,10 @@ class spectra:
 
     @classmethod
     def get_reflectance_transect(cls, file, plot_directory:str, team_name_key:str):
+        white_ref_correction = load_white_ref_correction()
         plot_name = os.path.basename(plot_directory)
         asd = asdreader.reader(file)
-        asd_refl = asd.reflectance
+        asd_refl = asd.reflectance * white_ref_correction
         asd_gps = asd.get_gps()
         latitude_ddmm, longitude_ddmm, elevation, utc_time = asd_gps[0], asd_gps[1], asd_gps[2], asd_gps[3]
 
