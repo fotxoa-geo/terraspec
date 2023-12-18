@@ -267,7 +267,6 @@ class spectra:
 
     @classmethod
     def row_reflectance(cls, col_size, columns, wavelengths, spectra_start, em, spectral_bundle, row_index):
-
         mixed_spectra = np.zeros((1, columns, len(wavelengths)))
         index = np.zeros((1, columns, 3))
         fractions = np.zeros((1, columns, 3))
