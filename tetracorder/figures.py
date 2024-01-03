@@ -30,45 +30,45 @@ import sns
 from mpl_toolkits.basemap import Basemap
 
 
-mineral_groupings = {'group.1um/copper_precipitate_greenslime': 'copper',
-                     'group.1um/fe2+_chlor+muscphy': 'chlorite',
-                     'group.1um/fe2+_goeth+musc' : 'goethite',
-                     'group.1um/fe2+fe3+_chlor+goeth.propylzone': 'goethite',
-                     'group.1um/fe2+generic_br33a_bioqtzmonz_epidote': 'goethite',
-                     'group.1um/fe2+generic_carbonate_siderite1': 'iron oxide',
-                     'group.1um/fe2+generic_nrw.cummingtonite': 'iron oxide',
-                     'group.1um/fe2+generic_nrw.hs-actinolite': 'iron oxide',
-                     'group.1um/fe2+generic_vbroad_br20': 'iron oxide',
-                     'group.1um/fe3+_goethite+qtz.medgr.gds240': 'goethite',
-                     'group.1um/fe3+_goethite.thincoat': 'goethite',
-                     'group.1um/fe3+_hematite.nano.BR34b2': 'hematite',
-                     'group.1um/fe3+_hematite.nano.BR34b2b': 'hematite',
-                     'group.1um/fe3+copper-hydroxide_pitchlimonite': 'iron oxide',
-                     'group.1um/fe3+mn_desert.varnish1': 'iron oxide',
-                     'group.2um/calcite+0.2Na-mont': 'calcite',
-                     'group.2um/calcite+0.5Ca-mont': 'calcite',
-                     'group.2um/calcite.25+dolom.25+Na-mont.5': 'calcite',
-                     'group.2um/carbonate_aragonite': 'carbonate',
-                     'group.2um/carbonate_calcite': 'calcite',
-                     'group.2um/carbonate_calcite+0.2Ca-mont': 'calcite',
-                     'group.2um/carbonate_calcite+0.3muscovite': 'calcite',
-                     'group.2um/carbonate_calcite0.7+kaol0.3': 'calcite',
-                     'group.2um/carbonate_dolo+.5ca-mont': 'dolomite',
-                     'group.2um/carbonate_dolomite': 'dolomite',
-                     'group.2um/chlorite-skarn': 'chlorite',
-                     'group.2um/kaolin+musc.intimat': 'kaolonite',
-                     'group.2um/kaolin.5+muscov.medAl': 'kaolonite',
-                     'group.2um/micagrp_lepidolite': 'mica',
-                     'group.2um/micagrp_muscovite-low-Al': 'muscovite',
-                     'group.2um/micagrp_muscovite-med-Al': 'muscovite',
-                     'group.2um/micagrp_vermiculite_WS682': 'vermiculite',
-                     'group.2um/organic_drygrass+.17Na-mont': 'npv',
-                     'group.2um/organic_vegetation-dry-grass-golden': 'pv',
-                     'group.2um/sioh_chalcedony': 'silicates',
-                     'group.2um/sioh_hydrated_basaltic_glass': 'silicates',
-                     'group.2um/smectite_montmorillonite_ca_swelling': 'montmorillonite',
-                     'group.2um/smectite_montmorillonite_na_highswelling': 'montmorillonite',
-                     'group.2um/smectite_nontronite_swelling': 'montmorillonite',
+mineral_groupings = {'group.1um/copper_precipitate_greenslime': 'none',
+                     'group.1um/fe2+_chlor+muscphy': 'Fe Oxiddes',
+                     'group.1um/fe2+_goeth+musc' : 'Fe Oxiddes',
+                     'group.1um/fe2+fe3+_chlor+goeth.propylzone': 'Fe Oxiddes',
+                     'group.1um/fe2+generic_br33a_bioqtzmonz_epidote': 'Fe Oxiddes',
+                     'group.1um/fe2+generic_carbonate_siderite1': 'Fe Oxiddes',
+                     'group.1um/fe2+generic_nrw.cummingtonite': 'Fe Oxiddes',
+                     'group.1um/fe2+generic_nrw.hs-actinolite': 'Fe Oxiddes',
+                     'group.1um/fe2+generic_vbroad_br20': 'Fe Oxiddes',
+                     'group.1um/fe3+_goethite+qtz.medgr.gds240': 'Fe Oxiddes',
+                     'group.1um/fe3+_goethite.thincoat': 'Fe Oxiddes',
+                     'group.1um/fe3+_hematite.nano.BR34b2': 'Fe Oxiddes',
+                     'group.1um/fe3+_hematite.nano.BR34b2b': 'Fe Oxiddes',
+                     'group.1um/fe3+copper-hydroxide_pitchlimonite': 'Fe Oxiddes',
+                     'group.1um/fe3+mn_desert.varnish1': 'Fe Oxiddes',
+                     'group.2um/calcite+0.2Na-mont': 'Carbonate',
+                     'group.2um/calcite+0.5Ca-mont': 'Carbonate',
+                     'group.2um/calcite.25+dolom.25+Na-mont.5': 'Carbonate',
+                     'group.2um/carbonate_aragonite': 'Carbonate',
+                     'group.2um/carbonate_calcite': 'Carbonate',
+                     'group.2um/carbonate_calcite+0.2Ca-mont': 'Carbonate',
+                     'group.2um/carbonate_calcite+0.3muscovite': 'Carbonate',
+                     'group.2um/carbonate_calcite0.7+kaol0.3': 'Carbonate',
+                     'group.2um/carbonate_dolo+.5ca-mont': 'Carbonate',
+                     'group.2um/carbonate_dolomite': 'Carbonate',
+                     'group.2um/chlorite-skarn': 'Carbonate',
+                     'group.2um/kaolin+musc.intimat': 'Clay',
+                     'group.2um/kaolin.5+muscov.medAl': 'Clay',
+                     'group.2um/micagrp_lepidolite': 'Clay',
+                     'group.2um/micagrp_muscovite-low-Al': 'Clay',
+                     'group.2um/micagrp_muscovite-med-Al': 'Clay',
+                     'group.2um/micagrp_vermiculite_WS682': 'Clay',
+                     'group.2um/organic_drygrass+.17Na-mont': 'none',
+                     'group.2um/organic_vegetation-dry-grass-golden': 'none',
+                     'group.2um/sioh_chalcedony': 'none',
+                     'group.2um/sioh_hydrated_basaltic_glass': 'none',
+                     'group.2um/smectite_montmorillonite_ca_swelling': 'Clay',
+                     'group.2um/smectite_montmorillonite_na_highswelling': 'Clay',
+                     'group.2um/smectite_nontronite_swelling': 'Clay',
                      'none': 'none'}
 
 def simplify_legend(handles, labels):
@@ -96,7 +96,7 @@ def cont_rem(wavelengths, reflectance, feature):
     return depths, wavelengths[feature_inds]
 
 
-def bin_sums(x, y, false_pos, false_neg):
+def bin_sums(x, y, false_pos, false_neg, nans:bool):
     mae = []
     x_vals = []
     percent_false_pos = []
@@ -105,7 +105,10 @@ def bin_sums(x, y, false_pos, false_neg):
     for col in range(x.shape[1]):
         fraction = x[0, col]
         vals = y[:, col]
-        mae_calc = np.mean(vals)
+        if nans:
+            vals[vals == 0] = np.nan
+
+        mae_calc = np.mean(vals[~np.isnan(vals)])
         x_vals.append(fraction)
 
         mineral_false_neg = false_neg[:, col]
@@ -115,30 +118,36 @@ def bin_sums(x, y, false_pos, false_neg):
         percent_false_neg.append(np.sum(mineral_false_neg != 0) / mineral_false_neg.shape[0])
         percent_false_pos.append(np.sum(mineral_false_pos != 0) / mineral_false_pos.shape[0])
 
-    print(mae)
-    print(x_vals)
     return x_vals, mae, percent_false_neg, percent_false_pos
 
 
-def error_abundance_corrected(spectral_abundance_array, pure_soil_array, fractions, index):
+def error_abundance_corrected(spectral_abundance_array, pure_soil_array, fractions, index, unmix_fractions, unmix_abundance):
     # correct spectral abundance, third dimension is the minerals
     error_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], np.shape(spectral_abundance_array)[2]))
     false_positive_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], np.shape(spectral_abundance_array)[2]))
     false_negative_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], np.shape(spectral_abundance_array)[2]))
+    error_grid_unmix = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], np.shape(spectral_abundance_array)[2]))
 
     for _row, row in enumerate(fractions):
         for _col, col in enumerate(row):
             soil_fractions = fractions[_row, _col, 2]
-
+            unmix_fractions_ = unmix_fractions[_row, _col, 2]
             soil_index = index[_row, 0, 2]
 
             # correct the abundances
             if int(np.round(soil_fractions, 2)) == 0:
                 error_grid[_row, _col, :] = np.absolute(spectral_abundance_array[_row, _col, :] - pure_soil_array[int(soil_index), :])
+
+                error_grid_unmix[_row, _col, :] = np.absolute(spectral_abundance_array[_row, _col, :] - unmix_abundance[_row, _col, :])
+
             else:
                 sa_c = spectral_abundance_array[_row, _col, :] / np.round(soil_fractions, 2)
                 error = np.absolute(sa_c - pure_soil_array[int(soil_index), :])
                 error_grid[_row, _col, :] = error
+
+                # unmixing errors
+                error_grid_unmix[_row, _col, :] = np.absolute((spectral_abundance_array[_row, _col, :]/unmix_fractions_) - unmix_abundance[_row, _col, :])
+
 
             # # fill out the detection grid
             # for _mineral, mineral in enumerate(pure_soil_array[int(soil_index), :]):
@@ -148,7 +157,7 @@ def error_abundance_corrected(spectral_abundance_array, pure_soil_array, fractio
             #         _row, _col, _mineral] == 0:
             #         false_negative_grid[_row, _col, _mineral] = 1
 
-    return error_grid, false_positive_grid, false_negative_grid
+    return error_grid, false_positive_grid, false_negative_grid, error_grid_unmix
 
 
 def atmosphere_meta(atmosphere):
@@ -190,18 +199,22 @@ class tetracorder_figures:
 
     def simulation_fig(self, xaxis: str):
 
-        # load simulation data - truncate the sa files from augmentation; unmixing is ignored here!
+        # load simulation data - truncate the sa files from augmentation
         sim_index_array = envi_to_array(os.path.join(self.output_directory, f'tetracorder_{xaxis}_index'))
         sim_fractions_array = envi_to_array(os.path.join(self.output_directory, f'tetracorder_{xaxis}_fractions'))
+
+        # load unmixing data
+        unmix_fractions_array = envi_to_array(os.path.join(self.aug_directory, 'sma-best', f'tetracorder_soil_spectra_fractional_cover'))
+        unmix_abundance = envi_to_array(os.path.join(self.sa_outputs, f'sma-unmixing-soil_abun_mineral'))
 
         sim_sa_arrary = envi_to_array(
             os.path.join(self.sa_outputs, f'tetracorder_{xaxis}_spectra_simulation_augmented_abun_mineral'))[:, 0:21, :]
         soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_abun_mineral'))[:, 0, :]
 
-        error_grid, false_positive_grid, false_negative_grid = error_abundance_corrected(
+        error_grid, false_positive_grid, false_negative_grid, sma_error = error_abundance_corrected(
             spectral_abundance_array=sim_sa_arrary,
             pure_soil_array=soil_sa_sim_pure,
-            fractions=sim_fractions_array, index=sim_index_array)
+            fractions=sim_fractions_array, index=sim_index_array, unmix_fractions=unmix_fractions_array, unmix_abundance=unmix_abundance)
 
         # create figure
         fig = plt.figure(constrained_layout=True, figsize=(12, 6))
@@ -230,6 +243,7 @@ class tetracorder_figures:
                     ax.set_yticklabels([])
 
                 abs_error = error_grid[:, :, counter]
+                abs_unmix_error = sma_error[:, :, counter]
                 mineral_false_positive = false_positive_grid[:, :, counter]
                 mineral_false_negative = false_negative_grid[:, :, counter]
 
@@ -242,14 +256,28 @@ class tetracorder_figures:
                 if xaxis == 'soil':
                     fractions = sim_fractions_array[:, :, 2]
 
+                # this is no-nans
                 x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_error,
                                                                              false_pos=mineral_false_positive,
-                                                                             false_neg=mineral_false_negative)
+                                                                            false_neg=mineral_false_negative, nans=False)
                 l1 = ax.plot(x_vals, mae, label='Baseline')
+
+                # this is nan
+                x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_error,
+                                                                             false_pos=mineral_false_positive,
+                                                                             false_neg=mineral_false_negative, nans=True)
+                #l2 = ax.plot(x_vals, mae, label='True Negative Muted')
+
+                # this is the sma line
+                x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_unmix_error,
+                                                                             false_pos=mineral_false_positive,
+                                                                             false_neg=mineral_false_negative,
+                                                                             nans=True)
+                l3 = ax.plot(x_vals, mae, label='SMA Approach')
                 ax.set_ylim(0.0, 0.25)
                 ax.set_xlim(0.0, 1.05)
 
-                lns = l1
+                lns = l1 + l3
 
                 labs = [l.get_label() for l in lns]
                 ax.legend(lns, labs, loc=0, prop={'size': 6})
@@ -273,7 +301,7 @@ class tetracorder_figures:
             abundance_emit = glob(os.path.join(self.sa_outputs,
                                                f'*{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_abun_mineral'))
             abundance_contact_probe = os.path.join(self.sa_outputs,
-                                                   f'{plot.replace(" ", "").replace("SPEC", "Spectral")}-emit_ems_augmented_abun_mineral')
+                                                   f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented_abun_mineral')
             fractional_cover = os.path.join(self.slpit_output, 'sma-best',
                                             f'asd-local___{plot.replace(" ", "")}___num-endmembers_20_n-mc_25_normalization_brightness_fractional_cover')
 
@@ -329,7 +357,7 @@ class tetracorder_figures:
             for col in range(ncols):
                 ax = fig.add_subplot(gs[row, col])
                 ax.set_title(self.bands[counter])
-                ax.set_xlabel(f'SLPIT (Contact Probe)')
+                ax.set_xlabel(f'SLPIT')
                 ax.grid('on', linestyle='--')
                 ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.01))
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(major_tick_spacing))
@@ -415,7 +443,7 @@ class tetracorder_figures:
                 ax.set_ylim(0, 0.2)
 
                 if col == 0:
-                    ax.set_ylabel('Absolute Abundance Error\n (Contact Probe - EMIT)')
+                    ax.set_ylabel('Absolute Abundance Error\n (SLPIT- EMIT)')
 
                 if col != 0:
                     ax.set_yticklabels([])
@@ -711,7 +739,17 @@ class tetracorder_figures:
             else:
                 emit_detections.append('none')
 
-        print(list(sorted(set(emit_detections + slpit_detections))))
+        plot_list = sorted(list(transect_data.plot_name.unique()), reverse=True)
+
+
+        # save df
+        df = pd.DataFrame({'emit' : emit_detections,
+                           'slpit': slpit_detections,
+                           'plot' : list(np.repeat(plot_list, 2))} ,
+                          columns=['emit', 'slpit', 'plot'])
+
+        df.to_csv(os.path.join(self.fig_directory, 'mineral_report.csv'), index=False)
+
         # write confusion matrix
         label_encoder = LabelEncoder()
         label_encoder.fit(slpit_detections + emit_detections)
@@ -735,7 +773,7 @@ class tetracorder_figures:
 
         for i in range(len(class_labels)):
             for j in range(len(class_labels)):
-                plt.text(j, i, str(cm[i][j]), ha='center', va='center', color='white', size=8)
+                plt.text(j, i, str(cm[i][j]), ha='center', va='center', color='white', size=12)
 
         plt.xlabel('EMIT')
         plt.ylabel('SLPIT')
@@ -748,8 +786,8 @@ def run_figure_workflow(base_directory):
     ems = ['soil']
     tc = tetracorder_figures(base_directory=base_directory)
     #tc.confusion_matrix()
-    tc.tetracorder_libraries()
+    #tc.tetracorder_libraries()
     #tc.mineral_validation()
     #tc.mineral_error_soil()
-    # for em in ems:
-    #    tc.simulation_fig(xaxis=em)
+    for em in ems:
+        tc.simulation_fig(xaxis=em)
