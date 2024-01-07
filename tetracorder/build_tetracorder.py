@@ -106,37 +106,43 @@ class tetracorder:
 
     def reconstruct_soil_sma(self):
         cursor_print('reconstructing soil from sma...')
+
         # reconstructed soil from fractions and unmix library
-        complete_fractions_array = envi_to_array(os.path.join(self.augmented_dir, 'sma-best', 'tetracorder_spectra_complete_fractions'))
+        complete_fractions_array = envi_to_array(os.path.join(self.augmented_dir, 'sma-best', f'tetracorder_soil_spectra_complete_fractions'))
 
         df_unmix = pd.read_csv(os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library.csv'))
         min_soil_index = np.min(df_unmix[df_unmix['level_1'] == 'soil'].index)
 
-        unmix_library_array = envi_to_array(os.path.join(self.simulation_output_directory, 'endmember_libraries',
-                                                   'convex_hull__n_dims_4_unmix_library'))
+        unmix_library_array = envi_to_array(os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library'))
 
         spectra_grid = np.zeros((complete_fractions_array.shape[0], complete_fractions_array.shape[1], len(self.wvls)))
 
         for _row, row in enumerate(complete_fractions_array):
-            sma_soils = np.where(complete_fractions_array[_row, 0, : -1] != 0)[0]
-            sma_soils = [x for x in sma_soils if x >= min_soil_index]
+            for _col, col in enumerate(row):
+                sma_soils = np.where(complete_fractions_array[_row, _col, : -1] != 0)[0]
+                sma_soils = [x for x in sma_soils if x >= min_soil_index]
 
-            if sma_soils:
-                soils_grid = np.zeros((len(sma_soils), len(self.wvls)))
+                if sma_soils:
+                    soils_grid = np.zeros((len(sma_soils), len(self.wvls)))
 
-                for _soil, soil in enumerate(sma_soils):
-                    soil_spectra = unmix_library_array[soil, 0, :] * complete_fractions_array[_row, 0, soil]
-                    soils_grid[_soil, :] = soil_spectra
+                    for _soil, soil in enumerate(sma_soils):
+                        soil_spectra = unmix_library_array[soil, 0, :] * complete_fractions_array[_row, _col, soil]
+                        soils_grid[_soil, :] = soil_spectra
 
-                spectra_grid[_row, :, :] = soils_grid.sum(axis=0)
+                    spectra_grid[_row, _col, :] = soils_grid.sum(axis=0)
 
-            else:
-                spectra_grid[_row, :, :] = -9999.
+                else:
+                    spectra_grid[_row, _col, :] = -9999.
 
         meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls,
                                 wvls=True)
         output_raster = os.path.join(self.tetra_data_directory, "unmixing-soil.hdr")
         save_envi(output_raster, meta_spectra, spectra_grid)
+
+        # augment the file
+        aug_raster = os.path.join(self.augmented_dir, "sma-unmixing-soil.hdr")
+        augment_envi(file=os.path.splitext(output_raster)[0], wvls=self.wvls, out_raster=aug_raster, vertical_average=False)
+
         print("\t- done")
 
     def augment_slpit_pixels(self):
@@ -188,7 +194,7 @@ class tetracorder:
         sim_npv_spectra = os.path.join(self.tetra_output_directory, 'tetracorder_npv_spectra')
         sim_pv_spectra = os.path.join(self.tetra_output_directory, 'tetracorder_pv_spectra')
 
-        files_to_augment = [simulation_lib, unmix_lib, sim_soil_spectra, sim_npv_spectra, sim_pv_spectra]
+        files_to_augment = [simulation_lib, unmix_lib, sim_soil_spectra]
 
         for i in files_to_augment:
             basename = os.path.basename(i)
@@ -201,8 +207,16 @@ class tetracorder:
 def run_tetracorder_build(base_directory, sensor):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
     #tc.generate_tetracorder_reflectance()
+<<<<<<< HEAD
     tc.unmix_tetracorder()
     #tc.reconstruct_soil_simulation()
     #tc.reconstruct_soil_sma()
     #tc.augment_slpit_pixels()
     #tc.augment_simulation()
+=======
+    #tc.unmix_tetracorder()
+    tc.reconstruct_soil_sma()
+    #tc.augment_slpit_pixels()
+    #tc.augment_simulation()
+
+>>>>>>> c266b7c66e986fec75db40a70ce94985b33e818e
