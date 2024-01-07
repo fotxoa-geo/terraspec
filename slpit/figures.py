@@ -155,9 +155,9 @@ class figures:
 
                     ax.set_title(f'Field Sample Date: {slpit_date}')
                     df_gis_select = df_gis.loc[df_gis['Name'] == plot.replace("Spectral", "SPEC")].copy().reset_index(drop=True)
-                    field_emit_date = df_gis_select.at[0, 'EMIT Overp']
-                    field_emit_date = datetime.strptime(field_emit_date, "%b %d, %Y at %I:%M:%S %p")
-                    field_emit_date = field_emit_date.strftime("%Y%m%dT%H%M")
+                    #field_emit_date = df_gis_select.at[0, 'EMIT Overp']
+                    #field_emit_date = datetime.strptime(field_emit_date, "%b %d, %Y at %I:%M:%S %p")
+                    #field_emit_date = field_emit_date.strftime("%Y%m%dT%H%M")
 
                     for _i, i in enumerate(reflectance_files):
                         acquisition_date = os.path.basename(i).split("_")[2]
@@ -269,64 +269,61 @@ class figures:
                     ax.text(2100, 0.85, f"Soil (n = {str(em_spectra.shape[0])})", fontsize=12)
 
                 if ax == ax7:
-                    pass
-                    # slpit_ems_abundance = glob(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "") +
-                    #                  '*emit_ems_augmented_abun_mineral'))
-                    #
-                    # slpit_transect_abundance = glob(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "") +
-                    #                  '*transect_augmented_abun_mineral'))
-                    #
-                    # emit_spectral_abundance = glob(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "").replace('Spectral', 'SPEC') +
-                    #                  '*pixels_augmented_abun_mineral'))
-                    #
-                    # # load df for em position key
-                    # em_csv = os.path.join(self.output_directory, 'spectral_transects', 'endmembers', plot.replace(" ", "") + '-emit.csv')
-                    # df_em = pd.read_csv(em_csv)
-                    # first_soil_index = df_em.index[df_em['level_1'] == 'Soil'].min()
-                    #
-                    # print(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "") +
-                    #                  '*emit_ems_augmented_abun_mineral'))
-                    # # load data
-                    # split_abundance_array = envi_to_array(slpit_ems_abundance[0])[first_soil_index:,:,:]
-                    # split_abundance_array[split_abundance_array == 0] = np.nan
-                    # emit_abundance_array = envi_to_array(emit_spectral_abundance[0])
-                    # emit_abundance_array[emit_abundance_array == 0] = np.nan
-                    # split_transect_array = envi_to_array(slpit_transect_abundance[0])
-                    # split_transect_array[split_transect_array == 0] = np.nan
-                    #
-                    # mineral_bands = load_band_names(slpit_ems_abundance[0])
-                    # mineral_bands = [item.replace('+', '\n') for item in mineral_bands]
-                    #
-                    # ax.set_ylabel('Spectral Abundance')
-                    # ax.set_ylim(0, .25)
-                    #
-                    # for _mineral, mineral in enumerate(mineral_bands):
-                    #     avg_slpit_em = np.nanmean(split_abundance_array[:, 0, _mineral])
-                    #     avg_split_transect = np.nanmean(split_transect_array[:, 0, _mineral])
-                    #     avg_emit = np.nanmean(emit_abundance_array[:, 0:3, _mineral])
-                    #
-                    #     ax.bar(_mineral, avg_slpit_em, color='green', label='Contact Probe', edgecolor="black", width=0.2)
-                    #     ax.bar(_mineral - 0.1, avg_split_transect, color='black', label='Fiber Optic', edgecolor="black",
-                    #            width=0.2)
-                    #     ax.bar(_mineral + 0.1, avg_emit, color='blue', label='EMIT', edgecolor="black", width=0.2)
-                    #
-                    # # Get handles and labels from the axes
-                    # handles, labels = ax.get_legend_handles_labels()
-                    #
-                    # # Create a dictionary to keep track of unique labels
-                    # unique_labels = {}
-                    # unique_handles = []
-                    #
-                    # # Iterate through the labels and handles and add them to the unique_labels dictionary
-                    # for i, label in enumerate(labels):
-                    #     if label not in unique_labels:
-                    #         unique_labels[label] = handles[i]
-                    #         unique_handles.append(handles[i])
-                    #
-                    # ax.legend(unique_handles, unique_labels.keys())
-                    # ax.set_xticks(np.arange(0, len(mineral_bands), step=1), minor=False)
-                    # ax.set_xticklabels(mineral_bands, fontdict=None, minor=False)
-                    # ax.tick_params(axis='x', labelsize=8)
+                    slpit_ems_abundance = glob(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "") +
+                                     '*emit_ems_augmented_abun_mineral'))
+
+                    slpit_transect_abundance = glob(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "") +
+                                     '*transect_augmented_abun_mineral'))
+
+                    emit_spectral_abundance = glob(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "").replace('Spectral', 'SPEC') +
+                                     '*pixels_augmented_abun_mineral'))
+
+                    # load df for em position key
+                    em_csv = os.path.join(self.output_directory, 'spectral_transects', 'endmembers', plot.replace(" ", "") + '-emit.csv')
+                    df_em = pd.read_csv(em_csv)
+                    first_soil_index = df_em.index[df_em['level_1'] == 'Soil'].min()
+
+                    # load data
+                    split_abundance_array = envi_to_array(slpit_ems_abundance[0])[0,0,:]
+                    #split_abundance_array[split_abundance_array == 0] = np.nan
+                    emit_abundance_array = envi_to_array(emit_spectral_abundance[0])
+                    #emit_abundance_array[emit_abundance_array == 0] = np.nan
+                    split_transect_array = envi_to_array(slpit_transect_abundance[0])[0,0,:]
+                    #split_transect_array[split_transect_array == 0] = np.nan
+
+                    mineral_bands = load_band_names(slpit_ems_abundance[0])
+                    mineral_bands = [item.replace('+', '\n') for item in mineral_bands]
+
+                    ax.set_ylabel('Spectral Abundance')
+                    ax.set_ylim(0, .25)
+
+                    for _mineral, mineral in enumerate(mineral_bands):
+                        avg_slpit_em = np.nanmean(split_abundance_array[_mineral])
+                        avg_split_transect = np.nanmean(split_transect_array[_mineral])
+                        avg_emit = np.mean(emit_abundance_array[0:3, 0:3, _mineral])
+
+                        ax.bar(_mineral, avg_slpit_em, color='green', label='Contact Probe', edgecolor="black", width=0.2)
+                        ax.bar(_mineral - 0.1, avg_split_transect, color='black', label='Fiber Optic', edgecolor="black",
+                               width=0.2)
+                        ax.bar(_mineral + 0.1, avg_emit, color='blue', label='EMIT', edgecolor="black", width=0.2)
+
+                    # Get handles and labels from the axes
+                    handles, labels = ax.get_legend_handles_labels()
+
+                    # Create a dictionary to keep track of unique labels
+                    unique_labels = {}
+                    unique_handles = []
+
+                    # Iterate through the labels and handles and add them to the unique_labels dictionary
+                    for i, label in enumerate(labels):
+                        if label not in unique_labels:
+                            unique_labels[label] = handles[i]
+                            unique_handles.append(handles[i])
+
+                    ax.legend(unique_handles, unique_labels.keys())
+                    ax.set_xticks(np.arange(0, len(mineral_bands), step=1), minor=False)
+                    ax.set_xticklabels(mineral_bands, fontdict=None, minor=False)
+                    ax.tick_params(axis='x', labelsize=8)
 
             plt.savefig(os.path.join(self.fig_directory, 'plot_stats', plot + '.pdf'), format="pdf", dpi=300,
                         bbox_inches="tight")
@@ -653,6 +650,7 @@ class figures:
                 scatter = ax.scatter(x, y, c=c, cmap=cmap, edgecolor='black')
 
 
+                print(df_x)
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
                 mae = mean_absolute_error(x, y)

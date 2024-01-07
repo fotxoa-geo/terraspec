@@ -171,23 +171,30 @@ def load_band_names(file):
     return list(bands.keys())
 
 
-def augment_envi(file, wvls, out_raster):
+def  augment_envi(file, wvls, out_raster, vertical_average=False, em_index=None):
     ds = gdal.Open(file, gdal.GA_ReadOnly)
     ds_array = envi_to_array(file)
 
-    if ds.RasterYSize == 3:
+    if ds.RasterYSize == 3: # this is for the EMIT 3x3 windows
         spectra_grid = np.zeros((100, 100, len(wvls)))
     else:
         spectra_grid = np.zeros((ds.RasterYSize, 100, len(wvls)))
 
-    for _row, row in enumerate(ds_array):
-        for _col, col in enumerate(row):
-            spectra_grid[_row, _col, :] = ds_array[_row, _col, :]
+    if not vertical_average:
+        for _row, row in enumerate(ds_array):
+            for _col, col in enumerate(row):
+                spectra_grid[_row, _col, :] = ds_array[_row, _col, :]
+
+    else:
+        if em_index == None: # this averages all spectral readings from slpit into tone
+            spectra_grid[0, 0, :] = np.mean(ds_array, axis=(0, 1))
+
+        else:
+            spectra_grid[0, 0, :] = np.mean(ds_array[em_index:, :, :], axis=(0, 1))
 
     meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=wvls,
                             wvls=True)
     save_envi(out_raster, meta_spectra, spectra_grid)
-
 
 def read_metadata(hdr_file):
     metadata = {}

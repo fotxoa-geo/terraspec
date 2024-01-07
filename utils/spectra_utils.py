@@ -6,12 +6,13 @@ from sklearn.decomposition import PCA
 import pandas as pd
 import time
 from p_tqdm import p_map
+from functools import partial
 from utils.envi import get_meta, save_envi
 from utils import asdreader
 from glob import glob
 import geopandas as gpd
 import matplotlib.pyplot as plt
-
+from utils.slpit_download import load_pickle, save_pickle
 
 def get_dd_coords(coord):
     dd_mm = float(str(coord).split(".")[0][-2:] + "." + str(coord).split(".")[1])/60
@@ -22,6 +23,11 @@ def get_dd_coords(coord):
 # bad wavelength regions
 bad_wv_regions = [[0, 440], [1310, 1490], [1770, 2050], [2440, 2880]]
 
+
+def load_white_ref_correction():
+    white_ref_array = np.loadtxt(os.path.join('utils', 'splib07a_Spectralon99WhiteRef_LSPHERE_ASDFRa_AREF.txt'), skiprows=1)
+
+    return white_ref_array
 
 def gps_asd(latitude_ddmm, longitude_ddmm, file):
     try:
@@ -148,17 +154,20 @@ class spectra:
         if em == 'soil':
             soil_frac = em_fraction
             remaining_fraction = 1 - em_fraction
-            npv_frac = pv_frac = remaining_fraction/2
+            npv_frac = np.random.uniform(0, remaining_fraction)  # Generate a random number between 0 and the target_sum
+            pv_frac = remaining_fraction - npv_frac  # Calculate the second number to ensure the sum matches the target_sum
 
         if em == 'npv':
             npv_frac = em_fraction
             remaining_fraction = 1 - em_fraction
-            soil_frac = pv_frac = remaining_fraction / 2
+            pv_frac = np.random.uniform(0, remaining_fraction)  # Generate a random number between 0 and the target_sum
+            soil_frac = remaining_fraction - pv_frac  # Calculate the second number to ensure the sum matches the target_sum
 
         if em == 'pv':
             pv_frac = em_fraction
             remaining_fraction = 1 - em_fraction
-            npv_frac = soil_frac = remaining_fraction / 2
+            soil_frac = np.random.uniform(0, remaining_fraction)  # Generate a random number between 0 and the target_sum
+            npv_frac = remaining_fraction - soil_frac  # Calculate the second number to ensure the sum matches the target_sum
 
         fractions = [npv_frac, pv_frac, soil_frac]
 
@@ -196,16 +205,15 @@ class spectra:
         return row_spectra, row_fractions, row_index
 
     @classmethod
-    def increment_reflectance(cls, class_names: list, simulation_table: str, level: str, spectral_bundles:int,
-                              increment_size:float, output_directory: str, wvls, name: str, spectra_starting_col:int,
-                              endmember:str):
+    def create_spectral_bundles(cls, df, level, spectral_bundles):
         ts = time.time()
         # define seed for random sampling of spectral bundles
         np.random.seed(13)
 
-        df = simulation_table
+        df = df
         df = df.reset_index(drop=True)
         df.insert(0, 'index', df.index)
+        class_names = sorted(list(df[level].unique()))
         class_lists = []
 
         for em in class_names:
@@ -213,37 +221,94 @@ class spectra:
             df_select = df_select.values.tolist()
             class_lists.append(df_select)
 
-        all_combinations = list(itertools.product(*class_lists))
+        output_pickle = 'spectraL_bundles'
+        if os.path.isfile(os.path.join('objects', output_pickle + '.pickle')):
+            all_combinations = load_pickle(output_pickle)
+        else:
+            all_combinations = list(itertools.product(*class_lists))
+            save_pickle(all_combinations, output_pickle)
 
         if len(all_combinations) < spectral_bundles:
             index = np.random.choice(len(all_combinations), replace=False, size=len(all_combinations))
         else:
             index = np.random.choice(len(all_combinations), replace=False, size=spectral_bundles)
 
-        cols = int(1 / increment_size) + 1
-        spectra_all = [all_combinations[i] for i in index]
-        fraction_grid = np.zeros((len(index), cols, len(class_names)))
-        spectra_grid = np.zeros((len(index), cols, len(wvls)))
-        index_grid = np.zeros((len(index), cols, len(class_names)))
+        picked_spectra = [all_combinations[i] for i in index]
 
         # spectra array - combinations x # of classes (each col is an em) x wavelengths
-        spec_array = np.array(spectra_all)
+        spec_array = np.array(picked_spectra)
 
-        for _col, col in enumerate(range(0, cols)):
-            col_frac = np.round(col * increment_size, 2)
-            col_fractions, col_index, col_spectra = spectra.increment_synthetic_reflectance(data=spec_array, em=endmember,
-                                                                                            wvls=wvls,
-                                                                                            em_fraction=col_frac,
-                                                                                            seed=_col, spectra_start=spectra_starting_col)
+        return spec_array
 
-            fraction_grid[:, _col, :] = col_fractions
-            spectra_grid[:, _col, :] = col_spectra
-            index_grid[:, _col, :] = col_index
+    @classmethod
+    def generate_em_fractions(cls, em, em_fraction, seed):
+        np.random.seed(seed)
+        # calculate the fractions
+        if em == 'soil':
+            soil_frac = em_fraction
+            remaining_fraction = 1 - em_fraction
+            npv_frac = np.random.uniform(0, remaining_fraction)  # Generate a random number between 0 and the target_sum
+            pv_frac = remaining_fraction - npv_frac  # Calculate the second number to ensure the sum matches the target_sum
+
+        if em == 'npv':
+            npv_frac = em_fraction
+            remaining_fraction = 1 - em_fraction
+            pv_frac = np.random.uniform(0, remaining_fraction)  # Generate a random number between 0 and the target_sum
+            soil_frac = remaining_fraction - pv_frac  # Calculate the second number to ensure the sum matches the target_sum
+
+        if em == 'pv':
+            pv_frac = em_fraction
+            remaining_fraction = 1 - em_fraction
+            soil_frac = np.random.uniform(0,
+                                          remaining_fraction)  # Generate a random number between 0 and the target_sum
+            npv_frac = remaining_fraction - soil_frac  # Calculate the second number to ensure the sum matches the target_sum
+
+        return npv_frac, pv_frac, soil_frac
+
+    @classmethod
+    def row_reflectance(cls, col_size, columns, wavelengths, spectra_start, em, spectral_bundle, row_index):
+
+        mixed_spectra = np.zeros((1, columns, len(wavelengths)))
+        index = np.zeros((1, columns, 3))
+        fractions = np.zeros((1, columns, 3))
+
+        for _col, col in enumerate(range(0, columns)):
+            increment_frac = np.round(col * col_size, 2)
+            npv_frac, pv_frac, soil_frac = spectra.generate_em_fractions(em=em, em_fraction=increment_frac, seed= row_index + _col)
+
+            mixed_spectra[0, _col, :] = (spectral_bundle[0][spectra_start:].astype(dtype=float) * npv_frac) + \
+                                        (spectral_bundle[1][spectra_start:].astype(dtype=float) * pv_frac) + \
+                                        (spectral_bundle[2][spectra_start:].astype(dtype=float) * soil_frac)
+            fractions[0, _col, :] = [npv_frac, pv_frac, soil_frac]
+            index[0, _col, :] = list(map(int, [spectral_bundle[0][0], spectral_bundle[1][0], spectral_bundle[2][0]]))
+
+        return mixed_spectra, fractions, index
+
+    @classmethod
+    def increment_reflectance(cls, class_names: list, simulation_table: str, level: str, spectral_bundles:int,
+                              increment_size:float, output_directory: str, wvls, name: str, spectra_starting_col:int,
+                              endmember:str):
+
+        cols = int(1 / increment_size) + 1
+        fraction_grid = np.zeros((spectral_bundles, cols, len(class_names)))
+        spectra_grid = np.zeros((spectral_bundles, cols, len(wvls)))
+        index_grid = np.zeros((spectral_bundles, cols, len(class_names)))
+
+        spec_array = spectra.create_spectral_bundles(df=simulation_table, level=level, spectral_bundles=spectral_bundles)
+
+        results = p_map(partial(spectra.row_reflectance, increment_size, cols, wvls,spectra_starting_col, endmember), [bundle for bundle in spec_array], [_index for _index,index in enumerate(spectra_grid)],
+                        **{"desc": "\t\t processing reflectance...", "ncols": 150})
+
+        # populate the results
+        for _row, row in enumerate(results):
+            spectra_grid[_row, :, :] = row[0]
+            fraction_grid[_row, :, :] = row[1]
+            index_grid[_row, :, :] = row[2]
 
         # save the datasets
-        refl_meta = get_meta(lines=len(index), samples=cols, bands=wvls, wvls=True)
-        index_meta = get_meta(lines=len(index), samples=cols, bands=class_names, wvls=False)
-        fraction_meta = get_meta(lines=len(index), samples=cols, bands=class_names, wvls=False)
+        refl_meta = get_meta(lines=spectral_bundles, samples=cols, bands=wvls, wvls=True)
+        index_meta = get_meta(lines=spectral_bundles, samples=cols, bands=class_names, wvls=False)
+        fraction_meta = get_meta(lines=spectral_bundles, samples=cols, bands=class_names, wvls=False)
 
         # save index, spectra, fraction grid
         output_files = [os.path.join(output_directory, name + '_index.hdr'),
@@ -378,9 +443,10 @@ class spectra:
 
     @classmethod
     def get_reflectance_transect(cls, file, plot_directory:str, team_name_key:str):
+        white_ref_correction = load_white_ref_correction()
         plot_name = os.path.basename(plot_directory)
         asd = asdreader.reader(file)
-        asd_refl = asd.reflectance
+        asd_refl = asd.reflectance * white_ref_correction
         asd_gps = asd.get_gps()
         latitude_ddmm, longitude_ddmm, elevation, utc_time = asd_gps[0], asd_gps[1], asd_gps[2], asd_gps[3]
 
