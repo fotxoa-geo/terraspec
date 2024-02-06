@@ -358,10 +358,13 @@ class figures:
         df_all_uncer.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization',
                                 'npv', 'pv', 'soil', 'shade']
 
+        # load cpu performance results
+        df_cpu = pd.read_csv(os.path.join(self.fig_directory, 'computing_performance_report.csv'))
+
         # # create figure
         fig = plt.figure(constrained_layout=True, figsize=(12, 12))
         ncols = 3
-        nrows = 6
+        nrows = 4
         gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.025, hspace=0.0001, figure=fig)
 
         # loop through figure columns
@@ -369,22 +372,19 @@ class figures:
             if row == 0:
                 df_select = df_all[(df_all['unmix_mode'] == 'sma-best') & (df_all['lib_mode'] == 'local')].copy()
                 df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'sma-best') & (df_all_uncer['lib_mode'] == 'local')].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'local') & (df_cpu['mode'] == 'sma-best')].copy()
             if row == 1:
                 df_select = df_all[(df_all['unmix_mode'] == 'sma-best') & (df_all['lib_mode'] == 'global')].copy()
                 df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'sma-best') & (df_all_uncer['lib_mode'] == 'global')].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'global') & (df_cpu['mode'] == 'sma-best')].copy()
             if row == 2:
                 df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['num_mc'] == 25)].copy()
                 df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'mesma') & (df_all_uncer['lib_mode'] == 'local') & (df_all_uncer['num_mc'] == 25)].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'local') & (df_cpu['mode'] == 'mesma')].copy()
             if row == 3:
-                df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['num_mc'] == 1)].copy()
-                df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'mesma') & (df_all_uncer['lib_mode'] == 'local')].copy()
-            if row == 4:
                 df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'global') & (df_all['num_mc'] == 25)].copy()
                 df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'mesma') & (df_all_uncer['lib_mode'] == 'global') & (df_all_uncer['num_mc'] == 25)].copy()
-            if row == 5:
-                df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'global') & (df_all['num_mc'] == 1)].copy()
-                df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'mesma') & (df_all_uncer['lib_mode'] == 'global')].copy()
-
+                df_performance = df_cpu[(df_cpu['library'] == 'global') & (df_cpu['mode'] == 'mesma')].copy()
 
             for col in range(ncols):
                 ax = fig.add_subplot(gs[row, col])
@@ -453,7 +453,7 @@ class figures:
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
                         verticalalignment='top', bbox=props)
 
-        plt.savefig(os.path.join(self.fig_directory, 'regression.png'), format="png", dpi=300, bbox_inches="tight")# load all fraction files
+        plt.savefig(os.path.join(self.fig_directory, 'regression.png'), format="png", dpi=300, bbox_inches="tight")
 
 
     def sza_plot(self):
@@ -671,6 +671,6 @@ class figures:
 def run_figures(base_directory):
     fig = figures(base_directory=base_directory)
     #fig.plot_summary()
-    #fig.plot_rmse()
-    fig.local_slpit()
-    fig.sza_plot()
+    fig.plot_rmse()
+    #fig.local_slpit()
+    #fig.sza_plot()

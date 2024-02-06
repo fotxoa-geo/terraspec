@@ -5,6 +5,7 @@ from slpit.geoprocess import run_geoprocess_utils, run_geoprocess_extract, run_n
 from slpit.build_slpit import run_build_workflow
 from slpit.figures import run_figures
 from slpit.slpit_unmix import run_slipt_unmix
+from slpit.slpit_tables import run_tables
 
 
 def display_slpit_menu():
@@ -20,7 +21,7 @@ def display_slpit_menu():
     print("E... Extract ENVI Data from SLPIT Points")
     print("F... Sync extracted 3x3 windows")
     print("G... Unmix Signals")
-    print("H... Process Figures")
+    print("H... Process Figures and Tables")
     print("I... Exit")
 
 
@@ -65,6 +66,7 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
         # run the figure set
         elif user_input == 'H':
             run_figures(base_directory=base_directory)
+            #run_tables(base_directory=base_directory)
 
         elif user_input == "I":
             print("Returning to main menu.")
