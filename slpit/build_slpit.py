@@ -200,7 +200,10 @@ class build_libraries:
                 else:
                     # get white ref; # this is where we forget to take end white spectra
                     line_num_max = df_select.filenumber.max()
-                    df_query = df_results[(df_results['file_num'] > line_num_max)].copy()
+                    closest_file_numbers = df_white_ref['filenumber'].values - line_num_max
+                    min_index = np.argmin(closest_file_numbers[closest_file_numbers != 0])
+                    df_query = df_results[(df_results['file_num'] > line_num_max) & (df_results['file_num'] < df_white_ref['filenumber'].values[min_index])].copy()
+
                     df_query['line_num'] = line_num
                     df_query = df_query.drop('white_ref', axis=1)
                     df_query.insert(0, "date", date)
