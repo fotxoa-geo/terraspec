@@ -26,7 +26,7 @@ class unmix_runs:
 
         # simulation parameters for spatial and hypertrace unmix
         self.optimal_parameters_sma = ['num_endmembers 20', '--n_mc 25', '--normalization brightness']
-        self.optimal_parameters_mesma = ['max_combinations 100', '--n_mc 25', '--normalization brightness']
+        self.optimal_parameters_mesma = ['max_combinations 90', '--n_mc 25', '--normalization brightness']
         self.non_opt_mesma = ['max_combinations 100', '--n_mc 1', '--normalization brightness']
 
         # load wavelengths
@@ -72,7 +72,7 @@ class unmix_runs:
 
             if os.path.isfile(em_local):
                 if mode == 'mesma':
-                    simulation_parameters = [self.optimal_parameters_mesma, self.non_opt_mesma] 
+                    simulation_parameters = [self.optimal_parameters_mesma ] #, self.non_opt_mesma] 
                 else:
                     simulation_parameters = [self.optimal_parameters_sma]
 
