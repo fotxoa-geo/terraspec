@@ -55,8 +55,13 @@ class unmix_runs:
 
         # create directory
         create_directory(os.path.join(self.output_directory, mode))
+        
+        count = 0
 
         for index, row in df.iterrows():
+            #if count != 0:
+            #    continue
+
             plot = row['Name']
 
             emit_filetime = row['EMIT Date']
@@ -98,10 +103,12 @@ class unmix_runs:
                            parameters=i, output_dest=os.path.join(output_dest, 'emit-global___' + out_param_name),
                            scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
                            spectra_starting_column=self.spectra_starting_column_global)
-                
+                    
+                    count += 1
             else:
                 print(em_local, " does not exist.")
-
+            
+                
 
 def run_slipt_unmix(base_directory, dry_run):
     all_runs = unmix_runs(base_directory, False)
