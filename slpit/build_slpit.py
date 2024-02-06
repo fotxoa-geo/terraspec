@@ -200,9 +200,15 @@ class build_libraries:
                 else:
                     # get white ref; # this is where we forget to take end white spectra
                     line_num_max = df_select.filenumber.max()
+
+                    # this gets all values if it was line 1 or line 2
                     closest_file_numbers = df_white_ref['filenumber'].values - line_num_max
                     min_index = np.argmin(closest_file_numbers[closest_file_numbers != 0])
                     df_query = df_results[(df_results['file_num'] > line_num_max) & (df_results['file_num'] < df_white_ref['filenumber'].values[min_index])].copy()
+
+                    if df_query.empty:
+                        # this gets line 3;
+                        df_query = df_results[(df_results['file_num'] > line_num_max)].copy()
 
                     df_query['line_num'] = line_num
                     df_query = df_query.drop('white_ref', axis=1)
@@ -210,6 +216,7 @@ class build_libraries:
                     df_query['utc_time'] = df_query['utc_time'].dt.strftime('%H:%M:%S')
                     adjusted_dfs.append(df_query)
                     print("\t\t no white ref correction available on: ", plot_name, line_num)
+
 
             df_corrected_all = pd.concat(adjusted_dfs)
             df_corrected_all.to_csv(os.path.join(self.output_transect_directory, plot_name + '- transect.csv'),
