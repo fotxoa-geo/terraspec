@@ -66,7 +66,7 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
         # run the figure set
         elif user_input == 'H':
             run_figures(base_directory=base_directory)
-            #run_tables(base_directory=base_directory)
+            run_tables(base_directory=base_directory)
 
         elif user_input == "I":
             print("Returning to main menu.")
