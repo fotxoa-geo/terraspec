@@ -58,13 +58,10 @@ class unmix_runs:
         # load shapefile
         df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
         df = df.sort_values('Name')
+        print(df)
 
         # create directory
         create_directory(os.path.join(self.output_directory, mode))
-<<<<<<< HEAD
-        
-=======
->>>>>>> 7c90ca8fef9ae674da0b36c031934411e8631dfb
         count = 0
 
         for index, row in df.iterrows():
@@ -73,7 +70,7 @@ class unmix_runs:
 
             plot = row['Name']
 
-            emit_filetime = row['EMIT Date']
+            emit_filetime = row['EMIT DATE']
             reflectance_img_emit = glob(os.path.join(self.gis_directory, 'emit-data-clip', f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
             reflectance_uncer_img_emit = glob(os.path.join(self.gis_directory, 'emit-data-clip',f'*{plot.replace(" ", "")}_RFLUNCERT_{emit_filetime}'))
             em_local = os.path.join(self.spectral_em_directory, plot.replace("SPEC", 'Spectral').replace(" ", "") + '-emit.csv')
@@ -127,4 +124,5 @@ class unmix_runs:
 def run_slipt_unmix(base_directory, dry_run):
     all_runs = unmix_runs(base_directory, dry_run)
     all_runs.unmix_calls(mode='sma-best')
+    all_runs.unmix_calls(mode='mesma-best')
     all_runs.unmix_calls(mode='mesma')
