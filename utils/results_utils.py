@@ -175,6 +175,7 @@ def performance_log(out_file:str):
     total_seconds = []
     error_flag = 0
     worker_counter = 0
+    total_lines = 0
 
     for line in lines:
         # pattern for time
@@ -198,8 +199,12 @@ def performance_log(out_file:str):
         host_name_match = re.search(r'Unmixing was processed on: (.+)' , line.strip())
         if host_name_match:
             cpu_host = str(host_name_match.group(1))
+
+        total_line_match = re.search(r'Running from lines: (\d+) - (\d+)', line.strip())
+        if total_line_match:
+            total_lines = str(total_line_match.group(2))
     
-    if worker_counter != 1000:
+    if worker_counter !=  int(total_lines):
         error_flag = 1
     
     df = pd.DataFrame([arguments], columns=arguments.keys())
