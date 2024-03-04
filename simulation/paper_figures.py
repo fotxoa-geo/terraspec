@@ -2,6 +2,7 @@ import os
 import time
 
 from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from sys import platform
 import pandas as pd
@@ -11,10 +12,8 @@ from scipy.spatial import ConvexHull
 from utils.create_tree import create_directory
 from utils.spectra_utils import spectra
 
-
-if not "win" in platform:
+if not "win32" in platform:
     plt.switch_backend('Agg')
-
 
 class figures:
     def __init__(self, base_directory: str, sensor: str, major_axis_fontsize, minor_axis_fontsize, title_fontsize,
@@ -44,24 +43,50 @@ class figures:
         self.linewidth = linewidth
         self.sig_figs = sig_figs
 
-    def size_endmembers_figure(self):
-        df_error = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_error_report.csv'))
+    def merge_sma_mesma(self):
+        df_sma_error = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_error_report.csv'))
+        df_sma_error['mode'] = 'sma-best'
+        df_mesma_error = pd.read_csv(os.path.join(self.fig_directory, 'mesma_unmix_error_report.csv'))
+        df_mesma_error['mode'] = 'mesma'
+        df_error = pd.concat([df_sma_error, df_mesma_error], ignore_index=True)
         df_error = df_error.replace('brightness', "Brightness")
-        df_error = df_error.replace('none', 'Default')
+        df_error = df_error.replace('1500', "1500 nm")
+        df_error = df_error.replace('none', 'No Normalization')
+
+        df_sma_uncer = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_uncertainty_report.csv'))
+        df_sma_uncer['mode'] = 'sma-best'
+        df_mesma_uncer = pd.read_csv(os.path.join(self.fig_directory, 'mesma_unmix_uncertainty_report.csv'))
+        df_mesma_uncer['mode'] = 'mesma'
+        df_uncer = pd.concat([df_sma_uncer, df_mesma_uncer], ignore_index=True)
+        df_uncer = df_uncer.replace('brightness', "Brightness")
+        df_uncer = df_uncer.replace('1500', "1500 nm")
+        df_uncer = df_uncer.replace('none', 'No Normalization')
+
+        return df_error, df_uncer
+
+    def load_sma_error(self):
+        df_error = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_error_report.csv'))
+        df_error['mode'] = 'sma-best'
+        df_error = df_error.replace('brightness', "Brightness")
+        df_error = df_error.replace('none', 'No Normalization')
 
         df_uncer = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_uncertainty_report.csv'))
+        df_uncer['mode'] = 'sma-best'
         df_uncer = df_uncer.replace('brightness', "Brightness")
 
-        # create 3x2 figure
-        ncols = 3  # for each em
-        nrows = 2
+        return df_error, df_uncer
 
-        fig, axs = plt.subplots(nrows, ncols, figsize=(self.fig_width, self.fig_height))
-        fig.subplots_adjust(wspace=0.1, hspace=0.1)
+    def size_endmembers_figure(self):
+        df_error, df_uncer = figures.load_sma_error(self)
+
+        fig = plt.figure(constrained_layout=True, figsize=(self.fig_width, self.fig_height))
+        ncols = 3
+        nrows = 2
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.001, hspace=0.0001, figure=fig)
 
         for row in range(nrows):
             for col in range(ncols):
-                ax = axs[row, col]
+                ax = fig.add_subplot(gs[row, col])
                 ax.grid('on', linestyle='--')
                 ax.set_ylim(0, 0.22)
                 ax.set_xlim(1, 6.25)
@@ -69,7 +94,7 @@ class figures:
                 if row == 0:
                     ax.set_title(self.ems[col].title(), fontsize=self.title_fontsize)
 
-                if row == 1:
+                if row == 3:
                     ax.set_xlabel("Principal Components", fontsize=self.axis_label_fontsize)
 
                 ax.tick_params(axis='both', which='major', labelsize=self.major_axis_fontsize)
@@ -80,12 +105,17 @@ class figures:
                 if col != 0:
                     ax.set_yticklabels([])
 
+
+        axes_2d = fig.get_axes()
+        axes_2d = [axes_2d[i:i + ncols] for i in range(0, len(axes_2d), ncols)]
+
         # filter the data by normalization
         for em in sorted(list(df_error.num_em.unique())):
-            df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == em) & (
-                        df_error['mc_runs'] == 25)].copy()
-            df_select_unc = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['num_em'] == em) & (
-                        df_uncer['mc_runs'] == 25)].copy()
+            if em == np.nan:
+                continue
+
+            df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == em) & (df_error['mc_runs'] == 25) & (df_error['mode'] == 'sma-best')].copy()
+            df_select_unc = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['num_em'] == em) & (df_uncer['mc_runs'] == 25) & (df_uncer['mode'] == 'sma-best')].copy()
 
             # filter by scenario
             for scenario in df_select.scenario.unique():
@@ -102,52 +132,44 @@ class figures:
                 # loop thorough figure and plot
                 for row in range(nrows):
                     for col in range(ncols):
-                        ax = axs[row, col]
-
                         label = str(int(em)) + ' EM'
+                        ax = axes_2d[row][col]
+
                         if scenario == 'latin' and row == 0:
                             ax.errorbar(df_select1.dims, df_select1[error_mae[col]],
                                         yerr=df_select_unc1[error_options[col]] / 25,
                                         label=label, solid_capstyle='projecting', capsize=capsize[col])
 
                             if col == 0:
-                                ax.set_ylabel('MAE\n(Latin Hypercube)', fontsize=self.axis_label_fontsize)
+                                ax.set_ylabel('SMA MAE\n(Latin Hypercube)', fontsize=self.axis_label_fontsize)
 
                         if scenario == 'convex' and row == 1:
                             ax.errorbar(df_select1.dims, df_select1[error_mae[col]],
                                         yerr=df_select_unc1[error_options[col]] / 25,
                                         label=label, solid_capstyle='projecting', capsize=capsize[col])
 
-
-
                             if col == 0:
-                                ax.set_ylabel('MAE\n(Convex Hull)', fontsize=self.axis_label_fontsize)
+                                ax.set_ylabel('SMA MAE\n(Convex Hull)', fontsize=self.axis_label_fontsize)
 
                         if row == 1 and col == 1:
-                            ax.legend()
+                            ax.legend(prop={'size': 8})
+
         plt.savefig(os.path.join(self.fig_directory, 'endmember_selection_figure.png'), bbox_inches="tight", dpi=400)
         plt.clf()
         plt.close()
 
     def uncertainty_figure(self):
-
-        df_error = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_error_report.csv'))
-        df_error = df_error.replace('brightness', "Brightness")
-        df_error = df_error.replace('none', 'Default')
-
-        df_uncer = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_uncertainty_report.csv'))
-        df_uncer = df_uncer.replace('brightness', "Brightness")
+        df_error, df_uncer = figures.merge_sma_mesma(self)
 
         # create 3x2 figure
-        ncols = 3  # for each em
-        nrows = 2  # top row normal, middle water, aod; x-axis solar angle
-
-        fig, axs = plt.subplots(nrows, ncols, figsize=(self.fig_width, self.fig_height))
-        fig.subplots_adjust(wspace=0.1, hspace=0.1)
+        fig = plt.figure(constrained_layout=True, figsize=(self.fig_width, self.fig_height))
+        ncols = 3
+        nrows = 2
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.001, hspace=0.0001, figure=fig)
 
         for row in range(nrows):
             for col in range(ncols):
-                ax = axs[row, col]
+                ax = fig.add_subplot(gs[row, col])
                 ax.grid('on', linestyle='--')
                 ax.set_ylim(0, 0.22)
                 ax.set_xlim(1, 6.25)
@@ -165,47 +187,62 @@ class figures:
                 if col != 0:
                     ax.set_yticklabels([])
 
+        axes_2d = fig.get_axes()
+        axes_2d = [axes_2d[i:i + ncols] for i in range(0, len(axes_2d), ncols)]
+
+        color_guide = {5: 'blue', 10: "red", 25: "green", 50: "orange"}
         # filter the data by normalization
         for mc_runs in sorted(list(df_error.mc_runs.unique())):
             if mc_runs == 1:
                 continue
-            df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == 30) & (df_error['mc_runs'] == mc_runs)].copy()
-            df_select_unc = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['num_em']== 30) & (df_uncer['mc_runs'] == mc_runs)].copy()
 
-            # filter by scenario
-            for scenario in df_select.scenario.unique():
-                df_select1 = df_select.loc[(df_select['scenario'] == scenario)].copy()
-                df_select1 = df_select1.sort_values('dims')  # sort by dimensions, lower to greater
+            for mode in df_error['mode'].unique():
+                if mode == 'sma-best':
+                    df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == 30) & (df_error['mc_runs'] == mc_runs)].copy()
+                    df_select_unc = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['num_em'] == 30) & (df_uncer['mc_runs'] == mc_runs)].copy()
+                    mode_label = 'SMA'
+                    linestyle = 'solid'
+                if mode == 'mesma':
+                    df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['cmbs'] == 100) & (df_error['mc_runs'] == mc_runs)].copy()
+                    df_select_unc = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['cmbs'] == 100) & (df_uncer['mc_runs'] == mc_runs)].copy()
+                    mode_label = "MESMA"
+                    linestyle = 'dotted'
 
-                df_select_unc1 = df_select_unc.loc[(df_select_unc['scenario'] == scenario)].copy()
-                df_select_unc1 = df_select_unc1.sort_values('dims')  # sort by dimensions, lower to greater
 
-                error_options = ['npv_uncer', 'pv_uncer', 'soil_uncer']
-                error_mae = ['npv_mae', 'pv_mae', 'soil_mae']
-                capsize = [8, 6, 4]
+                # filter by scenario
+                for scenario in df_select.scenario.unique():
+                    df_select1 = df_select.loc[(df_select['scenario'] == scenario)].copy()
+                    df_select1 = df_select1.sort_values('dims')  # sort by dimensions, lower to greater
 
-                # loop thorough figure and plot
-                for row in range(nrows):
-                    for col in range(ncols):
-                        ax = axs[row, col]
+                    df_select_unc1 = df_select_unc.loc[(df_select_unc['scenario'] == scenario)].copy()
+                    df_select_unc1 = df_select_unc1.sort_values('dims')  # sort by dimensions, lower to greater
 
-                        label = str(int(mc_runs)) + ' MC Runs'
-                        if scenario == 'latin' and row == 0:
-                            ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select_unc1[error_options[col]] / 25,
-                                        label=label, solid_capstyle='projecting', capsize=capsize[col])
+                    error_options = ['npv_uncer', 'pv_uncer', 'soil_uncer']
+                    error_mae = ['npv_mae', 'pv_mae', 'soil_mae']
+                    capsize = [8, 6, 4]
 
-                            if col == 0:
-                                ax.set_ylabel('MAE\n(Latin Hypercube)', fontsize=self.axis_label_fontsize)
+                    # loop thorough figure and plot
+                    for row in range(nrows):
+                        for col in range(ncols):
+                            ax = axes_2d[row][col]
 
-                        if scenario == 'convex' and row == 1:
-                            ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select_unc1[error_options[col]] / 25,
-                                        label=label, solid_capstyle='projecting', capsize=capsize[col])
+                            label = str(int(mc_runs)) + ' MC Runs'
+                            if scenario == 'latin' and row == 0:
+                                ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select_unc1[error_options[col]] / 25,
+                                            label=f"{label} - {mode_label}", solid_capstyle='projecting', capsize=capsize[col], linestyle= linestyle, color=color_guide[mc_runs])
 
-                            if col == 0:
-                                ax.set_ylabel('MAE\n(Convex Hull)', fontsize=self.axis_label_fontsize)
+                                if col == 0:
+                                    ax.set_ylabel('MAE\n(Latin Hypercube)', fontsize=self.axis_label_fontsize)
 
-                        if row == 1 and col == 1:
-                            ax.legend()
+                            if scenario == 'convex' and row == 1:
+                                ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select_unc1[error_options[col]] / 25,
+                                            label=f"{label} - {mode_label}", solid_capstyle='projecting', capsize=capsize[col], linestyle= linestyle, color=color_guide[mc_runs])
+
+                                if col == 0:
+                                    ax.set_ylabel('MAE\n(Convex Hull)', fontsize=self.axis_label_fontsize)
+
+                            if row == 1 and col == 1:
+                                ax.legend(prop={'size': 8})
 
         plt.savefig(os.path.join(self.fig_directory, 'uncertainty_options.png'), bbox_inches="tight", dpi=400)
         plt.clf()
@@ -339,7 +376,7 @@ class figures:
 
     def atmosphere_mesma(self):
 
-        df = pd.read_csv(os.path.join(self.fig_directory, "atmosphere_error_report.csv"))
+        df = pd.read_csv(os.path.join(self.fig_directory, " .csv"))
         df = df.loc[df['mode'] == 'mesma'].copy()
         df_error = pd.read_csv(os.path.join(self.fig_directory, 'mesma_unmix_error_report.csv'))
         df_uncer = pd.read_csv(os.path.join(self.fig_directory, 'mesma_unmix_uncertainty_report.csv'))
@@ -464,29 +501,18 @@ class figures:
         plt.savefig(os.path.join(self.fig_directory, "mesma_atmosphere_error_sun_angles.png"), bbox_inches="tight", dpi=400)
 
 
-
     def normalization_figure(self):
+        df_error, df_uncer = figures.merge_sma_mesma(self)
 
-        df_error = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_error_report.csv'))
-        df_uncer = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_uncertainty_report.csv'))
-
-        df_error = df_error.replace('brightness', "Brightness")
-        df_error = df_error.replace('1500', "1500 nm")
-        df_error = df_error.replace('none', 'No Normalization')
-
-        df_uncer = df_uncer.replace('brightness', "Brightness")
-        df_uncer = df_uncer.replace('1500', "1500 nm")
-        df_uncer = df_uncer.replace('none', 'No Normalization')
-
-        # create 3x3 figure
-        ncols = 3  # for each em
-        nrows = 2  # top = lh ; bottom = convex hull
-        fig, axs = plt.subplots(nrows, ncols, figsize=(self.fig_width, self.fig_height))
-        fig.subplots_adjust(wspace=0.1, hspace=0.1)
+        # create 3x2 figure
+        fig = plt.figure(constrained_layout=True, figsize=(self.fig_width, self.fig_height))
+        ncols = 3
+        nrows = 2
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.001, hspace=0.0001, figure=fig)
 
         for row in range(nrows):
             for col in range(ncols):
-                ax = axs[row, col]
+                ax = fig.add_subplot(gs[row, col])
                 ax.grid('on', linestyle='--')
                 ax.set_ylim(0, 0.22)
                 ax.set_xlim(1, 6.25)
@@ -504,46 +530,58 @@ class figures:
                 if col != 0:
                     ax.set_yticklabels([])
 
+        axes_2d = fig.get_axes()
+        axes_2d = [axes_2d[i:i + ncols] for i in range(0, len(axes_2d), ncols)]
+        color_guide = {"Brightness": 'green', "1500 nm": "red", "No Normalization": "blue"}
+
         # filter the data
         for norm_option in df_error.normalization.unique():
-            df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['num_em'] == 30) & (df_error['mc_runs'] == 25)].copy()
-            df_select_unc = df_uncer.loc[(df_uncer['normalization'] == norm_option) & (df_uncer['num_em'] == 30) & (df_uncer['mc_runs'] == 25)].copy()
 
-            # filter by scenario
-            for scenario in df_select.scenario.unique():
-                df_select1 = df_select.loc[(df_select['scenario'] == scenario)].copy()
-                df_select1 = df_select1.sort_values('dims') # sort by dimensions, lower to greater
+            for mode in df_error['mode'].unique():
+                if mode == 'sma-best':
+                    df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['num_em'] == 30) & (df_error['mc_runs'] == 25)].copy()
+                    df_select_unc = df_uncer.loc[(df_uncer['normalization'] == norm_option) & (df_uncer['num_em'] == 30) & (df_uncer['mc_runs'] == 25)].copy()
+                    label = 'SMA'
+                    linestyle = 'solid'
+                if mode == 'mesma':
+                    df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['cmbs'] == 100) & (df_error['mc_runs'] == 25)].copy()
+                    df_select_unc = df_uncer.loc[(df_uncer['normalization'] == norm_option) & (df_uncer['cmbs'] == 100) & (df_uncer['mc_runs'] == 25)].copy()
+                    label = "MESMA"
+                    linestyle = 'dotted'
 
-                df_select_unc1 = df_select_unc.loc[(df_select_unc['scenario'] == scenario)].copy()
-                df_select_unc1 = df_select_unc1.sort_values('dims')  # sort by dimensions, lower to greater
+                # filter by scenario
+                for scenario in df_select.scenario.unique():
+                    df_select1 = df_select.loc[(df_select['scenario'] == scenario)].copy()
+                    df_select1 = df_select1.sort_values('dims') # sort by dimensions, lower to greater
 
-                error_options = ['npv_uncer', 'pv_uncer', 'soil_uncer']
-                error_mae = ['npv_mae', 'pv_mae', 'soil_mae']
-                capsize = [8, 6, 4]
+                    df_select_unc1 = df_select_unc.loc[(df_select_unc['scenario'] == scenario)].copy()
+                    df_select_unc1 = df_select_unc1.sort_values('dims')  # sort by dimensions, lower to greater
 
-                # loop thorough figure and plot
-                for row in range(nrows):
-                    for col in range(ncols):
-                        ax = axs[row, col]
+                    error_options = ['npv_uncer', 'pv_uncer', 'soil_uncer']
+                    error_mae = ['npv_mae', 'pv_mae', 'soil_mae']
+                    capsize = [8, 6, 4]
 
-                        if scenario == 'latin' and row == 0:
-                            ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select_unc1[error_options[col]]/25,
-                                        label=norm_option, solid_capstyle='projecting', capsize=capsize[col])
+                    # loop thorough figure and plot
+                    for row in range(nrows):
+                        for col in range(ncols):
+                            ax = axes_2d[row][col]
 
+                            if scenario == 'latin' and row == 0:
+                                ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select_unc1[error_options[col]]/25,
+                                            label=f"{norm_option} - {label}", solid_capstyle='projecting', capsize=capsize[col], linestyle= linestyle, color=color_guide[norm_option])
 
-                            if col == 0:
-                                ax.set_ylabel('MAE\n(Latin Hypercube)', fontsize=self.axis_label_fontsize)
+                                if col == 0:
+                                    ax.set_ylabel('MAE\n(Latin Hypercube)', fontsize=self.axis_label_fontsize)
 
-                        if scenario == 'convex' and row == 1:
-                            ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select_unc1[error_options[col]]/25,
-                                        label=norm_option, solid_capstyle='projecting', capsize=capsize[col])
+                            if scenario == 'convex' and row == 1:
+                                ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select_unc1[error_options[col]]/25,
+                                            label=f"{norm_option} - {label}", solid_capstyle='projecting', capsize=capsize[col], linestyle=linestyle,  color=color_guide[norm_option])
+                                if col == 0:
+                                    ax.set_ylabel('MAE\n(Convex Hull)', fontsize=self.axis_label_fontsize)
 
+                            if row == 1 and col == 1:
+                                ax.legend(prop={'size': 8})
 
-                            if col == 0:
-                                ax.set_ylabel('MAE\n(Convex Hull)', fontsize=self.axis_label_fontsize)
-
-                        if row == 1 and col == 1:
-                            ax.legend()
         plt.savefig(os.path.join(self.fig_directory, 'normalization_figure.png'), bbox_inches="tight", dpi=400)
         plt.clf()
         plt.close()
@@ -620,10 +658,10 @@ def run_figures(base_directory, sensor):
     minor_axis_fontsize = 10
     title_fontsize = 12
     axis_label_fontsize = 10
-    fig_height = 8
+    fig_height = 12
     fig_width = 12
     linewidth = 1.5
-    sig_figs = 2
+    sig_figs = 3
 
     fig_class = figures(base_directory=base_directory, sensor=sensor, major_axis_fontsize=major_axis_fontsize,
                         minor_axis_fontsize=minor_axis_fontsize, title_fontsize=title_fontsize,
@@ -631,8 +669,8 @@ def run_figures(base_directory, sensor):
                         linewidth=linewidth, sig_figs=sig_figs)
 
     #fig_class.em_reduction_visulatization()
-    #fig_class.normalization_figure()
-    #fig_class.size_endmembers_figure()
-    #fig_class.uncertainty_figure()
-    fig_class.atmosphere()
-    fig_class.atmosphere_mesma()
+    fig_class.normalization_figure()
+    fig_class.size_endmembers_figure()
+    fig_class.uncertainty_figure()
+    #fig_class.atmosphere()
+    #fig_class.atmosphere_mesma()
