@@ -44,8 +44,8 @@ class figures:
         self.sig_figs = sig_figs
 
     def merge_sma_mesma(self):
-        df_sma_error = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_error_report.csv'))
-        df_sma_error['mode'] = 'sma-best'
+        df_sma_error = pd.read_csv(os.path.join(self.fig_directory, 'sma_unmix_error_report.csv'))
+        df_sma_error['mode'] = 'sma'
         df_mesma_error = pd.read_csv(os.path.join(self.fig_directory, 'mesma_unmix_error_report.csv'))
         df_mesma_error['mode'] = 'mesma'
         df_error = pd.concat([df_sma_error, df_mesma_error], ignore_index=True)
@@ -53,8 +53,8 @@ class figures:
         df_error = df_error.replace('1500', "1500 nm")
         df_error = df_error.replace('none', 'No Normalization')
 
-        df_sma_uncer = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_uncertainty_report.csv'))
-        df_sma_uncer['mode'] = 'sma-best'
+        df_sma_uncer = pd.read_csv(os.path.join(self.fig_directory, 'sma_unmix_uncertainty_report.csv'))
+        df_sma_uncer['mode'] = 'sma'
         df_mesma_uncer = pd.read_csv(os.path.join(self.fig_directory, 'mesma_unmix_uncertainty_report.csv'))
         df_mesma_uncer['mode'] = 'mesma'
         df_uncer = pd.concat([df_sma_uncer, df_mesma_uncer], ignore_index=True)
@@ -65,14 +65,15 @@ class figures:
         return df_error, df_uncer
 
     def load_sma_error(self):
-        df_error = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_error_report.csv'))
-        df_error['mode'] = 'sma-best'
+        df_error = pd.read_csv(os.path.join(self.fig_directory, 'sma_unmix_error_report.csv'))
+        df_error['mode'] = 'sma'
         df_error = df_error.replace('brightness', "Brightness")
         df_error = df_error.replace('none', 'No Normalization')
 
-        df_uncer = pd.read_csv(os.path.join(self.fig_directory, 'sma-best_unmix_uncertainty_report.csv'))
-        df_uncer['mode'] = 'sma-best'
+        df_uncer = pd.read_csv(os.path.join(self.fig_directory, 'sma_unmix_uncertainty_report.csv'))
+        df_uncer['mode'] = 'sma'
         df_uncer = df_uncer.replace('brightness', "Brightness")
+        df_uncer = df_uncer.replace('none', 'No Normalization')
 
         return df_error, df_uncer
 
@@ -114,8 +115,8 @@ class figures:
             if em == np.nan:
                 continue
 
-            df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == em) & (df_error['mc_runs'] == 25) & (df_error['mode'] == 'sma-best')].copy()
-            df_select_unc = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['num_em'] == em) & (df_uncer['mc_runs'] == 25) & (df_uncer['mode'] == 'sma-best')].copy()
+            df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == em) & (df_error['mc_runs'] == 25) & (df_error['mode'] == 'sma')].copy()
+            df_select_unc = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['num_em'] == em) & (df_uncer['mc_runs'] == 25) & (df_uncer['mode'] == 'sma')].copy()
 
             # filter by scenario
             for scenario in df_select.scenario.unique():
@@ -197,7 +198,7 @@ class figures:
                 continue
 
             for mode in df_error['mode'].unique():
-                if mode == 'sma-best':
+                if mode == 'sma':
                     df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == 30) & (df_error['mc_runs'] == mc_runs)].copy()
                     df_select_unc = df_uncer.loc[(df_uncer['normalization'] == 'Brightness') & (df_uncer['num_em'] == 30) & (df_uncer['mc_runs'] == mc_runs)].copy()
                     mode_label = 'SMA'
@@ -538,7 +539,7 @@ class figures:
         for norm_option in df_error.normalization.unique():
 
             for mode in df_error['mode'].unique():
-                if mode == 'sma-best':
+                if mode == 'sma':
                     df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['num_em'] == 30) & (df_error['mc_runs'] == 25)].copy()
                     df_select_unc = df_uncer.loc[(df_uncer['normalization'] == norm_option) & (df_uncer['num_em'] == 30) & (df_uncer['mc_runs'] == 25)].copy()
                     label = 'SMA'
