@@ -36,22 +36,22 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
     
     out_dir_path = os.path.dirname(os.path.dirname(output_dest))
     report_path = os.path.join(os.path.dirname(os.path.dirname((os.path.dirname(output_dest)))), 'figures', 'computing_performance_report.csv') 
-    outlog_name = os.path.join(out_dir_path, 'outlogs', os.path.basename(output_dest) + '.out')  
-    scrtch_rfl = os.path.join(out_dir_path, 'scratch', os.path.basename(output_dest))
-    scrtch_hdr = os.path.join(out_dir_path, 'scratch', os.path.basename(output_dest) + '.hdr') 
-    scrtch_csv = os.path.join(out_dir_path, 'scratch', os.path.basename(output_dest) + '.csv')
+    outlog_name = os.path.join(out_dir_path, 'outlogs', f"{mode}-{os.path.basename(output_dest)}.out")  
+    scrtch_rfl = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}")
+    scrtch_hdr = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}.hdr") 
+    scrtch_csv = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}.csv")
     
     shutil.copyfile(reflectance_file, scrtch_rfl)
     shutil.copyfile(reflectance_file + '.hdr' , scrtch_hdr)
     shutil.copyfile(em_file, scrtch_csv)
-
+    
     # the io bug call allows us to completely start all the runs 
-    if io_bug is None:
-        base_call = f'julia -p {n_cores} ~/EMIT/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
-                    f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} --' \
+    if io_bug:
+        base_call = f'julia ~/EMIT/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
+                    f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
                     f'{" ".join(parameters)} '
-        #subprocess.call([f'srun -N 1 -c 40 --mem 250G --pty {base_call}'], shell=True) 
-        execute_call(['sbatch', '-N', '1', '-c', n_cores,'--mem', "80G", '--output', outlog_name, '--wrap', f'{base_call}'], dry_run)
+        
+        execute_call(['sbatch', '-N', '1', '--tasks-per-node', '1', '--mem', "50G", '--output', outlog_name, '--wrap', f'{base_call}'], dry_run)
  
     else:
         # open report
@@ -60,11 +60,11 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
         df_report = df_report.replace('"', '', regex=True)    
         
         if scrtch_rfl in df_report['reflectance_file'].values:
-            base_call = f'julia -p {n_cores} ~/EMIT/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
+            base_call = f'julia ~/EMIT/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
                         f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
                         f'{" ".join(parameters)} '    
             
-            execute_call(['sbatch', '-N', '1', '-c', n_cores,'--mem', "80G", '--output', outlog_name, '--wrap', f'{base_call}'], dry_run)
+            execute_call(['sbatch', '-N', '1', '--tasks-per-node', "1", '--mem', "50G", '--output', outlog_name, '--wrap', f'{base_call}'], dry_run)
         else:
             pass
 
@@ -126,7 +126,7 @@ class runs:
         self.em_libraries_output = os.path.join(self.output_directory, "endmember_libraries")
 
         # model parameters
-        self.num_cmb = ['--max_combinations 10', '--max_combinations 100', '--max_combinations 500', '--max_combinations 1000']
+        self.num_cmb = ['--max_combinations 10', '--max_combinations 25', '--max_combinations 50', '--max_combinations 100', '--max_combinations 500', '--max_combinations 1000']
         self.normalization = ['--normalization brightness', '--normalization none', '--normalization 1500']
         self.num_em = ['--num_endmembers 3', '--num_endmembers 5', '--num_endmembers 10', '--num_endmembers 20', '--num_endmembers 30']
         self.mc_runs = ['--n_mc 50', '--n_mc 25', '--n_mc 10', '--n_mc 5', '--n_mc 1']
@@ -177,6 +177,7 @@ class runs:
         # create results directory
         create_directory((os.path.join(self.base_directory, "output", mode)))
         
+        count = 0
         for simulation_parameters in all_sma_runs:
             dfs = glob(os.path.join(self.em_libraries_output, '*latin_hypercube_*.csv'))
 
@@ -193,9 +194,13 @@ class runs:
                                             "--", "_").replace(" ", "_").replace("__", "_")
 
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=df, parameters=simulation_parameters, output_dest=output_dest, scale=self.scale, spectra_starting_column=self.spectra_starting_col_julia, io_bug=io_bug)
+                count += 1
+
+        print(f"total number of {mode} calls: {count}")
 
     def convex_hulls(self, mode:str, io_bug):
         print(f"commencing convex hull {mode} spectral unmixing...")
+        
         if mode == 'mesma':
             options = product(self.normalization, self.num_cmb, self.mc_runs)
         else:
@@ -206,6 +211,7 @@ class runs:
         # create results directory
         create_directory((os.path.join(self.base_directory, "output", mode)))
         
+        count = 0 
         for simulation_parameters in all_sma_runs:
             dfs = glob(os.path.join(self.em_libraries_output, '*convex_hull_*.csv'))
             for df in dfs:
@@ -217,6 +223,9 @@ class runs:
                 # output destination
                 output_dest = os.path.join(self.base_directory, "output", mode, output_name + "_" + mode + " ".join(simulation_parameters)).replace("--", "_").replace(" ", "_").replace("__", "_")
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=df, parameters=simulation_parameters, output_dest=output_dest, scale=self.scale, spectra_starting_column=self.spectra_starting_col_julia, io_bug=io_bug)
+                count += 1
+                
+        print(f"total number of {mode} calls: {count}")
 
     def hypertrace_call(self, mode:str):
         # start hypertrace unmixing
@@ -248,14 +257,14 @@ class runs:
                              parameters=opt_params)
 
     
-def run_unmix_workflow(base_directory, dry_run):
+def run_unmix_workflow(base_directory, dry_run, io_bug):
     all_runs = runs(base_directory=base_directory, dry_run=dry_run)
     #geo = all_runs.geographic_sma(mode='sma-best')
-    io_bug = 1
-    sma_convex = all_runs.convex_hulls(mode='sma-best', io_bug=io_bug)
+    sma_convex = all_runs.convex_hulls(mode='sma', io_bug=io_bug)
     mesma_convex = all_runs.convex_hulls(mode='mesma', io_bug=io_bug)
-    lh_sma = all_runs.latin_hypercubes(mode='sma-best', io_bug=io_bug)
+    lh_sma = all_runs.latin_hypercubes(mode='sma', io_bug=io_bug)
     lh_mesma = all_runs.latin_hypercubes(mode='mesma', io_bug=io_bug)
-
+    sma_convex = all_runs.convex_hulls(mode='sma-best', io_bug=io_bug)
+    lh_sma = all_runs.latin_hypercubes(mode='sma-best', io_bug=io_bug)
     #all_runs.hypertrace_call(mode='mesma')
     #all_runs.hypertrace_call(mode='sma-best')
