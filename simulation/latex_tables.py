@@ -25,7 +25,7 @@ class latex:
         self.ems_short = ['npv', 'pv', 'soil']
 
     def optimal_parameters(self):
-        sma_table = os.path.join(self.fig_directory, "sma-best_unmix_error_report.csv")
+        sma_table = os.path.join(self.fig_directory, "sma_unmix_error_report.csv")
         mesma_table = os.path.join(self.fig_directory, "mesma_unmix_error_report.csv")
         df_sma = pd.read_csv(sma_table)
         df_sma.insert(0, 'mode', 'SMA')
@@ -63,9 +63,9 @@ class latex:
             print(df_mode.to_latex(index=False))
 
     def baseline_setings(self):
-        sma_table = os.path.join(self.fig_directory, "sma-best_unmix_error_report.csv")
+        sma_table = os.path.join(self.fig_directory, "sma_unmix_error_report.csv")
         mesma_table = os.path.join(self.fig_directory, "mesma_unmix_error_report.csv")
-        sma_uncert_table = os.path.join(self.fig_directory, "sma-best_unmix_uncertainty_report.csv")
+        sma_uncert_table = os.path.join(self.fig_directory, "sma_unmix_uncertainty_report.csv")
         mesma_uncer_table = os.path.join(self.fig_directory, "mesma_unmix_uncertainty_report.csv")
 
         df_sma = pd.read_csv(sma_table)
@@ -290,8 +290,8 @@ class latex:
 
 
     def summary_table(self):
-        df_unmix = pd.read_csv(os.path.join(self.fig_directory, "sma-best_unmix_error_report.csv"))
-        df_uncertainty = pd.read_csv(os.path.join(self.fig_directory, "sma-best_unmix_uncertainty_report.csv"))
+        df_unmix = pd.read_csv(os.path.join(self.fig_directory, "sma_unmix_error_report.csv"))
+        df_uncertainty = pd.read_csv(os.path.join(self.fig_directory, "sma_unmix_uncertainty_report.csv"))
         df_unmix_mesma = pd.read_csv(os.path.join(self.fig_directory, "mesma_unmix_error_report.csv"))
         df_uncertainty_mesma = pd.read_csv(os.path.join(self.fig_directory, "mesma_unmix_uncertainty_report.csv"))
         df_atmos = pd.read_csv(os.path.join(self.fig_directory, "atmosphere_error_report.csv"))
@@ -393,23 +393,16 @@ class latex:
         df_time['num_endmembers'] = df_time['num_endmembers'].apply(lambda x: ast.literal_eval(x)[0])
         df_time['dims'] = df_time['reflectance_file'].apply(lambda path: os.path.basename(path).split('_')[:5][4])
         df_time = df_time.loc[(df_time['error'] == 0)].copy()
-        # get baseline - both convex hull and latin hypercube
-        df_avg_baseline = df_time.loc[((df_time['normalization'] == 'none') & (df_time['n_mc'] == 25) & (df_time['num_endmembers'] == 3)) &
-                                      ((df_time['max_combinations'] == 100) | (df_time['max_combinations'] == -1))].copy()
-        df_avg_baseline_mesma = df_avg_baseline.loc[(df_avg_baseline['mode'] == 'mesma')].copy()
-        df_avg_baseline_sma = df_avg_baseline.loc[(df_avg_baseline['mode'] == 'sma-best')].copy()
-        print('\t Average Baseline MESMA (spec/s) : ', np.round(np.average(df_avg_baseline_mesma['spectra_per_s']), 2), 's; Worker Count: ', np.average(df_avg_baseline_mesma['worker_count']))
-        print('\t Average Baseline SMA (spec/s) : ', np.round(np.average(df_avg_baseline_sma['spectra_per_s']), 2),'s; Worker Count: ', np.average(df_avg_baseline_sma['worker_count']))
-
+        
         # get optimal settings - both convex and latin hypercube
-        df_avg_optimal = df_time.loc[((df_time['normalization'] == 'brightness') & (df_time['n_mc'] == 25)) &
-            ((df_time['max_combinations'] == 100) | (df_time['max_combinations'] == -1)) & ((df_time['num_endmembers'] == 30) | (df_time['num_endmembers'] == 3))].copy()
+        df_avg_optimal = df_time.loc[((df_time['normalization'] == 'brightness') & (df_time['n_mc'] == 1)) &
+            ((df_time['max_combinations'] == 25) | (df_time['max_combinations'] == -1)) & ((df_time['num_endmembers'] == 30) | (df_time['num_endmembers'] == 3))].copy()
 
         df_avg_optimal_mesma = df_avg_optimal.loc[(df_avg_optimal['mode'] == 'mesma')].copy()
-        df_avg_optimal_sma = df_avg_optimal.loc[(df_avg_optimal['mode'] == 'sma-best') & (df_avg_optimal['num_endmembers'] == 30)].copy()
+        df_avg_optimal_sma = df_avg_optimal.loc[(df_avg_optimal['mode'] == 'sma') & (df_avg_optimal['num_endmembers'] == 30)].copy()
 
-        print('\t Average Optimal MESMA (spec/s) : ', np.round(np.average(df_avg_optimal_mesma['spectra_per_s']), 2),'s; Worker Count: ', np.average(df_avg_optimal_mesma['worker_count']))
-        print('\t Average Baseline SMA (spec/s) : ', np.round(np.average(df_avg_optimal_sma['spectra_per_s']), 2), 's; Worker Count: ', np.average(df_avg_optimal_sma['worker_count']))
+        print('\t Average Optimal MESMA (spec/s) : ', np.round(np.average(df_avg_optimal_mesma['total_time']), 2),'s; Worker Count: ', np.average(df_avg_optimal_mesma['worker_count']))
+        print('\t Average Optimal SMA (spec/s) : ', np.round(np.average(df_avg_optimal_sma['total_time']), 2), 's; Worker Count: ', np.average(df_avg_optimal_sma['worker_count']))
 
         # optimal settings - all values of number of endmembers (n) for sma
         df_avg_sma_num_em = df_time.loc[(df_time['normalization'] == 'brightness') & (df_time['n_mc'] == 25) & (df_time['max_combinations'] == -1)].copy()
@@ -508,9 +501,9 @@ class latex:
 
 def run_latex_tables(base_directory: str):
     latex_class = latex(base_directory=base_directory)
-    # latex_class.optimal_parameters()
+    latex_class.optimal_parameters()
     # latex_class.atmosphere_table()
-    # latex_class.summary_table()
+    latex_class.summary_table()
     latex_class.time_table()
     # latex_class.baseline_setings()
 
