@@ -52,7 +52,6 @@ class tables:
                    'npv_std', 'pv_std', 'soil_std',  'npv_stde', 'pv_stde', 'soil_stde']
 
         df = pd.DataFrame(results, columns=cols_df)
-        print(df)
         df.to_csv(os.path.join(self.fig_directory,  mode + "_unmix_uncertainty_report.csv"), index=False)
 
     def atmosphere_table(self):
@@ -166,13 +165,15 @@ class tables:
 
 def run_build_tables(base_directory):
     run_tables = tables(base_directory=base_directory)
-    # run_tables.unmix_error_table(mode='sma-best')
-    # run_tables.unmix_unceratinty_table(mode='sma-best')
-    # run_tables.unmix_error_table(mode='mesma')
-    # run_tables.unmix_unceratinty_table(mode='mesma')
+    
+    #run_tables.performance_table()
+    #modes = ['sma-best', 'mesma', 'sma']
+    #for i in modes:
+    #    run_tables.unmix_error_table(mode=i)
+    #    run_tables.unmix_unceratinty_table(mode=i)
+    
     #run_tables.atmosphere_table()
     #run_tables.geographic_table(mode='spatial')
     #run_tables.metadata_table_unmix()
-    #run_tables.performance_table()
     # print latex tables
-    #run_latex_tables(base_directory=base_directory)
+    run_latex_tables(base_directory=base_directory)
