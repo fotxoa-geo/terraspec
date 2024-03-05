@@ -176,46 +176,48 @@ def performance_log(out_file:str):
     error_flag = 0
     worker_counter = 0
     total_lines = 0
+    
+    try:
+        for line in lines:
+            # pattern for time
+            time_match = re.search(r"seconds:\s+([\d.]+)", line.strip())
+            if time_match:
+                pixel_s = float(time_match.group(1))
+                total_seconds.append(pixel_s)
+                worker_counter += 1
 
-    for line in lines:
-        # pattern for time
-        time_match = re.search(r"seconds:\s+([\d.]+)", line.strip())
-        if time_match:
-            pixel_s = float(time_match.group(1))
-            total_seconds.append(pixel_s)
-            worker_counter += 1
+            argument_match = re.search(r'Arguments:\s*\(([^)]+)\)', line.strip())
+        
+            if argument_match:
+                argument_string = argument_match.group(1)
+                arguments = dict(re.findall(r'(\w+)\s*=\s*([^,)]+)', argument_string))
+        
+            error_match = re.search(r'GDALError \(CE_Failure, code 10\):', line.strip())
+        
+            if error_match:
+                error_flag = 1
 
-        argument_match = re.search(r'Arguments:\s*\(([^)]+)\)', line.strip())
-        
-        if argument_match:
-            argument_string = argument_match.group(1)
-            arguments = dict(re.findall(r'(\w+)\s*=\s*([^,)]+)', argument_string))
-        
-        error_match = re.search(r'GDALError \(CE_Failure, code 10\):', line.strip())
-        
-        if error_match:
+            host_name_match = re.search(r'Unmixing was processed on: (.+)' , line.strip())
+            if host_name_match:
+                cpu_host = str(host_name_match.group(1))
+
+            total_line_match = re.search(r'Running from lines: (\d+) - (\d+)', line.strip())
+            if total_line_match:
+                total_lines = str(total_line_match.group(2))
+    
+        if worker_counter !=  int(total_lines) - 1:
             error_flag = 1
-
-        host_name_match = re.search(r'Unmixing was processed on: (.+)' , line.strip())
-        if host_name_match:
-            cpu_host = str(host_name_match.group(1))
-
-        total_line_match = re.search(r'Running from lines: (\d+) - (\d+)', line.strip())
-        if total_line_match:
-            total_lines = str(total_line_match.group(2))
     
-    if worker_counter !=  int(total_lines):
-        error_flag = 1
-    
-    df = pd.DataFrame([arguments], columns=arguments.keys())
-    df['spectra_per_s'] = worker_counter/(np.sum(total_seconds)/40)
-    df['total_time'] = np.sum(total_seconds)
-    df['error'] = error_flag
-    df['worker_count'] = worker_counter
-    df['node'] = cpu_host
+        df = pd.DataFrame([arguments], columns=arguments.keys())
+        df['spectra_per_s'] = worker_counter/(np.sum(total_seconds))
+        df['total_time'] = np.sum(total_seconds)
+        df['error'] = error_flag
+        df['worker_count'] = worker_counter
+        df['node'] = cpu_host
         
-    return df
-
+        return df
+    except:
+        print(out_file, "failed!")
 
 def r2_calculations(x_vals, y_vals):
     X = np.array(x_vals)
