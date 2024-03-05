@@ -9,7 +9,7 @@ from simulation.paper_figures import run_figures
 from simulation.paper_figures_mesma import run_figures as mesf
 
 
-def run_sim_workflow(base_directory, dry_run):
+def run_sim_workflow(base_directory, dry_run, io_bug):
     msg = f"You have entered simulation mode! " \
           f"\nThere are various options to chose from: " \
           f"\n\tclean, build, hypertrace, unmix, figures, tables"
@@ -34,7 +34,7 @@ def run_sim_workflow(base_directory, dry_run):
 
     # run unmixing code
     if user_input == 'unmix':
-        run_unmix_workflow(base_directory=base_directory, dry_run=dry_run)
+        run_unmix_workflow(base_directory=base_directory, dry_run=dry_run, io_bug=io_bug)
 
     # build csv report tables and latex tables
     if user_input == 'tables':
