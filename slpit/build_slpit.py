@@ -4,7 +4,7 @@ from glob import glob
 import os
 from utils.slpit_download import load_pickle
 import pandas as pd
-from utils import asdreader
+from utils import asdreader, sedreader
 from functools import partial
 from p_tqdm import p_map
 import requests
@@ -82,10 +82,13 @@ class build_libraries:
 
             # get all asd files from folder
             all_asd_files = sorted(glob(os.path.join(plot_directory, '*.asd')))
+            if not all_asd_files:
+                print(".asd files not found! Looking for .sed files...")
+                all_asd_files = sorted(glob(os.path.join(plot_directory, '*.sed')))
 
             transect_spectra = []
             for asd_file in all_asd_files:
-                file_num = int(os.path.basename(asd_file).split(".")[0].split("_")[1])
+                file_num = int(os.path.basename(asd_file).split(".")[0].split("_")[-1])
 
                 # check if file is in white ref or em
                 if file_num in df_transect_em.asd_file_num.values:
@@ -110,7 +113,11 @@ class build_libraries:
                                      "desc": "\t\t processing plot: " + plot_name + " ...",
                                      "ncols": 150})
 
-            asd = asdreader.reader(results_refl[0][1])
+            try:
+                asd = asdreader.reader(results_refl[0][1])
+            except:
+                asd = sedreader.reader(results_refl[0][1])
+
             df_results = pd.DataFrame(results_refl)
             df_results.columns = ["plot_name", "file_name", "file_num", "longitude", "latitude", "elevation",
                                   "utc_time"] + list(asd.wavelengths)
@@ -270,10 +277,13 @@ class build_libraries:
 
             # get all asd files from folder
             all_asd_files = sorted(glob(os.path.join(plot_directory, '*.asd')))
+            if not all_asd_files:
+                print(".asd files not found! Looking for .sed files...")
+                all_asd_files = sorted(glob(os.path.join(plot_directory, '*.sed')))
 
             endmember_spectra = []
             for asd_file in all_asd_files:
-                file_num = int(os.path.basename(asd_file).split(".")[0].split("_")[1])
+                file_num = int(os.path.basename(asd_file).split(".")[0].split("_")[-1])
 
                 # check if file is in white ref or em
                 if file_num in df_transect_em.asd_file_num.values:
@@ -288,7 +298,11 @@ class build_libraries:
                                 "desc": "\t\t processing plot: " + plot_name + " ...",
                                 "ncols": 150})
 
-            asd = asdreader.reader(results[0][1])
+            try:
+                asd = asdreader.reader(results[0][1])
+            except:
+                asd = sedreader.reader(results[0][1])
+
             df_results = pd.DataFrame(results)
             df_results.columns = ["plot_name", "file_name", "file_num", "longitude", "latitude", "elevation",
                                   "utc_time"] + list(asd.wavelengths)
@@ -433,6 +447,7 @@ class build_libraries:
         df_derivative.columns = df_plot.columns
         df_derivative.to_csv(os.path.join(self.output_directory, 'SPEC-003-fd.csv'), index=False)
 
+
 def run_build_workflow(base_directory, sensor):
     msg = f"Please move all .asd Files from the ASD Computer " \
           f"to the following location: {os.path.join(base_directory, 'data')}\n" \
@@ -440,23 +455,33 @@ def run_build_workflow(base_directory, sensor):
           f"\tTeam_Plot-Number (e.g., Spectral - 001; Team = Spectral; Plot-Number: 001"
 
     cursor_print(msg)
-    user_input = query_yes_no('\nWould you like plots for all .asd files?', default="yes")
+    user_input = query_yes_no('\nWould you like plots for all .asd/.sed files?', default="yes")
 
     if user_input:
         transect_directories = sorted(glob(os.path.join(base_directory, 'data', 'spectral_transects', "*", ""), recursive=True))
         create_directory(os.path.join(base_directory, 'figures', 'asd_file_plots'))
         for directory in transect_directories:
-            asd_files = glob(os.path.join(directory, '*.asd'))
             plot_name = os.path.basename(os.path.dirname(directory))
+            if os.path.isdir(os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name)) and glob(os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name, '*.png')):
+                continue
+
             create_directory(os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name))
-            p_map(partial(spectra.plot_asd_file, out_directory=os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name)),
-                  asd_files,
-                  **{"desc": "\t\t plotting asd files: " + plot_name + "...", "ncols": 150})
+            asd_files = glob(os.path.join(directory, '*.asd'))
+
+            if asd_files:
+                p_map(partial(spectra.plot_asd_file, out_directory=os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name)),
+                      asd_files, **{"desc": "\t\t plotting asd files: " + plot_name + "...", "ncols": 150})
+
+            else:
+                sed_files = glob(os.path.join(directory, '*.sed'))
+                p_map(partial(spectra.plot_sed_file, out_directory=os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name)),
+                      sed_files, **{"desc": "\t\t plotting sed files: " + plot_name + "...", "ncols": 150})
+
 
     else:
         lib = build_libraries(base_directory=base_directory, sensor=sensor)
         lib.build_emit_transects()
         lib.build_emit_endmembers()
         lib.build_em_collection()
-        lib.build_gis_data()
-        lib.build_derivative_library()
+        #lib.build_gis_data()
+        #lib.build_derivative_library()

@@ -216,20 +216,21 @@ def get_sim_parameters():
     cols = 1
     level = 'level_1'
     spectral_bundles = 1000
-    emit_wvls, emit_fwhm = spectra.load_wavelengths(sensor='emit')
+    emit_wvls, emit_fwhm = spectra.load_wavelengths(sensor='modis')
 
     return spectral_bundles, cols, level, emit_wvls
 
 
 def run_build_reflectance(output_directory):
-    num_dimensions = [2, 3, 4, 5, 6]  # dimensions to use for convex hull and latin hypercubes
+    #num_dimensions = [2, 3, 4, 5, 6]  # dimensions to use for convex hull and latin hypercubes
+    num_dimensions = [4]  # dimensions to use for convex hull and latin hypercubes
     max_dimension = max(num_dimensions)
     spectral_starting_col = 7
 
     # build convex hulls and latin hypercubes across different dimensional space
     for i in num_dimensions:
-        build_hypercubes(dimensions=i, max_dimension=max_dimension, spectra_starting_col=spectral_starting_col,
-                         output_directory=output_directory)
+        #build_hypercubes(dimensions=i, max_dimension=max_dimension, spectra_starting_col=spectral_starting_col,
+        #                 output_directory=output_directory)
         build_hull(dimensions=i, spectra_starting_col=spectral_starting_col, output_directory=output_directory)
 
     build_geographic(dimensions=4, output_directory=output_directory, spectra_starting_col=spectral_starting_col)

@@ -14,7 +14,15 @@ from osgeo import gdal
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from simulation.latex_tables import run_latex_tables
-import ast
+
+
+def table_sim_menu():
+    print("You are in table mode for simulations...")
+    print("A... Computing Performance Tables")
+    print("B... Error Tables")
+    print("C... Latex Tables")
+    print("D... Exit")
+
 
 class tables:
     def __init__(self, base_directory: str):
@@ -165,15 +173,28 @@ class tables:
 
 def run_build_tables(base_directory):
     run_tables = tables(base_directory=base_directory)
-    
-    #run_tables.performance_table()
-    #modes = ['sma-best', 'mesma', 'sma']
-    #for i in modes:
-    #    run_tables.unmix_error_table(mode=i)
-    #    run_tables.unmix_unceratinty_table(mode=i)
+    while True:
+        table_sim_menu()
+
+        user_input = input('\nPlease indicate the desired tables: ').upper()
+
+        if user_input == 'A':
+            run_tables.performance_table()
+
+        elif user_input == 'B':
+            modes = ['sma-best', 'mesma', 'sma']
+            for i in modes:
+                run_tables.unmix_error_table(mode=i)
+                run_tables.unmix_unceratinty_table(mode=i)
+
+        elif user_input == 'C':
+            run_latex_tables(base_directory=base_directory)
+
+        elif user_input == 'I':
+            print("returning to simulation main menu...")
+            break
     
     #run_tables.atmosphere_table()
     #run_tables.geographic_table(mode='spatial')
     #run_tables.metadata_table_unmix()
-    # print latex tables
-    run_latex_tables(base_directory=base_directory)
+

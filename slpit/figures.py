@@ -232,6 +232,7 @@ class figures:
                     ax.get_xaxis().set_ticklabels([])
                     ax.set_ylim(0, 1)
                     ax.set_xlim(320, 2550)
+                    ax.set_xlim(320, 2550)
                     ax.text(385, 0.85, f"NPV (n = {str(df_spectra.shape[0])})", fontsize=12)
                     ax.legend(prop={'size': 6})
 
@@ -269,61 +270,65 @@ class figures:
                     ax.text(2100, 0.85, f"Soil (n = {str(em_spectra.shape[0])})", fontsize=12)
 
                 if ax == ax7:
-                    slpit_ems_abundance = glob(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "") +
-                                     '*emit_ems_augmented_abun_mineral'))
+                    try:
+                        slpit_ems_abundance = glob(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "") +
+                                         '*emit_ems_augmented_abun_mineral'))
 
-                    slpit_transect_abundance = glob(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "") +
-                                     '*transect_augmented_abun_mineral'))
+                        slpit_transect_abundance = glob(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "") +
+                                         '*transect_augmented_abun_mineral'))
 
-                    emit_spectral_abundance = glob(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "").replace('Spectral', 'SPEC') +
-                                     '*pixels_augmented_abun_mineral'))
+                        emit_spectral_abundance = glob(os.path.join(self.tetracorder_output_directory, '*' + plot.replace(" ", "").replace('Spectral', 'SPEC') +
+                                         '*pixels_augmented_abun_mineral'))
 
-                    # load df for em position key
-                    em_csv = os.path.join(self.output_directory, 'spectral_transects', 'endmembers', plot.replace(" ", "") + '-emit.csv')
-                    df_em = pd.read_csv(em_csv)
-                    first_soil_index = df_em.index[df_em['level_1'] == 'Soil'].min()
+                        # load df for em position key
+                        em_csv = os.path.join(self.output_directory, 'spectral_transects', 'endmembers', plot.replace(" ", "") + '-emit.csv')
+                        df_em = pd.read_csv(em_csv)
+                        first_soil_index = df_em.index[df_em['level_1'] == 'Soil'].min()
 
-                    # load data
-                    split_abundance_array = envi_to_array(slpit_ems_abundance[0])[0,0,:]
-                    #split_abundance_array[split_abundance_array == 0] = np.nan
-                    emit_abundance_array = envi_to_array(emit_spectral_abundance[0])
-                    #emit_abundance_array[emit_abundance_array == 0] = np.nan
-                    split_transect_array = envi_to_array(slpit_transect_abundance[0])[0,0,:]
-                    #split_transect_array[split_transect_array == 0] = np.nan
+                        # load data
+                        split_abundance_array = envi_to_array(slpit_ems_abundance[0])[0,0,:]
+                        #split_abundance_array[split_abundance_array == 0] = np.nan
+                        emit_abundance_array = envi_to_array(emit_spectral_abundance[0])
+                        #emit_abundance_array[emit_abundance_array == 0] = np.nan
+                        split_transect_array = envi_to_array(slpit_transect_abundance[0])[0,0,:]
+                        #split_transect_array[split_transect_array == 0] = np.nan
 
-                    mineral_bands = load_band_names(slpit_ems_abundance[0])
-                    mineral_bands = [item.replace('+', '\n') for item in mineral_bands]
+                        mineral_bands = load_band_names(slpit_ems_abundance[0])
+                        mineral_bands = [item.replace('+', '\n') for item in mineral_bands]
 
-                    ax.set_ylabel('Spectral Abundance')
-                    ax.set_ylim(0, .25)
+                        ax.set_ylabel('Spectral Abundance')
+                        ax.set_ylim(0, .25)
 
-                    for _mineral, mineral in enumerate(mineral_bands):
-                        avg_slpit_em = np.nanmean(split_abundance_array[_mineral])
-                        avg_split_transect = np.nanmean(split_transect_array[_mineral])
-                        avg_emit = np.mean(emit_abundance_array[0:3, 0:3, _mineral])
+                        for _mineral, mineral in enumerate(mineral_bands):
+                            avg_slpit_em = np.nanmean(split_abundance_array[_mineral])
+                            avg_split_transect = np.nanmean(split_transect_array[_mineral])
+                            avg_emit = np.mean(emit_abundance_array[0:3, 0:3, _mineral])
 
-                        ax.bar(_mineral, avg_slpit_em, color='green', label='Contact Probe', edgecolor="black", width=0.2)
-                        ax.bar(_mineral - 0.1, avg_split_transect, color='black', label='Fiber Optic', edgecolor="black",
-                               width=0.2)
-                        ax.bar(_mineral + 0.1, avg_emit, color='blue', label='EMIT', edgecolor="black", width=0.2)
+                            ax.bar(_mineral, avg_slpit_em, color='green', label='Contact Probe', edgecolor="black", width=0.2)
+                            ax.bar(_mineral - 0.1, avg_split_transect, color='black', label='Fiber Optic', edgecolor="black",
+                                   width=0.2)
+                            ax.bar(_mineral + 0.1, avg_emit, color='blue', label='EMIT', edgecolor="black", width=0.2)
 
-                    # Get handles and labels from the axes
-                    handles, labels = ax.get_legend_handles_labels()
+                        # Get handles and labels from the axes
+                        handles, labels = ax.get_legend_handles_labels()
 
-                    # Create a dictionary to keep track of unique labels
-                    unique_labels = {}
-                    unique_handles = []
+                        # Create a dictionary to keep track of unique labels
+                        unique_labels = {}
+                        unique_handles = []
 
-                    # Iterate through the labels and handles and add them to the unique_labels dictionary
-                    for i, label in enumerate(labels):
-                        if label not in unique_labels:
-                            unique_labels[label] = handles[i]
-                            unique_handles.append(handles[i])
+                        # Iterate through the labels and handles and add them to the unique_labels dictionary
+                        for i, label in enumerate(labels):
+                            if label not in unique_labels:
+                                unique_labels[label] = handles[i]
+                                unique_handles.append(handles[i])
 
-                    ax.legend(unique_handles, unique_labels.keys())
-                    ax.set_xticks(np.arange(0, len(mineral_bands), step=1), minor=False)
-                    ax.set_xticklabels(mineral_bands, fontdict=None, minor=False)
-                    ax.tick_params(axis='x', labelsize=8)
+                        ax.legend(unique_handles, unique_labels.keys())
+                        ax.set_xticks(np.arange(0, len(mineral_bands), step=1), minor=False)
+                        ax.set_xticklabels(mineral_bands, fontdict=None, minor=False)
+                        ax.tick_params(axis='x', labelsize=8)
+
+                    except:
+                        ax.set_ylabel('Spectral Abundance')
 
             plt.savefig(os.path.join(self.fig_directory, 'plot_stats', plot + '.pdf'), format="pdf", dpi=300,
                         bbox_inches="tight")
@@ -346,6 +351,7 @@ class figures:
         results = p_map(fraction_file_info, all_files, **{"desc": "\t\t retrieving mean fractional cover: ...", "ncols": 150})
         df_all = pd.DataFrame(results)
         df_all.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization', 'npv', 'pv', 'soil', 'shade']
+        df_all.to_csv(os.path.join(self.fig_directory, 'fraction_output.csv'), index=False)
 
         # load all uncertainty files
         uncer_files_sma = sorted(glob(os.path.join(self.output_directory, 'sma-best', '*fractional_cover_uncertainty')))
@@ -359,7 +365,7 @@ class figures:
                                 'npv', 'pv', 'soil', 'shade']
 
         # load cpu performance results
-        df_cpu = pd.read_csv(os.path.join(self.fig_directory, 'computing_performance_report.csv'))
+        df_cpu = pd.read_csv(os.path.join(self.fig_directory, 'computing_performance_report_emit.csv'))
 
         # # create figure
         fig = plt.figure(constrained_layout=True, figsize=(12, 12))
@@ -372,19 +378,19 @@ class figures:
             if row == 0:
                 df_select = df_all[(df_all['unmix_mode'] == 'sma-best') & (df_all['lib_mode'] == 'local')].copy()
                 df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'sma-best') & (df_all_uncer['lib_mode'] == 'local')].copy()
-                df_performance = df_cpu[(df_cpu['library'] == 'local') & (df_cpu['mode'] == 'sma-best')].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'local') & (df_cpu['mode'] == '"sma-best"')].copy()
             if row == 1:
                 df_select = df_all[(df_all['unmix_mode'] == 'sma-best') & (df_all['lib_mode'] == 'global')].copy()
                 df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'sma-best') & (df_all_uncer['lib_mode'] == 'global')].copy()
-                df_performance = df_cpu[(df_cpu['library'] == 'global') & (df_cpu['mode'] == 'sma-best')].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'global') & (df_cpu['mode'] == '"sma-best"')].copy()
             if row == 2:
                 df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['num_mc'] == 25)].copy()
                 df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'mesma') & (df_all_uncer['lib_mode'] == 'local') & (df_all_uncer['num_mc'] == 25)].copy()
-                df_performance = df_cpu[(df_cpu['library'] == 'local') & (df_cpu['mode'] == 'mesma')].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'local') & (df_cpu['mode'] == '"mesma"')].copy()
             if row == 3:
                 df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'global') & (df_all['num_mc'] == 25)].copy()
                 df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'mesma') & (df_all_uncer['lib_mode'] == 'global') & (df_all_uncer['num_mc'] == 25)].copy()
-                df_performance = df_cpu[(df_cpu['library'] == 'global') & (df_cpu['mode'] == 'mesma')].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'global') & (df_cpu['mode'] == '"mesma"')].copy()
 
             for col in range(ncols):
                 ax = fig.add_subplot(gs[row, col])
@@ -436,18 +442,19 @@ class figures:
                 #         ax.errorbar(xi, yi, yerr=yu, xerr=xu, fmt='o')
                 #         plt.annotate(label, (xi, yi), textcoords="offset points", xytext=(0, 10), ha='center')
 
+                performance = df_performance['spectra_per_s'].mean()
+
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
                 mae = mean_absolute_error(x, y)
                 r2 = r2_calculations(x, y)
 
                 txtstr = '\n'.join((
-                    r'RMSE: %.2f' % (rmse,),
-                    r'MAE: %.2f' % (mae,),
-                    r'CMB/EM: ' + str(n_cmbs),
-                    r'MC: ' + str(n_mc),
+                    r'MAE(RMSE): %.2f(%.2f)' % (mae,rmse),
                     r'R$^2$: %.2f' % (r2,),
-                    r'n = ' + str(len(x))))
+                    r'n = ' + str(len(x)),
+                    r'Spectra/s: %.2f' % (performance),
+                ))
 
                 props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
@@ -560,7 +567,6 @@ class figures:
         plt.savefig(os.path.join(self.fig_directory, 'sza_mae.png'), format="png", dpi=300, bbox_inches="tight")
 
 
-
     def local_slpit(self):
         # load all fraction files
         fraction_files_sma = sorted(glob(os.path.join(self.output_directory, 'sma-best', '*fractional_cover')))
@@ -670,7 +676,7 @@ class figures:
 
 def run_figures(base_directory):
     fig = figures(base_directory=base_directory)
-    #fig.plot_summary()
+    fig.plot_summary()
     fig.plot_rmse()
     #fig.local_slpit()
     #fig.sza_plot()
