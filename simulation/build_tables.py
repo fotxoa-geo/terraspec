@@ -14,7 +14,16 @@ from osgeo import gdal
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from simulation.latex_tables import run_latex_tables
-import ast
+
+
+def table_sim_menu():
+    print("You are in table mode for simulations...")
+    print("A... Computing Performance Tables")
+    print("B... Error Tables")
+    print("C... Latex Tables")
+    print("D... Exit")
+
+
 
 class tables:
     def __init__(self, base_directory: str):
@@ -57,6 +66,8 @@ class tables:
     def atmosphere_table(self):
         fraction_files = glob(os.path.join(self.base_directory, 'output', 'hypertrace', '**', '*fractional_cover'),
                               recursive=True)
+
+        print(fraction_files)
         print('processing atmospheric table...')
         # this was the spectra used for hypertrace with the lowest error!!!
         true_file = os.path.join(self.base_directory, 'output', 'convex_hull__n_dims_4_fractions')
@@ -161,19 +172,35 @@ class tables:
         
         df_performance = pd.concat(dfs)
         df_performance.to_csv(os.path.join(self.fig_directory, "computing_performance_report.csv"), index=False)
+        
+    def atmosphere_performance_table(self):
+        outfiles = glob(os.path.join(self.output_directory, 'hypertrace', 'outlogs', 'unmix', '*.out'))
+        
+        dfs = p_umap(performance_log, outfiles,**{"desc": f"\t\t processing performance tables...", "ncols": 150})
+        df_performance = pd.concat(dfs)
+        df_performance.to_csv(os.path.join(self.fig_directory, "atmosphere_computing_performance_report.csv"), index=False)
 
 
 def run_build_tables(base_directory):
     run_tables = tables(base_directory=base_directory)
-    
-    #run_tables.performance_table()
-    #modes = ['sma-best', 'mesma', 'sma']
-    #for i in modes:
-    #    run_tables.unmix_error_table(mode=i)
-    #    run_tables.unmix_unceratinty_table(mode=i)
-    
-    #run_tables.atmosphere_table()
-    #run_tables.geographic_table(mode='spatial')
-    #run_tables.metadata_table_unmix()
-    # print latex tables
-    run_latex_tables(base_directory=base_directory)
+    while True:
+        table_sim_menu()
+
+        user_input = input('\nPlease indicate the desired tables: ').upper()
+
+        if user_input == 'A':
+            run_tables.performance_table()
+            run_tables.atmosphere_performance_table()
+        elif user_input == 'B':
+            modes = ['sma-best', 'mesma', 'sma']
+            for i in modes:
+                run_tables.unmix_error_table(mode=i)
+                run_tables.unmix_unceratinty_table(mode=i)
+            
+            run_tables.atmosphere_table()
+        elif user_input == 'C':
+            run_latex_tables(base_directory=base_directory)
+
+        elif user_input == 'D':
+            print("returning to simulation main menu...")
+            break
