@@ -206,3 +206,58 @@ def read_metadata(hdr_file):
                 metadata[key.strip()] = value.strip()
     return metadata
 
+
+def tetracorder_rgb(envi_file, output_directory):
+    basename = os.path.basename(envi_file)
+    driver = gdal.GetDriverByName("GTiff")
+    out_ras = os.path.join(output_directory, f"minerals_{basename}.tif")
+
+    ds = gdal.Open(envi_file, gdal.GA_ReadOnly)
+    prj = ds.GetProjection()
+    ds_array = ds.ReadAsArray().transpose((1, 2, 0))
+
+    outRaster = driver.Create(out_ras, ds_array.shape[1], ds_array.shape[0], 4, gdal.GDT_Byte)
+
+    originX, pixelWidth, b, originY, d, pixelHeight = ds.GetGeoTransform()
+    outRaster.SetGeoTransform((originX, pixelWidth, 0, originY, 0, pixelHeight))
+
+    band_names = load_band_names(f"{envi_file}")
+
+    rgb_array = np.zeros((ds_array.shape[0], ds_array.shape[1], 3))
+
+    oxides = ['Goethite', 'Hematite', 'Chlorite']
+    clays = ['Illite+Muscovite', 'Kaolinite', 'Montmorillonite', 'Vermiculite']
+    carbonates = ['Calcite', 'Dolomite', 'Gypsum']
+
+    # geenrate rgb abundance array
+    for _mineral_band, mineral_band in enumerate(band_names):
+
+        if mineral_band in oxides:
+            rgb_array[:, :, 0] += ds_array[:, :, _mineral_band]
+        elif mineral_band in clays:
+            rgb_array[:, :, 2] += ds_array[:, :, _mineral_band]
+        elif mineral_band in carbonates:
+            rgb_array[:, :, 1] += ds_array[:, :, _mineral_band]
+
+    # set no data bands
+    no_data_mask = np.all(rgb_array == np.array([0, 0, 0]), axis=-1)
+    rgb_array[no_data_mask] = 0
+
+    # save tiff
+    for _b, b in enumerate(range(0, rgb_array.shape[2])): #-1 for alpha band
+        outband = outRaster.GetRasterBand(_b + 1)
+        band_select = rgb_array[:, :, _b]
+        band_select *= 255.0 / band_select.max()
+        outband.WriteArray(band_select)
+        outband.SetNoDataValue(0)
+
+    # set alpha band
+    outband = outRaster.GetRasterBand(4)
+    band_select = np.zeros((ds_array.shape[0], ds_array.shape[1]))
+    band_select[~no_data_mask] = 255
+    outband.WriteArray(band_select)
+
+    # # setteing srs from input tif file.
+    outRasterSRS = osr.SpatialReference(wkt=prj)
+    outRaster.SetProjection(outRasterSRS.ExportToWkt())
+    outband.FlushCache()

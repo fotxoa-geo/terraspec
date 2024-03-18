@@ -29,12 +29,13 @@ def error_metrics(truth_array, estimated_array):
     mae = []
     stds = []
     std_error = []
+
     for em in range(truth_array.shape[2]):
         x = truth_array[:, :, em].flatten()
         y = estimated_array[:, :, em].flatten()
         stds.append(np.std(np.abs(x-y)))
         rmse.append(mean_squared_error(x, y, squared=False))
-        r2.append(r2_score(x, y))
+        r2.append(r2_calculations(x, y))
         mae.append(mean_absolute_error(x, y))
         std_error.append(sem(a=np.abs(x-y), ddof=1, nan_policy='omit'))
 

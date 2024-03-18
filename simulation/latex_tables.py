@@ -388,21 +388,34 @@ class latex:
                                 'refl_nodata', 'refl_scale', 'write_complete_fractions', 'optimizer', 'start_line',
                               'end_line', 'endmember_classes', 'log_file',], inplace=True)
 
-        df_time['scenario'] = df_time['reflectance_file'].apply(lambda path: '-'.join(os.path.basename(path).split('_')[:2]))
+        df_time['scenario'] = df_time['reflectance_file'].apply(lambda path: '-'.join(os.path.basename(path).split('_')[:2]).split('-')[1])
         df_time['spectra_per_s'] = df_time['spectra_per_s'].astype(float)
+        df_time['spectra_per_s'] = df_time['spectra_per_s'].apply(lambda x: round(x, 2))
         df_time['num_endmembers'] = df_time['num_endmembers'].apply(lambda x: ast.literal_eval(x)[0])
         df_time['dims'] = df_time['reflectance_file'].apply(lambda path: os.path.basename(path).split('_')[:5][4])
+
         df_time = df_time.loc[(df_time['error'] == 0)].copy()
         
         # get optimal settings - both convex and latin hypercube
-        df_avg_optimal = df_time.loc[((df_time['normalization'] == 'brightness') & (df_time['n_mc'] == 1)) &
-            ((df_time['max_combinations'] == 25) | (df_time['max_combinations'] == -1)) & ((df_time['num_endmembers'] == 30) | (df_time['num_endmembers'] == 3))].copy()
+        df_avg_optimal = df_time.loc[((df_time['normalization'] == 'brightness') & (df_time['n_mc'] == 25)) &
+            ((df_time['max_combinations'] == 100) | (df_time['max_combinations'] == -1)) & ((df_time['num_endmembers'] == 30) | (df_time['num_endmembers'] == 3))].copy()
 
-        df_avg_optimal_mesma = df_avg_optimal.loc[(df_avg_optimal['mode'] == 'mesma')].copy()
-        df_avg_optimal_sma = df_avg_optimal.loc[(df_avg_optimal['mode'] == 'sma') & (df_avg_optimal['num_endmembers'] == 30)].copy()
 
-        print('\t Average Optimal MESMA (spec/s) : ', np.round(np.average(df_avg_optimal_mesma['total_time']), 2),'s; Worker Count: ', np.average(df_avg_optimal_mesma['worker_count']))
-        print('\t Average Optimal SMA (spec/s) : ', np.round(np.average(df_avg_optimal_sma['total_time']), 2), 's; Worker Count: ', np.average(df_avg_optimal_sma['worker_count']))
+
+
+        for mode in df_time['mode'].unique():
+            if mode == 'mesma':
+                df_avg_optimal_mesma = df_avg_optimal.loc[(df_avg_optimal['mode'] == 'mesma')].copy()
+                df_avg = df_avg_optimal_mesma.sort_values('dims')
+
+            elif mode == 'sma':
+                df_avg_optimal_sma = df_avg_optimal.loc[
+                    (df_avg_optimal['mode'] == 'sma') & (df_avg_optimal['num_endmembers'] == 30)].copy()
+                df_avg = df_avg_optimal_sma.sort_values('dims')
+
+            for i in df_time['scenario'].unique():
+                df_time_select = df_avg.loc[(df_avg['scenario'] == i) & (df_avg['mode'] == mode)].copy()
+                print(df_time_select.to_latex(index=False, escape=False))
 
         # optimal settings - all values of number of endmembers (n) for sma
         df_avg_sma_num_em = df_time.loc[(df_time['normalization'] == 'brightness') & (df_time['n_mc'] == 25) & (df_time['max_combinations'] == -1)].copy()

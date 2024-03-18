@@ -782,6 +782,7 @@ class tetracorder_figures:
         plt.savefig(os.path.join(self.fig_directory, 'mineral_confusion_matrix.png'), format="png", dpi=300,
                         bbox_inches="tight")
 
+
 def run_figure_workflow(base_directory):
     ems = ['soil']
     tc = tetracorder_figures(base_directory=base_directory)

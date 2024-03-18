@@ -9,6 +9,7 @@ from p_tqdm import p_map
 from functools import partial
 from utils.envi import get_meta, save_envi
 from utils import asdreader
+from utils import sedreader
 from glob import glob
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -28,6 +29,7 @@ def load_white_ref_correction():
     white_ref_array = np.loadtxt(os.path.join('utils', 'splib07a_Spectralon99WhiteRef_LSPHERE_ASDFRa_AREF.txt'), skiprows=1)
 
     return white_ref_array
+
 
 def gps_asd(latitude_ddmm, longitude_ddmm, file):
     try:
@@ -92,12 +94,22 @@ class spectra:
     @classmethod
     def convolve_asdfile(cls, asd_file, wvl, fwhm):
         # Load asd data
-        data = asdreader.reader(asd_file)
-        asd_wl = data.wavelengths
-        asd_refl = np.round(data.reflectance, 4)
+
+        # get file type
+        file_type = os.path.splitext(asd_file)[1]
+
+        if file_type == '.asd':
+            data = asdreader.reader(asd_file)
+            ins_wl = data.wavelengths
+            refl = np.round(data.reflectance, 4)
+
+        elif file_type == '.sed':
+            data = sedreader.reader(asd_file)
+            ins_wl = data.wavelengths
+            refl = np.round(data.reflectance, 4)
 
         # Convolve spectra
-        refl_convolve = isc.resample_spectrum(x=asd_refl, wl=asd_wl, wl2=wvl, fwhm2=fwhm, fill=False)
+        refl_convolve = isc.resample_spectrum(x=refl, wl=ins_wl, wl2=wvl, fwhm2=fwhm, fill=False)
 
         return refl_convolve
 
@@ -444,22 +456,33 @@ class spectra:
     def get_reflectance_transect(cls, file, plot_directory:str, team_name_key:str):
         white_ref_correction = load_white_ref_correction()
         plot_name = os.path.basename(plot_directory)
-        asd = asdreader.reader(file)
-        asd_refl = asd.reflectance * white_ref_correction
-        asd_gps = asd.get_gps()
-        latitude_ddmm, longitude_ddmm, elevation, utc_time = asd_gps[0], asd_gps[1], asd_gps[2], asd_gps[3]
 
-        if int(utc_time[0]) + int(utc_time[1]) + int(utc_time[2]) == 0:
-            file_time = asd.get_save_time()
-            utc_time = str(file_time[2]) + ":" + str(file_time[1]) + ":" + str(file_time[0])
-        else:
-            utc_time = str(utc_time[0]) + ":" + str(utc_time[1]) + ":" + str(utc_time[2])
+        # get file type
+        file_type = os.path.splitext(file)[1]
 
-        file_num = int(os.path.basename(file).split(".")[0].split("_")[1])
+        if file_type == '.asd':
+            asd = asdreader.reader(file)
+            refl = asd.reflectance * white_ref_correction
+            asd_gps = asd.get_gps()
+            latitude_ddmm, longitude_ddmm, elevation, utc_time = asd_gps[0], asd_gps[1], asd_gps[2], asd_gps[3]
 
-        dd_lat, dd_long = gps_asd(latitude_ddmm=latitude_ddmm, longitude_ddmm=longitude_ddmm, file=file)
+            if int(utc_time[0]) + int(utc_time[1]) + int(utc_time[2]) == 0:
+                file_time = asd.get_save_time()
+                utc_time = str(file_time[2]) + ":" + str(file_time[1]) + ":" + str(file_time[0])
+            else:
+                utc_time = str(utc_time[0]) + ":" + str(utc_time[1]) + ":" + str(utc_time[2])
 
-        return [plot_name, file, file_num, dd_long, dd_lat, elevation, utc_time] + list(asd_refl)
+            file_num = int(os.path.basename(file).split(".")[0].split("_")[-1])
+
+            dd_lat, dd_long = gps_asd(latitude_ddmm=latitude_ddmm, longitude_ddmm=longitude_ddmm, file=file)
+
+        elif file_type == '.sed':
+            sed = sedreader.reader(file)
+            refl = sed.reflectance * white_ref_correction
+            dd_long, dd_lat, utc_time,elevation = sed.gps
+            file_num = int(os.path.basename(file).split(".")[0].split("_")[-1])
+
+        return [plot_name, file, file_num, dd_long, dd_lat, elevation, utc_time] + list(refl)
 
     @classmethod
     def first_derivative(cls, df_row, spectral_starting_col, wvls):
@@ -516,6 +539,7 @@ class spectra:
         # Load asd data
         data = asdreader.reader(asd_file)
         asd_wl = data.wavelengths
+
         try:
             outfname = os.path.join(out_directory, os.path.basename(asd_file) + '.png')
             if os.path.isfile(outfname):
@@ -537,5 +561,30 @@ class spectra:
         except:
             print(asd_file, out_directory)
 
+    @classmethod
+    def plot_sed_file(cls, sed_file, out_directory):
+        # load sed data
+        data = sedreader.reader(sed_file)
+        sed_wvl = data.wavelengths
 
 
+        try:
+            outfname = os.path.join(out_directory, os.path.basename(sed_file) + '.png')
+            if os.path.isfile(outfname):
+                pass
+
+            else:
+                sed_refl = data.reflectance
+
+                plt.plot(sed_wvl, sed_refl, label=os.path.basename(sed_file))
+                plt.legend()
+                plt.ylabel("Reflectance (%)")
+                plt.xlabel("Wavelenghts (nm)")
+                plt.ylim([0, 1.1])
+
+                plt.savefig(outfname, bbox_inches='tight')
+                plt.clf()
+                plt.close()
+
+        except:
+            print(sed_file, out_directory)

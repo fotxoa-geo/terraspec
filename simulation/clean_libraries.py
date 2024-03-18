@@ -24,7 +24,7 @@ datasets = data['datasets']  # spectral datasets
 
 # load asd wavelegnths
 wavelengths_asd = spectra.load_asd_wavelenghts()
-emit_wvls, emit_fwhm = spectra.load_wavelengths(sensor='emit')
+emit_wvls, emit_fwhm = spectra.load_wavelengths(sensor='modis')
 
 
 def process_all_data(base_directory, output_directory):
