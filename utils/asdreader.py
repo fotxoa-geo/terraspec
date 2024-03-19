@@ -31,7 +31,6 @@ def parse_bstr(asd, offset):
         return bstr[0], offset
 
     except:
-        print("errorrrr")
         raise
 
 
