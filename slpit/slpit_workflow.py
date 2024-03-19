@@ -24,6 +24,14 @@ def display_slpit_menu():
     print("H... Process Figures and Tables")
     print("I... Exit")
 
+def display_result_menu():
+    msg = f"You have entered SLPIT result mode! " \
+          f"\nThere are various options to chose from: "
+    cursor_print(msg)
+
+    print("A... Figures")
+    print("B... Tables")
+    print("C... Exit")
 
 def run_slpit_workflow(base_directory:str, dry_run, sensor):
     while True:
@@ -65,8 +73,19 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
 
         # run the figure set
         elif user_input == 'H':
-            #run_figures(base_directory=base_directory)
-            run_tables(base_directory=base_directory)
+            while True:
+                display_result_menu()
+
+                result_input = input('\nPlease indicate the desired mode: ').upper()
+                if result_input == 'A':
+                    run_figures(base_directory=base_directory)
+
+                elif result_input == 'B':
+                    run_tables(base_directory=base_directory)
+
+                elif result_input == 'C':
+                    print("Returning to SLPIT menu.")
+                    break
 
         elif user_input == "I":
             print("Returning to main menu.")

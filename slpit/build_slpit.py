@@ -35,7 +35,7 @@ class build_libraries:
 
         # team names keys - corresponds to suffix in ASD files
         self.team_keys = {
-            'spectral': 'SP'}
+            'spectral': 'SP', 'thermal': 'TM'}
 
         # input data directories
         self.spectral_em_directory = os.path.join(self.base_directory, 'data', 'spectral_endmembers')
