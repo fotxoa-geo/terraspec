@@ -18,6 +18,15 @@ level_arg = 'level_1'
 n_cores = '40'
 
 
+
+def unmix_sim_menu():
+    print("You are in unmixing mode for simulations...")
+    print("A... Unmix the no atmosphere reflectances")
+    print("B... Unmix Hypertrace")
+    print("C... Exit")
+
+
+
 def create_uncertainty(uncertainty_file: str, wvls):
     output = os.path.join(os.path.dirname(uncertainty_file), 'reflectance_uncertainty.hdr')
     if os.path.isfile(output):
@@ -72,6 +81,8 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
 def hypertrace_unmix(base_directory: str, mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list):
     # create results directory
     create_directory((os.path.join(base_directory, "output", 'hypertrace', 'fractions')))
+    create_directory((os.path.join(base_directory, "output", 'hypertrace', 'outlogs')))
+    create_directory((os.path.join(base_directory, "output", 'hypertrace', 'outlogs', 'unmix')))
 
     # get metadata from hypertrace outputs
     atmosphere = os.path.abspath(reflectance_file).split('/')[-7].split("__")[0].split("_")[1:]
@@ -99,13 +110,14 @@ def hypertrace_unmix(base_directory: str, mode: str, reflectance_file: str, em_f
 
     # path to reflectance uncertainty file
     uncertainty_file = os.path.join(os.path.dirname(reflectance_file), "reflectance_uncertainty")
+    outlog_name = os.path.join(base_directory, "output", 'hypertrace', 'outlogs', 'unmix', f'{mode}_{basename.replace(".", "-")}.out')
 
-    base_call = f'julia -p {n_cores} ~/EMIT/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
+    base_call = f'julia ~/EMIT/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
                 f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column 8 ' \
                 f'--reflectance_uncertainty_file {uncertainty_file} ' \
                 f'{" ".join(parameters)}'
 
-    execute_call(['sbatch', '-N', "1", '-c', n_cores, '--mem', "180G", '--wrap', f'{base_call}'], dry_run)
+    execute_call(['sbatch', '-N', "1", '--tasks-per-node', '1', '--mem', "50G", '--output', outlog_name, '--wrap', f'{base_call}'], dry_run)
 
 
 class runs:
@@ -259,12 +271,21 @@ class runs:
     
 def run_unmix_workflow(base_directory, dry_run, io_bug):
     all_runs = runs(base_directory=base_directory, dry_run=dry_run)
+    while True:
+        unmix_sim_menu()
+        user_input = input('\nPlease indicate the desired unmix mode: ').upper()
+
     #geo = all_runs.geographic_sma(mode='sma-best')
-    sma_convex = all_runs.convex_hulls(mode='sma', io_bug=io_bug)
-    mesma_convex = all_runs.convex_hulls(mode='mesma', io_bug=io_bug)
-    lh_sma = all_runs.latin_hypercubes(mode='sma', io_bug=io_bug)
-    lh_mesma = all_runs.latin_hypercubes(mode='mesma', io_bug=io_bug)
-    sma_convex = all_runs.convex_hulls(mode='sma-best', io_bug=io_bug)
-    lh_sma = all_runs.latin_hypercubes(mode='sma-best', io_bug=io_bug)
-    #all_runs.hypertrace_call(mode='mesma')
-    #all_runs.hypertrace_call(mode='sma-best')
+        if user_input == 'A':
+            sma_convex = all_runs.convex_hulls(mode='sma', io_bug=io_bug)
+            mesma_convex = all_runs.convex_hulls(mode='mesma', io_bug=io_bug)
+            lh_sma = all_runs.latin_hypercubes(mode='sma', io_bug=io_bug)
+            lh_mesma = all_runs.latin_hypercubes(mode='mesma', io_bug=io_bug)
+            sma_convex = all_runs.convex_hulls(mode='sma-best', io_bug=io_bug)
+            lh_sma = all_runs.latin_hypercubes(mode='sma-best', io_bug=io_bug)
+        elif user_input == 'B':
+            all_runs.hypertrace_call(mode='mesma')
+            all_runs.hypertrace_call(mode='sma')
+        elif user_input == 'C':
+            print('returning to main menu...')
+            break
