@@ -44,6 +44,7 @@ def fraction_file_info(fraction_file):
 
     return [instrument, unmix_mode, plot, library_mode, int(num_cmb_em), int(num_mc), normalization] + mean_fractions
 
+
 class figures:
     def __init__(self, base_directory: str):
         self.base_directory = base_directory
@@ -61,6 +62,7 @@ class figures:
         # load teatracorder directory
         terraspec_base = os.path.dirname(base_directory)
         self.tetracorder_output_directory = os.path.join(terraspec_base, 'tetracorder', 'output', 'spectral_abundance')
+        self.cmap_kw = 'Accent'
 
     def plot_summary(self):
         # spectral data
@@ -123,12 +125,19 @@ class figures:
 
                 if ax == ax3:
                     # plot average of all EMIT files across time
-                    reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data-clip', '*'+ plot.replace("Spectral", "SPEC").replace(" ", "") + '_RFL_' + '*[!.xml][!.csv][!.hdr]')))
+                    reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data-clip', '*' + plot.replace("Spectral", "SPEC").replace(" ", "") + '_RFL_' + '*[!.xml][!.csv][!.hdr]')))
+
+                    if not reflectance_files:
+                        reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data-clip',
+                                                 '*' + plot.replace("Thermal", "THERM").replace(" ",
+                                                                                                "") + '_RFL_' + '*[!.xml][!.csv][!.hdr]')))
+
 
                     # plot average of SLPIT
                     refl_file_asd = glob(os.path.join(self.output_directory, 'spectral_transects', 'transect',
                                                       "*" + plot.replace(" ", "")))
-
+                    print(plot)
+                    print(refl_file_asd)
                     df_refl_asd = gdal.Open(refl_file_asd[0], gdal.GA_ReadOnly)
                     refl_array_asd = df_refl_asd.ReadAsArray().transpose((1, 2, 0))
                     y = np.mean(refl_array_asd, axis=0).ravel()
@@ -176,6 +185,11 @@ class figures:
                         days = np.absolute(delta.days)
 
                         cloud_mask = glob(os.path.join(self.gis_directory, 'emit-data-clip', f'*{plot.replace("Spectral", "SPEC").replace(" ", "")}_MASK_{acquisition_date}'))
+
+                        if not cloud_mask:
+                            cloud_mask = glob(os.path.join(self.gis_directory, 'emit-data-clip',
+                                                           f'*{plot.replace("Thermal", "THERM").replace(" ", "")}_MASK_{acquisition_date}'))
+
                         ds_cloud = gdal.Open(cloud_mask[0], gdal.GA_ReadOnly)
                         cloud_array = ds_cloud.ReadAsArray().transpose((1, 2, 0))
 
@@ -217,17 +231,17 @@ class figures:
                     df_spectra = em_data[(em_data['plot_name'] == plot) & ((em_data['level_1'] == 'NPV'))].copy()
                     df_species_key = pd.read_csv(os.path.join('utils', 'species_santabarbara_ca.csv'))
                     num_species = len(sorted(list(df_spectra.species.unique())))
-                    colors = np.random.rand(num_species, 3)
+                    npv_cmap = plt.cm.get_cmap(self.cmap_kw, num_species + 1)
 
                     for _species, species in enumerate(sorted(list(df_spectra.species.unique()))):
                         df_species = df_spectra[df_spectra['species'] == species].copy()
                         em_spectra = df_species.iloc[:, 10:].to_numpy()
 
                         for _row, row in enumerate(em_spectra):
-                            ax.plot(self.wvls, row, color=colors[_species])
+                            ax.plot(self.wvls, row, color=npv_cmap(_species))
 
                         common_name = df_species_key.loc[df_species_key['key_value'] == species, ['label']].values[0][0]
-                        ax.plot(self.wvls, row, c=colors[_species], label=common_name)
+                        ax.plot(self.wvls, row, c=npv_cmap(_species), label=common_name)
 
                     ax.get_xaxis().set_ticklabels([])
                     ax.set_ylim(0, 1)
@@ -240,7 +254,7 @@ class figures:
                     df_spectra = em_data[(em_data['plot_name'] == plot) & ((em_data['level_1'] == 'PV'))].copy()
                     df_species_key = pd.read_csv(os.path.join('utils', 'species_santabarbara_ca.csv'))
                     num_species = len(sorted(list(df_spectra.species.unique())))
-                    colors = np.random.rand(num_species, 3)
+                    pv_cmap = plt.cm.get_cmap(self.cmap_kw, num_species + 1)
 
                     for _species, species in enumerate(sorted(list(df_spectra.species.unique()))):
                         df_species = df_spectra[df_spectra['species'] == species].copy()
@@ -248,10 +262,10 @@ class figures:
 
                         for _row, row in enumerate(em_spectra):
 
-                            ax.plot(self.wvls, row, color=colors[_species])
+                            ax.plot(self.wvls, row, color=pv_cmap(_species))
 
                         common_name = df_species_key.loc[df_species_key['key_value'] == species, ['label']].values[0][0]
-                        ax.plot(self.wvls, row, c=colors[_species], label=common_name)
+                        ax.plot(self.wvls, row, c=pv_cmap(_species), label=common_name)
 
                     ax.get_xaxis().set_ticklabels([])
                     ax.set_ylim(0, 1)
@@ -655,8 +669,6 @@ class figures:
                 ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='none', markersize=4, zorder=1) 
                 scatter = ax.scatter(x, y, c=c, cmap=cmap, edgecolor='black')
 
-
-                print(df_x)
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
                 mae = mean_absolute_error(x, y)

@@ -63,7 +63,12 @@ def parse_metadata(sed_lines):
 def load_spectral_info(sed_lines):
     spectral_data = np.loadtxt(sed_lines, delimiter='\t', skiprows=27)
     wavelengths = spectral_data[:, 0].ravel()
-    spectrum = spectral_data[:,1].ravel()
+    try:
+        spectrum = spectral_data[:,2].ravel()/spectral_data[:,1].ravel()
+
+    except:
+
+        spectrum = spectral_data[:, 1].ravel()
 
     return wavelengths, spectrum
 
