@@ -35,7 +35,7 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
                spectra_starting_column:str, uncertainty_file=None, io_bug=None):
     
     out_dir_path = os.path.dirname(os.path.dirname(output_dest))
-    report_path = os.path.join(os.path.dirname(os.path.dirname((os.path.dirname(output_dest)))), 'figures', 'computing_performance_report.csv') 
+
     outlog_name = os.path.join(out_dir_path, 'outlogs', f"{mode}-{os.path.basename(output_dest)}.out")  
     scrtch_rfl = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}")
     scrtch_hdr = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}.hdr") 
@@ -47,26 +47,33 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
     
     # the io bug call allows us to completely start all the runs 
     if io_bug:
-        base_call = f'julia ~/EMIT/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
-                    f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
-                    f'{" ".join(parameters)} '
-        
-        execute_call(['sbatch', '-N', '1', '--tasks-per-node', '1', '--mem', "50G", '--output', outlog_name, '--wrap', f'{base_call}'], dry_run)
- 
-    else:
+        report_path = os.path.join(os.path.dirname(os.path.dirname((os.path.dirname(output_dest)))), 'figures',
+                                   'computing_performance_report.csv')
         # open report
         df_report = pd.read_csv(report_path)
         df_report = df_report.loc[(df_report['error'] == 1)].copy()
-        df_report = df_report.replace('"', '', regex=True)    
-        
+        df_report = df_report.replace('"', '', regex=True)
+
         if scrtch_rfl in df_report['reflectance_file'].values:
             base_call = f'julia ~/EMIT/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
                         f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
-                        f'{" ".join(parameters)} '    
-            
-            execute_call(['sbatch', '-N', '1', '--tasks-per-node', "1", '--mem', "50G", '--output', outlog_name, '--wrap', f'{base_call}'], dry_run)
+                        f'{" ".join(parameters)} '
+
+            execute_call(
+                ['sbatch', '-N', '1', '--tasks-per-node', "1", '--mem', "50G", '--output', outlog_name, '--wrap',
+                 f'{base_call}'], dry_run)
         else:
             pass
+ 
+    else:
+        base_call = f'julia ~/EMIT/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
+                    f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
+                    f'{" ".join(parameters)} '
+
+        execute_call(['sbatch', '-N', '1', '--tasks-per-node', '1', '--mem', "50G", '--output', outlog_name, '--wrap',
+                      f'{base_call}'], dry_run)
+
+
 
 
 def hypertrace_unmix(base_directory: str, mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list):
