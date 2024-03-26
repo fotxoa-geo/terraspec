@@ -13,6 +13,28 @@ from utils.spectra_utils import spectra
 from utils.envi import get_meta, save_envi
 from utils.text_guide import cursor_print, query_yes_no
 from utils.slpit_utils import slpit
+from math import radians, sin, cos, sqrt, atan2
+import geopandas as gpd
+
+
+def haversine_distance(lat1, lon1, lat2, lon2, plot):
+    R = 6371.0  # Earth radius in kilometers
+
+    # Convert decimal degrees to radians
+    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+
+    # Differences in coordinates
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    # Haversine formula
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    distance = R * c # in km
+    if distance == 0:
+        distance = np.nan
+
+    return [plot, distance] # returns distance in m
 
 
 class build_libraries:
@@ -29,6 +51,7 @@ class build_libraries:
         create_directory(os.path.join(self.output_directory, 'spectral_transects'))
         create_directory(os.path.join(self.output_directory, 'spectral_transects', 'transect'))
         create_directory(os.path.join(self.output_directory, 'spectral_transects', 'endmembers'))
+        create_directory(os.path.join(self.output_directory, 'spectral_transects', 'endmembers-raw'))
         create_directory(os.path.join(self.output_directory, 'plot_pictures'))
         create_directory(os.path.join(self.output_directory, 'plot_pictures', 'spectral_transects'))
         create_directory(os.path.join(self.output_directory, 'plot_pictures', 'spectral_endmembers'))
@@ -47,6 +70,7 @@ class build_libraries:
         # output data directories
         self.output_transect_directory = os.path.join(self.output_directory, 'spectral_transects', 'transect')
         self.output_transect_em_directory = os.path.join(self.output_directory, 'spectral_transects', 'endmembers')
+        self.output_transect_em_directory_raw = os.path.join(self.output_directory, 'spectral_transects', 'endmembers-raw')
 
         # import the simulation outputs
         terraspec_base = os.path.join(base_directory, "..")
@@ -266,8 +290,7 @@ class build_libraries:
             plot_name = f"{i['team_names'].capitalize()} - {i['plot_num']:03d}"
             plot_directory = os.path.join(self.spectral_transect_directory, plot_name)
             date = i['sample_date']
-            if os.path.isfile(os.path.join(self.output_transect_em_directory,
-                                           plot_name.replace(" ", "") + '-' + self.instrument + '.csv')):
+            if os.path.isfile(os.path.join(self.output_transect_em_directory_raw, f'{plot_name.replace(" ", "")}-{self.instrument}.csv')):
                 continue
 
             # em table
@@ -294,9 +317,7 @@ class build_libraries:
 
             results = p_map(partial(spectra.get_reflectance_transect, plot_directory=plot_directory,
                                     team_name_key=self.team_keys[i['team_names']]), endmember_spectra,
-                            **{
-                                "desc": "\t\t processing plot: " + plot_name + " ...",
-                                "ncols": 150})
+                            **{"desc": "\t\t processing plot: " + plot_name + " ...", "ncols": 150})
 
             try:
                 asd = asdreader.reader(results[0][1])
@@ -322,7 +343,7 @@ class build_libraries:
                                                                         'species']] = line_num, em_clas, species
 
             df_results = df_results.sort_values("level_1")
-            df_results.to_csv(os.path.join(self.output_transect_em_directory, plot_name.replace(" ", "") + '-asd.csv'),
+            df_results.to_csv(os.path.join(self.output_transect_em_directory_raw, plot_name.replace(" ", "") + '-asd.csv'),
                               index=False)
 
             # convolve wavelengths to user specified instrument
@@ -335,34 +356,8 @@ class build_libraries:
             df_convolve.columns = list(self.wvls)
             df_convolve = pd.concat([df_results.iloc[:, :10].reset_index(drop=True), df_convolve], axis=1)
 
-            # this row assumes that 3 em are presentl if not add 10 of the missing one
-            if len(sorted(list(df_convolve.level_1.unique()))) == 3:
-                pass
-            else:
-                # add
-                df_ems = pd.read_csv(os.path.join(self.output_directory, 'all-endmembers-emit.csv'))
-
-                plot_ems = sorted(list(df_convolve.level_1.unique()))
-                em_difference = sorted(list(set(all_ems) - set(plot_ems)))
-                # append missing endmembers - from site
-                ems_to_append = []
-                for em in em_difference:
-                    df_em = df_ems.loc[df_ems['level_1'] == em].copy()
-                    df_rand = df_em.sample(n=30, random_state=13, ignore_index=True)
-                    ems_to_append.append(df_rand)
-                    print('adding 30 ', em, ' to plot:', plot_name)
-
-                # if list is empty do nothing
-                if not ems_to_append:
-                    pass
-                else:
-                    df_append = pd.concat(ems_to_append, ignore_index=True)
-                    df_append.columns = df_convolve.columns
-                    df_convolve = pd.concat([df_convolve, df_append], ignore_index=True)
-                    df_convolve['plot_name'] = plot_name
-
             df_convolve = df_convolve.sort_values("level_1")
-            df_convolve.to_csv(os.path.join(self.output_transect_em_directory,
+            df_convolve.to_csv(os.path.join(self.output_transect_em_directory_raw,
                                             plot_name.replace(" ", "") + '-' + self.instrument + '.csv'), index=False)
 
             # save files as envi files
@@ -376,10 +371,88 @@ class build_libraries:
             print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
             meta_spectra = get_meta(lines=len(results_convolve), samples=spectra_grid.shape[1], bands=self.wvls,
                                     wvls=True)
-            output_raster = os.path.join(self.output_transect_em_directory, plot_name.replace(" ", "") + '-' + self.instrument + ".hdr")
+            output_raster = os.path.join(self.output_transect_em_directory_raw, plot_name.replace(" ", "") + '-' + self.instrument + ".hdr")
             save_envi(output_raster, meta_spectra, spectra_grid)
             time.sleep(3)
             print("done")
+
+    def em_qty_check(self):
+        # ensures that in each csv there at least 3 classes and n samples for each class
+        # will use the nearest site for geographic distance
+        em_min_samples = {'PV': 30, 'NPV': 30, 'Soil': 75}
+
+        emit_ems = sorted(spectra.get_all_ems(output_directory=self.output_directory, instrument=self.instrument))
+        df_all_emit_ems = pd.read_csv(os.path.join(self.output_directory, "all-endmembers-" + self.instrument + ".csv"))
+        df_distance = pd.read_csv(os.path.join('gis', 'min_dist_to_emit_plots.csv'))
+        all_ems = sorted(list(df_all_emit_ems.level_1.unique()))
+
+        for i in emit_ems:
+            plot_number = os.path.basename(i).split('-')[1]
+            df_em_site = pd.read_csv(i)
+            site_em = sorted(list(df_em_site.level_1.unique()))
+            df_nearest_distances = df_distance.loc[df_distance['emit_plot_analysis'] == f"SPEC - {plot_number}"].copy()
+
+            ems_to_append = []
+
+            if len(site_em) == 3:
+                # fill in remainder so each class in equal to number of desired samples
+                for _em, em in enumerate(site_em):
+                    df_em_select = df_em_site.loc[df_em_site['level_1'] == em].copy()
+
+                    if df_em_select.shape[0] == em_min_samples[em]:
+                        pass
+                    else:
+                        remaining_samples = em_min_samples[em] - df_em_select.shape[0]
+                        site_counter = 0
+
+                        while remaining_samples > 0:
+                            current_nearest_site = eval(df_nearest_distances.iloc[:, site_counter].iloc[0])[0].split('-')[1]
+                            df_nearest_ems = df_all_emit_ems.loc[(df_all_emit_ems['level_1'] == em) & (df_all_emit_ems['plot_name'] == f'Spectral - {current_nearest_site.strip()}')].copy()
+
+                            if remaining_samples > df_nearest_ems.shape[0]:
+                                df_rand = df_nearest_ems.sample(n=df_nearest_ems.shape[0], random_state=13, ignore_index=True)
+                                remaining_samples -= df_nearest_ems.shape[0]
+
+                            else:
+                                df_rand = df_nearest_ems.sample(n=remaining_samples, random_state=13, ignore_index=True)
+                                remaining_samples -= remaining_samples
+
+                            ems_to_append.append(df_rand)
+                            # update counters
+                            site_counter += 1
+
+            else:
+                print(i, 'missing 3 em clases!')
+                # if not 3 classes add n samlpes
+                em_difference = sorted(list(set(all_ems) - set(site_em)))
+
+                for em in em_difference:
+
+                    remaining_samples = em_min_samples[em]
+                    site_counter = 0
+
+                    while remaining_samples > 0:
+                        current_nearest_site = eval(df_nearest_distances.iloc[:, site_counter].iloc[0])[0].split('-')[1]
+                        df_nearest_ems = df_all_emit_ems.loc[(df_all_emit_ems['level_1'] == em) & (
+                                df_all_emit_ems['plot_name'] == f'Spectral - {current_nearest_site.strip()}')].copy()
+
+                        df_rand = df_nearest_ems.sample(n=remaining_samples, random_state=13, ignore_index=True)
+                        ems_to_append.append(df_rand)
+
+                        # update counters
+                        site_counter += 1
+                        remaining_samples -= remaining_samples
+
+            # if list is empty do nothing
+            out_csv = os.path.join(self.output_transect_em_directory, f"{os.path.basename(i)}.csv")
+
+            if not ems_to_append:
+                df_em_site.to_csv(out_csv)
+            else:
+                df_append = pd.concat(ems_to_append, ignore_index=True)
+                df_convolve = pd.concat([df_em_site, df_append], ignore_index=True)
+                df_convolve = df_convolve.sort_values('level_1')
+                df_convolve.to_csv(out_csv, index=False)
 
     def build_em_collection(self):
         # merge all endmembers - instrument based wavelengths
@@ -448,18 +521,64 @@ class build_libraries:
         df_derivative.to_csv(os.path.join(self.output_directory, 'SPEC-003-fd.csv'), index=False)
 
 
-def run_build_workflow(base_directory, sensor):
-    msg = f"Please move all .asd Files from the ASD Computer " \
-          f"to the following location: {os.path.join(base_directory, 'data')}\n" \
-          f"Folder names should be based on the following naming convention:\n" \
-          f"\tTeam_Plot-Number (e.g., Spectral - 001; Team = Spectral; Plot-Number: 001"
+    def nearest_emit_site(self):
 
-    cursor_print(msg)
+        # get plot center points
+        shapefile_emit = os.path.join('gis', "Observation.shp")
+        df_emit = gpd.read_file(shapefile_emit)
+        df_emit['latitude'] = df_emit['geometry'].y
+        df_emit['longitude'] = df_emit['geometry'].x
+        df_emit = df_emit.drop('geometry', axis=1)
+
+        df_emit = df_emit.sort_values('Name')
+        df_min_distance_rows = []
+
+        for index, row in df_emit.iterrows():
+
+            plot = row['Name']
+
+            lon = row['longitude']
+            lat = row['latitude']
+
+            results = p_map(partial(haversine_distance, lat, lon), df_emit['latitude'].values,
+                            df_emit['longitude'].values, df_emit['Name'].values,
+                            **{"desc": f"geographic distance: {plot}", "ncols": 150})
+
+            df_results = pd.DataFrame(results)
+            df_results.columns = ['emit_plot_function', 'distance_km']
+            df_results = df_results.dropna()
+            df_results = df_results.sort_values('distance_km')
+
+            df_results.to_csv(r'C:\Users\spect\Desktop\test_distances\\' + f"{plot}.csv")
+
+            df_results['combined'] = list(zip(df_results['emit_plot_function'], df_results['distance_km']))
+            df_results = df_results.drop(columns=['emit_plot_function', 'distance_km']).T
+            df_results['emit_plot_analysis'] = plot
+            df_to_row = df_results.iloc[0].values
+
+            df_min_distance_rows.append(df_to_row)
+
+        min_dist_df = pd.DataFrame(df_min_distance_rows)
+        column_names = min_dist_df.columns.tolist()
+        column_names[-1] = 'emit_plot_analysis'
+        min_dist_df.columns = column_names
+        min_dist_df.to_csv(os.path.join('gis', 'min_dist_to_emit_plots.csv'), index=False)
+        min_dist_df.to_csv(r'C:\Users\spect\Desktop\test_distances\\' + 'min_dist_to_emit_plots.csv', index=False)
+
+
+def run_build_workflow(base_directory, sensor):
+    #msg = f"Please move all .asd Files from the ASD Computer " \
+    #      f"to the following location: {os.path.join(base_directory, 'data')}\n" \
+    #      f"Folder names should be based on the following naming convention:\n" \
+    #      f"\tTeam_Plot-Number (e.g., Spectral - 001; Team = Spectral; Plot-Number: 001"
+
+    #cursor_print(msg)
     user_input = query_yes_no('\nWould you like plots for all .asd/.sed files?', default="yes")
 
     if user_input:
         transect_directories = sorted(glob(os.path.join(base_directory, 'data', 'spectral_transects', "*", ""), recursive=True))
         create_directory(os.path.join(base_directory, 'figures', 'asd_file_plots'))
+
         for directory in transect_directories:
             plot_name = os.path.basename(os.path.dirname(directory))
             if os.path.isdir(os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name)) and glob(os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name, '*.png')):
@@ -481,7 +600,10 @@ def run_build_workflow(base_directory, sensor):
     else:
         lib = build_libraries(base_directory=base_directory, sensor=sensor)
         lib.build_emit_transects()
+        if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
+            lib.nearest_emit_site()
         lib.build_emit_endmembers()
         lib.build_em_collection()
-        #lib.build_gis_data()
+        lib.build_gis_data()
+        lib.em_qty_check()
         #lib.build_derivative_library()
