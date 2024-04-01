@@ -17,6 +17,20 @@ from utils.unmix_utils import call_unmix, call_hypertrace_unmix, hypertrace_meta
 from simulation.run_hypertrace import hypertrace_workflow
 
 
+def tetracorder_build_menu():
+    msg = f"You have entered Tetracorder build mode! " \
+          f"\nThere are various options to chose from: "
+    cursor_print(msg)
+
+    print("Welcome to the Tetracorder build Mode....")
+    print("A... Simulate Tetracorder reflectance")
+    print("B... Hypertrace workflow")
+    print("C... Unmix simulated reflectance")
+    print("D... Reconstruct soil simulation")
+    print("E... Augment pixels ")
+    print("F... Exit")
+
+
 class tetracorder:
 
     def __init__(self, base_directory: str, sensor:str):
@@ -35,8 +49,13 @@ class tetracorder:
         # create output directory for augmented files
         create_directory(os.path.join(self.tetra_output_directory, 'augmented'))
         create_directory(os.path.join(self.tetra_output_directory, 'spectral_abundance'))
+        create_directory(os.path.join(self.tetra_output_directory, 'fractions'))
+        create_directory(os.path.join(self.tetra_output_directory, 'simulated_spectra'))
+        create_directory(os.path.join(self.tetra_output_directory, 'hypertrace'))
 
         self.augmented_dir = os.path.join(os.path.join(self.tetra_output_directory, 'augmented'))
+        self.fractions_dir = os.path.join(os.path.join(self.tetra_output_directory, 'fractions'))
+        self.sim_spectra_dir = os.path.join(os.path.join(self.tetra_output_directory, 'simulated_spectra'))
 
         #create_directory(os.path.join(self.output_directory, 'outlogs'))
         #create_directory(os.path.join(self.output_directory, 'scratch'))
@@ -49,17 +68,17 @@ class tetracorder:
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
                                       level='level_1', spectral_bundles=10000, increment_size=0.05,
-                                      output_directory= self.tetra_output_directory, wvls=self.wvls,
+                                      output_directory=self.sim_spectra_dir, wvls=self.wvls,
                                       name='tetracorder_soil', spectra_starting_col=8, endmember='soil')
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
                                       level='level_1', spectral_bundles=10000, increment_size=0.05,
-                                      output_directory=self.tetra_output_directory, wvls=self.wvls,
+                                      output_directory=self.sim_spectra_dir, wvls=self.wvls,
                                       name='tetracorder_npv', spectra_starting_col=8, endmember='npv')
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
                                       level='level_1', spectral_bundles=10000, increment_size=0.05,
-                                      output_directory=self.tetra_output_directory, wvls=self.wvls,
+                                      output_directory=self.sim_spectra_dir, wvls=self.wvls,
                                       name='tetracorder_pv', spectra_starting_col=8, endmember='pv')
 
     def hypertrace_tetracorder(self):
@@ -67,7 +86,7 @@ class tetracorder:
         hypertrace_workflow(dry_run=False, clean=False,
                             configfile=os.path.join('simulation', 'hypertrace', 'tetracorder.json'))
 
-    def unmix_tetracorder(self):
+    def unmix_tetracorder(self, dry_run:bool):
         cursor_print('unmixing tetracorder')
 
         em_file = os.path.join(self.simulation_output_directory, 'endmember_libraries',
@@ -75,15 +94,16 @@ class tetracorder:
 
         optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization brightness']
 
-        reflectance_files = glob(os.path.join(self.tetra_output_directory, 'tetracorder_*_spectra*'))
+        reflectance_files = glob(os.path.join(self.sim_spectra_dir, 'tetracorder_*_spectra*'))
         for i in reflectance_files:
-            call_unmix(mode='sma-best', dry_run=False, reflectance_file=i, em_file=em_file,
-                       parameters=optimal_parameters, output_dest=self.augmented_dir, scale='1',
+            call_unmix(mode='sma', dry_run=dry_run, reflectance_file=i, em_file=em_file,
+                       parameters=optimal_parameters, output_dest=self.fractions_dir, scale='1',
                        spectra_starting_column='8')
 
         print("loading hypertrace outputs...")
         estimated_reflectances = glob(os.path.join(self.augmented_dir, "hypertrace", '**', '*estimated-reflectance'), recursive=True)
         uncertainty_files = []
+
         for reflectance_file in estimated_reflectances:
             uncertainty_file = os.path.join(os.path.dirname(reflectance_file), 'posterior-uncertainty')
             uncertainty_files.append(uncertainty_file)
@@ -148,7 +168,7 @@ class tetracorder:
     def augment_slpit_pixels(self):
         cursor_print('augmenting slpit pixels...')
         transect_files = glob(os.path.join(self.slpit_output_directory, 'spectral_transects', 'transect', '*[!.csv][!.hdr][!.aux][!.xml]'))
-        em_files = glob(os.path.join(self.slpit_output_directory, 'spectral_transects', 'endmembers', '*[!.csv][!.hdr][!.aux][!.xml]'))
+        em_files = glob(os.path.join(self.slpit_output_directory, 'spectral_transects', 'endmembers-raw', '*[!.csv][!.hdr][!.aux][!.xml]'))
 
         # load shapefile
         df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
@@ -156,7 +176,7 @@ class tetracorder:
 
         for index, row in df.iterrows():
             plot = row['Name']
-            emit_filetime = row['EMIT Date']
+            emit_filetime = row['EMIT DATE']
             reflectance_img_emit = glob(os.path.join(self.slpit_gis_directory, 'emit-data-clip',
                                                      f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
 
@@ -198,18 +218,34 @@ class tetracorder:
 
         for i in files_to_augment:
             basename = os.path.basename(i)
-            output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_simulation_augmented.hdr")
+            output_raster = os.path.join(self.tetra_output_directory, 'augmented', f"{basename}_simulation_augmented.hdr")
             augment_envi(file=i, wvls=self.wvls, out_raster=output_raster)
 
         cursor_print("\t- done")
 
 
-def run_tetracorder_build(base_directory, sensor):
+def run_tetracorder_build(base_directory, sensor, dry_run):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
-    #tc.generate_tetracorder_reflectance()
+    while True:
+        tetracorder_build_menu()
 
-    tc.unmix_tetracorder()
-    #tc.reconstruct_soil_simulation()
-    #tc.reconstruct_soil_sma()
-    #tc.augment_slpit_pixels()
-    #tc.augment_simulation()
+        user_input = input('\nPlease indicate the desired mode: ').upper()
+
+        # download EMIT NC images
+        if user_input == 'A':
+            tc.generate_tetracorder_reflectance()
+        elif user_input == 'B':
+            tc.hypertrace_tetracorder()
+        elif user_input == 'C':
+            tc.unmix_tetracorder(dry_run=dry_run)
+        elif user_input == 'D':
+            tc.reconstruct_soil_simulation()
+            tc.reconstruct_soil_sma()
+        elif user_input == 'E':
+            tc.augment_slpit_pixels()
+            #tc.augment_simulation()
+        elif user_input == 'F':
+            print("Returning to Tetracorder main menu.")
+            break
+        else:
+            print("Invalid choice. Please choose a valid option.")
