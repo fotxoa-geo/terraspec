@@ -176,56 +176,68 @@ class tetracorder_figures:
 
     def error_abundance_corrected(self, spectral_abundance_array, pure_soil_array, fractions, index):
 
-        mineral_grid_positions = {
-            'Chlorite': 0,
-            'Goethite': 1,
-            'Hematite': 2,
-            'Calcite': 0,
-            'Dolomite': 1,
-            'Gypsum': 2,
-            'Illite+Muscovite': 0,
-            'Kaolinite': 1,
-            'Montmorillonite': 2,
-            'Vermiculite': 3}
+        mineral_grid_positions = {'Calcite': 0,
+                                  'Dolomite': 1,
+                                  'Gypsum-Fine': 2,
+                                  'Gypsum-Coarse': 3,
+
+                                  'Chlorite': 0,
+
+                                  'Goethite-Nano': 0,
+                                  'Goethite-Fine': 1,
+                                  'Goethite-Med': 2,
+                                  'Goethite-Large': 3,
+                                  'Hematite-Nano': 4,
+                                  'Hematite-Fine': 5,
+                                  'Hematite-Med': 6,
+                                  'Hematite-Large': 7,
+
+                                  'Illite+Muscovite': 0,
+                                  'Kaolinite': 1,
+                                  'Montmorillonite': 2,
+                                  'Vermiculite': 3,
+
+                                  'Quartz+Feldspar': 0}
 
         # mineral group grid
-        oxide_grid_sim = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 3))
-        carbonate_grid_sim = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1],3))
+        oxide_grid_sim = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 8))
+        carbonate_grid_sim = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 4))
         clay_grid_sim = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 4))
+        quartz_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 1))
+        chlorite_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 1))
 
         for _mineral, mineral in enumerate(self.bands):
             mineral_group = mineral_groups[mineral]
             mineral_grid_position = mineral_grid_positions[mineral]
 
             if mineral_group == 'Fe Oxides':
-                oxide_grid_sim[:, :, mineral_grid_position] = spectral_abundance_array[:,:, mineral_grid_position]
+                oxide_grid_sim[:, :, mineral_grid_position] = spectral_abundance_array[:,:, _mineral]
             elif mineral_group == 'Carbonates':
-                carbonate_grid_sim[:, :, mineral_grid_position] = spectral_abundance_array[:, :, mineral_grid_position]
+                carbonate_grid_sim[:, :, mineral_grid_position] = spectral_abundance_array[:, :, _mineral]
+            elif mineral_group == 'Chlorite':
+                chlorite_grid[:, :, mineral_grid_position] = spectral_abundance_array[:, :, _mineral]
+            elif mineral_group == 'Quartz+Feldspar':
+                quartz_grid[:, :, mineral_grid_position] = spectral_abundance_array[:, :, _mineral]
             else:
-                clay_grid_sim[:, :, mineral_grid_position] = spectral_abundance_array[:, :, mineral_grid_position]
+                clay_grid_sim[:, :, mineral_grid_position] = spectral_abundance_array[:, :, _mineral]
 
-        # merge mineral group grids
-        mineral_grid_sim = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 3))
-        mineral_grid_pure = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1],3))
+        # merge mineral group grids for simulated spectra
+        mineral_grid_sim = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 5))
 
-        for _row, row in enumerate(oxide_grid_sim):
-            for _col, col in enumerate(row):
-                for _group, group in enumerate(col):
+        for _grid, grid in enumerate([oxide_grid_sim, carbonate_grid_sim, clay_grid_sim, quartz_grid, chlorite_grid]):
+            for _row, row in enumerate(grid):
+                for _col, col in enumerate(row):
 
-                    all_zeros = np.all(arr == 0)
+                    group = grid[_row, _col, :]
+                    all_zeros = np.all(group == 0)
 
                     if all_zeros:
-                        print("The array contains all zeros.")
+                        mineral_grid_sim[_row, _col, _grid] = 0
                     else:
-                        print("The array contains non-zero elements.")
+                        mineral_grid_sim[_row, _col, _grid] = np.mean(grid[_row, _col, :][grid[_row, _col, :] != 0])
 
-                    mineral_grid_sim[_row, _col, _group] = np.mean(oxide_grid_sim[_row, _col, :][oxide_grid_sim[_row, _col, :] != 0])
-
-                    mineral_grid_sim[_row, _col, 1] = np.mean(carbonate_grid_sim[_row, _col, :][oxide_grid_sim[_row, _col, :] != 0])
-                    mineral_grid_sim[_row, _col, 2] = np.mean(clay_grid_sim[_row, _col, :][oxide_grid_sim[_row, _col, :] != 0])
-
-        # correct spectral abundance, third dimension is the mineral groups
-        error_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 3))
+        # spectral abundance, third dimension is the mineral groups
+        error_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 5))
 
         # populate error grid
         for _row, row in enumerate(fractions):
@@ -234,9 +246,12 @@ class tetracorder_figures:
                 soil_index = index[_row, 0, 2]
                 soil_spectral_abundance = pure_soil_array[int(soil_index), :]
 
+                # calculate the pure abudance
                 oxide_pure = []
                 carbonate_pure = []
                 clay_pure = []
+                chlorite_pure = []
+                quartz_pure = []
 
                 for _mineral, mineral in enumerate(self.bands):
                     mineral_group = mineral_groups[mineral]
@@ -246,14 +261,24 @@ class tetracorder_figures:
                         oxide_pure.append(pure_sa)
                     elif mineral_group == 'Carbonates':
                         carbonate_pure.append(pure_sa)
+                    elif mineral_group == 'Chlorite':
+                        chlorite_pure.append(pure_sa)
+                    elif mineral_group == 'Quartz+Feldspar':
+                        quartz_pure.append(pure_sa)
                     else:
                         clay_pure.append(pure_sa)
 
-                oxide_pure = np.mean(np.array(oxide_pure))
-                carbonate_pure = np.mean(np.array(carbonate_pure))
-                clay_pure = np.mean(np.array(clay_pure))
+                pure_abundace_by_group = []
+                for _pure, pure in enumerate([oxide_pure, carbonate_pure, clay_pure, quartz_pure, chlorite_pure]):
+                    tmp_array = np.array(pure)
+                    all_zeros = np.all(tmp_array == 0)
 
-                pure_sa_grouped = np.array([oxide_pure, carbonate_pure, clay_pure])
+                    if all_zeros:
+                        pure_abundace_by_group.append(0)
+                    else:
+                        pure_abundace_by_group.append(np.mean(tmp_array[tmp_array != 0]))
+
+                pure_sa_grouped = np.array(pure_abundace_by_group)
 
                 sa_c = mineral_grid_sim[_row, _col, :] #/ np.round(soil_fractions, 2)
                 error = np.absolute(sa_c - pure_sa_grouped)
@@ -265,8 +290,10 @@ class tetracorder_figures:
         # load simulation data - truncate the sa files from augmentation
         sim_index_array = envi_to_array(os.path.join(self.sim_spectra_directory, f'tetracorder_{xaxis}_index'))
         sim_fractions_array = envi_to_array(os.path.join(self.sim_spectra_directory, f'tetracorder_{xaxis}_fractions'))
-        sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{xaxis}_spectra_simulation_augmented_abun_mineral'))[:, 0:21, :]
-        soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_abun_mineral'))[:, 0, :]
+        sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{xaxis}_spectra_simulation_augmented_jabun_rel_abundance'))[:, 0:21, :]
+        sim_sa_arrary[sim_sa_arrary == -9999] = 0
+        soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_jabun_rel_abundance'))[:, 0, :]
+        soil_sa_sim_pure[soil_sa_sim_pure == -9999] = 0
 
         error_grid = self.error_abundance_corrected(
             spectral_abundance_array=sim_sa_arrary,
@@ -276,7 +303,8 @@ class tetracorder_figures:
         # create figure
         fig = plt.figure(constrained_layout=True, figsize=(8, 6))
         ncols = 3
-        nrows = 1
+        nrows = 2
+
         gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0, hspace=0, figure=fig)
         minor_tick_spacing = 0.1
         major_tick_spacing = 0.25
@@ -285,23 +313,28 @@ class tetracorder_figures:
         plot_titles = {
             0: 'Iron Oxides',
             1: 'Carbonates',
-            2: 'Clays'}
+            2: 'Clays',
+            3: 'Quartz',
+            4: 'Chlorite'}
+
         for row in range(nrows):
             for col in range(ncols):
+                if counter == 5:
+                    continue
                 ax = fig.add_subplot(gs[row, col])
-                ax.set_title(plot_titles[col])
+                ax.set_title(plot_titles[counter])
                 ax.set_xlabel(f'{xaxis}')
                 ax.grid('on', linestyle='--')
-                ax.xaxis.set_minor_locator(ticker.MultipleLocator(minor_tick_spacing))
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(major_tick_spacing))
-                ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
-                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
+                #ax.xaxis.set_minor_locator(ticker.MultipleLocator(minor_tick_spacing))
+                #ax.xaxis.set_major_locator(ticker.MultipleLocator(major_tick_spacing))
+                #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
+                #ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
 
                 if col == 0:
                     ax.set_ylabel('MAE')
 
-                if col != 0:
-                    ax.set_yticklabels([])
+                # if col != 0:
+                #     ax.set_yticklabels([])
 
                 abs_error = error_grid[:, :, counter]
 
@@ -319,8 +352,8 @@ class tetracorder_figures:
                 l1 = ax.plot(x_vals, mae, label='No Atmosphere')
 
                 # this is nan
-                x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_error, nans=True)
-                l2 = ax.plot(x_vals, mae, label='No Atmosphere (Nans Muted)')
+                # x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_error, nans=True)
+                # l2 = ax.plot(x_vals, mae, label='No Atmosphere (Nans Muted)')
 
                 # this is the sma line
                 # x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_unmix_error,
@@ -328,10 +361,10 @@ class tetracorder_figures:
                 #                                                              false_neg=mineral_false_negative,
                 #                                                              nans=True)
                 #l3 = ax.plot(x_vals, mae, label='SMA Approach')
-                ax.set_ylim(0.0, 0.25)
-                ax.set_xlim(0.0, 1.05)
+                #ax.set_ylim(0.0, 0.25)
+                #ax.set_xlim(0.0, 1.05)
 
-                lns = l1 + l2
+                lns = l1
 
                 labs = [l.get_label() for l in lns]
                 ax.legend(lns, labs, loc=0, prop={'size': 6})
@@ -370,8 +403,6 @@ class tetracorder_figures:
                                                    f'{plot.replace(" ", "").replace("SPEC", "Spectral") + file_kw}augmented_grain')
 
             fractional_cover = os.path.join(self.slpit_output, 'sma', f'asd-local___{plot.replace(" ", "")}___num-endmembers_20_n-mc_25_normalization_brightness_fractional_cover')
-
-
 
             # load arrays
             truth_array = envi_to_array(abundance_contact_probe)[0, 0, :]
@@ -972,6 +1003,6 @@ def run_figure_workflow(base_directory):
     #tc.tetracorder_libraries()
     #tc.mineral_validation(x_axis='contact')
     #tc.mineral_validation(x_axis='transect')
-    tc.mineral_threshold()
+    #tc.mineral_threshold()
     for em in ems:
         tc.simulation_fig(xaxis=em)
