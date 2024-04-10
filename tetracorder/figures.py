@@ -30,21 +30,21 @@ import sns
 from mpl_toolkits.basemap import Basemap
 
 
-mineral_groupings = {'group.1um/copper_precipitate_greenslime': 'none',
-                     'group.1um/fe2+_chlor+muscphy': 'Fe Oxiddes',
-                     'group.1um/fe2+_goeth+musc' : 'Fe Oxiddes',
-                     'group.1um/fe2+fe3+_chlor+goeth.propylzone': 'Fe Oxiddes',
-                     'group.1um/fe2+generic_br33a_bioqtzmonz_epidote': 'Fe Oxiddes',
-                     'group.1um/fe2+generic_carbonate_siderite1': 'Fe Oxiddes',
-                     'group.1um/fe2+generic_nrw.cummingtonite': 'Fe Oxiddes',
-                     'group.1um/fe2+generic_nrw.hs-actinolite': 'Fe Oxiddes',
-                     'group.1um/fe2+generic_vbroad_br20': 'Fe Oxiddes',
-                     'group.1um/fe3+_goethite+qtz.medgr.gds240': 'Fe Oxiddes',
-                     'group.1um/fe3+_goethite.thincoat': 'Fe Oxiddes',
-                     'group.1um/fe3+_hematite.nano.BR34b2': 'Fe Oxiddes',
-                     'group.1um/fe3+_hematite.nano.BR34b2b': 'Fe Oxiddes',
-                     'group.1um/fe3+copper-hydroxide_pitchlimonite': 'Fe Oxiddes',
-                     'group.1um/fe3+mn_desert.varnish1': 'Fe Oxiddes',
+mineral_groupings = {'group.1um/copper_precipitate_greenslime': 'Copper',
+                     'group.1um/fe2+_chlor+muscphy': 'Fe Oxides',
+                     'group.1um/fe2+_goeth+musc': 'Fe Oxides',
+                     'group.1um/fe2+fe3+_chlor+goeth.propylzone': 'Fe Oxides',
+                     'group.1um/fe2+generic_br33a_bioqtzmonz_epidote': 'Fe Oxides',
+                     'group.1um/fe2+generic_carbonate_siderite1': 'Fe Oxides',
+                     'group.1um/fe2+generic_nrw.cummingtonite': 'Fe Oxides',
+                     'group.1um/fe2+generic_nrw.hs-actinolite': 'Fe Oxides',
+                     'group.1um/fe2+generic_vbroad_br20': 'Fe Oxides',
+                     'group.1um/fe3+_goethite+qtz.medgr.gds240': 'Fe Oxides',
+                     'group.1um/fe3+_goethite.thincoat': 'Fe Oxides',
+                     'group.1um/fe3+_hematite.nano.BR34b2': 'Fe Oxides',
+                     'group.1um/fe3+_hematite.nano.BR34b2b': 'Fe Oxides',
+                     'group.1um/fe3+copper-hydroxide_pitchlimonite': 'Fe Oxides',
+                     'group.1um/fe3+mn_desert.varnish1': 'Fe Oxides',
                      'group.2um/calcite+0.2Na-mont': 'Carbonate',
                      'group.2um/calcite+0.5Ca-mont': 'Carbonate',
                      'group.2um/calcite.25+dolom.25+Na-mont.5': 'Carbonate',
@@ -55,21 +55,40 @@ mineral_groupings = {'group.1um/copper_precipitate_greenslime': 'none',
                      'group.2um/carbonate_calcite0.7+kaol0.3': 'Carbonate',
                      'group.2um/carbonate_dolo+.5ca-mont': 'Carbonate',
                      'group.2um/carbonate_dolomite': 'Carbonate',
-                     'group.2um/chlorite-skarn': 'Carbonate',
+                     'group.2um/chlorite-skarn': 'Silicates',
                      'group.2um/kaolin+musc.intimat': 'Clay',
                      'group.2um/kaolin.5+muscov.medAl': 'Clay',
                      'group.2um/micagrp_lepidolite': 'Clay',
                      'group.2um/micagrp_muscovite-low-Al': 'Clay',
                      'group.2um/micagrp_muscovite-med-Al': 'Clay',
                      'group.2um/micagrp_vermiculite_WS682': 'Clay',
-                     'group.2um/organic_drygrass+.17Na-mont': 'none',
-                     'group.2um/organic_vegetation-dry-grass-golden': 'none',
-                     'group.2um/sioh_chalcedony': 'none',
-                     'group.2um/sioh_hydrated_basaltic_glass': 'none',
+                     'group.2um/organic_drygrass+.17Na-mont': 'Organics',
+                     'group.2um/organic_vegetation-dry-grass-golden': 'Organics',
+                     'group.2um/sioh_chalcedony': 'Silicates',
+                     'group.2um/sioh_hydrated_basaltic_glass': 'Silicates',
                      'group.2um/smectite_montmorillonite_ca_swelling': 'Clay',
                      'group.2um/smectite_montmorillonite_na_highswelling': 'Clay',
                      'group.2um/smectite_nontronite_swelling': 'Clay',
-                     'none': 'none'}
+                     'N.D.': 'N.D.'}
+
+mineral_groups = {'Calcite': 'Carbonates',
+                  'Chlorite': 'Chlorite',
+                  'Dolomite': 'Carbonates',
+                  'Goethite-Nano': 'Fe Oxides',
+                  'Goethite-Fine': 'Fe Oxides',
+                  'Goethite-Med' : 'Fe Oxides',
+                  'Goethite-Large': 'Fe Oxides',
+                  'Gypsum-Fine': 'Carbonates',
+                  'Gypsum-Coarse': 'Carbonates',
+                  'Hematite-Nano': 'Fe Oxides',
+                  'Hematite-Fine': 'Fe Oxides',
+                  'Hematite-Med': 'Fe Oxides',
+                  'Hematite-Large': 'Fe Oxides',
+                  'Illite+Muscovite': 'Clays',
+                  'Kaolinite': 'Clays',
+                  'Montmorillonite': 'Clays',
+                  'Vermiculite': 'Clays',
+                  'Quartz+Feldspar': 'Quartz+Feldspar'}
 
 def simplify_legend(handles, labels):
     unique_labels = {}
@@ -96,7 +115,7 @@ def cont_rem(wavelengths, reflectance, feature):
     return depths, wavelengths[feature_inds]
 
 
-def bin_sums(x, y, false_pos, false_neg, nans:bool):
+def bin_sums(x, y, nans:bool):
     mae = []
     x_vals = []
     percent_false_pos = []
@@ -111,54 +130,9 @@ def bin_sums(x, y, false_pos, false_neg, nans:bool):
         mae_calc = np.mean(vals[~np.isnan(vals)])
         x_vals.append(fraction)
 
-        mineral_false_neg = false_neg[:, col]
-        mineral_false_pos = false_pos[:, col]
-
         mae.append(mae_calc)
-        percent_false_neg.append(np.sum(mineral_false_neg != 0) / mineral_false_neg.shape[0])
-        percent_false_pos.append(np.sum(mineral_false_pos != 0) / mineral_false_pos.shape[0])
 
     return x_vals, mae, percent_false_neg, percent_false_pos
-
-
-def error_abundance_corrected(spectral_abundance_array, pure_soil_array, fractions, index, unmix_fractions, unmix_abundance):
-    # correct spectral abundance, third dimension is the minerals
-    error_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], np.shape(spectral_abundance_array)[2]))
-    false_positive_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], np.shape(spectral_abundance_array)[2]))
-    false_negative_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], np.shape(spectral_abundance_array)[2]))
-    error_grid_unmix = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], np.shape(spectral_abundance_array)[2]))
-
-    for _row, row in enumerate(fractions):
-        for _col, col in enumerate(row):
-            soil_fractions = fractions[_row, _col, 2]
-            unmix_fractions_ = unmix_fractions[_row, _col, 2]
-            soil_index = index[_row, 0, 2]
-
-            # correct the abundances
-            if int(np.round(soil_fractions, 2)) == 0:
-                error_grid[_row, _col, :] = np.absolute(spectral_abundance_array[_row, _col, :] - pure_soil_array[int(soil_index), :])
-
-                error_grid_unmix[_row, _col, :] = np.absolute(spectral_abundance_array[_row, _col, :] - unmix_abundance[_row, _col, :])
-
-            else:
-                sa_c = spectral_abundance_array[_row, _col, :] / np.round(soil_fractions, 2)
-                error = np.absolute(sa_c - pure_soil_array[int(soil_index), :])
-                error_grid[_row, _col, :] = error
-
-                # unmixing errors
-                error_grid_unmix[_row, _col, :] = np.absolute((spectral_abundance_array[_row, _col, :]/unmix_fractions_) - unmix_abundance[_row, _col, :])
-
-
-            # # fill out the detection grid
-            # for _mineral, mineral in enumerate(pure_soil_array[int(soil_index), :]):
-            #     if pure_soil_array[int(soil_index), _mineral] == 0 and spectral_abundance_array[row, _col, _mineral] != 0:
-            #         false_positive_grid[_row, _col, _mineral] = 1
-            #     elif pure_soil_array[int(soil_index), _mineral] != 0 and spectral_abundance_array[
-            #         _row, _col, _mineral] == 0:
-            #         false_negative_grid[_row, _col, _mineral] = 1
-
-    return error_grid, false_positive_grid, false_negative_grid, error_grid_unmix
-
 
 def atmosphere_meta(atmosphere):
     basename = os.path.basename(atmosphere)
@@ -187,65 +161,182 @@ class tetracorder_figures:
 
         self.base_directory = base_directory
         self.output_directory = os.path.join(base_directory, 'tetracorder', 'output')
-        self.aug_directory = os.path.join(base_directory, 'tetracorder', 'output', 'augmented')
+        self.aug_directory = os.path.join(self.output_directory, 'augmented')
+        self.sim_spectra_directory = os.path.join(self.output_directory, 'simulated_spectra')
+        self.output_fractions = os.path.join(self.output_directory, 'fractions')
+        self.sa_outputs = os.path.join(self.output_directory, 'spectral_abundance')
+
         self.slpit_output = os.path.join(base_directory, 'slpit', 'output')
-        self.sa_outputs = os.path.join(base_directory, 'tetracorder', 'output', 'spectral_abundance')
         self.fig_directory = os.path.join(base_directory, 'tetracorder', 'figures')
 
         self.bands = load_band_names(
-            os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_abun_mineral'))
+            os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_jabun_abs_abundance'))
 
         create_directory(os.path.join(self.fig_directory, 'plot_minerals'))
 
+    def error_abundance_corrected(self, spectral_abundance_array, pure_soil_array, fractions, index):
+
+        mineral_grid_positions = {'Calcite': 0,
+                                  'Dolomite': 1,
+                                  'Gypsum-Fine': 2,
+                                  'Gypsum-Coarse': 3,
+
+                                  'Chlorite': 0,
+
+                                  'Goethite-Nano': 0,
+                                  'Goethite-Fine': 1,
+                                  'Goethite-Med': 2,
+                                  'Goethite-Large': 3,
+                                  'Hematite-Nano': 4,
+                                  'Hematite-Fine': 5,
+                                  'Hematite-Med': 6,
+                                  'Hematite-Large': 7,
+
+                                  'Illite+Muscovite': 0,
+                                  'Kaolinite': 1,
+                                  'Montmorillonite': 2,
+                                  'Vermiculite': 3,
+
+                                  'Quartz+Feldspar': 0}
+
+        # mineral group grid
+        oxide_grid_sim = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 8))
+        carbonate_grid_sim = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 4))
+        clay_grid_sim = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 4))
+        quartz_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 1))
+        chlorite_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 1))
+
+        for _mineral, mineral in enumerate(self.bands):
+            mineral_group = mineral_groups[mineral]
+            mineral_grid_position = mineral_grid_positions[mineral]
+
+            if mineral_group == 'Fe Oxides':
+                oxide_grid_sim[:, :, mineral_grid_position] = spectral_abundance_array[:,:, _mineral]
+            elif mineral_group == 'Carbonates':
+                carbonate_grid_sim[:, :, mineral_grid_position] = spectral_abundance_array[:, :, _mineral]
+            elif mineral_group == 'Chlorite':
+                chlorite_grid[:, :, mineral_grid_position] = spectral_abundance_array[:, :, _mineral]
+            elif mineral_group == 'Quartz+Feldspar':
+                quartz_grid[:, :, mineral_grid_position] = spectral_abundance_array[:, :, _mineral]
+            else:
+                clay_grid_sim[:, :, mineral_grid_position] = spectral_abundance_array[:, :, _mineral]
+
+        # merge mineral group grids for simulated spectra
+        mineral_grid_sim = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 5))
+
+        for _grid, grid in enumerate([oxide_grid_sim, carbonate_grid_sim, clay_grid_sim, quartz_grid, chlorite_grid]):
+            for _row, row in enumerate(grid):
+                for _col, col in enumerate(row):
+
+                    group = grid[_row, _col, :]
+                    all_zeros = np.all(group == 0)
+
+                    if all_zeros:
+                        mineral_grid_sim[_row, _col, _grid] = 0
+                    else:
+                        mineral_grid_sim[_row, _col, _grid] = np.mean(grid[_row, _col, :][grid[_row, _col, :] != 0])
+
+        # spectral abundance, third dimension is the mineral groups
+        error_grid = np.zeros((np.shape(fractions)[0], np.shape(fractions)[1], 5))
+
+        # populate error grid
+        for _row, row in enumerate(fractions):
+            for _col, col in enumerate(row):
+                soil_fractions = fractions[_row, _col, 2]
+                soil_index = index[_row, 0, 2]
+                soil_spectral_abundance = pure_soil_array[int(soil_index), :]
+
+                # calculate the pure abudance
+                oxide_pure = []
+                carbonate_pure = []
+                clay_pure = []
+                chlorite_pure = []
+                quartz_pure = []
+
+                for _mineral, mineral in enumerate(self.bands):
+                    mineral_group = mineral_groups[mineral]
+                    pure_sa = soil_spectral_abundance[_mineral]
+
+                    if mineral_group == 'Fe Oxides':
+                        oxide_pure.append(pure_sa)
+                    elif mineral_group == 'Carbonates':
+                        carbonate_pure.append(pure_sa)
+                    elif mineral_group == 'Chlorite':
+                        chlorite_pure.append(pure_sa)
+                    elif mineral_group == 'Quartz+Feldspar':
+                        quartz_pure.append(pure_sa)
+                    else:
+                        clay_pure.append(pure_sa)
+
+                pure_abundace_by_group = []
+                for _pure, pure in enumerate([oxide_pure, carbonate_pure, clay_pure, quartz_pure, chlorite_pure]):
+                    tmp_array = np.array(pure)
+                    all_zeros = np.all(tmp_array == 0)
+
+                    if all_zeros:
+                        pure_abundace_by_group.append(0)
+                    else:
+                        pure_abundace_by_group.append(np.mean(tmp_array[tmp_array != 0]))
+
+                pure_sa_grouped = np.array(pure_abundace_by_group)
+
+                sa_c = mineral_grid_sim[_row, _col, :] #/ np.round(soil_fractions, 2)
+                error = np.absolute(sa_c - pure_sa_grouped)
+                error_grid[_row, _col, :] = error
+
+        return error_grid
+
     def simulation_fig(self, xaxis: str):
-
         # load simulation data - truncate the sa files from augmentation
-        sim_index_array = envi_to_array(os.path.join(self.output_directory, f'tetracorder_{xaxis}_index'))
-        sim_fractions_array = envi_to_array(os.path.join(self.output_directory, f'tetracorder_{xaxis}_fractions'))
+        sim_index_array = envi_to_array(os.path.join(self.sim_spectra_directory, f'tetracorder_{xaxis}_index'))
+        sim_fractions_array = envi_to_array(os.path.join(self.sim_spectra_directory, f'tetracorder_{xaxis}_fractions'))
+        sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{xaxis}_spectra_simulation_augmented_jabun_rel_abundance'))[:, 0:21, :]
+        sim_sa_arrary[sim_sa_arrary == -9999] = 0
+        soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_jabun_rel_abundance'))[:, 0, :]
+        soil_sa_sim_pure[soil_sa_sim_pure == -9999] = 0
 
-        # load unmixing data
-        unmix_fractions_array = envi_to_array(os.path.join(self.aug_directory, 'sma-best', f'tetracorder_soil_spectra_fractional_cover'))
-        unmix_abundance = envi_to_array(os.path.join(self.sa_outputs, f'sma-unmixing-soil_abun_mineral'))
-
-        sim_sa_arrary = envi_to_array(
-            os.path.join(self.sa_outputs, f'tetracorder_{xaxis}_spectra_simulation_augmented_abun_mineral'))[:, 0:21, :]
-        soil_sa_sim_pure = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_simulation_augmented_abun_mineral'))[:, 0, :]
-
-        error_grid, false_positive_grid, false_negative_grid, sma_error = error_abundance_corrected(
+        error_grid = self.error_abundance_corrected(
             spectral_abundance_array=sim_sa_arrary,
             pure_soil_array=soil_sa_sim_pure,
-            fractions=sim_fractions_array, index=sim_index_array, unmix_fractions=unmix_fractions_array, unmix_abundance=unmix_abundance)
+            fractions=sim_fractions_array, index=sim_index_array) #, unmix_fractions=unmix_fractions_array) #, unmix_abundance=unmix_abundance)
 
         # create figure
-        fig = plt.figure(constrained_layout=True, figsize=(12, 6))
-        ncols = 5
+        fig = plt.figure(constrained_layout=True, figsize=(8, 6))
+        ncols = 3
         nrows = 2
+
         gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0, hspace=0, figure=fig)
         minor_tick_spacing = 0.1
         major_tick_spacing = 0.25
         counter = 0
 
+        plot_titles = {
+            0: 'Iron Oxides',
+            1: 'Carbonates',
+            2: 'Clays',
+            3: 'Quartz',
+            4: 'Chlorite'}
+
         for row in range(nrows):
             for col in range(ncols):
+                if counter == 5:
+                    continue
                 ax = fig.add_subplot(gs[row, col])
-                ax.set_title(self.bands[counter])
+                ax.set_title(plot_titles[counter])
                 ax.set_xlabel(f'{xaxis}')
                 ax.grid('on', linestyle='--')
-                ax.xaxis.set_minor_locator(ticker.MultipleLocator(minor_tick_spacing))
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(major_tick_spacing))
-                ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
-                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
+                #ax.xaxis.set_minor_locator(ticker.MultipleLocator(minor_tick_spacing))
+                #ax.xaxis.set_major_locator(ticker.MultipleLocator(major_tick_spacing))
+                #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
+                #ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
 
                 if col == 0:
                     ax.set_ylabel('MAE')
 
-                if col != 0:
-                    ax.set_yticklabels([])
+                # if col != 0:
+                #     ax.set_yticklabels([])
 
                 abs_error = error_grid[:, :, counter]
-                abs_unmix_error = sma_error[:, :, counter]
-                mineral_false_positive = false_positive_grid[:, :, counter]
-                mineral_false_negative = false_negative_grid[:, :, counter]
 
                 if xaxis == 'npv':
                     fractions = sim_fractions_array[:, :, 0]
@@ -257,138 +348,216 @@ class tetracorder_figures:
                     fractions = sim_fractions_array[:, :, 2]
 
                 # this is no-nans
-                x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_error,
-                                                                             false_pos=mineral_false_positive,
-                                                                            false_neg=mineral_false_negative, nans=False)
-                l1 = ax.plot(x_vals, mae, label='Baseline')
+                x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_error, nans=False)
+                l1 = ax.plot(x_vals, mae, label='No Atmosphere')
 
                 # this is nan
-                x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_error,
-                                                                             false_pos=mineral_false_positive,
-                                                                             false_neg=mineral_false_negative, nans=True)
-                #l2 = ax.plot(x_vals, mae, label='True Negative Muted')
+                # x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_error, nans=True)
+                # l2 = ax.plot(x_vals, mae, label='No Atmosphere (Nans Muted)')
 
                 # this is the sma line
-                x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_unmix_error,
-                                                                             false_pos=mineral_false_positive,
-                                                                             false_neg=mineral_false_negative,
-                                                                             nans=True)
-                l3 = ax.plot(x_vals, mae, label='SMA Approach')
-                ax.set_ylim(0.0, 0.25)
-                ax.set_xlim(0.0, 1.05)
+                # x_vals, mae, percent_false_neg, percent_false_pos = bin_sums(x=fractions, y=abs_unmix_error,
+                #                                                              false_pos=mineral_false_positive,
+                #                                                              false_neg=mineral_false_negative,
+                #                                                              nans=True)
+                #l3 = ax.plot(x_vals, mae, label='SMA Approach')
+                #ax.set_ylim(0.0, 0.25)
+                #ax.set_xlim(0.0, 1.05)
 
-                lns = l1 + l3
+                lns = l1
 
                 labs = [l.get_label() for l in lns]
                 ax.legend(lns, labs, loc=0, prop={'size': 6})
                 ax.set_aspect(1. / ax.get_data_ratio())
 
                 counter += 1
-
         plt.savefig(os.path.join(self.fig_directory, 'tetracorder_mae_' + xaxis + '.png'), dpi=300, bbox_inches='tight')
 
-    def mineral_validation(self):
+    def mineral_validation(self, x_axis:str):
         # load shapefile
         df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
+        df['Team'] = df['Name'].str.split('-').str[0].str.strip()
+        df = df[df['Team'] != 'THERM']
         df = df.sort_values('Name')
         rows_estimated = []
         rows_truth = []
         rows_soil_fractions = []
 
+        if x_axis == 'contact':
+            file_kw = '-emit_ems_'
+        else:
+            file_kw = '_transect_'
+
         for index, row in df.iterrows():
             plot = row['Name']
-            emit_filetime = row['EMIT Date']
+            emit_filetime = row['EMIT DATE']
             abundance_emit = glob(os.path.join(self.sa_outputs,
-                                               f'*{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_abun_mineral'))
+                                               f'*{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_jabun_rel_abundance'))
+            grain_size_emit = glob(os.path.join(self.sa_outputs,
+                                               f'*{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_grain'))
+
+
             abundance_contact_probe = os.path.join(self.sa_outputs,
-                                                   f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented_abun_mineral')
-            fractional_cover = os.path.join(self.slpit_output, 'sma-best',
-                                            f'asd-local___{plot.replace(" ", "")}___num-endmembers_20_n-mc_25_normalization_brightness_fractional_cover')
+                                                   f'{plot.replace(" ", "").replace("SPEC", "Spectral") + file_kw}augmented_jabun_rel_abundance')
+            grain_size_slpit = os.path.join(self.sa_outputs,
+                                                   f'{plot.replace(" ", "").replace("SPEC", "Spectral") + file_kw}augmented_grain')
+
+            fractional_cover = os.path.join(self.slpit_output, 'sma', f'asd-local___{plot.replace(" ", "")}___num-endmembers_20_n-mc_25_normalization_brightness_fractional_cover')
 
             # load arrays
             truth_array = envi_to_array(abundance_contact_probe)[0, 0, :]
-            # truth_array[truth_array == 0] = np.nan
             estimated_array = envi_to_array(abundance_emit[0])
-            # estimated_array[estimated_array == 0] = np.nan
+
+            grain_emit_array = envi_to_array(grain_size_emit[0])[0, 0, -1] * 0.08043
+            grain_slpit_array = envi_to_array(grain_size_slpit)[0, 0, -1] * 0.08043
 
             # load fractional cover
             plot_fractional_cover = np.average(envi_to_array(fractional_cover)[:, :, 2])
+            plot_soils = [plot] + [plot_fractional_cover]
 
-            plot_truth_abun = [plot]
-            plot_estimated_abun = [plot]
-            plot_soils = [plot, plot_fractional_cover]
+            oxides_emit = []
+            clays_emit = []
+            carbonates_emit = []
+            chlorite_emit = []
+            q_f_emit = []
+
+            oxides_slpit = []
+            clays_slpit = []
+            carbonates_slpit = []
+            chlorite_slpit = []
+            q_f_slpit = []
 
             for _mineral, mineral in enumerate(self.bands):
                 truth_abun = truth_array[_mineral]
-                plot_truth_abun.append(truth_abun)
-                estimated_abun = np.mean(estimated_array[0, 0, _mineral]) / plot_fractional_cover
-                plot_estimated_abun.append(estimated_abun)
+                mineral_group = mineral_groups[mineral]
+
+                if mineral_group == 'Fe Oxides':
+                    oxides_emit.append(np.mean(estimated_array[0, 0, _mineral]))
+                    oxides_slpit.append(truth_abun)
+                elif mineral_group == 'Carbonates':
+                    carbonates_emit.append(np.mean(estimated_array[0, 0, _mineral]))
+                    carbonates_slpit.append(truth_abun)
+                elif mineral_group == 'Chlorite':
+                    chlorite_emit.append(np.mean(estimated_array[0, 0, _mineral]))
+                    chlorite_slpit.append(truth_abun)
+                elif mineral_group == 'Quartz+Feldspar':
+                    q_f_emit.append(np.mean(estimated_array[0, 0, _mineral]))
+                    q_f_slpit.append(truth_abun)
+                else:
+                    clays_emit.append(np.mean(estimated_array[0, 0, _mineral]))
+                    clays_slpit.append(truth_abun)
+
+            row_emit = []
+            row_slpit = []
+
+            # clean emit rows
+            for i in [oxides_emit, clays_emit, carbonates_emit, chlorite_emit, q_f_emit]:
+                tmp_array = np.array([i])
+                if np.all(tmp_array == 0):
+                    row_emit.append(0)
+                else:
+                    tmp_array = np.where(tmp_array == 0, np.nan, tmp_array)
+                    row_emit.append(np.nanmean(tmp_array))
+
+            # clean slpit rows
+            for i in [oxides_slpit, clays_slpit, carbonates_slpit, chlorite_slpit, q_f_slpit]:
+                tmp_array = np.array([i])
+                if np.all(tmp_array == 0):
+                    row_slpit.append(0)
+                else:
+                    tmp_array = np.where(tmp_array == 0, np.nan, tmp_array)
+                    row_slpit.append(np.nanmean(tmp_array))
 
             # append plot abundances to master rows
-            rows_estimated.append(plot_estimated_abun)
-            rows_truth.append(plot_truth_abun)
+            rows_estimated.append([plot] + row_emit + [grain_emit_array])
+            rows_truth.append([plot] + row_slpit + [grain_slpit_array])
             rows_soil_fractions.append(plot_soils)
 
         # master dfs
         df_est = pd.DataFrame(rows_estimated)
-        df_est.columns = ['Plot'] + self.bands
+        df_est.columns = ['Plot'] + ['Iron Oxides_emit', 'Carbonates_emit', 'Clays_emit', 'Chlorite_emit', 'Quartz+Feldspar_emit', 'Grain Size_emit']
         df_est = df_est.fillna(0)
-        df_est.to_csv(os.path.join(self.sa_outputs, 'slpit-emit_estimated_abundance.csv'), index=False)
 
         df_truth = pd.DataFrame(rows_truth)
-        df_truth.columns = ['Plot'] + self.bands
+        df_truth.columns = ['Plot'] + ['Iron Oxides_slpit', 'Carbonates_slpit', 'Clays_slpit', 'Chlorite_slpit', 'Quartz+Feldspar_slpit', 'Grain Size_slpit']
         df_truth = df_truth.fillna(0)
-        df_truth.to_csv(os.path.join(self.sa_outputs, 'slpit-contact_estimated_abundance.csv'), index=False)
+
+        df_merge = pd.merge(df_est, df_truth, on='Plot')
 
         df_soil = pd.DataFrame(rows_soil_fractions)
+
         df_soil.columns = ['Plot', 'soil_frac']
-        df_soil.to_csv(os.path.join(self.sa_outputs, 'slpit_soil-fractions.csv'), index=False)
+        df_merge = pd.merge(df_merge, df_soil, on='Plot')
+        df_merge = df_merge[df_merge != -9999].dropna()
+        df_merge.to_csv(os.path.join(self.fig_directory, f'slpit-emit_{x_axis}_estimated_abundance.csv'), index=False)
 
         # create figure
-        fig = plt.figure(figsize=(12, 6))
-        ncols = 5
+        fig = plt.figure(figsize=(12, 8))
+        ncols = 3
         nrows = 2
-        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.10, figure=fig)
-        minor_tick_spacing = 0.02
-        major_tick_spacing = 0.05
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.75, hspace=0, figure=fig)
+        minor_tick_spacing = 0.1
+        major_tick_spacing = 0.2
         counter = 0
+
+        plot_titles = {0: 'Iron Oxides', 1: 'Carbonates', 2: 'Clays', 3: 'Chlorite', 4: 'Quartz+Feldspar', 5: 'Grain Size'}
+        plot_lims = {0: (0, 0.03), 1: (0, 0.2), 2: (0, 1), 3:  (0, 1), 4: (0,1), 5: (0, 30)}
+        plot_ticks = {0: (0.005, 0.01), 1: (0.05, 0.1), 2: (minor_tick_spacing, major_tick_spacing),
+                      3: (minor_tick_spacing, major_tick_spacing), 4: (minor_tick_spacing, major_tick_spacing), 5: (2.5, 5)}
 
         for row in range(nrows):
             for col in range(ncols):
                 ax = fig.add_subplot(gs[row, col])
-                ax.set_title(self.bands[counter])
+                ax.set_title(plot_titles[counter])
                 ax.set_xlabel(f'SLPIT')
-                ax.grid('on', linestyle='--')
-                ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.01))
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(major_tick_spacing))
-                ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
+                #ax.grid('on', linestyle='--')
 
-                ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
-                ax.yaxis.set_major_locator(ticker.MultipleLocator(major_tick_spacing))
-                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
-                ax.set_xlim(-0.05, 0.25)
-                ax.set_ylim(-0.05, 0.25)
+                ax.xaxis.set_minor_locator(ticker.MultipleLocator(plot_ticks[counter][0]))
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(plot_ticks[counter][1]))
+                ax.tick_params(axis='x', labelsize=8)
+                ax.tick_params(axis='y', labelsize=8)
+                #ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
+
+                ax.yaxis.set_minor_locator(ticker.MultipleLocator(plot_ticks[counter][0]))
+                ax.yaxis.set_major_locator(ticker.MultipleLocator(plot_ticks[counter][1]))
+                #ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
+
+                ax.set_xlim(plot_lims[counter][0], plot_lims[counter][1])
+                ax.set_ylim(plot_lims[counter][0], plot_lims[counter][1])
 
                 if col == 0:
-                    ax.set_ylabel('EMIT Spectral Abundance')
+                    ax.set_ylabel('EMIT Spectral\nAbundance')
 
-                if col != 0:
-                    ax.set_yticklabels([])
+                # if col != 0:
+                #     ax.set_yticklabels([])
 
-                p = ax.scatter(df_truth[self.bands[counter]], df_est[self.bands[counter]], c=df_soil['soil_frac'],
-                               cmap='viridis', s=8)
-                rmse = mean_squared_error(df_truth[self.bands[counter]], df_est[self.bands[counter]], squared=False)
-                mae = mean_absolute_error(df_truth[self.bands[counter]], df_est[self.bands[counter]])
-                r2 = r2_calculations(df_truth[self.bands[counter]], df_est[self.bands[counter]])
+                x = df_merge[f'{plot_titles[counter]}_slpit'].values
+                y = df_merge[f'{plot_titles[counter]}_emit'].values
+                frac = df_merge[f'soil_frac'].values
 
-                # plot 1 to 1 line
-                one_line = np.linspace(0, 1, 101)
-                ax.plot(one_line, one_line, color='red')
+                df_no_detect = pd.DataFrame({'x': x, 'y': y, 'soil_frac': frac})
+                df_no_detect = df_no_detect[(df_no_detect['x'] != 0) | (df_no_detect['y'] != 0)]
 
-                txtstr = '\n'.join((
-                    r'MAE(RMSE): %.2f(%.2f)' % (mae, rmse),
-                    r'R$^2$: %.2f' % (r2,),
-                    r'n = ' + str(len(df_truth[self.bands[counter]]))))
+                x = df_no_detect['x'].values
+                y = df_no_detect['y'].values
+
+                if len (x) != 0 and len(y) != 0:
+                    p = ax.scatter(x, y, c=df_no_detect['soil_frac'], cmap='viridis', s=8)
+                    rmse = mean_squared_error(x, y, squared=False)
+                    mae = mean_absolute_error(x, y)
+                    r2 = r2_calculations(x, y)
+
+                    # plot 1 to 1 line
+                    one_line = np.linspace(0, plot_lims[counter][1], 101)
+                    ax.plot(one_line, one_line, color='red')
+
+                    txtstr = '\n'.join((
+                        r'MAE(RMSE): %.2f(%.2f)' % (mae, rmse),
+                        r'R$^2$: %.2f' % (r2,),
+                        r'n = ' + str(len(x))))
+
+                else:
+                    txtstr = 'no points to plot!'
 
                 props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=6,
@@ -396,68 +565,109 @@ class tetracorder_figures:
                 ax.set_aspect('equal', adjustable='box')
                 counter += 1
 
-        fig.subplots_adjust(right=0.8)
-        cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-        fig.colorbar(p, cax=cbar_ax, orientation='vertical', label='SLPIT Soil Fraction (%)')
+                if col == 3:
+                    color_bar_label = 'SLPIT\nSoil Fraction (%)'
+                else:
+                    color_bar_label = ''
+                cbar = fig.colorbar(p, ax=ax, orientation='vertical', label=color_bar_label, fraction=0.05)
+                cbar.ax.yaxis.set_tick_params(labelsize=6)
 
-        plt.savefig(os.path.join(self.fig_directory, 'slpit-contact-probe_emit.png'), dpi=300, bbox_inches='tight')
+        plt.savefig(os.path.join(self.fig_directory, f'mineral_validation_{x_axis}.png'), dpi=300, bbox_inches='tight')
         plt.clf()
         plt.close()
 
-    def mineral_error_soil(self):
+    def mineral_threshold(self):
         # import csvs with abundance estimates
-        df_emit = pd.read_csv(os.path.join(self.sa_outputs, 'slpit-emit_estimated_abundance.csv'))
-        df_emit = df_emit.fillna(0)
-        df_contact = pd.read_csv(os.path.join(self.sa_outputs, 'slpit-contact_estimated_abundance.csv'))
-        df_contact = df_contact.fillna(0)
+        df_contact = pd.read_csv(os.path.join(self.fig_directory, f'slpit-emit_contact_estimated_abundance.csv'))
+        df_contact['mode'] = 'contact'
 
-        # these are the x-axis
-        df_soil = pd.read_csv(os.path.join(self.sa_outputs, 'slpit_soil-fractions.csv'))
+        df_transect = pd.read_csv(os.path.join(self.fig_directory, f'slpit-emit_transect_estimated_abundance.csv'))
+        df_transect['mode'] = 'transect'
 
         # # create figure
         fig = plt.figure(figsize=(12, 6))
-        ncols = 5
+        ncols = 3
         nrows = 2
-        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.5, figure=fig)
-        minor_tick_spacing = 0.02
-        major_tick_spacing = 0.05
-        counter = 0
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.4, figure=fig)
+        minor_tick_spacing = 0.1
+        major_tick_spacing = 0.2
 
-        # dfs for master error
-        dfs = []
+        plot_titles = {
+            0: 'Iron Oxides',
+            1: 'Carbonates',
+            2: 'Clays',
+            3: 'Chlorite',
+            4: 'Quartz+Feldspar',
+            5: 'Grain Size'}
+        plot_lims = {
+            0: (0, 0.1),
+            1: (0, 0.35),
+            2: (0, 0.75),
+            3: (0, 0.35),
+            4: (0, 0.75),
+            5: (0, 50)}
+        plot_ticks = {
+            0: (0.005, 0.01),
+            1: (0.05, 0.1),
+            2: (minor_tick_spacing, major_tick_spacing),
+            3: (minor_tick_spacing, major_tick_spacing),
+            4: (minor_tick_spacing, major_tick_spacing),
+            5: (2.5, 5)}
+        counter = 0
 
         for row in range(nrows):
             for col in range(ncols):
                 ax = fig.add_subplot(gs[row, col])
-                ax.set_title(self.bands[counter])
-                ax.set_xlabel(f'Soil Fractions\n (SLPIT)')
+                ax.set_title(plot_titles[counter])
+                if row == 1:
+                    ax.set_xlabel(f'Soil Fractions\n (SLPIT)')
                 ax.grid('on', linestyle='--')
-                ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.05))
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(0.25))
-                ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
+                #ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.1))
+                #ax.xaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                #ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
 
-                ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
-                ax.yaxis.set_major_locator(ticker.MultipleLocator(major_tick_spacing))
-                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
+                #ax.yaxis.set_minor_locator(ticker.MultipleLocator(plot_ticks[counter][0]))
+                #ax.yaxis.set_major_locator(ticker.MultipleLocator(plot_ticks[counter][1]))
+                #ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
                 ax.set_xlim(0, 1)
-                ax.set_ylim(0, 0.2)
+                ax.set_ylim(plot_lims[counter][0], plot_lims[counter][1])
 
                 if col == 0:
                     ax.set_ylabel('Absolute Abundance Error\n (SLPIT- EMIT)')
 
-                if col != 0:
-                    ax.set_yticklabels([])
+                # if col != 0:
+                #     ax.set_yticklabels([])
 
-                error = np.absolute(df_contact[self.bands[counter]].values - df_emit[self.bands[counter]].values)
-                soil_frac = df_soil['soil_frac'].values
+                for df in [df_contact, df_transect]:
+                    x = df[f'{plot_titles[counter]}_slpit'].values
+                    y = df[f'{plot_titles[counter]}_emit'].values
 
-                df_mineral = pd.DataFrame({'soil_frac': soil_frac, 'error': error})
-                df_mineral = df_mineral.sort_values('soil_frac')
-                ax.scatter(df_mineral['soil_frac'], df_mineral['error'])
+                    frac = df[f'soil_frac'].values
+
+                    df_no_detect = pd.DataFrame({'x': x, 'y': y, 'soil_frac': frac})
+                    df_no_detect = df_no_detect[(df_no_detect['x'] != 0) | (df_no_detect['y'] != 0)]
+
+                    df_no_detect['error'] = df_no_detect['x'] - df_no_detect['y']
+                    df_no_detect['error'] = df_no_detect['error'].abs()
+                    df_no_detect = df_no_detect.sort_values('soil_frac')
+
+                    mode = list(df['mode'].unique())[0]
+
+                    if mode == 'contact':
+                        marker='s'
+                        label = 'Contact Probe'
+                    else:
+                        marker='^'
+                        label = 'Bare Fiber'
+
+                    ax.scatter(df_no_detect['soil_frac'], df_no_detect['error'], edgecolors='black', marker=marker, s=8, label=label)
                 # ax.set_aspect('equal', adjustable='box')
                 counter += 1
 
-        plt.savefig(os.path.join(self.fig_directory, 'abundance_error_by_soil_cover.png'), dpi=300, bbox_inches='tight')
+                if col == 2:
+                    ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+
+        plt.savefig(os.path.join(self.fig_directory, f'mineral_threshold.png'), dpi=300, bbox_inches='tight')
         plt.clf()
         plt.close()
 
@@ -495,6 +705,8 @@ class tetracorder_figures:
         libraries = {}
 
         transect_data = pd.read_csv(os.path.join(self.slpit_output, 'all-transect-emit.csv'))
+        transect_data['Team'] = transect_data['plot_name'].str.split('-').str[0].str.strip()
+        transect_data = transect_data[transect_data['Team'] != 'Thermal']
 
         emit_detections = []
         slpit_detections = []
@@ -693,54 +905,56 @@ class tetracorder_figures:
     def confusion_matrix(self, threshold=None, frac_cover=False):
         df_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
         transect_data = pd.read_csv(os.path.join(self.slpit_output, 'all-transect-emit.csv'))
+        transect_data['Team'] = transect_data['plot_name'].str.split('-').str[0].str.strip()
+        transect_data = transect_data[transect_data['Team'] != 'Thermal']
 
         emit_detections = []
         slpit_detections = []
 
         for plot in sorted(list(transect_data.plot_name.unique()), reverse=True):
+
             slpit_ems_records = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "") +
                                                   '*emit_ems_augmented_min'))
 
             emit_records = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "").replace('Spectral', 'SPEC') +
                                              '*pixels_augmented_min'))
 
-            fractional_cover = os.path.join(self.slpit_output, 'sma-best', f'asd-local___{plot.replace(" ", "").replace("Spectral", "SPEC")}___num-endmembers_20_n-mc_25_normalization_brightness_fractional_cover')
+            fractional_cover = os.path.join(self.slpit_output, 'sma', f'asd-local___{plot.replace(" ", "").replace("Spectral", "SPEC")}___num-endmembers_20_n-mc_25_normalization_brightness_fractional_cover')
 
-            if frac_cover:
-                soil_frac_cover = np.mean(envi_to_array(fractional_cover)[:,:,2])
-                if soil_frac_cover > threshold:
-                    continue
+            # if frac_cover:
+            #     soil_frac_cover = np.mean(envi_to_array(fractional_cover)[:,:,2])
+            #     if soil_frac_cover > threshold:
+            #         continue
 
             # slpit data - g1
             if int(envi_to_array(slpit_ems_records[0])[0, 0, 1]) != 0:
                 filename = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(slpit_ems_records[0])[0, 0, 1]), 'Filename'].iloc[0]
                 slpit_detections.append(mineral_groupings[filename])
             else:
-                slpit_detections.append('none')
+                slpit_detections.append('N.D.')
 
             # slpit data - g2
             if int(envi_to_array(slpit_ems_records[0])[0, 0, 3]) != 0:
                 filename = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(slpit_ems_records[0])[0, 0, 3]), 'Filename'].iloc[0]
                 slpit_detections.append(mineral_groupings[filename])
             else:
-                slpit_detections.append('none')
+                slpit_detections.append('N.D.')
 
             # emit data - g1
             if int(envi_to_array(emit_records[0])[0, 0, 1]) != 0:
                 filename = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(emit_records[0])[0, 0, 1]), 'Filename'].iloc[0]
                 emit_detections.append(mineral_groupings[filename])
             else:
-                emit_detections.append('none')
+                emit_detections.append('N.D.')
 
             if int(envi_to_array(emit_records[0])[0, 0, 3]) != 0:
                 filename = df_matrix.loc[df_matrix['Index'] == int(envi_to_array(emit_records[0])[0, 0, 3]), 'Filename'].iloc[0]
                 emit_detections.append(mineral_groupings[filename])
 
             else:
-                emit_detections.append('none')
+                emit_detections.append('N.D.')
 
         plot_list = sorted(list(transect_data.plot_name.unique()), reverse=True)
-
 
         # save df
         df = pd.DataFrame({'emit' : emit_detections,
@@ -759,12 +973,11 @@ class tetracorder_figures:
 
         # Get the class labels
         class_labels = label_encoder.classes_
-        cm = metrics.confusion_matrix(actual_values_encoded, predicted_values_encoded)
+        cm = metrics.confusion_matrix(predicted_values_encoded, actual_values_encoded)
 
-        plt.figure(figsize=(20, 18))
+        plt.figure(figsize=(12, 6))
         plt.grid(True)
-        plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
-        plt.title('Confusion Matrix')
+        plt.imshow(cm, interpolation='nearest', cmap=plt.cm.viridis)
         plt.colorbar()
 
         tick_marks = np.arange(len(class_labels))
@@ -775,8 +988,8 @@ class tetracorder_figures:
             for j in range(len(class_labels)):
                 plt.text(j, i, str(cm[i][j]), ha='center', va='center', color='white', size=12)
 
-        plt.xlabel('EMIT')
-        plt.ylabel('SLPIT')
+        plt.ylabel('EMIT')
+        plt.xlabel('SLPIT')
         plt.tight_layout()
 
         plt.savefig(os.path.join(self.fig_directory, 'mineral_confusion_matrix.png'), format="png", dpi=300,
@@ -788,7 +1001,8 @@ def run_figure_workflow(base_directory):
     tc = tetracorder_figures(base_directory=base_directory)
     #tc.confusion_matrix()
     #tc.tetracorder_libraries()
-    #tc.mineral_validation()
-    #tc.mineral_error_soil()
+    #tc.mineral_validation(x_axis='contact')
+    #tc.mineral_validation(x_axis='transect')
+    #tc.mineral_threshold()
     for em in ems:
         tc.simulation_fig(xaxis=em)
