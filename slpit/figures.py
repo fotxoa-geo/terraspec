@@ -40,7 +40,10 @@ def fraction_file_info(fraction_file):
 
     mean_fractions = []
     for _band, band in enumerate(range(0, array.shape[2])):
-            mean_fractions.append(np.mean(array[:, :, _band]))
+            if instrument == 'asd':
+                mean_fractions.append(np.mean(array[:, :, _band]))
+            else:  
+                mean_fractions.append(np.mean(array[:, :, _band]))
 
     return [instrument, unmix_mode, plot, library_mode, int(num_cmb_em), int(num_mc), normalization] + mean_fractions
 
@@ -357,55 +360,38 @@ class figures:
         merger.close()
 
     def plot_rmse(self):
-        # load all fraction files
-        fraction_files_sma = sorted(glob(os.path.join(self.output_directory, 'sma-best', '*fractional_cover')))
-        fraction_files_mesma = sorted(glob(os.path.join(self.output_directory, 'mesma', '*fractional_cover')))
-        all_files = fraction_files_sma + fraction_files_mesma
-
-        results = p_map(fraction_file_info, all_files, **{"desc": "\t\t retrieving mean fractional cover: ...", "ncols": 150})
-        df_all = pd.DataFrame(results)
-        df_all.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization', 'npv', 'pv', 'soil', 'shade']
-        df_all.to_csv(os.path.join(self.fig_directory, 'fraction_output.csv'), index=False)
-
-        # load all uncertainty files
-        uncer_files_sma = sorted(glob(os.path.join(self.output_directory, 'sma-best', '*fractional_cover_uncertainty')))
-        uncer_files_mesma = sorted(glob(os.path.join(self.output_directory, 'mesma', '*fractional_cover_uncertainty')))
-        all_uncer_files = uncer_files_sma + uncer_files_mesma
-
-        results_uncer = p_map(fraction_file_info, all_uncer_files, **{"desc": "\t\t retrieving mean uncertainty: ...", "ncols": 150})
-        df_all_uncer = pd.DataFrame(results_uncer)
-
-        df_all_uncer.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization',
-                                'npv', 'pv', 'soil', 'shade']
+        df_all = pd.read_csv(os.path.join(self.fig_directory, 'fraction_output.csv'))
+        df_all['Team'] = df_all['plot'].str.split('-').str[0].str.strip()
+        df_all = df_all[df_all['Team'] != 'THERM']
 
         # load cpu performance results
         df_cpu = pd.read_csv(os.path.join(self.fig_directory, 'computing_performance_report_emit.csv'))
+        print(df_cpu['mode'].unique())
+        print(df_cpu.columns)
 
         # # create figure
         fig = plt.figure(constrained_layout=True, figsize=(12, 12))
         ncols = 3
         nrows = 4
         gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.025, hspace=0.0001, figure=fig)
+        
+        col_map = {0: 'npv', 1: 'pv', 2: 'soil'}
 
         # loop through figure columns
         for row in range(nrows):
             if row == 0:
-                df_select = df_all[(df_all['unmix_mode'] == 'sma-best') & (df_all['lib_mode'] == 'local')].copy()
-                df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'sma-best') & (df_all_uncer['lib_mode'] == 'local')].copy()
-                df_performance = df_cpu[(df_cpu['library'] == 'local') & (df_cpu['mode'] == '"sma-best"')].copy()
+                df_select = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'local')].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'local') & (df_cpu['mode'] == 'sma')].copy()
             if row == 1:
-                df_select = df_all[(df_all['unmix_mode'] == 'sma-best') & (df_all['lib_mode'] == 'global')].copy()
-                df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'sma-best') & (df_all_uncer['lib_mode'] == 'global')].copy()
-                df_performance = df_cpu[(df_cpu['library'] == 'global') & (df_cpu['mode'] == '"sma-best"')].copy()
+                df_select = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global')].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'global') & (df_cpu['mode'] == 'sma')].copy()
             if row == 2:
-                df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['num_mc'] == 25)].copy()
-                df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'mesma') & (df_all_uncer['lib_mode'] == 'local') & (df_all_uncer['num_mc'] == 25)].copy()
-                df_performance = df_cpu[(df_cpu['library'] == 'local') & (df_cpu['mode'] == '"mesma"')].copy()
+                df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 100)].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'local') & (df_cpu['mode'] == 'mesma')].copy()
             if row == 3:
-                df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'global') & (df_all['num_mc'] == 25)].copy()
-                df_uncer = df_all_uncer[(df_all_uncer['unmix_mode'] == 'mesma') & (df_all_uncer['lib_mode'] == 'global') & (df_all_uncer['num_mc'] == 25)].copy()
-                df_performance = df_cpu[(df_cpu['library'] == 'global') & (df_cpu['mode'] == '"mesma"')].copy()
-
+                df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'global') & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 100)].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'global') & (df_cpu['mode'] == 'mesma')].copy()
+            
             for col in range(ncols):
                 ax = fig.add_subplot(gs[row, col])
                 ax.set_xlabel('SLPIT')
@@ -426,35 +412,12 @@ class figures:
 
                 df_x = df_select[(df_select['instrument'] == 'asd')].copy().reset_index(drop=True)
                 df_y = df_select[(df_select['instrument'] == 'emit')].copy().reset_index(drop=True)
-                #df_x_u = df_uncer[(df_uncer['instrument'] == 'asd')].copy().reset_index(drop=True)
-                #df_y_u = df_uncer[(df_uncer['instrument'] == 'emit')].copy().reset_index(drop=True)
-
+                
                 # plot fractional cover values
-                if col == 0:
-                    x = df_x['npv']
-                    y = df_y['npv']
-                    #x_u = df_x_u['npv']
-                    #y_u = df_y_u['npv']
+                x = df_x[col_map[col]]
+                y = df_y[col_map[col]]
 
-                elif col == 1:
-                    x = df_x['pv']
-                    y = df_y['pv']
-                    #x_u = df_x_u['pv']
-                    #y_u = df_y_u['pv']
-                else:
-                    x = df_x['soil']
-                    y = df_y['soil']
-                    #x_u = df_x_u['soil']
-                    #y_u = df_y_u['soil']
-
-                #ax.errorbar(xi, yi, yerr=yu, xerr=xu, fmt='o')
                 ax.scatter(x,y)
-
-                # Add labels to each point
-                # for xi, yi,xu,yu, label in zip(x, y, x_u, y_u, df_x['plot']):
-                #     if label in ['SPEC-026', 'SPEC-022', 'SPEC-003']:
-                #         ax.errorbar(xi, yi, yerr=yu, xerr=xu, fmt='o')
-                #         plt.annotate(label, (xi, yi), textcoords="offset points", xytext=(0, 10), ha='center')
 
                 performance = df_performance['spectra_per_s'].mean()
 
@@ -462,7 +425,8 @@ class figures:
                 rmse = mean_squared_error(x, y, squared=False)
                 mae = mean_absolute_error(x, y)
                 r2 = r2_calculations(x, y)
-
+                m, b = np.polyfit(x, y, 1)
+                ax.plot(one_line, m*one_line + b, color='black')
                 txtstr = '\n'.join((
                     r'MAE(RMSE): %.2f(%.2f)' % (mae,rmse),
                     r'R$^2$: %.2f' % (r2,),
@@ -493,14 +457,14 @@ class figures:
 
         for index, row in df_gis.iterrows():
             plot = row['Name']
-            emit_filetime = row['EMIT Date']
+            emit_filetime = row['EMIT DATE']
 
             df_transect = transect_data.loc[transect_data['plot_name'] == plot.replace("SPEC", "Spectral")].copy()
             acquisition_datetime_utc = datetime.strptime(emit_filetime, "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
             geometry_results_emit = sunpos(acquisition_datetime_utc, row['latitude'], row['longitude'], np.mean(df_transect['elevation']))
 
-            frac_emit_sma = glob(os.path.join(self.output_directory, 'sma-best', f'emit-local__*{plot.replace("Spectral", "SPEC").replace(" ", "")}__*_fractional_cover'))
-            frac_slpit_sma = glob(os.path.join(self.output_directory, 'sma-best', f'asd-local__*{plot.replace("Spectral", "SPEC").replace(" ", "")}__*_fractional_cover'))
+            frac_emit_sma = glob(os.path.join(self.output_directory, 'sma', f'emit-local__*{plot.replace("Spectral", "SPEC").replace(" ", "")}__*_fractional_cover'))
+            frac_slpit_sma = glob(os.path.join(self.output_directory, 'sma', f'asd-local__*{plot.replace("Spectral", "SPEC").replace(" ", "")}__*_fractional_cover'))
 
             sma_slipt_array, sma_emit_array = load_data(frac_slpit_sma[0], frac_emit_sma[0])
 
@@ -523,7 +487,7 @@ class figures:
         df = pd.DataFrame(df_rows)
         df.columns = ['plot', 'sza', 'sma-npv', 'sma-pv', 'sma-soil', 'mesma-npv', 'mesma-pv', 'mesma-soil']
         df = df.sort_values('sza')
-
+        df = df.dropna() 
         # # create figure
         fig = plt.figure(constrained_layout=True, figsize=(12, 8))
         ncols = 3
@@ -583,47 +547,25 @@ class figures:
 
     def local_slpit(self):
         # load all fraction files
-        fraction_files_sma = sorted(glob(os.path.join(self.output_directory, 'sma-best', '*fractional_cover')))
-        fraction_files_mesma = sorted(glob(os.path.join(self.output_directory, 'mesma', '*fractional_cover')))
-        all_files = fraction_files_sma + fraction_files_mesma
+        df_all = pd.read_csv(os.path.join(self.fig_directory, 'fraction_output.csv'))
+        df_all['Team'] = df_all['plot'].str.split('-').str[0].str.strip()
+        df_all = df_all[df_all['Team'] != 'THERM']
 
-        results = p_map(fraction_file_info, all_files,
-                        **{"desc": "\t\t retrieving mean fractional cover: ...", "ncols": 150})
-        df_all = pd.DataFrame(results)
-        df_all.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization',
-                          'npv', 'pv', 'soil', 'shade']
-
-        # load all uncertainty files
-        uncer_files_sma = sorted(glob(os.path.join(self.output_directory, 'sma-best', '*fractional_cover_uncertainty')))
-        uncer_files_mesma = sorted(glob(os.path.join(self.output_directory, 'mesma', '*fractional_cover_uncertainty')))
-        all_uncer_files = uncer_files_sma + uncer_files_mesma
-
-        results_uncer = p_map(fraction_file_info, all_uncer_files,
-                              **{"desc": "\t\t retrieving mean uncertainty: ...", "ncols": 150})
-        df_all_uncer = pd.DataFrame(results_uncer)
-
-        df_all_uncer.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization',
-                                'npv', 'pv', 'soil', 'shade']
-
-        # # create figure
+        # create figure
         fig = plt.figure(constrained_layout=True, figsize=(12, 8))
         ncols = 3
         nrows = 2
         gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.025, hspace=0.0001, figure=fig)
+        
+        col_map = {0: 'npv', 1: 'pv', 2: 'soil'}
 
         # loop through figure columns
         for row in range(nrows):
             if row == 0:
-                df_select = df_all[(df_all['unmix_mode'] == 'sma-best') & (df_all['lib_mode'] == 'local')].copy()
-                df_uncer = df_all_uncer[
-                    (df_all_uncer['unmix_mode'] == 'sma-best') & (df_all_uncer['lib_mode'] == 'local')].copy()
+                df_select = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'local')].copy()
                 
             if row == 1:
-                df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (
-                            df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 100)].copy()
-                df_uncer = df_all_uncer[
-                    (df_all_uncer['unmix_mode'] == 'mesma') & (df_all_uncer['lib_mode'] == 'local') & (
-                                df_all_uncer['num_mc'] == 25) & (df_all_uncer['num_cmb_em'] == 100)].copy()
+                df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 100)].copy()
                 
             for col in range(ncols):
                 ax = fig.add_subplot(gs[row, col])
@@ -643,30 +585,14 @@ class figures:
 
                 df_x = df_select[(df_select['instrument'] == 'asd')].copy().reset_index(drop=True)
                 df_y = df_select[(df_select['instrument'] == 'emit')].copy().reset_index(drop=True)
-                df_x_u = df_uncer[(df_uncer['instrument'] == 'asd')].copy().reset_index(drop=True)
-                df_y_u = df_uncer[(df_uncer['instrument'] == 'emit')].copy().reset_index(drop=True)
 
                 # plot fractional cover values
-                if col == 0:
-                    x = df_x['npv']
-                    y = df_y['npv']
-                    x_u = df_x_u['npv']
-                    y_u = df_y_u['npv']
-
-                elif col == 1:
-                    x = df_x['pv']
-                    y = df_y['pv']
-                    x_u = df_x_u['pv']
-                    y_u = df_y_u['pv']
-                else:
-                    x = df_x['soil']
-                    y = df_y['soil']
-                    x_u = df_x_u['soil']
-                    y_u = df_y_u['soil']
-
+                x = df_x[col_map[col]]
+                y = df_y[col_map[col]]
+                
                 cmap = plt.get_cmap('viridis') 
                 c = list(range(1, len(df_x['plot'].values) + 1))
-                ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='none', markersize=4, zorder=1) 
+                #ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='none', markersize=4, zorder=1) 
                 scatter = ax.scatter(x, y, c=c, cmap=cmap, edgecolor='black')
 
                 # Add error metrics
@@ -688,7 +614,7 @@ class figures:
 
 def run_figures(base_directory):
     fig = figures(base_directory=base_directory)
-    fig.plot_summary()
+    #fig.plot_summary()
     fig.plot_rmse()
-    #fig.local_slpit()
-    #fig.sza_plot()
+    fig.local_slpit()
+    fig.sza_plot()
