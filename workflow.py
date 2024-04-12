@@ -16,7 +16,7 @@ def display_menu():
 
 def main():
     parser = argparse.ArgumentParser(description='Run Terraspec')
-    parser.add_argument('-bd', '--base_root_directory', type=str, default='~', help='Specify project directory (e.g., where outputs will save')
+    parser.add_argument('-bd', '--base_root_directory', type=str, default='/data1/geog/gregokin/', help='Specify project directory (e.g., where outputs will save')
     parser.add_argument('-dry', '--dry_run', type=bool, help=' Set the dry run parameter to True to print unmix call', default=False)
     parser.add_argument('-lvl', '--level', type=str, help='level of classification to use', default='level_1')
     parser.add_argument('-sns', '--sensor', type=str, help='specify sensor to use', default='emit', choices=['emit', 'aviris-ng'])
@@ -44,7 +44,7 @@ def main():
             run_slpit_workflow(os.path.join(base_directory, 'slpit'), dry_run=args.dry_run, sensor=args.sensor)
 
         elif choice == 'C':
-            run_tetracorder_workflow(base_directory, sensor=args.sensor)
+            run_tetracorder_workflow(base_directory, sensor=args.sensor, dry_run=args.dry_run)
 
         elif choice == "D":
             outro = "TerraSpec processes complete. Thank you for using Terraspec!"
