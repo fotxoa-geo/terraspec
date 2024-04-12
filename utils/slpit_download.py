@@ -20,6 +20,7 @@ sk = r'7Og6inIanLbg0G6xwSvwrOGUTilBqm4htXQ1N1oX'
 profile_id = 504019
 spectral_endmembers_page_id = 3856841
 emit_transects_page_id = 3856847
+shift_transects_id = 3856837
 server_name = 'tech-ate'
 
 
@@ -81,22 +82,28 @@ def run_download_emit(base_directory):
     download_emit(base_directory=base_directory)
 
 
-def sync_gdrive(base_directory):
+def sync_gdrive(base_directory, project):
 
     if "linux" in platform:
         output_directory = os.path.join(base_directory, 'data', 'spectral_transects')
         create_directory(output_directory)
-        base_call = f"rclone copy gdrive:terraspec/slpit/data/spectral_transects {output_directory} -P"
+        if project == 'emit':
+            base_call = f"rclone copy gdrive:terraspec/slpit/data/spectral_transects {output_directory} -P"
+        else:
+            base_call = f"rclone copy gdrive:terraspec/shift/data/spectral_transects {output_directory} -P"
         subprocess.call(base_call, shell=True)
     else:
         print("Cannot sync between local machine! Upload data from ASD computer to google drive.")
 
 
-def sync_extracts(base_directory):
+def sync_extracts(base_directory, project):
     if "linux" in platform:
-        output_directory = os.path.join(base_directory, 'gis', 'emit-data-clip')
+        output_directory = os.path.join(base_directory, 'gis', f'{project}-data-clip')
         create_directory(output_directory)
-        base_call = f"rclone copy {output_directory} gdrive:terraspec/slpit/gis/emit-data-clip/ -P"
+        if project == 'emit':
+            base_call = f"rclone copy {output_directory} gdrive:terraspec/slpit/gis/{project}-data-clip/ -P"
+        else:
+            base_call = f"rclone copy {output_directory} gdrive:terraspec/shift/gis/{project}-data-clip/ -P"
         subprocess.call(base_call, shell=True)
     else:
         print("Extracts are being done in cluster! Cannot sync between local machine.")
@@ -106,5 +113,10 @@ def run_dowloand_slpit():
     emit_slpit_recrods = get_iform_records(server_name=server_name, client_key=ck, secret_key=sk, profile_id=profile_id,
                                            page_id=emit_transects_page_id)
     save_pickle(emit_slpit_recrods, 'emit_slpit')
+
+def download_shift_slpit():
+    shift_slpit_recrods = get_iform_records(server_name=server_name, client_key=ck, secret_key=sk, profile_id=profile_id,
+                                           page_id=shift_transects_id)
+    save_pickle(shift_slpit_recrods, 'shift_slpit')
 
 
