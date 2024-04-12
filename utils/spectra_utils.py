@@ -502,9 +502,10 @@ class spectra:
 
     @classmethod
     def get_all_ems(cls,output_directory: str, instrument: str):
-        spectral_endmembers = glob(os.path.join(output_directory, 'spectral_endmembers', '*' + instrument + ".csv"))
-        emit_transect_endmembers = glob(os.path.join(output_directory, 'spectral_transects', 'endmembers', '*' + instrument + ".csv"))
-        all_ems = spectral_endmembers + emit_transect_endmembers
+        #spectral_endmembers = glob(os.path.join(output_directory, 'spectral_endmembers', '*' + instrument + ".csv"))
+        emit_transect_endmembers = glob(os.path.join(output_directory, 'spectral_transects', 'endmembers-raw', '*' + instrument + ".csv"))
+        emit_transect_endmembers = [item for item in emit_transect_endmembers if "Thermal" not in item]
+        all_ems = emit_transect_endmembers
 
         return all_ems
 
