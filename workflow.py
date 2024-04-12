@@ -6,13 +6,15 @@ import subprocess
 from simulation.sim_workflow import run_sim_workflow
 from slpit.slpit_workflow import run_slpit_workflow
 from tetracorder.tetracorder_workflow import run_tetracorder_workflow
+from shift.shift_workflow import run_shift_workflow
 import time
 def display_menu():
     print("Welcome to the Interactive Menu")
     print("A... Simulation")
     print("B... SLPIT")
     print("C... Tetracorder")
-    print("D... Exit")
+    print('D... SHIFT')
+    print("E... Exit")
 
 def main():
     parser = argparse.ArgumentParser(description='Run Terraspec')
@@ -44,9 +46,12 @@ def main():
             run_slpit_workflow(os.path.join(base_directory, 'slpit'), dry_run=args.dry_run, sensor=args.sensor)
 
         elif choice == 'C':
-            run_tetracorder_workflow(base_directory, sensor=args.sensor)
+            run_tetracorder_workflow(base_directory, sensor=args.sensor, dry_run=args.dry_run)
 
-        elif choice == "D":
+        elif choice == 'D':
+            run_shift_workflow(os.path.join(base_directory, 'shift'), sensor='aviris_ng', dry_run=args.dry_run)
+
+        elif choice == "E":
             outro = "TerraSpec processes complete. Thank you for using Terraspec!"
             cursor_print(outro)
             time.sleep(1)
