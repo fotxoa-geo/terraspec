@@ -57,7 +57,7 @@ def get_reflectance_transect(file, season, plot_directory: str):
 
             except:
                 # get long lat from shift plots csv
-                df_coords = pd.read_csv('plot_coordinates.csv')
+                df_coords = pd.read_csv(os.path.join('gis', 'plot_coordinates.csv'))
                 long = df_coords.loc[
                     (df_coords['Plot Name'] == plot_name) & (df_coords['Season'] == season.upper()), 'longitude'].iloc[
                     0]
