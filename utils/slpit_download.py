@@ -90,7 +90,8 @@ def sync_gdrive(base_directory, project):
         if project == 'emit':
             base_call = f"rclone copy gdrive:terraspec/slpit/data/spectral_transects {output_directory} -P"
         else:
-            base_call = f"rclone copy gdrive:terraspec/shift/data/spectral_transects {output_directory} -P"
+            output_directory = os.path.join(base_directory, 'data')
+            base_call = f"rclone copy gdrive:terraspec/shift/data/ {output_directory} -P"
         subprocess.call(base_call, shell=True)
     else:
         print("Cannot sync between local machine! Upload data from ASD computer to google drive.")

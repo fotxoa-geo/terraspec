@@ -210,9 +210,9 @@ class tetracorder:
         unmix_lib = os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library')
 
         # simulation spectra
-        sim_soil_spectra = os.path.join(self.tetra_output_directory, 'tetracorder_soil_spectra')
-        sim_npv_spectra = os.path.join(self.tetra_output_directory, 'tetracorder_npv_spectra')
-        sim_pv_spectra = os.path.join(self.tetra_output_directory, 'tetracorder_pv_spectra')
+        sim_soil_spectra = os.path.join(self.sim_spectra_dir, 'tetracorder_soil_spectra')
+        sim_npv_spectra = os.path.join(self.sim_spectra_dir, 'tetracorder_npv_spectra')
+        sim_pv_spectra = os.path.join(self.sim_spectra_dir, 'tetracorder_pv_spectra')
 
         files_to_augment = [simulation_lib, unmix_lib, sim_soil_spectra]
 
@@ -243,7 +243,7 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
             tc.reconstruct_soil_sma()
         elif user_input == 'E':
             tc.augment_slpit_pixels()
-            #tc.augment_simulation()
+            tc.augment_simulation()
         elif user_input == 'F':
             print("Returning to Tetracorder main menu.")
             break

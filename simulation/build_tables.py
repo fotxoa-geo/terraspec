@@ -23,10 +23,6 @@ def table_sim_menu():
     print("C... Latex Tables")
     print("D... Exit")
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 0b61fe314013bc13ab2d0e205e0efd95aa8b0dd4
 
 class tables:
     def __init__(self, base_directory: str):

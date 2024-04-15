@@ -115,6 +115,7 @@ class unmix_runs:
         reflectance_files = sorted(glob(os.path.join(self.spectral_transect_directory, '*')))
 
         # loop counter
+        create_directory(os.path.join(self.output_directory, mode))
         count = 0
         for reflectance_file in reflectance_files:
 
@@ -159,25 +160,25 @@ class unmix_runs:
                 # asd unmixing - slpit with local endmembers
                 count = count + 1
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=em_file,
-                           parameters=updated_parameters, output_dest=os.path.join(output_dest,os.path.join(output_dest, f'local-asd-{out_param_name}')),
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest,os.path.join(output_dest, f'asd-local___{out_param_name}')),
                            spectra_starting_column=self.spectra_starting_column_local, scale=self.scale)
 
                 # airborne unmixing with local endmembers
                 count = count + 1
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=aviris_refl, em_file=em_file,
-                           parameters=updated_parameters, output_dest=os.path.join(output_dest,f'local-aviris-{out_param_name}'),
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest,f'aviris-local___{out_param_name}'),
                            spectra_starting_column=self.spectra_starting_column_local, scale=self.scale)
 
                 # asd unmixing with global endmembers
                 count = count + 1
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=self.emit_global,
-                           parameters=updated_parameters, output_dest=os.path.join(output_dest,f'global-asd-{out_param_name}'),
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest,f'asd-global___{out_param_name}'),
                            spectra_starting_column=self.spectra_starting_column_global, scale=self.scale)
 
                 # airborne unmixing with global endmembers
                 count = count + 1
                 call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=aviris_refl, em_file=self.emit_global,
-                           parameters=updated_parameters, output_dest=os.path.join(output_dest,f'global-aviris-{out_param_name}'),
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest,f'aviris-global___{out_param_name}'),
                            spectra_starting_column=self.spectra_starting_column_global, scale=self.scale)
 
             else:

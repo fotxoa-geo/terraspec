@@ -323,7 +323,7 @@ class build_libraries:
 
                 # convolve wavelengths to user specified instrument
                 results_convolve = p_map(partial(spectra.convolve, wvl=self.wvls, fwhm=self.fwhm, asd_wvl=self.asd_wvls,
-                                                 starting_col=11), df_results.iterrows(),
+                                                 spectra_starting_col=11), df_results.iterrows(),
                                          **{"desc": "\t\t\tconvulsing plot: " + plot_name + " ...", "ncols": 150})
 
                 df_convolve = pd.DataFrame(results_convolve)

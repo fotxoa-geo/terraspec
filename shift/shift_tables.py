@@ -26,7 +26,7 @@ class tables:
                      **{"desc": f"\t\t processing performance tables...", "ncols": 150})
 
         df_performance = pd.concat(dfs)
-        df_performance['library'] = df_performance['output_file_base'].apply(os.path.basename).str.split("_").apply(lambda x: x[0]).str.split('-').apply(lambda x: x[0])
+        df_performance['library'] = df_performance['endmember_file'].apply(os.path.basename).str.split("___").apply(lambda x: x[0]).str.split('-').apply(lambda x: x[-1])
 
         df_performance.to_csv(os.path.join(self.fig_directory, "shift_computing_performance_report.csv"), index=False)
 

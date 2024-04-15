@@ -119,9 +119,9 @@
             }
         }
     },
-    "lutdir": "/data1/geog/gregokin/terraspec/tetracorder/output/augmented/hypertrace/luts/sRTMnet",
-    "outdir": "/data1/geog/gregokin/terraspec/tetracorder/output/augmented/hypertrace/tetracorder",
-    "reflectance_file": "/data1/geog/gregokin/terraspec/tetracorder/output/augmented/tetracorder_spectra",
+    "lutdir": "/data1/geog/gregokin/terraspec/tetracorder/output/hypertrace/luts/sRTMnet",
+    "outdir": "/data1/geog/gregokin/terraspec/tetracorder/output/hypertrace/tetracorder",
+    "reflectance_file": "/data1/geog/gregokin/terraspec/tetracorder/output/simulated_spectra/tetracorder_soil_spectra",
     "rtm_template_file": "/dev/null",
     "wavelength_file": "./utils/wavelengths/emit_wavelengths.txt"
 }

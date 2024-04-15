@@ -25,8 +25,8 @@ class unmix_runs:
         self.gis_directory = os.path.join(base_directory, 'gis')
 
         # simulation parameters for spatial and hypertrace unmix
-        self.optimal_parameters_sma = ['--num_endmembers 20', '--n_mc 25', '--normalization brightness']
-        self.optimal_parameters_mesma = ['--max_combinations 100', '--n_mc 25', '--normalization brightness']
+        self.optimal_parameters_sma = ['--num_endmembers 20', '--n_mc 25', '--normalization none']
+        self.optimal_parameters_mesma = ['--max_combinations 100', '--n_mc 25', '--normalization none']
         self.non_opt_mesma = ['max_combinations 100', '--n_mc 1', '--normalization brightness']
 
         self.num_cmb = ['--max_combinations 10', '--max_combinations 20', '--max_combinations 30',
@@ -72,9 +72,18 @@ class unmix_runs:
             emit_filetime = row['EMIT DATE']
             reflectance_img_emit = glob(os.path.join(self.gis_directory, 'emit-data-clip', f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
             reflectance_uncer_img_emit = glob(os.path.join(self.gis_directory, 'emit-data-clip',f'*{plot.replace(" ", "")}_RFLUNCERT_{emit_filetime}'))
-            em_local = os.path.join(self.spectral_em_directory, plot.replace("SPEC", 'Spectral').replace(" ", "") + '-emit.csv')
-            asd_reflectance = glob(os.path.join(self.spectral_transect_directory, f'*{plot.replace("SPEC", "Spectral").replace(" ", "")}'))
+            
+            # use team designations
+            team = plot.split("-")[0].strip()
 
+            if team == 'SPEC':
+                team_name = 'Spectral'
+            else:
+                team_name = 'Thermal'
+
+            em_local = os.path.join(self.spectral_em_directory, f"{plot.replace(team, team_name).strip().replace(' ', '')}-emit.csv")
+            asd_reflectance = glob(os.path.join(self.spectral_transect_directory, f"*{plot.replace(team, team_name).strip().replace(' ', '')}"))
+            
             if os.path.isfile(em_local):
                 
                 output_dest = os.path.join(self.output_directory, mode)
@@ -154,6 +163,5 @@ class unmix_runs:
 
 def run_slipt_unmix(base_directory, dry_run):
     all_runs = unmix_runs(base_directory, dry_run)
-    all_runs.unmix_calls(mode='sma-best')
-    all_runs.unmix_calls(mode='mesma-best')
+    all_runs.unmix_calls(mode='sma')
     all_runs.unmix_calls(mode='mesma')

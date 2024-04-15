@@ -444,10 +444,10 @@ class build_libraries:
                         remaining_samples -= remaining_samples
 
             # if list is empty do nothing
-            out_csv = os.path.join(self.output_transect_em_directory, f"{os.path.basename(i)}.csv")
+            out_csv = os.path.join(self.output_transect_em_directory, f"{os.path.basename(i)}")
 
             if not ems_to_append:
-                df_em_site.to_csv(out_csv)
+                df_em_site.to_csv(out_csv, index=False)
             else:
                 df_append = pd.concat(ems_to_append, ignore_index=True)
                 df_convolve = pd.concat([df_em_site, df_append], ignore_index=True)
@@ -520,7 +520,6 @@ class build_libraries:
         df_derivative.columns = df_plot.columns
         df_derivative.to_csv(os.path.join(self.output_directory, 'SPEC-003-fd.csv'), index=False)
 
-
     def nearest_emit_site(self):
 
         # get plot center points
@@ -529,6 +528,8 @@ class build_libraries:
         df_emit['latitude'] = df_emit['geometry'].y
         df_emit['longitude'] = df_emit['geometry'].x
         df_emit = df_emit.drop('geometry', axis=1)
+        df_emit['Team'] = df_emit['Name'].str.split('-').str[0].str.strip()
+        df_emit = df_emit[df_emit['Team'] != 'THERM']
 
         df_emit = df_emit.sort_values('Name')
         df_min_distance_rows = []
@@ -549,8 +550,6 @@ class build_libraries:
             df_results = df_results.dropna()
             df_results = df_results.sort_values('distance_km')
 
-            df_results.to_csv(r'C:\Users\spect\Desktop\test_distances\\' + f"{plot}.csv")
-
             df_results['combined'] = list(zip(df_results['emit_plot_function'], df_results['distance_km']))
             df_results = df_results.drop(columns=['emit_plot_function', 'distance_km']).T
             df_results['emit_plot_analysis'] = plot
@@ -563,7 +562,6 @@ class build_libraries:
         column_names[-1] = 'emit_plot_analysis'
         min_dist_df.columns = column_names
         min_dist_df.to_csv(os.path.join('gis', 'min_dist_to_emit_plots.csv'), index=False)
-        min_dist_df.to_csv(r'C:\Users\spect\Desktop\test_distances\\' + 'min_dist_to_emit_plots.csv', index=False)
 
 
 def run_build_workflow(base_directory, sensor):

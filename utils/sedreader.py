@@ -4,7 +4,7 @@ from collections import namedtuple
 
 
 def sed_gps(coord):
-    updated_coord = coord.replace("Â°", "")
+    updated_coord = coord.replace("°", "")
     minutes = float(updated_coord.split(" ")[1])/60
     degrees = float(updated_coord.split(" ")[0])
     dd = degrees + minutes
@@ -28,7 +28,7 @@ def parse_metadata(sed_lines):
             altitude = altitude_match.group(1)
 
         # gps match
-        longitude_match = re.search(r"Longitude: (\d+Â° \d+\.\d+)\'([WE])", line_select.rstrip()) # the Â° is a weird read
+        longitude_match = re.search(r"Longitude: (\d+° \d+\.\d+)\'([WE])", line_select.rstrip()) # the Â° is a weird read
         if longitude_match:
 
             longitude = longitude_match.group(1)
@@ -37,7 +37,7 @@ def parse_metadata(sed_lines):
             if hemisphere == 'W':
                 longitude = longitude * -1
 
-        latitude_match = re.search(r"Latitude: (\d+Â° \d+\.\d+)\'([NS])", line_select.rstrip())  # the Â° is a weird read
+        latitude_match = re.search(r"Latitude: (\d+° \d+\.\d+)\'([NS])", line_select.rstrip())  # the Â° is a weird read
         if latitude_match:
             latitude = latitude_match.group(1)
             latitude = sed_gps(latitude)
