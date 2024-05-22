@@ -671,3 +671,15 @@ class spectra:
 
         except:
             print(sed_file, out_directory)
+    
+    @classmethod
+    def vector_normalize_spectrum(cls, array):
+        norm = np.linalg.norm(array)
+        
+        if norm == 0:
+            return array
+        
+        return array / norm
+
+
+

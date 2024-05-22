@@ -54,28 +54,44 @@ def download_emit(base_directory):
 
     create_directory(os.path.join(base_directory, 'gis', 'emit-data'))
     create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'nc_files'))
-
+    create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'nc_files', 'l1b'))
+    create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'nc_files', 'l2a'))
+    
     # get plot center points from ipad
     shapefile = os.path.join('gis', "Observation.shp")
-    today = datetime.datetime.today().strftime('%Y-%m')
-    today_date = datetime.datetime.strptime(today, '%Y-%m')
-    next_month_date = today_date + relativedelta(months=1)
-    next_month_str = next_month_date.strftime('%Y-%m')
 
     df = pd.DataFrame(gp.read_file(shapefile))
     df = df.sort_values('Name')
-
+    
     for index, row in df.iterrows():
         plot = row['Name']
         lon = row['geometry'].x
         lat = row['geometry'].y
+        emit_date = row['EMIT DATE']
+        
+        plot_date = datetime.datetime.strptime(emit_date, '%Y%m%dT%H%M%S')
+        
+        next_plot_months =  plot_date + relativedelta(months=3)
+        next_plot_months = next_plot_months.strftime('%Y-%m')
+        
+        previous_plot_months = plot_date - relativedelta(months=3)
+        previous_plot_months = previous_plot_months.strftime('%Y-%m')
 
         lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat = lon, lat, lon, lat
-
+        
+        print(f"downloading... {plot}")
         results = earthaccess.search_data(short_name="EMITL2ARFL", version="001", cloud_hosted=True,
                                               bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
-                                              temporal=("2022-08", next_month_str), count=-1)
-        files = earthaccess.download(results, os.path.join(base_directory, 'gis', 'emit-data', 'nc_files'))
+                                              temporal=(previous_plot_months, next_plot_months), count=-1)
+        files = earthaccess.download(results, os.path.join(base_directory, 'gis', 'emit-data', 'nc_files', 'l2a'))
+        
+        results = earthaccess.search_data(short_name="EMITL1BRAD", version="001", cloud_hosted=True,
+                                              bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
+                                              temporal=(previous_plot_months, next_plot_months), count=-1)
+        files = earthaccess.download(results, os.path.join(base_directory, 'gis', 'emit-data', 'nc_files', 'l1b'))
+        
+
+
 
 
 def run_download_emit(base_directory):
