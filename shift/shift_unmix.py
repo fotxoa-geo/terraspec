@@ -44,8 +44,7 @@ corresponding_flight = { 'DPA-004-FALL' : '20220915t195816',
                          'SRB-050-FALL' : '',
                          'SRB-084-SPRING' : '20220511t212317',
                          'SRB-100-FALL' : '20220915t203517',
-                         'SRB-200-FALL' : '',
-                         }
+                         'SRB-200-FALL' : '',}
 
 def aviris_data(aviris_csv, shift_plot, df_em, season):
 

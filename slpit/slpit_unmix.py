@@ -70,23 +70,11 @@ class unmix_runs:
             plot = row['Name']
 
             emit_filetime = row['EMIT DATE']
-            print(emit_filetime)
             reflectance_img_emit = glob(os.path.join(self.gis_directory, 'emit-data-clip', f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
             reflectance_uncer_img_emit = glob(os.path.join(self.gis_directory, 'emit-data-clip',f'*{plot.replace(" ", "")}_RFLUNCERT_{emit_filetime}'))
-            print(plot, reflectance_img_emit)
+            em_local = os.path.join(self.spectral_em_directory, plot.replace("SPEC", 'Spectral').replace(" ", "") + '-emit.csv')
+            asd_reflectance = glob(os.path.join(self.spectral_transect_directory, f'*{plot.replace("SPEC", "Spectral").replace(" ", "")}'))
 
-            # use team designations
-            team = plot.split("-")[0].strip()
-
-            if team == 'SPEC':
-                team_name = 'Spectral'
-            else:
-                team_name = 'Thermal'
-                continue
-
-            em_local = os.path.join(self.spectral_em_directory, f"{plot.replace(team, team_name).strip().replace(' ', '')}-emit.csv")
-            asd_reflectance = glob(os.path.join(self.spectral_transect_directory, f"*{plot.replace(team, team_name).strip().replace(' ', '')}"))
-            
             if os.path.isfile(em_local):
                 
                 output_dest = os.path.join(self.output_directory, mode)
@@ -94,39 +82,38 @@ class unmix_runs:
                 
                 if mode == 'mesma' or mode == 'mesma-best':
                     simulation_parameters = self.optimal_parameters_mesma
-                    updated_parameters = simulation_parameters
+                    
+                    for cmb in self.num_cmb:
+                        updated_parameters = [item.replace('--max_combinations 100', cmb) for item in simulation_parameters]
+                        out_param_string = " ".join(updated_parameters)
+                        out_param_name = plot.replace(" ", "") + "___" + out_param_string.replace('--','').replace('_', '-').replace(' ', '_')
 
-                    #for cmb in self.num_cmb:
-                    #    updated_parameters = [item.replace('--max_combinations 100', cmb) for item in simulation_parameters]
-                    out_param_string = " ".join(updated_parameters)
-                    out_param_name = plot.replace(" ", "") + "___" + out_param_string.replace('--','').replace('_', '-').replace(' ', '_')
+                        # unmix asd with local library
 
-                    # unmix asd with local library
+                        count = count + 1
+                        call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=em_local,
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'asd-local___' + out_param_name),
+                           scale=self.scale,  spectra_starting_column=self.spectra_starting_column_local)
 
-                    count = count + 1
-                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=em_local,
-                        parameters=updated_parameters, output_dest=os.path.join(output_dest, 'asd-local___' + out_param_name),
-                        scale=self.scale,  spectra_starting_column=self.spectra_starting_column_local)
+                        count = count + 1
+                        # unmix asd with global library
+                        call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=self.emit_global,
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'asd-global___' + out_param_name),
+                           scale=self.scale,  spectra_starting_column=self.spectra_starting_column_global)
 
-                    count = count + 1
-                    # unmix asd with global library
-                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=self.emit_global,
-                        parameters=updated_parameters, output_dest=os.path.join(output_dest, 'asd-global___' + out_param_name),
-                        scale=self.scale,  spectra_starting_column=self.spectra_starting_column_global)
+                        count = count + 1
+                        # emit pixels unmixed with local em
+                        call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=em_local,
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'emit-local___' + out_param_name),
+                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
+                           spectra_starting_column=self.spectra_starting_column_local)
 
-                    count = count + 1
-                    # emit pixels unmixed with local em
-                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=em_local,
-                        parameters=updated_parameters, output_dest=os.path.join(output_dest, 'emit-local___' + out_param_name),
-                        scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
-                        spectra_starting_column=self.spectra_starting_column_local)
-
-                    count = count + 1
+                        count = count + 1
                         # emit pixels unmixed with global
-                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=self.emit_global,
-                        parameters=updated_parameters, output_dest=os.path.join(output_dest, 'emit-global___' + out_param_name),
-                        scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
-                        spectra_starting_column=self.spectra_starting_column_global)
+                        call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=self.emit_global,
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'emit-global___' + out_param_name),
+                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
+                           spectra_starting_column=self.spectra_starting_column_global)
                
                 
                 else:
@@ -167,5 +154,6 @@ class unmix_runs:
 
 def run_slipt_unmix(base_directory, dry_run):
     all_runs = unmix_runs(base_directory, dry_run)
-    all_runs.unmix_calls(mode='sma')
+    all_runs.unmix_calls(mode='sma-best')
+    all_runs.unmix_calls(mode='mesma-best')
     all_runs.unmix_calls(mode='mesma')

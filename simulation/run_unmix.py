@@ -49,7 +49,7 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
     scrtch_rfl = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}")
     scrtch_hdr = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}.hdr") 
     scrtch_csv = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}.csv")
-    
+
     shutil.copyfile(reflectance_file, scrtch_rfl)
     shutil.copyfile(reflectance_file + '.hdr' , scrtch_hdr)
     shutil.copyfile(em_file, scrtch_csv)

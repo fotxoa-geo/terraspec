@@ -104,7 +104,7 @@ def build_hypercubes(dimensions: int, max_dimension: int, spectra_starting_col:i
 def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int, normalize=False):
     df = spectra.load_global_library(output_directory=output_directory)
     df_soil = df.loc[(df['level_1'] == 'soil')].copy().reset_index(drop=True)
-    
+
     if normalize:
         df_only = df.iloc[:, spectra_starting_col:]
         df_array = df_only.to_numpy()
@@ -180,8 +180,8 @@ def get_sim_parameters():
 
 
 def run_build_reflectance(output_directory):
-    #num_dimensions = [2, 3, 4, 5, 6]  # dimensions to use for convex hull and latin hypercubes
-    num_dimensions = [4]  # dimensions to use for convex hull and latin hypercubes
+    num_dimensions = [2, 3, 4, 5, 6]  # dimensions to use for convex hull and latin hypercubes
+    #num_dimensions = [4]  # dimensions to use for convex hull and latin hypercubes
     max_dimension = max(num_dimensions)
     spectral_starting_col = 7
 

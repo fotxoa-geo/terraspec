@@ -116,6 +116,7 @@ class figures:
         # spectral data
         create_directory(os.path.join(self.fig_directory, 'plot_stats'))
         transect_data = pd.read_csv(os.path.join(self.output_directory, 'all-transect-emit.csv'))
+
         em_data = pd.read_csv(os.path.join(self.output_directory, 'all-endmembers-emit.csv'))
 
         asd_wavelengths = np.array(transect_data.columns[9:]).astype(float)
@@ -131,6 +132,8 @@ class figures:
         # gis shapefile
         df_gis = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
         df_gis = df_gis.sort_values('Name')
+        # df_gis['Team'] = df_gis['Name'].str.split('-').str[0].str.strip()
+        # df_gis = df_gis[df_gis['Team'] != 'THERM']
 
         # fractional cover
         for plot in sorted(list(transect_data.plot_name.unique()), reverse=True):
@@ -235,8 +238,11 @@ class figures:
                         cloud_mask = glob(os.path.join(self.gis_directory, 'emit-data-clip', f'*{plot.replace("Spectral", "SPEC").replace(" ", "")}_MASK_{acquisition_date}'))
 
                         if not cloud_mask:
+                            print('helloooooo')
                             cloud_mask = glob(os.path.join(self.gis_directory, 'emit-data-clip',
                                                            f'*{plot.replace("Thermal", "THERM").replace(" ", "")}_MASK_{acquisition_date}'))
+                            if not cloud_mask:
+                                continue
 
                         ds_cloud = gdal.Open(cloud_mask[0], gdal.GA_ReadOnly)
                         cloud_array = ds_cloud.ReadAsArray().transpose((1, 2, 0))
@@ -442,6 +448,8 @@ class figures:
                 ax = fig.add_subplot(gs[row, col])
                 ax.set_ylim(self.axes_limits['ymin'], self.axes_limits['ymax'])
                 ax.set_xlim(self.axes_limits['xmin'], self.axes_limits['xmax'])
+                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+                ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
 
                 mode = list(df_select['unmix_mode'].unique())[0]
                 lib_mode = list(df_select['lib_mode'].unique())[0]
@@ -458,10 +466,9 @@ class figures:
                     ax.set_xticklabels([''] + ax.get_xticklabels()[1:])
 
                 if col == 0:
-                    ax.set_ylabel(mode.upper() + '$_{' + lib_mode + '}$\n\nEMIT',
+                    ax.set_ylabel(mode.upper() + '$_{' + lib_mode + '}$',
                                   fontsize=self.axis_label_fontsize)
 
-                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
                 ax.set_yticks(np.arange(self.axes_limits['ymin'], self.axes_limits['ymax'] + 0.2, 0.2))
 
                 if col != 0:
@@ -477,13 +484,16 @@ class figures:
                 # plot fractional cover values
                 x = df_x[col_map[col]]
                 y = df_y[col_map[col]]
+                x_u = df_x[f'{col_map[col]}_se']
+                y_u = df_y[f'{col_map[col]}_se']
 
                 m, b = np.polyfit(x, y, 1)
                 one_line = np.linspace(0, 1, 101)
 
                 ax.plot(one_line, one_line, color='red')
                 ax.plot(one_line, m * one_line + b, color='black')
-                ax.scatter(x, y, marker='s', edgecolor='black', label='EMIT', zorder=10)
+                ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='', linestyle='None',capsize=5)
+                ax.scatter(x, y, marker='s', edgecolor='black', color='blue', label='EMIT', zorder=10)
 
                 performance = df_performance['spectra_per_s'].mean()
 
@@ -496,16 +506,18 @@ class figures:
                     r'MAE(RMSE): %.2f(%.2f)' % (mae,rmse),
                     r'R$^2$: %.2f' % (r2,),
                     r'n = ' + str(len(x)),
+                    #r'CPU: %.2f' % (performance,)
                 ))
 
                 props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=12,
                         verticalalignment='top', bbox=props)
 
+        fig.supylabel('EMIT Fractions', fontsize=self.axis_label_fontsize)
         plt.savefig(os.path.join(self.fig_directory, f'regression_{norm_option}.png'), format="png", dpi=400, bbox_inches="tight")
 
 
-    def sza_plot(self):
+    def sza_plot(self, norm_option):
         print('loading sza plot...')
 
         df_rows = []
@@ -515,10 +527,18 @@ class figures:
         df_gis['latitude'] = gdf['geometry'].apply(lambda geom: geom.y)
         df_gis['longitude'] = gdf['geometry'].apply(lambda geom: geom.x)
         df_gis = df_gis.sort_values('Name')
+        df_gis['Team'] = df_gis['Name'].str.split('-').str[0].str.strip()
+        df_gis = df_gis[df_gis['Team'] != 'THERM']
 
         # transect data for elevation
         transect_data = pd.read_csv(os.path.join(self.output_directory, 'all-transect-emit.csv'))
 
+        # load fraction outputs
+        df_all = pd.read_csv(os.path.join(self.fig_directory, 'fraction_output.csv'))
+        df_all['Team'] = df_all['plot'].str.split('-').str[0].str.strip()
+        df_all = df_all[df_all['Team'] != 'THERM']
+
+        df_rows = []
         for index, row in df_gis.iterrows():
             plot = row['Name']
             emit_filetime = row['EMIT DATE']
@@ -527,86 +547,93 @@ class figures:
             acquisition_datetime_utc = datetime.strptime(emit_filetime, "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
             geometry_results_emit = sunpos(acquisition_datetime_utc, row['latitude'], row['longitude'], np.mean(df_transect['elevation']))
 
-            frac_emit_sma = glob(os.path.join(self.output_directory, 'sma', f'emit-local__*{plot.replace("Spectral", "SPEC").replace(" ", "")}__*_fractional_cover'))
-            frac_slpit_sma = glob(os.path.join(self.output_directory, 'sma', f'asd-local__*{plot.replace("Spectral", "SPEC").replace(" ", "")}__*_fractional_cover'))
-
-            sma_slipt_array, sma_emit_array = load_data(frac_slpit_sma[0], frac_emit_sma[0])
-
-            frac_slpit_mesma = glob(os.path.join(self.output_directory, 'mesma', f'asd-local__*{plot.replace("Spectral", "SPEC").replace(" ", "")}__*_fractional_cover'))
-            frac_emit_mesma = glob(os.path.join(self.output_directory, 'mesma',
-                                                f'emit-local__*{plot.replace("Spectral", "SPEC").replace(" ", "")}__*_fractional_cover'))
-            mesma_slipt_array, mesma_emit_array = load_data(frac_slpit_mesma[0], frac_emit_mesma[0])
-
             df_row = [plot, geometry_results_emit[1]]
-            for arrays in [(sma_slipt_array, sma_emit_array), (mesma_slipt_array, mesma_emit_array)]:
-                for _em, em in enumerate(self.ems):
-                    y = arrays[0][:, :, _em]
-                    y_hat = arrays[1][:,:, _em]
-
-                    mae = np.absolute(np.mean(y)) - np.absolute(np.mean(y_hat))
-                    df_row.append(np.absolute(mae))
-
             df_rows.append(df_row)
 
         df = pd.DataFrame(df_rows)
-        df.columns = ['plot', 'sza', 'sma-npv', 'sma-pv', 'sma-soil', 'mesma-npv', 'mesma-pv', 'mesma-soil']
-        df = df.sort_values('sza')
+        df.columns = ['plot', 'sza']
+        df = df.sort_values('plot')
         df = df.dropna()
-        # # create figure
-        fig = plt.figure(constrained_layout=True, figsize=(12, 8))
+
+        # # # create figure
+        fig = plt.figure(figsize=(self.fig_width, self.fig_height))
         ncols = 3
-        nrows = 2
-        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.025, hspace=0.0001, figure=fig)
+        nrows = 4
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.05, hspace=0.05, width_ratios=[1] * ncols,
+                               height_ratios=[1] * nrows)
+
+        col_map = {
+            0: 'npv',
+            1: 'pv',
+            2: 'soil'}
 
         for row in range(nrows):
+            if row == 0:
+                df_select = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'local') & (df_all['normalization'] == norm_option)].copy()
+
+            if row == 1:
+                df_select = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global') & (df_all['normalization'] == norm_option)].copy()
+
+            if row == 2:
+                df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 100) & (df_all['normalization'] == norm_option)].copy()
+
+            if row == 3:
+                df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'global') & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 100) & (df_all['normalization'] == norm_option)].copy()
+
             for col in range(ncols):
                 ax = fig.add_subplot(gs[row, col])
-                ax.grid('on', linestyle='--')
-                ax.set_ylabel("Absolute Error")
-                ax.set_xlabel('Solar Zenith Angle (°)')
+                ax.set_ylim(self.axes_limits['ymin'], 0.4)
+                ax.set_xlim(10, 60)
+                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
 
-                ax.set_xlim(0, 60)
-                ax.set_ylim(0, 0.5)
+                mode = list(df_select['unmix_mode'].unique())[0]
+                lib_mode = list(df_select['lib_mode'].unique())[0]
 
-                if col == 0 and row == 0:
-                    ax.set_title(f'NPV')
-                    l = df['sma-npv']
-                    marker = '.'
+                if row == 0:
+                    ax.set_title(self.ems[col], fontsize=self.title_fontsize)
 
-                if col == 1 and row == 0:
-                    ax.set_title(f'GV')
-                    l = df['sma-pv']
-                    marker = '+'
+                if row == 3 and col == 1:
+                    ax.set_xlabel("Solar Zenith Angles (°)", fontsize=self.axis_label_fontsize)
 
-                if col == 2 and row == 0:
-                    ax.set_title(f'Soil')
-                    l = df['sma-soil']
-                    marker = 'x'
+                if row == 3 and col != 0:
+                    ax.set_xticklabels([''] + ax.get_xticklabels()[1:])
 
-                if col == 0 and row == 1:
-                    l = df['mesma-npv']
-                    marker = '.'
+                if col == 0:
+                    ax.set_ylabel(mode.upper() + '$_{' + lib_mode + '}$',
+                                  fontsize=self.axis_label_fontsize)
 
-                if col == 1 and row == 1:
-                    l = df['mesma-pv']
-                    marker = '+'
+                ax.set_yticks(np.arange(self.axes_limits['ymin'], 0.4 + 0.05, 0.05))
 
-                if col == 2 and row == 1:
-                    l = df['mesma-soil']
-                    marker = 'x'
+                if col != 0:
+                    ax.set_yticklabels([])
 
-                x = df['sza']
-                ax.scatter(x, l, marker=marker)
-                r2 = r2_calculations(x, l)
+                if row != 3:
+                    ax.set_yticklabels([''] + ax.get_yticklabels()[1:])
+                    ax.set_xticklabels([])
+
+                df_x = df_select[(df_select['instrument'] == 'asd')].copy().reset_index(drop=True)
+                df_x = df_x.sort_values('plot')
+                df_y = df_select[(df_select['instrument'] == 'emit')].copy().reset_index(drop=True)
+                df_y = df_y.sort_values('plot')
+
+                # plot fractional cover values
+                x = df_x[col_map[col]].values
+                y = df_y[col_map[col]].values
+
+                abs_error = np.absolute(x-y)
+                sza_vals = df['sza'].values
+
+                ax.scatter(sza_vals, abs_error)
+                r2 = r2_calculations(sza_vals, abs_error)
                 txtstr = '\n'.join((
                     r'R$^2$: %.2f' % (r2,),
                     r'n = ' + str(len(x))))
                 props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
-                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
+                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=12,
                         verticalalignment='top', bbox=props)
-                ax.set_aspect(1. / ax.get_data_ratio())
 
-        plt.savefig(os.path.join(self.fig_directory, 'sza_mae.png'), format="png", dpi=300, bbox_inches="tight")
+        fig.supylabel('Absolute Error', fontsize=self.axis_label_fontsize)
+        plt.savefig(os.path.join(self.fig_directory, f'sza_mae_{norm_option}.png'), format="png", dpi=300, bbox_inches="tight")
 
 
     def local_slpit(self):
@@ -698,5 +725,6 @@ def run_figures(base_directory):
     #fig.plot_summary()
     fig.plot_rmse(norm_option='brightness')
     fig.plot_rmse(norm_option='none')
-    fig.local_slpit()
-    fig.sza_plot()
+    # fig.local_slpit()
+    fig.sza_plot(norm_option='brightness')
+    fig.sza_plot(norm_option='none')

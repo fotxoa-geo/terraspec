@@ -3,6 +3,7 @@ from utils.slpit_download import download_shift_slpit, sync_gdrive
 from shift.build_shift import run_build_workflow
 from shift.shift_unmix import run_shift_unmix
 from shift.shift_tables import run_tables
+from shift.figures import run_figures
 
 def display_shift_menu():
     msg = f"You have entered SHIFT mode! " \
