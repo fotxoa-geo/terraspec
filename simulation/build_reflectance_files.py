@@ -101,12 +101,23 @@ def build_hypercubes(dimensions: int, max_dimension: int, spectra_starting_col:i
                                  wvls=wvls, spectra_starting_col=spectra_starting_col)
 
 
-def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int):
+def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int, normalize=False):
     df = spectra.load_global_library(output_directory=output_directory)
     df_soil = df.loc[(df['level_1'] == 'soil')].copy().reset_index(drop=True)
+    
+    if normalize:
+        df_only = df.iloc[:, spectra_starting_col:]
+        df_array = df_only.to_numpy()
+        norm = p_map(spectra.vector_normalize_spectrum, df_array,
+                                     **{"desc": f"\t\t\tnormalizing spectrum: CH d = {dimensions}...", "ncols": 150})
+        df_norm = pd.DataFrame(norm)
+        df_norm.columns = df_only.columns
+        df_norm = pd.concat([df.iloc[:, :spectra_starting_col].reset_index(drop=True), df_norm], axis=1)
+    else:
+        pass
 
     # # pc analysis for em library
-    cursor_print("loading convex hull... d = " + str(dimensions))
+    cursor_print(f"loading convex hull... d = {dimensions}")
     print()
 
     # use test train split on pv and npv for unmmix library
@@ -116,8 +127,13 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int)
     em_libraries_output, sim_libraries_output = get_library_outputs(output_directory=output_directory)
 
     # run soil PCA
-    pc_components = spectra.pca_analysis(df, spectra_starting_col=spectra_starting_col)
-    pc_array = np.asarray(pc_components)[:, spectra_starting_col: spectra_starting_col + dimensions]
+    if normalize:
+        pc_components = spectra.pca_analysis(df_norm, spectra_starting_col=spectra_starting_col)
+        pc_array = np.asarray(pc_components)[:, spectra_starting_col: spectra_starting_col + dimensions]
+
+    else:
+        pc_components = spectra.pca_analysis(df, spectra_starting_col=spectra_starting_col)
+        pc_array = np.asarray(pc_components)[:, spectra_starting_col: spectra_starting_col + dimensions]
 
     # get the convex hull of n-dimensions
     ch = ConvexHull(pc_array)
@@ -132,9 +148,7 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int)
     df_unmix = pd.concat([unmix_npv_pv, df_ch], axis=0).sort_values("level_1")
 
     # save the dataframes to a csv - unmixing library
-    df_unmix.to_csv(
-        os.path.join(em_libraries_output, 'convex_hull__n_dims_' + str(dimensions) + '_unmix_library.csv'),
-        index=False)
+    df_unmix.to_csv(os.path.join(em_libraries_output, 'convex_hull__n_dims_' + str(dimensions) + '_unmix_library.csv'), index=False)
 
     df_sim = pd.concat([df, df_unmix]).drop_duplicates(keep=False).sort_values("level_1")
 
@@ -156,67 +170,11 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int)
                                  wvls=wvls, spectra_starting_col=spectra_starting_col)
 
 
-def build_geographic(dimensions: int, output_directory:str, spectra_starting_col:int):
-    cursor_print("loading... geographic validation")
-    print()
-
-    df = spectra.load_global_library(output_directory=output_directory)
-
-    # filter by dataset; only doing 4 dimensional convex hull
-    for dataset in df.dataset.unique():
-        df_dataset = df.loc[df['dataset'] != dataset].copy()
-        df_soil = df_dataset.loc[(df_dataset['level_1'] == 'soil')].copy().reset_index(drop=True)
-
-        # select npv/pv data
-        unmix_npv_pv = test_train_split(df_dataset)
-
-        # get output paths
-        em_libraries_output, sim_libraries_output = get_library_outputs(output_directory=output_directory)
-
-        # run soil PCA
-        pc_components = spectra.pca_analysis(df_dataset, spectra_starting_col=spectra_starting_col)
-        pc_array = np.asarray(pc_components)[:, spectra_starting_col: spectra_starting_col + dimensions]
-
-        # get the convex hull of n-dimensions
-        ch = ConvexHull(pc_array)
-
-        # Get the indices of the hull points
-        hull_indices = ch.vertices
-
-        # hull merged df with metadata
-        df_ch = df_soil.iloc[hull_indices]
-
-        # merge the em dataframes
-        df_unmix = pd.concat([unmix_npv_pv, df_ch], axis=0).sort_values("level_1")
-
-        # save the dataframes to a csv - unmixing library
-        df_unmix.to_csv(
-            os.path.join(em_libraries_output, 'convex_hull-withold--' + dataset + '__n_dims_' +
-                         str(dimensions) + '_unmix_library.csv'),
-            index=False)
-
-        # subtract the ems from the simulation
-        df_sim = pd.concat([df, df_unmix]).drop_duplicates(keep=False)
-        df_sim_soil = df_sim.loc[(df_sim['level_1'] == 'soil') & (df_sim['dataset'] == dataset)].copy().reset_index(
-            drop=True)
-        df_sim_pv_npv = df_sim.loc[(df_sim['level_1'] != 'soil')].copy().reset_index(drop=True)
-        df_sim = pd.concat([df_sim_pv_npv, df_sim_soil]).drop_duplicates(keep=False).sort_values("level_1")
-
-        # get simulation parameters
-        spectral_bundles, cols, level, wvls = get_sim_parameters()
-
-        # # simulate the reflectance
-        spectra.simulate_reflectance(df_sim=df_sim, df_unmix=df_unmix, dimensions=dimensions,
-                                     sim_libraries_output=sim_libraries_output, mode='convex_hull-withold--' + dataset,
-                                     level=level, spectral_bundles=spectral_bundles, cols=cols,
-                                     output_directory=output_directory, wvls=wvls, spectra_starting_col=spectra_starting_col)
-
-
 def get_sim_parameters():
     cols = 1
     level = 'level_1'
     spectral_bundles = 1000
-    emit_wvls, emit_fwhm = spectra.load_wavelengths(sensor='modis')
+    emit_wvls, emit_fwhm = spectra.load_wavelengths(sensor='emit')
 
     return spectral_bundles, cols, level, emit_wvls
 
@@ -231,6 +189,6 @@ def run_build_reflectance(output_directory):
     for i in num_dimensions:
         #build_hypercubes(dimensions=i, max_dimension=max_dimension, spectra_starting_col=spectral_starting_col,
         #                 output_directory=output_directory)
-        build_hull(dimensions=i, spectra_starting_col=spectral_starting_col, output_directory=output_directory)
+        build_hull(dimensions=i, spectra_starting_col=spectral_starting_col, output_directory=output_directory, normalize=True)
 
-    build_geographic(dimensions=4, output_directory=output_directory, spectra_starting_col=spectral_starting_col)
+    #build_geographic(dimensions=4, output_directory=output_directory, spectra_starting_col=spectral_starting_col)

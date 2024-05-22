@@ -69,7 +69,7 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
                         f'{" ".join(parameters)} '
 
             execute_call(
-                ['sbatch', '-N', '1', '--tasks-per-node', "1", '--mem', "50G", '--output', outlog_name, '--wrap',
+                ['sbatch', '-N', '1', '--tasks-per-node', "1", '--mem', "50G", '--output', outlog_name, '--job-name', 'emit.unmix' ,'--wrap',
                  f'{base_call}'], dry_run)
         else:
             pass
@@ -79,7 +79,7 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
                     f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
                     f'{" ".join(parameters)} '
 
-        execute_call(['sbatch', '-N', '1', '--tasks-per-node', '1', '--mem', "50G", '--output', outlog_name, '--wrap',
+        execute_call(['sbatch', '-N', '1', '--tasks-per-node', '1', '--mem', "50G", '--output', outlog_name, '--job-name', 'emit.unmix', '--wrap',
                       f'{base_call}'], dry_run)
 
 

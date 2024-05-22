@@ -38,20 +38,27 @@ class latex:
         df = df.replace('brightness', 'Brightness')
 
         # select parameters for mesma and sma
-        df_select = df.loc[(df['normalization'] == 'Brightness') & (df['mc_runs'] == 25)].copy()
+        df_select = df.loc[(df['normalization'] == 'Brightness') & (df['dims'] == 4)].copy()
         df_select = df_select.loc[(df['num_em'] == 30) | (df['cmbs'] == 100)].copy()
         df_select['cmbs'] = df_select['cmbs'].fillna(1)
         df_select['num_em'] = df_select['num_em'].fillna(3)
 
         for i in ["SMA", "MESMA"]:
             df_mode = df_select.loc[df_select['mode'] == i].copy()
-            df_mode = df_mode.sort_values('dims')
+            df_mode = df_mode.sort_values('mc_runs')
             df_mode = df_mode.sort_values('scenario', ascending=False)
 
             # combine mae(rmse) for table
-            df_mode['combined_npv'] = df_mode['npv_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_mode['npv_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
-            df_mode['combined_pv'] = df_mode['pv_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_mode['pv_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
-            df_mode['combined_soil'] = df_mode['soil_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_mode['soil_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
+            #df_mode['combined_npv'] = df_mode['npv_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_mode['npv_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
+            #df_mode['combined_pv'] = df_mode['pv_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_mode['pv_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
+            #df_mode['combined_soil'] = df_mode['soil_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_mode['soil_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
+            
+            # mc unc avg std error for table 
+            df_mode['combined_npv'] =  df_mode['npv_mc_unc'].apply('{:,.3f}'.format).astype(str)
+            df_mode['combined_pv'] = df_mode['pv_mc_unc'].apply('{:,.3f}'.format).astype(str)
+            df_mode['combined_soil'] = df_mode['soil_mc_unc'].apply('{:,.3f}'.format).astype(str)
+
+
 
             # remove reduntant information
             cols = df_mode.columns.tolist()
@@ -97,8 +104,8 @@ class latex:
         for i in modes:
             df_base_mode = df_base.loc[(df_base['mode'] == i)].copy()
             df_opt_mode = df_opt.loc[(df_opt['mode'] == i)].copy()
-            print(f'Baseline {i} MAE :', np.round(np.average(df_base_mode['npv_mae']), 2), np.round(np.average(df_base_mode['pv_mae']),2),
-                  np.round(np.average(df_base_mode['soil_mae']), 2))
+            #print(f'Baseline {i} MAE :', np.round(np.average(df_base_mode['npv_mae']), 2), np.round(np.average(df_base_mode['pv_mae']),2),
+                  #np.round(np.average(df_base_mode['soil_mae']), 2))
             print(f'Optimized {i} MAE :', np.round(np.average(df_opt_mode['npv_mae']), 2),
                   np.round(np.average(df_opt_mode['pv_mae']), 2),
                   np.round(np.average(df_opt_mode['soil_mae']), 2))
@@ -291,9 +298,9 @@ class latex:
 
     def summary_table(self):
         df_unmix = pd.read_csv(os.path.join(self.fig_directory, "sma_unmix_error_report.csv"))
-        df_uncertainty = pd.read_csv(os.path.join(self.fig_directory, "sma_unmix_uncertainty_report.csv"))
+        #df_uncertainty = pd.read_csv(os.path.join(self.fig_directory, "sma_unmix_uncertainty_report.csv"))
         df_unmix_mesma = pd.read_csv(os.path.join(self.fig_directory, "mesma_unmix_error_report.csv"))
-        df_uncertainty_mesma = pd.read_csv(os.path.join(self.fig_directory, "mesma_unmix_uncertainty_report.csv"))
+        #df_uncertainty_mesma = pd.read_csv(os.path.join(self.fig_directory, "mesma_unmix_uncertainty_report.csv"))
         df_atmos = pd.read_csv(os.path.join(self.fig_directory, "atmosphere_error_report.csv"))
         df_atmos.solar_zenith = df_atmos.solar_zenith.round()
         df_atmos['solar_zenith'] = df_atmos['solar_zenith'].astype('int')
@@ -313,9 +320,9 @@ class latex:
             'soil_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
 
         # get uncertainty
-        df_select_uncer = df_uncertainty.loc[(df_uncertainty['normalization'] == 'brightness') &
-                                       (df_uncertainty['num_em'] == 30) & (df_uncertainty['mc_runs'] == 25) &
-                                       (df_uncertainty['scenario'] == 'convex') & (df_uncertainty['dims'] == 4)].copy()
+        #df_select_uncer = df_uncertainty.loc[(df_uncertainty['normalization'] == 'brightness') &
+        #                               (df_uncertainty['num_em'] == 30) & (df_uncertainty['mc_runs'] == 25) &
+        #                               (df_uncertainty['scenario'] == 'convex') & (df_uncertainty['dims'] == 4)].copy()
 
         rows.append(['No Atmosphere-SMA',df_select_unmix.combined_npv.values[0], '± '+ str(np.round(df_select_uncer.npv_uncer.values[0],2)),
                      df_select_unmix.combined_pv.values[0], '± ' + str(np.round(df_select_uncer.pv_uncer.values[0],2)),
@@ -392,12 +399,12 @@ class latex:
         df_time['spectra_per_s'] = df_time['spectra_per_s'].astype(float)
         df_time['spectra_per_s'] = df_time['spectra_per_s'].apply(lambda x: round(x, 2))
         df_time['num_endmembers'] = df_time['num_endmembers'].apply(lambda x: ast.literal_eval(x)[0])
-        df_time['dims'] = df_time['reflectance_file'].apply(lambda path: os.path.basename(path).split('_')[:5][4])
+        df_time['dims'] = df_time['reflectance_file'].apply(lambda path: os.path.basename(path).split('_')[:5][4]).astype(int)
 
         df_time = df_time.loc[(df_time['error'] == 0)].copy()
         
         # get optimal settings - both convex and latin hypercube
-        df_avg_optimal = df_time.loc[((df_time['normalization'] == 'brightness') & (df_time['n_mc'] == 25)) &
+        df_avg_optimal = df_time.loc[((df_time['normalization'] == 'brightness') & (df_time['dims'] == 4)) &
             ((df_time['max_combinations'] == 100) | (df_time['max_combinations'] == -1)) & ((df_time['num_endmembers'] == 30) | (df_time['num_endmembers'] == 3))].copy()
 
 
@@ -406,12 +413,12 @@ class latex:
         for mode in df_time['mode'].unique():
             if mode == 'mesma':
                 df_avg_optimal_mesma = df_avg_optimal.loc[(df_avg_optimal['mode'] == 'mesma')].copy()
-                df_avg = df_avg_optimal_mesma.sort_values('dims')
+                df_avg = df_avg_optimal_mesma.sort_values('n_mc')
 
             elif mode == 'sma':
                 df_avg_optimal_sma = df_avg_optimal.loc[
                     (df_avg_optimal['mode'] == 'sma') & (df_avg_optimal['num_endmembers'] == 30)].copy()
-                df_avg = df_avg_optimal_sma.sort_values('dims')
+                df_avg = df_avg_optimal_sma.sort_values('n_mc')
 
             for i in df_time['scenario'].unique():
                 df_time_select = df_avg.loc[(df_avg['scenario'] == i) & (df_avg['mode'] == mode)].copy()
@@ -421,12 +428,17 @@ class latex:
         df_avg_sma_num_em = df_time.loc[(df_time['normalization'] == 'brightness') & (df_time['n_mc'] == 25) & (df_time['max_combinations'] == -1)].copy()
         num_em = []
         avg_time_per_em = []
-
+        
+                
         for i in sorted(list(df_avg_sma_num_em.num_endmembers.unique())):
             df_select = df_avg_sma_num_em.loc[(df_avg_sma_num_em['num_endmembers'] == i)].copy()
             num_em.append(i)
             avg_elapsed_time = np.round(np.average(df_select['spectra_per_s']), 2)
             avg_time_per_em.append(avg_elapsed_time)
+        
+        print(num_em)
+        print(avg_time_per_em)
+
 
         X = np.array(num_em)
         y = np.array(avg_time_per_em)
@@ -437,6 +449,7 @@ class latex:
         intercept = model.intercept_
         y_pred = model.predict(X)
 
+        print(slope, intercept)
         print('The r^2 value between n and time is : ', np.round(r2_score(avg_time_per_em, y_pred),2))
 
         # optimal settings - combinations increase for MESMA
@@ -445,12 +458,17 @@ class latex:
 
         num_cmb = []
         avg_time_per_cmb = []
-
+        
+        
         for i in sorted(list(df_avg_mesma_cmb.max_combinations.unique())):
             df_select = df_avg_mesma_cmb.loc[(df_avg_mesma_cmb['max_combinations'] == i)].copy()
             num_cmb.append(i)
             avg_elapsed_time = np.round(np.average(df_select['spectra_per_s']), 2)
             avg_time_per_cmb.append(avg_elapsed_time)
+        
+        print(num_cmb)
+        print(avg_time_per_cmb)
+
 
         X = np.array(num_cmb)
         y = np.array(avg_time_per_cmb)
@@ -460,7 +478,8 @@ class latex:
         slope = model.coef_[0]
         intercept = model.intercept_
         y_pred = model.predict(X)
-
+        
+        print(slope, intercept)
         print('The r^2 value between number of combinations and time is : ', np.round(r2_score(avg_time_per_cmb, y_pred), 2))
 
         # optimal settings - find variations in normalization methods ; SMA
@@ -516,7 +535,7 @@ def run_latex_tables(base_directory: str):
     latex_class = latex(base_directory=base_directory)
     latex_class.optimal_parameters()
     # latex_class.atmosphere_table()
-    latex_class.summary_table()
+    #latex_class.summary_table()
     latex_class.time_table()
     # latex_class.baseline_setings()
 
