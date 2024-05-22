@@ -40,8 +40,8 @@ class tables:
 
         df_all = pd.DataFrame(results)
 
-        df_all.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization',
-                                                 'npv', 'pv', 'soil', 'shade']
+        df_all.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization', 'rows', 'cols', 'duplicate_flag',
+                                                 'npv', 'pv', 'soil', 'shade', 'npv_se', 'pv_se', 'soil_se', 'shade_se']
 
         df_all.to_csv(os.path.join(self.fig_directory, 'shift_fraction_output.csv'), index=False)
 
