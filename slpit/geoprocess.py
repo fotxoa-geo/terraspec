@@ -24,6 +24,8 @@ class emit:
         create_directory(os.path.join(base_directory, 'gis', 'emit-data'))
         create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'nc_files'))
         create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'envi'))
+        create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'envi', 'l1b'))
+        create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'envi', 'l2a'))
         create_directory(os.path.join(base_directory, 'gis', 'rgb-quick-look'))
         create_directory(os.path.join(base_directory, 'gis', 'emit-data-clip'))
         create_directory(os.path.join(base_directory, 'gis', 'outlogs'))
@@ -31,19 +33,23 @@ class emit:
         # define gis directory
         self.gis_directory = os.path.join(base_directory, 'gis')
 
-    def nc_to_envi(self):
+    def nc_to_envi(self, product, ortho=False):
         msg = f"\nTerraSpec has created the following directory: {os.path.join(self.base_directory, 'gis', 'emit-data', 'envi')}\n" \
               f"ENVI files along with corresponding HDR files will be stored here."
         cursor_print(msg)
         create_directory(os.path.join(self.gis_directory, 'outlogs', 'nc_processes'))
-        nc_files = glob(os.path.join(self.gis_directory, 'emit-data', 'nc_files', '*.nc'))
+        nc_files = glob(os.path.join(self.gis_directory, 'emit-data', 'nc_files', product, '*.nc'))
 
         for i in nc_files:
             basename = os.path.basename(i).split(".")[0]
             nc_outfile = os.path.join(os.path.join(self.gis_directory, 'outlogs', 'nc_processes', basename + '.out'))
-            base_call = f'python ./emit_utils/reformat.py {i} {os.path.join(self.gis_directory, "emit-data", "envi")} --orthorectify'
 
-            subprocess.call(['sbatch', '-N', '1', '-c', '40', '--mem', '180G', '--output', nc_outfile, '--wrap', f'{base_call}'])
+            if ortho == True:
+                base_call = f'python ./emit_utils/reformat.py {i} {os.path.join(self.gis_directory, "emit-data", "envi", product)} --orthorectify'
+            else:
+                base_call = f'python ./emit_utils/reformat.py {i} {os.path.join(self.gis_directory, "emit-data", "envi", product)}'
+
+            subprocess.call(['sbatch', '-N', '1', '-c', '1', '--mem', '80G', '--output', nc_outfile, '--job-name', f'emit-{product}', '--wrap', f'{base_call}'])
 
     def rgb_quick_look(self):
         msg = f"\nTerraSpec has created the following directory: {os.path.join(self.base_directory, 'gis', 'rgb-quick-look')}\n" \
@@ -83,31 +89,39 @@ class emit:
         shapefile = os.path.join('gis', "Observation.shp")
 
         # get emit reflectance files
-        reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_reflectance')))
+        reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', 'l2a', '*_reflectance')))
 
         # get emit uncertainty files
-        reflectance_uncertainty_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_reflectance_uncertainty')))
+        reflectance_uncertainty_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', 'l2a', '*_reflectance_uncertainty')))
 
         # get mask files
-        mask_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', '*_mask')))
+        mask_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', 'l2a', '*_mask')))
         mask_files = [file for file in mask_files if '_band_mask' not in file]
         
         current_dir = os.path.dirname(os.path.abspath(__file__))
         window_extract_path = os.path.join(current_dir, 'window_extract.py')
 
         all_files = reflectance_files + reflectance_uncertainty_files + mask_files
-
+        
         create_directory(os.path.join(self.gis_directory, 'outlogs', 'extracts'))
-
+        
         for file in all_files:
             acquisition_date = os.path.basename(file).split("_")[4]
             acquisition_type = os.path.basename(file).split("_")[2]
-            base_call = f'python {window_extract_path} -rfl_img {file} -w_size {window_size} ' \
-                        f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis_directory, "emit-data-clip")} '
-            outfile = os.path.join(self.gis_directory, 'outlogs', 'extracts', acquisition_date + '_' + acquisition_type + '.out')
-            sbatch_cmd = f"sbatch -N 1 -c 40 --mem 80G --output {outfile} --wrap='{base_call}'"
-            subprocess.run(sbatch_cmd, shell=True, text=True)
+            version = os.path.basename(file).split("_")[3]
+            product = os.path.basename(file).split("_")[1]
 
+            corresponding_nc_file = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'nc_files', product.lower(), f'*{product}_{acquisition_type}_{version}_{acquisition_date}*.nc')))
+            nc_file = corresponding_nc_file[0]
+            
+            base_call = f'python {window_extract_path} -rfl_img {file} -nc_file {nc_file} -w_size {window_size} ' \
+                        f'-shp {shapefile} -pad {pad} -out {os.path.join(self.gis_directory, "emit-data-clip")} '
+            
+            outfile = os.path.join(self.gis_directory, 'outlogs', 'extracts', acquisition_date + '_' + acquisition_type + '.out')
+            sbatch_cmd = f"sbatch -N 1 -c 1 --mem 50G --output {outfile} --job-name emit.extract  --wrap='{base_call}'"
+            
+            subprocess.run(sbatch_cmd, shell=True, text=True)
+            
 
 def run_geoprocess_utils(base_directory):
     geo = emit(base_directory=base_directory)
@@ -116,7 +130,8 @@ def run_geoprocess_utils(base_directory):
 
 def run_nc_to_envi(base_directory):
     geo = emit(base_directory=base_directory)
-    geo.nc_to_envi()
+    geo.nc_to_envi(product="l1b", ortho=True)
+    geo.nc_to_envi(product="l2a", ortho=False)
 
 
 def run_geoprocess_extract(base_directory, dry_run: bool):

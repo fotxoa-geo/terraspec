@@ -24,6 +24,22 @@ import geopandas as gp
 from utils.results_utils import r2_calculations, load_data, error_metrics
 from matplotlib.ticker import FormatStrFormatter
 
+
+def duplicate_check_fractions(array):
+    seen = set()
+    duplicate_flag = 0
+
+    for i in range(len(array)):
+        for j in range(len(array[i])):
+            if array[i][j] in seen:
+                array[i][j] = np.nan
+                duplicate_flag = 1
+            else:
+                seen.add(array[i][j])
+    
+    return array, duplicate_flag
+
+
 def fraction_file_info(fraction_file):
     name = os.path.basename(fraction_file)
     unmix_mode = os.path.basename(os.path.dirname(fraction_file))
@@ -44,15 +60,20 @@ def fraction_file_info(fraction_file):
     mean_fractions = []
     mean_se = []
     for _band, band in enumerate(range(0, fraction_array.shape[2])):
-            if instrument == 'asd':
-                mean_fractions.append(np.mean(fraction_array[:, :, _band]))
-            else:
-                mean_fractions.append(np.mean(fraction_array[:, :, _band]))
+            
+            selected_fractions = fraction_array[:, :, _band]
+            selected_fractions, duplicate_flag = duplicate_check_fractions(selected_fractions)
+            #if instrument == 'asd':
+             #   mean_fractions.append(np.mean(fraction_array[:, :, _band]))
+            #else:
+            #    mean_fractions.append(np.mean(fraction_array[:, :, _band]))
+            
+            mean_fractions.append(np.nanmean(selected_fractions))
 
             se = np.mean(unc_array[:, :, _band]/np.sqrt(int(num_mc)))
             mean_se.append(se)
 
-    return [instrument, unmix_mode, plot, library_mode, int(num_cmb_em), int(num_mc), normalization] + mean_fractions + mean_se
+    return [instrument, unmix_mode, plot, library_mode, int(num_cmb_em), int(num_mc), normalization, fraction_array.shape[0], fraction_array.shape[1], duplicate_flag] + mean_fractions + mean_se
 
 
 class figures:

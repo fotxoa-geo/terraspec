@@ -65,7 +65,7 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
             run_geoprocess_extract(base_directory=base_directory, dry_run=dry_run)
 
         elif user_input =='F':
-            sync_extracts(base_directory)
+            sync_extracts(base_directory, project='emit')
 
         # run unmixing code
         elif user_input == 'G':
