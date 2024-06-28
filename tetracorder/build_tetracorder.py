@@ -52,10 +52,12 @@ class tetracorder:
         create_directory(os.path.join(self.tetra_output_directory, 'fractions'))
         create_directory(os.path.join(self.tetra_output_directory, 'simulated_spectra'))
         create_directory(os.path.join(self.tetra_output_directory, 'hypertrace'))
+        create_directory(os.path.join(self.tetra_output_directory, 'veg-correction'))
 
         self.augmented_dir = os.path.join(os.path.join(self.tetra_output_directory, 'augmented'))
         self.fractions_dir = os.path.join(os.path.join(self.tetra_output_directory, 'fractions'))
         self.sim_spectra_dir = os.path.join(os.path.join(self.tetra_output_directory, 'simulated_spectra'))
+        self.veg_correction_dir = os.path.join(self.tetra_output_directory, 'veg-correction')
 
         #create_directory(os.path.join(self.output_directory, 'outlogs'))
         #create_directory(os.path.join(self.output_directory, 'scratch'))
@@ -66,20 +68,23 @@ class tetracorder:
         df_sim = pd.read_csv(os.path.join(self.simulation_output_directory, 'simulation_libraries',
                                           'convex_hull__n_dims_4_simulation_library.csv'))
 
-        spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
-                                      level='level_1', spectral_bundles=10000, increment_size=0.05,
-                                      output_directory=self.sim_spectra_dir, wvls=self.wvls,
-                                      name='tetracorder_soil', spectra_starting_col=8, endmember='soil')
+        df_sim_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
+                                                         'convex_hull__n_dims_4_simulation_library'))
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
                                       level='level_1', spectral_bundles=10000, increment_size=0.05,
                                       output_directory=self.sim_spectra_dir, wvls=self.wvls,
-                                      name='tetracorder_npv', spectra_starting_col=8, endmember='npv')
+                                      name='tetracorder_soil', spectra_starting_col=8, endmember='soil', simulation_library_array=df_sim_array)
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
                                       level='level_1', spectral_bundles=10000, increment_size=0.05,
                                       output_directory=self.sim_spectra_dir, wvls=self.wvls,
-                                      name='tetracorder_pv', spectra_starting_col=8, endmember='pv')
+                                      name='tetracorder_npv', spectra_starting_col=8, endmember='npv', simulation_library_array=df_sim_array)
+
+        spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim,
+                                      level='level_1', spectral_bundles=10000, increment_size=0.05,
+                                      output_directory=self.sim_spectra_dir, wvls=self.wvls,
+                                      name='tetracorder_pv', spectra_starting_col=8, endmember='pv', simulation_library_array=df_sim_array)
 
     def hypertrace_tetracorder(self):
         cursor_print('hypertrace: tetracorder')
@@ -211,10 +216,12 @@ class tetracorder:
 
         # simulation spectra
         sim_soil_spectra = os.path.join(self.sim_spectra_dir, 'tetracorder_soil_spectra')
+        sim_soil_em_spectra = os.path.join(self.sim_spectra_dir, 'tetracorder_soil_em_spectra')
+
         sim_npv_spectra = os.path.join(self.sim_spectra_dir, 'tetracorder_npv_spectra')
         sim_pv_spectra = os.path.join(self.sim_spectra_dir, 'tetracorder_pv_spectra')
 
-        files_to_augment = [simulation_lib, unmix_lib, sim_soil_spectra]
+        files_to_augment = [simulation_lib, unmix_lib, sim_soil_spectra, sim_soil_em_spectra]
 
         for i in files_to_augment:
             basename = os.path.basename(i)
@@ -222,6 +229,13 @@ class tetracorder:
             augment_envi(file=i, wvls=self.wvls, out_raster=output_raster)
 
         cursor_print("\t- done")
+
+    def mineral_lib_refl_cont(self):
+        # case 1 - em spectra - this is pure soil!
+        em_tetracorder_index = envi_to_array(os.path.join(self.base_directory, 'output', 'spectral_abundance', 'tetracorder_soil_em_spectra_simulation_augmented_min'))
+        em_spectra_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_em_spectra'))
+        output_file = os.path.join(self.veg_correction_dir, 'tetracorder_soil_em_spectra_variables.hdr')
+        spectra.mineral_components(index_array=em_tetracorder_index[:, :21, :], spectra_array=em_spectra_array, output_file=output_file)
 
 
 def run_tetracorder_build(base_directory, sensor, dry_run):
@@ -231,19 +245,19 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
 
         user_input = input('\nPlease indicate the desired mode: ').upper()
 
-        # download EMIT NC images
         if user_input == 'A':
             tc.generate_tetracorder_reflectance()
+            tc.augment_simulation()
         elif user_input == 'B':
             tc.hypertrace_tetracorder()
         elif user_input == 'C':
             tc.unmix_tetracorder(dry_run=dry_run)
         elif user_input == 'D':
-            tc.reconstruct_soil_simulation()
-            tc.reconstruct_soil_sma()
+            #tc.reconstruct_soil_sma()
+            tc.mineral_lib_refl_cont()
         elif user_input == 'E':
             tc.augment_slpit_pixels()
-            tc.augment_simulation()
+
         elif user_input == 'F':
             print("Returning to Tetracorder main menu.")
             break

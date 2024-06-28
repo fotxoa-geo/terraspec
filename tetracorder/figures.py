@@ -156,6 +156,19 @@ def atmosphere_meta(atmosphere):
     return aod, h2o, np.round(geometry_results_emit[1], 2)
 
 
+def standardize_cont_feature(pure_signal, mixed_singal):
+    min_pure = np.min(pure_signal)
+    max_pure = np.max(pure_signal)
+
+    min_mixed = np.min(mixed_singal)
+    max_mixed = np.max(mixed_singal)
+
+    pure_normalized = (pure_signal - min_pure) / (max_pure - min_pure)
+    pure_scaled = pure_normalized * (max_mixed - min_mixed) + min_mixed
+
+    return pure_scaled
+
+
 class tetracorder_figures:
     def __init__(self, base_directory: str):
 
@@ -711,7 +724,7 @@ class tetracorder_figures:
         emit_detections = []
         slpit_detections = []
 
-        for plot in sorted(list(transect_data.plot_name.unique()), reverse=True):
+        for plot in sorted(list(transect_data.plot_name.unique())):
             slpit_ems_records = glob(os.path.join(self.sa_outputs, '*' + plot.replace(" ", "") +
                                                   '*emit_ems_augmented_min'))
 
@@ -765,7 +778,7 @@ class tetracorder_figures:
             g1_e = fig.add_subplot(gs[1, 2])
             g2_e = fig.add_subplot(gs[1, 3])
 
-            emit_wvls, fwhm = spectra.load_wavelengths(sensor='emit')
+
             g1_s.set_title('Continuum Removed Group 1 - SLPIT', fontsize=10)
             g2_s.set_title('Continuum Removed Group 2 - SLPIT', fontsize=10)
 
@@ -781,10 +794,17 @@ class tetracorder_figures:
             ls.axis('off')
 
             # plot spectra
+            emit_wvls, fwhm = spectra.load_wavelengths(sensor='emit')
+            good_emit_bands = spectra.get_good_bands_mask(emit_wvls, wavelength_pairs=None)
+            emit_wvls[~good_emit_bands] = np.nan
+            emit_wvls = emit_wvls/1000
+
             fs.set_title('Full Spectrum')
             fs.plot(emit_wvls, plot_spectra, label='SLPIT', c='blue')
             fs.plot(emit_wvls, emit_spectra, label='EMIT', c='orange')
             fs.set_ylim(0,1)
+            fs.set_ylabel('Reflectance')
+            fs.set_xlabel('Wavelengths (µm)')
             fs.legend()
 
             # plot map
@@ -840,18 +860,18 @@ class tetracorder_figures:
                                 split_cont, wvls = cont_rem(wavelengths, plot_spectra, cont_feat['continuum'])
                                 emit_cont, ewvls = cont_rem(wavelengths, emit_spectra, cont_feat['continuum'])
 
-                                g1_s.plot(wl, cont, label=f'{file_label}', c='black', linestyle='dotted')
+                                g1_s.plot(wl, standardize_cont_feature(pure_signal=cont, mixed_singal=split_cont), label=f'{file_label}', c='black', linestyle='dotted')
                                 g1_s.plot(wvls, split_cont, label=f'SLPIT', c='blue')
-                                g1_s.plot(ewvls, emit_cont, label=f'EMIT', c='orange')
+                                #g1_s.plot(ewvls, emit_cont, label=f'EMIT', c='orange')
 
                             if group == 'group.2um':
                                 split_cont, wvls = cont_rem(wavelengths, plot_spectra, cont_feat['continuum'])
                                 cont, wl = cont_rem(wavelengths, library_reflectance[library_records.index(slpit_record), :], cont_feat['continuum'])
                                 emit_cont, ewvls = cont_rem(wavelengths, emit_spectra, cont_feat['continuum'])
 
-                                g2_s.plot(wl, cont, label=f'{file_label}', c='black', linestyle='dotted')
+                                g2_s.plot(wl, standardize_cont_feature(pure_signal=cont, mixed_singal=split_cont), label=f'{file_label}', c='black', linestyle='dotted')
                                 g2_s.plot(wvls, split_cont, label=f'SLPIT', c='blue')
-                                g2_s.plot(ewvls, emit_cont, label=f'EMIT', c='orange')
+                                #g2_s.plot(ewvls, emit_cont, label=f'EMIT', c='orange')
 
                 # plot EMIT data
                 for _record, emit_record in enumerate(mineral_records_emit):
@@ -872,8 +892,8 @@ class tetracorder_figures:
                                 split_cont, wvls = cont_rem(wavelengths, plot_spectra, cont_feat['continuum'])
                                 emit_cont, ewvls = cont_rem(wavelengths, emit_spectra, cont_feat['continuum'])
 
-                                g1_e.plot(wl, cont, label=f'{file_label}', c='black', linestyle='dotted')
-                                g1_e.plot(wvls, split_cont, label=f'SLPIT', c='blue')
+                                g1_e.plot(wl, standardize_cont_feature(pure_signal=cont, mixed_singal=emit_cont), label=f'{file_label}', c='black', linestyle='dotted')
+                                #g1_e.plot(wvls, split_cont, label=f'SLPIT', c='blue')
                                 g1_e.plot(ewvls, emit_cont, label=f'EMIT', c='orange')
 
                             if group == 'group.2um':
@@ -881,8 +901,8 @@ class tetracorder_figures:
                                 split_cont, wvls = cont_rem(wavelengths, plot_spectra, cont_feat['continuum'])
                                 emit_cont, ewvls = cont_rem(wavelengths, emit_spectra, cont_feat['continuum'])
 
-                                g2_e.plot(wl, cont, label=f'{file_label}', c='black', linestyle='dotted')
-                                g2_e.plot(wvls, split_cont, label=f'SLPIT', c='blue')
+                                g2_e.plot(wl, standardize_cont_feature(pure_signal=cont, mixed_singal=emit_cont), label=f'{file_label}', c='black', linestyle='dotted')
+                                #g2_e.plot(wvls, split_cont, label=f'SLPIT', c='blue')
                                 g2_e.plot(ewvls, emit_cont, label=f'EMIT', c='orange')
 
             for ax in [g1_s, g2_s, g1_e, g2_e]:
@@ -996,11 +1016,28 @@ class tetracorder_figures:
                         bbox_inches="tight")
 
 
+    def veg_correction(self):
+
+        cols = 20 + 1 # total number of cols used; code does not get rid of augemnted cols
+        em_sa_array = envi_to_array(os.path.join(self.sa_outputs, 'tetracorder_soil_em_spectra_simulation_augmented_jabun_rel_abundance'))
+        em_sa_array = em_sa_array[:, :cols, :]
+        em_tetracorder_index = envi_to_array(os.path.join(self.sa_outputs, 'tetracorder_soil_em_spectra_simulation_augmented_min'))
+        em_tetracorder_index = em_tetracorder_index[:,:cols, :]
+
+        mixed_sa_array = envi_to_array(os.path.join(self.sa_outputs, 'tetracorder_soil_spectra_simulation_augmented_jabun_rel_abundance'))
+        mixed_sa_array = mixed_sa_array[:, :cols, :]
+        mixed_tetracorder_index = envi_to_array(os.path.join(self.sa_outputs, 'tetracorder_soil_spectra_simulation_augmented_min'))
+        mixed_tetracorder_index = mixed_tetracorder_index[:,:cols, :]
+
+
+
+
 def run_figure_workflow(base_directory):
     ems = ['soil']
     tc = tetracorder_figures(base_directory=base_directory)
+    tc.veg_correction()
     #tc.confusion_matrix()
-    #tc.tetracorder_libraries()
+    tc.tetracorder_libraries()
     #tc.mineral_validation(x_axis='contact')
     #tc.mineral_validation(x_axis='transect')
     #tc.mineral_threshold()
