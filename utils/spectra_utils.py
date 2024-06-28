@@ -15,6 +15,10 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 from utils.slpit_download import load_pickle, save_pickle
 import struct
+import tetracorder.tetracorder as tc
+import spectral.io.envi as envi
+from emit_utils.file_checks import envi_header
+from scipy.interpolate import interp1d
 
 def get_dd_coords(coord):
     dd_mm = float(str(coord).split(".")[0][-2:] + "." + str(coord).split(".")[1])/60
@@ -299,39 +303,169 @@ class spectra:
     @classmethod
     def increment_reflectance(cls, class_names: list, simulation_table: str, level: str, spectral_bundles:int,
                               increment_size:float, output_directory: str, wvls, name: str, spectra_starting_col:int,
-                              endmember:str):
+                              endmember:str, simulation_library_array):
 
         cols = int(1 / increment_size) + 1
         fraction_grid = np.zeros((spectral_bundles, cols, len(class_names)))
         spectra_grid = np.zeros((spectral_bundles, cols, len(wvls)))
         index_grid = np.zeros((spectral_bundles, cols, len(class_names)))
+        em_grid = np.zeros((spectral_bundles, cols, len(wvls)))
 
         spec_array = spectra.create_spectral_bundles(df=simulation_table, level=level, spectral_bundles=spectral_bundles)
 
-        results = p_map(partial(spectra.row_reflectance, increment_size, cols, wvls,spectra_starting_col, endmember), [bundle for bundle in spec_array], [_index for _index,index in enumerate(spectra_grid)],
+        results = p_map(partial(spectra.row_reflectance, increment_size, cols, wvls,spectra_starting_col, endmember),
+                        [bundle for bundle in spec_array], [_index for _index,index in enumerate(spectra_grid)],
                         **{"desc": "\t\t processing reflectance...", "ncols": 150})
+        em_indices = {'npv': 0, 'pv': 1, 'soil': 2}
 
         # populate the results
         for _row, row in enumerate(results):
             spectra_grid[_row, :, :] = row[0]
             fraction_grid[_row, :, :] = row[1]
             index_grid[_row, :, :] = row[2]
+            picked_em = int(row[2][0][0][em_indices[endmember]])
+            #em_spectra = simulation_library_array[picked_em, :, :] * row[1][0][:,[em_indices[endmember]]]
+            em_grid[_row, :, :] = simulation_library_array[picked_em, :, :] * row[1][0][:,[em_indices[endmember]]]
 
         # save the datasets
         refl_meta = get_meta(lines=spectral_bundles, samples=cols, bands=wvls, wvls=True)
         index_meta = get_meta(lines=spectral_bundles, samples=cols, bands=class_names, wvls=False)
         fraction_meta = get_meta(lines=spectral_bundles, samples=cols, bands=class_names, wvls=False)
+        em_meta = get_meta(lines=spectral_bundles, samples=cols, bands=wvls, wvls=True)
 
         # save index, spectra, fraction grid
-        output_files = [os.path.join(output_directory, name + '_index.hdr'),
-                        os.path.join(output_directory, name + '_spectra.hdr'),
-                        os.path.join(output_directory, name + '_fractions.hdr')]
+        output_files = [os.path.join(output_directory, f'{name}_index.hdr'),
+                        os.path.join(output_directory, f'{name}_spectra.hdr'),
+                        os.path.join(output_directory, f'{name}_fractions.hdr'),
+                        os.path.join(output_directory, f'{name}_em_spectra.hdr')]
 
-        meta_docs = [index_meta, refl_meta, fraction_meta]
-        grids = [index_grid, spectra_grid, fraction_grid]
+        meta_docs = [index_meta, refl_meta, fraction_meta, em_meta]
+        grids = [index_grid, spectra_grid, fraction_grid, em_grid]
 
         p_map(save_envi, output_files, meta_docs, grids, **{"desc": "\t\t saving envi files...", "ncols": 150})
         del index_grid, spectra_grid, fraction_grid
+
+
+    @classmethod
+    def cont_removal(cls, wavelengths, reflectance, feature):
+        left_inds = np.where(np.logical_and(wavelengths >= feature[0], wavelengths <= feature[1]))[0]
+        left_x = wavelengths[int(left_inds.mean())]
+        left_y = reflectance[left_inds].mean()
+
+        right_inds = np.where(np.logical_and(wavelengths >= feature[2], wavelengths <= feature[3]))[0]
+        right_x = wavelengths[int(right_inds.mean())]
+        right_y = reflectance[right_inds].mean()
+
+        feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
+
+        continuum = interp1d([left_x, right_x], [left_y, right_y],
+                             bounds_error=False, fill_value='extrapolate')(wavelengths)
+        depths = reflectance[feature_inds] / continuum[feature_inds]
+        return depths, wavelengths[feature_inds]
+
+
+    @classmethod
+    def nearest_index_to_wavelength(cls, wavelengths, target_wavelength):
+        wvl_nearest_index = (np.abs(wavelengths - target_wavelength)).argmin()
+
+        return wvl_nearest_index
+
+    @classmethod
+    def mineral_group_retrival(cls, mineral_index, spectra_observed):
+        decoded_expert = tc.decode_expert_system(os.path.join('utils', 'tetracorder', 'cmd.lib.setup.t5.27c1'),
+                                                          log_file=None, log_level='INFO')
+
+        SPECTRAL_REFERENCE_LIBRARY = {'splib06': os.path.join('utils', 'tetracorder', 's06emitd_envi'),
+                                      'sprlb06': os.path.join('utils', 'tetracorder', 'r06emitd_envi')}
+
+        spectral_reference_library_files = SPECTRAL_REFERENCE_LIBRARY
+
+        group_wvl_center = {'group.2um': 2.24, 'group.1um': 0.79}
+
+        # array to be returned with following positions: group number, rb, rc, rbo, rco
+        return_array = np.ones((5)) * -9999.
+
+        # mineral matrix
+        if mineral_index != 0:
+            df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
+            record = df_mineral_matrix.loc[df_mineral_matrix['Index'] == int(mineral_index), 'Record'].iloc[0]
+            filename = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Filename'].iloc[0]
+            group = filename.split('.depth.gz')[0].replace('/', '\\').split(os.sep)[0]
+            group_num = float(group.split('.')[1][0])
+
+            # this will loop through both libraries
+            for key, item in spectral_reference_library_files.items():
+                library = envi.open(envi_header(item), item)
+                library_reflectance = library.spectra.copy()
+                library_records = [int(q) for q in library.metadata['record']]
+
+                if record not in library_records:
+                    continue
+
+                hdr = envi.read_envi_header(envi_header(item))
+                wavelengths = np.array([float(q) for q in hdr['wavelength']])
+
+                for cont_feat in decoded_expert[filename.split('.depth.gz')[0].replace('/', '\\')]['features']:
+                    # get rc and rb from tetracorder library
+                    refl_cont, wl = spectra.cont_removal(wavelengths, library_reflectance[library_records.index(record), :], cont_feat['continuum'])
+                    rc_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wl, target_wavelength=group_wvl_center[group])
+                    rc = refl_cont[rc_nearest_index]
+                    rb_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength=group_wvl_center[group])
+                    rb = library_reflectance[library_records.index(record), :][rb_nearest_index]
+
+                    # get rco and rbo - observed spectra
+                    refl_cont_o, wl_o = spectra.cont_removal(wavelengths, spectra_observed, cont_feat['continuum'])
+                    rco_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wl_o, target_wavelength=group_wvl_center[group])
+                    rco = refl_cont_o[rco_nearest_index]
+                    rbo_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength=group_wvl_center[group])
+                    rbo = spectra_observed[rbo_nearest_index]
+
+                    return_array[:] = [group_num, rb, rc, rbo, rco]
+
+        else:
+            pass
+
+        return return_array
+
+    @classmethod
+    def mineral_group_row(cls, mineral_index_row, spectra_row):
+
+        row_return_array = np.ones((mineral_index_row.shape[0], 10)) * -9999.
+
+        for _col, col in enumerate(mineral_index_row):
+            for _band, band in enumerate(col):
+                if _band in [0, 2]:
+                    pass
+                else:
+                    col_spectra = spectra_row[_col,:]
+                    mineral_retrival = spectra.mineral_group_retrival(mineral_index=band, spectra_observed=col_spectra)
+
+                    group_num = mineral_retrival[0]
+
+                    if group_num == 1:
+                        row_return_array[_col, :5] = mineral_retrival
+                    else:
+                        row_return_array[_col, 5:] = mineral_retrival
+
+        return row_return_array
+
+    @classmethod
+    def mineral_components(cls, index_array, spectra_array, output_file):
+
+        # cont grid - corresponds to Rc and Rc-observed - for both group 1 and group 2
+        output_grid = np.zeros((index_array.shape[0], index_array.shape[1], 10))
+
+        results = p_map(spectra.mineral_group_row, [index_array[_row, :, :] for _row, row in enumerate(index_array)],
+                        [spectra_array[_row, :, :] for _row, row in enumerate(spectra_array)],
+                        **{"desc": "\t\t processing continuum reflectance...", "ncols": 150})
+
+        for _row, row in enumerate(results):
+            output_grid[_row, :, :] = row
+
+        # save spectra
+        meta = get_meta(lines=index_array.shape[0], samples= index_array.shape[1], bands=[i for i in range(10)], wvls=False)
+        meta['data ignore value'] = -9999
+        save_envi(output_file=output_file, meta=meta, grid=output_grid)
 
     @classmethod
     def generate_reflectance(cls, class_names: list, simulation_table: str, level: str, spectral_bundles:int, cols:int,
