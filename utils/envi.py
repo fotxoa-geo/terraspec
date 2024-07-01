@@ -141,7 +141,7 @@ def envi_tiff(envi_file, output_directory):
     prj = ds.GetProjection()
 
     ds_array = ds.ReadAsArray().transpose((1, 2, 0))
-    outRaster = driver.Create(out_ras, ds_array.shape[1], ds_array.shape[0], 4, gdal.GDT_Byte)
+    outRaster = driver.Create(out_ras, ds_array.shape[1], ds_array.shape[0], ds_array.shape[2], gdal.GDT_Float32)
 
     originX, pixelWidth, b, originY, d, pixelHeight = ds.GetGeoTransform()
     outRaster.SetGeoTransform((originX, pixelWidth, 0, originY, 0, pixelHeight))
@@ -149,7 +149,7 @@ def envi_tiff(envi_file, output_directory):
     for _b, b in enumerate(range(0, ds_array.shape[2])):
         outband = outRaster.GetRasterBand(_b + 1)
         band_select = ds_array[:, :, _b]
-        band_select[band_select != 0] = 255
+        #band_select[band_select != 0] = 255
         outband.WriteArray(band_select)
 
     # settings srs from input tif file.

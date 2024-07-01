@@ -1,7 +1,7 @@
 import os
 from utils.text_guide import cursor_print, query_slpit_mode, query_yes_no
 from utils.slpit_download import run_download_emit, run_dowloand_slpit, sync_gdrive, sync_extracts
-from slpit.geoprocess import run_geoprocess_utils, run_geoprocess_extract, run_nc_to_envi
+from slpit.geoprocess import run_geoprocess_utils
 from slpit.build_slpit import run_build_workflow
 from slpit.figures import run_figures
 from slpit.slpit_unmix import run_slipt_unmix
@@ -17,8 +17,7 @@ def display_slpit_menu():
     print("A... Download EMIT Imagery")
     print("B... Download Transect Data")
     print("C... Build Reflectance Files from ASD")
-    print("D... Geoprocess NC to ENVI data")
-    print("E... Extract ENVI Data from SLPIT Points")
+    print("D... Geoprocess Data")
     print("F... Sync extracted 3x3 windows")
     print("G... Unmix Signals")
     print("H... Process Figures and Tables")
@@ -54,15 +53,7 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
 
         # run the geoprocess on the emit imagery
         elif user_input == 'D':
-            run_nc_to_envi(base_directory=base_directory)
-
-            rgb_input = query_yes_no(question='Would you like RGBs?')
-            if rgb_input:
-                run_geoprocess_utils(base_directory=base_directory)
-
-        # extract the 3x3 windows
-        elif user_input == 'E':
-            run_geoprocess_extract(base_directory=base_directory, dry_run=dry_run)
+            run_geoprocess_utils(base_directory=base_directory, dry_run=dry_run)
 
         elif user_input =='F':
             sync_extracts(base_directory, project='emit')

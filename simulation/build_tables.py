@@ -46,7 +46,7 @@ class tables:
 
         cols_df = ['scenario', 'normalization', 'num_em', 'cmbs', 'dims', 'mc_runs', 'npv_mae', 'pv_mae', 'soil_mae',
                    'npv_rmse', 'pv_rmse', 'soil_rmse', 'npv_r2', 'pv_r2', 'soil_r2', 'npv_mc_unc', 'pv_mc_unc', 'soil_mc_unc',
-                   'npv_stde', 'pv_stde', 'soil_stde']
+                   'npv_stde', 'pv_stde', 'soil_stde', 'npv_mean_unc', 'pv_mean_unc', 'soil_mean_unc']
 
         df = pd.DataFrame(results, columns=cols_df)
         df.to_csv(os.path.join(self.fig_directory, f'{mode}_unmix_error_report.csv'), index=False)

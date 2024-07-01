@@ -33,6 +33,7 @@ def error_metrics(truth_array, estimated_array, mc_unc_array, mc_runs):
     mae = []
     mc_unc = []
     std_error = []
+    mc_avg = []
 
     for em in range(truth_array.shape[2]):
         x = truth_array[:, :, em].flatten()
@@ -43,16 +44,18 @@ def error_metrics(truth_array, estimated_array, mc_unc_array, mc_runs):
             sum_square_sstd = np.sum(np.square(sstd))
             unc = np.sqrt(sum_square_sstd)/sstd.shape[0]
             mc_unc.append(unc)
-        
+            mc_avg.append(np.mean(sstd))
+
         else:
             mc_unc.append(-9999)
+            mc_avg.append(-9999)
 
         rmse.append(mean_squared_error(x, y, squared=False))
         r2.append(r2_calculations(x, y))
         mae.append(mean_absolute_error(x, y))
         std_error.append(sem(a=np.abs(x-y), ddof=1, nan_policy='omit'))
 
-    return mae + rmse + r2 + mc_unc + std_error
+    return mae + rmse + r2 + mc_unc + std_error + mc_avg
 
 
 def uncertainty_metrics(uncertainty_array):

@@ -41,18 +41,22 @@ def create_uncertainty(uncertainty_file: str, wvls):
 
 
 def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list, output_dest:str, scale:str,
-               spectra_starting_column:str, uncertainty_file=None, io_bug=None):
+               spectra_starting_column:str, uncertainty_file=None, io_bug=None, scenes=None):
     
     out_dir_path = os.path.dirname(os.path.dirname(output_dest))
-
+    
+    create_directory( os.path.join(out_dir_path, 'outlogs'))
     outlog_name = os.path.join(out_dir_path, 'outlogs', f"{mode}-{os.path.basename(output_dest)}.out")  
-    scrtch_rfl = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}")
-    scrtch_hdr = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}.hdr") 
-    scrtch_csv = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}.csv")
+    
 
-    shutil.copyfile(reflectance_file, scrtch_rfl)
-    shutil.copyfile(reflectance_file + '.hdr' , scrtch_hdr)
-    shutil.copyfile(em_file, scrtch_csv)
+    if scenes == None:
+        scrtch_rfl = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}")
+        scrtch_hdr = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}.hdr") 
+        scrtch_csv = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}.csv")
+
+        shutil.copyfile(reflectance_file, scrtch_rfl)
+        shutil.copyfile(reflectance_file + '.hdr' , scrtch_hdr)
+        shutil.copyfile(em_file, scrtch_csv)
     
     # the io bug call allows us to completely start all the runs 
     if io_bug:
@@ -75,9 +79,15 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
             pass
  
     else:
-        base_call = f'julia ~/EMIT/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
-                    f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
-                    f'{" ".join(parameters)} '
+        if scenes:
+            base_call = f'julia ~/EMIT/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
+                        f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
+                        f'{" ".join(parameters)} '
+
+        else:
+            base_call = f'julia ~/EMIT/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
+                        f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
+                        f'{" ".join(parameters)} '
 
         execute_call(['sbatch', '-N', '1', '--tasks-per-node', '1', '--mem', "50G", '--output', outlog_name, '--job-name', 'emit.unmix', '--wrap',
                       f'{base_call}'], dry_run)

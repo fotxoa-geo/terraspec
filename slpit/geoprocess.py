@@ -29,6 +29,7 @@ class emit:
         create_directory(os.path.join(base_directory, 'gis', 'rgb-quick-look'))
         create_directory(os.path.join(base_directory, 'gis', 'emit-data-clip'))
         create_directory(os.path.join(base_directory, 'gis', 'outlogs'))
+        create_directory(os.path.join(base_directory, 'gis', 'rgb-envi'))
 
         # define gis directory
         self.gis_directory = os.path.join(base_directory, 'gis')
@@ -39,17 +40,17 @@ class emit:
         cursor_print(msg)
         create_directory(os.path.join(self.gis_directory, 'outlogs', 'nc_processes'))
         nc_files = glob(os.path.join(self.gis_directory, 'emit-data', 'nc_files', product, '*.nc'))
-
+        
         for i in nc_files:
             basename = os.path.basename(i).split(".")[0]
-            nc_outfile = os.path.join(os.path.join(self.gis_directory, 'outlogs', 'nc_processes', basename + '.out'))
-
+            nc_outfile = os.path.join(os.path.join(self.gis_directory, 'outlogs', 'nc_processes', f'{basename}.out'))
+            
             if ortho == True:
                 base_call = f'python ./emit_utils/reformat.py {i} {os.path.join(self.gis_directory, "emit-data", "envi", product)} --orthorectify'
             else:
                 base_call = f'python ./emit_utils/reformat.py {i} {os.path.join(self.gis_directory, "emit-data", "envi", product)}'
-
-            subprocess.call(['sbatch', '-N', '1', '-c', '1', '--mem', '80G', '--output', nc_outfile, '--job-name', f'emit-{product}', '--wrap', f'{base_call}'])
+    
+            subprocess.call(['sbatch', '-N', '1', '-c', '1', '--mem', '80G', '--output', nc_outfile, '--job-name', f'emit.{product}', '--wrap', f'{base_call}'])
 
     def rgb_quick_look(self):
         msg = f"\nTerraSpec has created the following directory: {os.path.join(self.base_directory, 'gis', 'rgb-quick-look')}\n" \
@@ -79,6 +80,7 @@ class emit:
             else:
                 sys.stdout.write(
                     f"Please move envi files to: {os.path.join(self.gis_directory, 'emit-data')}\n")
+
 
     def clip_emit(self, window_size: int, pad: int, dry_run: bool):
         msg = f"\nTerraSpec has created the following directory: {os.path.join(self.gis_directory, 'emit-data-clip')}\n"\
@@ -121,22 +123,58 @@ class emit:
             sbatch_cmd = f"sbatch -N 1 -c 1 --mem 50G --output {outfile} --job-name emit.extract  --wrap='{base_call}'"
             
             subprocess.run(sbatch_cmd, shell=True, text=True)
+    
+
+    def envi_rgbs(self):
+        reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'envi', 'l2a', '*_reflectance')))
+        out_path = os.path.join(self.gis_directory, f'rgb-envi')
+
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        rgb_path = os.path.join(current_dir, 'rgb_envi.py')
+        
+        for file in reflectance_files:
+            acquisition_date = os.path.basename(file).split("_")[4]
+            acquisition_type = os.path.basename(file).split("_")[2]
+            version = os.path.basename(file).split("_")[3]
+            product = os.path.basename(file).split("_")[1]
             
+            corresponding_nc_file = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'nc_files', product.lower(), f'*{product}_{acquisition_type}_{version}_{acquisition_date}*.nc')))
+            nc_file = corresponding_nc_file[0]
 
-def run_geoprocess_utils(base_directory):
+            base_call = f'python {rgb_path} -rfl_img {file} -nc_file {nc_file} -out {out_path} '
+
+            outfile = os.path.join(self.gis_directory, 'outlogs', f"{acquisition_date}-rgb.out")
+            sbatch_cmd = f"sbatch -N 1 -c 1 --mem 50G --output {outfile} --job-name emit.rgb  --wrap='{base_call}'"
+            subprocess.run(sbatch_cmd, shell=True, text=True)
+
+def geoprocess_menu():
+    print("geoprocess mode for SLPIT...")
+    print("A... Field rgbs - 8 bit")
+    print("B... ENVI RGB - Float 32")
+    print("C... NC to ENVI")
+    print("D... Extract 3 x 3 pixels")
+    print("E... Exit")
+
+def run_geoprocess_utils(base_directory, dry_run):
     geo = emit(base_directory=base_directory)
-    geo.rgb_quick_look()
+    
+    while True:
+        
+        geoprocess_menu()
 
-
-def run_nc_to_envi(base_directory):
-    geo = emit(base_directory=base_directory)
-    geo.nc_to_envi(product="l1b", ortho=True)
-    geo.nc_to_envi(product="l2a", ortho=False)
-
-
-def run_geoprocess_extract(base_directory, dry_run: bool):
-    geo = emit(base_directory=base_directory)
-    geo.clip_emit(window_size=3, pad=1, dry_run=dry_run)
+        user_input = input('\nPlease indicate the desired command: ').upper()
+        
+        if user_input == 'A':
+            geo.rgb_quick_look()
+        elif user_input == 'B':
+            geo.envi_rgbs()
+        elif user_input == 'C':
+            geo.nc_to_envi(product="l1b", ortho=True)
+            geo.nc_to_envi(product="l2a", ortho=False)
+        elif user_input == 'D':
+            geo.clip_emit(window_size=3, pad=1, dry_run=dry_run)
+        elif user_input == 'E':
+            break
 
 
 

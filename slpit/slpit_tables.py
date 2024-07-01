@@ -44,18 +44,7 @@ class tables:
         df_all = pd.DataFrame(results)
         df_all.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization', 'rows', 'cols', 'duplicate_flag', 'npv', 'pv', 'soil', 'shade', 'npv_se', 'pv_se', 'soil_se', 'shade_se']
         df_all.to_csv(os.path.join(self.fig_directory, 'fraction_output.csv'), index=False)
-
-        #uncer_files_sma = sorted(glob(os.path.join(self.output_directory, 'sma', '*fractional_cover_uncertainty')))
-        #ncer_files_mesma = sorted(glob(os.path.join(self.output_directory, 'mesma', '*fractional_cover_uncertainty')))
-        #all_uncer_files = uncer_files_sma + uncer_files_mesma
-
-        #results_uncer = p_map(fraction_file_info, all_uncer_files,
-        #                      **{"desc": "\t\t retrieving mean uncertainty: ...", "ncols": 150})
-        #df_all_uncer = pd.DataFrame(results_uncer)
-
-        #df_all_uncer.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization',
-        #                        'npv', 'pv', 'soil', 'shade']
-
+        
 def run_tables(base_directory):
     tb = tables(base_directory=base_directory)
     tb.performance_table()
