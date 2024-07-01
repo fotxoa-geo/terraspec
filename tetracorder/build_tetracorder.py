@@ -235,7 +235,16 @@ class tetracorder:
         em_tetracorder_index = envi_to_array(os.path.join(self.base_directory, 'output', 'spectral_abundance', 'tetracorder_soil_em_spectra_simulation_augmented_min'))
         em_spectra_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_em_spectra'))
         output_file = os.path.join(self.veg_correction_dir, 'tetracorder_soil_em_spectra_variables.hdr')
+        
+        # case 2 - mixed simulated spectra - this is pure soil mixed with random GV + NPV
+        mixed_tetracorder_index = envi_to_array(os.path.join(self.base_directory, 'output', 'spectral_abundance', 'tetracorder_soil_spectra_simulation_augmented_min'))
+        mixed_spectra_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_spectra'))
+        mix_output_file = os.path.join(self.veg_correction_dir, 'tetracorder_soil_spectra_variables.hdr')
+        
+        spectra.mineral_components(index_array=mixed_tetracorder_index[:, :21, :], spectra_array=mixed_spectra_array, output_file=mix_output_file)
         spectra.mineral_components(index_array=em_tetracorder_index[:, :21, :], spectra_array=em_spectra_array, output_file=output_file)
+
+        # case 3 - sma/mesma reconstructions! 
 
 
 def run_tetracorder_build(base_directory, sensor, dry_run):
