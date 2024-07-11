@@ -4,6 +4,7 @@ from shift.build_shift import run_build_workflow
 from shift.shift_unmix import run_shift_unmix
 from shift.shift_tables import run_tables
 from shift.figures import run_figures
+from shift.field_methods_figures import run_figures as mt_fig
 
 def display_shift_menu():
     msg = f"You have entered SHIFT mode! " \
@@ -67,6 +68,7 @@ def run_shift_workflow(base_directory:str, dry_run, sensor):
 
                 result_input = input('\nPlease indicate the desired mode: ').upper()
                 if result_input == 'B':
+                    mt_fig(base_directory=base_directory)
                     run_figures(base_directory=base_directory)
 
                 elif result_input == 'A':
