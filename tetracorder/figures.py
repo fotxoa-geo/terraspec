@@ -1120,7 +1120,7 @@ class tetracorder_figures:
 def run_figure_workflow(base_directory):
     ems = ['soil']
     tc = tetracorder_figures(base_directory=base_directory)
-    #tc.veg_correction()
+    tc.veg_correction()
     tc.veg_correction_fig()
     #tc.confusion_matrix()
     #tc.tetracorder_libraries()
