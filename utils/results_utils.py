@@ -9,10 +9,11 @@ from scipy.stats import sem
 import numpy as np
 import re
 from sklearn.linear_model import LinearRegression
-from utils.envi import envi_to_array
+from utils.envi import envi_to_array, get_meta, save_envi
 from datetime import datetime, timezone, timedelta
 from isofit.core.sunposition import sunpos
-
+from p_tqdm import p_map
+from utils.spectra_utils import spectra
 
 def load_fraction_files(base_directory: str, mode: str, search_kw: str):
     files = glob(os.path.join(base_directory, "output", mode, search_kw), recursive=True)
@@ -342,4 +343,76 @@ def atmosphere_file(fraction_file, base_directory):
     return row
 
 
+def veg_correction(bd_variables, fractions, veg_rfl):
+    veg_fraction = fractions[0] + fractions[1]  # gv + npv
+    soil_fraction = fractions[2]
 
+    # extract variables from rb
+    rb = bd_variables[1]
+    rc = bd_variables[2]
+    rbo = bd_variables[3]
+    rco = bd_variables[4]
+    agg_group = bd_variables[5]
+
+    bdo = 1 - (soil_fraction*rb + veg_fraction* veg_rfl) / (soil_fraction*rc + veg_fraction * veg_rfl)
+
+    rc_corrected = (rco / soil_fraction) - veg_fraction * veg_rfl
+    rb_corrected = ((1 - bdo) * rco - veg_fraction*veg_rfl)/ soil_fraction
+
+    bd_corrected = 1 - rb_corrected/rc_corrected
+
+    return bd_corrected, agg_group
+
+
+def veg_correction_row(bd_pure_row, fractions_row, veg_row):
+
+    row_return_array = np.ones((bd_pure_row.shape[0], 4)) * -9999.
+
+    group_wvl_center = spectra.group_wvl_center()
+    wl, fwhm = spectra.load_wavelengths(sensor='emit')
+
+    for _col, col in enumerate(bd_pure_row):
+        col_bd = bd_pure_row[_col, :]
+
+        veg_rfl = veg_row[_col, :]
+
+        if col_bd[0] != -9999.:
+
+            g1_veg_index = spectra.nearest_index_to_wavelength(wavelengths=wl, target_wavelength=group_wvl_center['group.1um'])
+            g1_veg_rfl = veg_rfl[g1_veg_index]
+            g1_veg_corrected_bd = veg_correction(bd_variables=col_bd[:6], fractions=fractions_row[_col, :],
+                                                 veg_rfl=g1_veg_rfl)
+
+            row_return_array[_col, 0] = g1_veg_corrected_bd[0]
+
+        if col_bd[6] != -9999.:
+            g2_veg_index = spectra.nearest_index_to_wavelength(wavelengths=wl, target_wavelength=group_wvl_center['group.2um'])
+            g2_veg_rfl = veg_rfl[g2_veg_index]
+            g2_veg_corrected_bd = veg_correction(bd_variables=col_bd[6:], fractions=fractions_row[_col, :],
+                                                 veg_rfl=g2_veg_rfl)
+
+            row_return_array[_col, int(g2_veg_corrected_bd[1])] = g2_veg_corrected_bd[0]
+
+    return row_return_array
+
+
+def band_depth_veg_correction(bd, fractions, veg_rfl, output_file):
+
+    # return corrected band depths - 3 bands: iron oxides, carbonates, clays
+    output_grid = np.zeros((bd.shape[0], bd.shape[1], 4))
+
+    results = p_map(veg_correction_row,
+                    [bd[_row, :, :] for _row, row in enumerate(bd)],
+                    [fractions[_row, :, :] for _row, row in enumerate(bd)],
+                    [veg_rfl[_row, :, :] for _row, row in enumerate(bd)],
+                    **{"desc": "\t\t applying vegetation correction to band depth...",
+                       "ncols": 150})
+
+    for _row, row in enumerate(results):
+        output_grid[_row, :, :] = row
+
+    # save spectra
+    meta = get_meta(lines=output_grid.shape[0], samples=output_grid.shape[1], bands=[i for i in range(4)],
+                    wvls=False)
+    meta['data ignore value'] = -9999
+    save_envi(output_file=output_file, meta=meta, grid=output_grid)
