@@ -11,7 +11,7 @@ from matplotlib.ticker import FormatStrFormatter
 import matplotlib.ticker as ticker
 import geopandas as gp
 from glob import glob
-from utils.results_utils import r2_calculations
+from utils.results_utils import r2_calculations, band_depth_veg_correction
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from isofit.core.sunposition import sunpos
 from datetime import datetime, timezone
@@ -28,7 +28,8 @@ from sklearn import metrics
 from sklearn.preprocessing import LabelEncoder
 import sns
 from mpl_toolkits.basemap import Basemap
-
+from p_tqdm import p_map
+from matplotlib.ticker import MultipleLocator
 
 mineral_groupings = {'group.1um/copper_precipitate_greenslime': 'Copper',
                      'group.1um/fe2+_chlor+muscphy': 'Fe Oxides',
@@ -178,6 +179,7 @@ class tetracorder_figures:
         self.sim_spectra_directory = os.path.join(self.output_directory, 'simulated_spectra')
         self.output_fractions = os.path.join(self.output_directory, 'fractions')
         self.sa_outputs = os.path.join(self.output_directory, 'spectral_abundance')
+        self.veg_correction_dir = os.path.join(self.output_directory, 'veg-correction')
 
         self.slpit_output = os.path.join(base_directory, 'slpit', 'output')
         self.fig_directory = os.path.join(base_directory, 'tetracorder', 'figures')
@@ -1017,29 +1019,113 @@ class tetracorder_figures:
 
 
     def veg_correction(self):
+        # case 1 - band depth of pure soils and corrected mixed
+        bd_pure = envi_to_array(os.path.join(self.veg_correction_dir, 'tetracorder_soil_em_spectra_variables'))
+        bd_mix = envi_to_array(os.path.join(self.veg_correction_dir, 'tetracorder_soil_spectra_variables'))
+        fractions_pure = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_soil_fractions'))
+        veg_rfl = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_soil_extract_spectra'))
+        veg_rfl_sma = envi_to_array((os.path.join(self.sim_spectra_directory, 'unmixing-gv-no_brightness')))
+        sma_fractions = envi_to_array((os.path.join(self.output_fractions, 'sma', 'no-brightness', 'tetracorder_soil_spectra_fractional_cover')))
 
-        cols = 20 + 1 # total number of cols used; code does not get rid of augemnted cols
-        em_sa_array = envi_to_array(os.path.join(self.sa_outputs, 'tetracorder_soil_em_spectra_simulation_augmented_jabun_rel_abundance'))
-        em_sa_array = em_sa_array[:, :cols, :]
-        em_tetracorder_index = envi_to_array(os.path.join(self.sa_outputs, 'tetracorder_soil_em_spectra_simulation_augmented_min'))
-        em_tetracorder_index = em_tetracorder_index[:,:cols, :]
+        # save case 1 outputs
+        output_file_case1 = os.path.join(self.veg_correction_dir, 'case1.hdr')
+        band_depth_veg_correction(bd=bd_mix, fractions=fractions_pure, veg_rfl=veg_rfl, output_file=output_file_case1)
 
-        mixed_sa_array = envi_to_array(os.path.join(self.sa_outputs, 'tetracorder_soil_spectra_simulation_augmented_jabun_rel_abundance'))
-        mixed_sa_array = mixed_sa_array[:, :cols, :]
-        mixed_tetracorder_index = envi_to_array(os.path.join(self.sa_outputs, 'tetracorder_soil_spectra_simulation_augmented_min'))
-        mixed_tetracorder_index = mixed_tetracorder_index[:,:cols, :]
+        output_pure_case1 = os.path.join(self.veg_correction_dir, 'pure_case1.hdr')
+        no_vg_rfl = veg_rfl * 0
+        band_depth_veg_correction(bd=bd_pure, fractions=fractions_pure, veg_rfl=no_vg_rfl, output_file=output_pure_case1)
+
+        # save case 2 outputs - SMA based vegetation
+        output_file_case2 = os.path.join(self.veg_correction_dir, 'case2.hdr')
+        band_depth_veg_correction(bd=bd_mix, fractions=sma_fractions, veg_rfl=veg_rfl_sma, output_file=output_file_case2)
 
 
 
+
+    def veg_correction_fig(self):
+        # this is case 1
+        fig, axes = plt.subplots(1,3, figsize=(15, 9))
+
+        fractions = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_soil_fractions'))
+        unique_x_val = np.unique(fractions[0, :, 2])
+
+        bd = envi_to_array(os.path.join(self.veg_correction_dir, 'pure_case1'))
+        bd[bd == -9999.] = np.nan
+        bd_hat = envi_to_array(os.path.join(self.veg_correction_dir, 'case1'))
+        bd_hat[bd_hat == -9999.] = np.nan
+
+        bd_sma = envi_to_array(os.path.join(self.veg_correction_dir, 'case2'))
+        bd_sma[bd_sma == -9999.] = np.nan
+
+        titles = {0: 'Iron Oxides', 1: 'Carbonates', 2: 'Clays'}
+        for _ax, ax in enumerate(axes):
+            # prepare the data
+            y = bd[:, :, _ax]
+            y_hat = bd_hat[:, :, _ax]
+            y_sma = bd_sma[:,:, _ax]
+
+            # filter out the NaNs
+            y_data = [y[:, i][~np.isnan(y[:, i])] for i in range(y.shape[1])]
+            y_hat_data = [y_hat[:, i][~np.isnan(y_hat[:, i])] for i in range(y_hat.shape[1])]
+            y_sma_data = [y_sma[:, i][~np.isnan(y_sma[:, i])] for i in range(y_sma.shape[1])]
+
+            # Filter out empty arrays
+            y_data = [d for d in y_data if d.size > 0]
+            y_hat_data = [d for d in y_hat_data if d.size > 0]
+            y_sma_data = [d for d in y_sma_data if d.size > 0]
+
+            if y_data:
+                #vp1 = ax.violinplot(y_data, showmeans=True, widths=0.4)
+                y_mean = [np.mean(d) for d in y_data]
+                vp1 = ax.plot(np.arange(len(y_mean)), y_mean, label='BD pure')
+            if y_hat_data:
+                #vp2 = ax.violinplot(y_hat_data, showmeans=True, widths=0.4)
+                y_hat_mean = [np.mean(d) for d in y_hat_data]
+                vp2 = ax.plot(np.arange(len(y_hat_mean)), y_hat_mean, label='BD mix')
+
+            if y_sma_data:
+                #vp3 = ax.violinplot(y_sma_data, showmeans=True, widths=0.4)
+                y_sma_mean = [np.mean(d) for d in y_sma_data]
+                vp3 = ax.plot(np.arange(len(y_sma_mean)), y_sma_mean, label='SMA')
+
+            ax.set_title(titles[_ax])
+            ax.set_xlabel('% Soil Cover')
+            ax.set_ylabel('Band Depth')
+
+            step = max(1, len(unique_x_val) // 10)
+            ticks = np.arange(1, len(unique_x_val) + 1, step)
+            labels = [f'{val * 100:.0f}%' for val in unique_x_val[::step]]
+
+            ax.set_xticks(ticks=ticks, labels=labels)
+
+            # Add legend
+            # handles = [
+            #     plt.Line2D([0], [0], color=vp1['bodies'][0].get_facecolor().flatten(), lw=2, label='BD pure'),
+            #     plt.Line2D([0], [0], color=vp2['bodies'][0].get_facecolor().flatten(), lw=2, label='BD mix'),
+            #     plt.Line2D([0], [0], color=vp3['bodies'][0].get_facecolor().flatten(), lw=2, label='SMA')
+            # ]
+            ax.legend(loc='upper right')
+
+            ax.set_ylim(0, 1)
+
+            ax.xaxis.set_minor_locator(MultipleLocator(20))
+            ax.tick_params(which='minor', length=4, color='b')
+
+        plt.savefig(os.path.join(self.fig_directory, 'veg_correction_case1_figure.png'), format="png", dpi=300,
+                        bbox_inches="tight")
+
+        plt.clf()
+        plt.close()
 
 def run_figure_workflow(base_directory):
     ems = ['soil']
     tc = tetracorder_figures(base_directory=base_directory)
     tc.veg_correction()
+    tc.veg_correction_fig()
     #tc.confusion_matrix()
-    tc.tetracorder_libraries()
+    #tc.tetracorder_libraries()
     #tc.mineral_validation(x_axis='contact')
     #tc.mineral_validation(x_axis='transect')
     #tc.mineral_threshold()
-    for em in ems:
-        tc.simulation_fig(xaxis=em)
+    # for em in ems:
+    #     tc.simulation_fig(xaxis=em)

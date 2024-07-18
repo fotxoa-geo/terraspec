@@ -56,9 +56,16 @@ def gps_asd(latitude_ddmm, longitude_ddmm, file):
 
     return dd_lat, dd_long
 
-mineral_groupings = mineral_groups = {'Calcite': 1, 'Chlorite': 1, 'Dolomite': 1, 
-                                    'Goethite': 0, 'Gypsum': 1, 'Hematite': 0, 
-                                    'Illite+Muscovite': 2, 'Kaolinite': 2, 'Montmorillonite': 2, 'Vermiculite': 2}
+mineral_groupings = mineral_groups = {'Calcite': 1,
+                  'Chlorite': 1,
+                  'Dolomite': 1,
+                  'Goethite': 0,
+                  'Gypsum': 1,
+                  'Hematite': 0,
+                  'Illite+Muscovite': 2,
+                  'Kaolinite': 2,
+                  'Montmorillonite': 2,
+                  'Vermiculite': 2}
 
 class spectra:
     "spectra class allows for different calls for instrument and asd wavelengths"
@@ -314,6 +321,7 @@ class spectra:
         spectra_grid = np.zeros((spectral_bundles, cols, len(wvls)))
         index_grid = np.zeros((spectral_bundles, cols, len(class_names)))
         em_grid = np.zeros((spectral_bundles, cols, len(wvls)))
+        em_extract_grid = np.zeros((spectral_bundles, cols, len(wvls)))
 
         spec_array = spectra.create_spectral_bundles(df=simulation_table, level=level, spectral_bundles=spectral_bundles)
 
@@ -330,28 +338,31 @@ class spectra:
             picked_em = int(row[2][0][0][em_indices[endmember]])
             #em_spectra = simulation_library_array[picked_em, :, :] * row[1][0][:,[em_indices[endmember]]]
             em_grid[_row, :, :] = simulation_library_array[picked_em, :, :] * row[1][0][:,[em_indices[endmember]]]
+            em_extract_grid[_row, :, :] = row[0] - (simulation_library_array[picked_em, :, :] * row[1][0][:,[em_indices[endmember]]])
 
         # save the datasets
         refl_meta = get_meta(lines=spectral_bundles, samples=cols, bands=wvls, wvls=True)
         index_meta = get_meta(lines=spectral_bundles, samples=cols, bands=class_names, wvls=False)
         fraction_meta = get_meta(lines=spectral_bundles, samples=cols, bands=class_names, wvls=False)
         em_meta = get_meta(lines=spectral_bundles, samples=cols, bands=wvls, wvls=True)
+        em_extract_meta = get_meta(lines=spectral_bundles, samples=cols, bands=wvls, wvls=True)
 
         # save index, spectra, fraction grid
         output_files = [os.path.join(output_directory, f'{name}_index.hdr'),
                         os.path.join(output_directory, f'{name}_spectra.hdr'),
                         os.path.join(output_directory, f'{name}_fractions.hdr'),
-                        os.path.join(output_directory, f'{name}_em_spectra.hdr')]
+                        os.path.join(output_directory, f'{name}_em_spectra.hdr'),
+                        os.path.join(output_directory, f'{name}_extract_spectra.hdr')]
 
-        meta_docs = [index_meta, refl_meta, fraction_meta, em_meta]
-        grids = [index_grid, spectra_grid, fraction_grid, em_grid]
+        meta_docs = [index_meta, refl_meta, fraction_meta, em_meta, em_extract_meta]
+        grids = [index_grid, spectra_grid, fraction_grid, em_grid, em_extract_grid]
 
         p_map(save_envi, output_files, meta_docs, grids, **{"desc": "\t\t saving envi files...", "ncols": 150})
         del index_grid, spectra_grid, fraction_grid
 
 
     @classmethod
-    def cont_removal(cls, wavelengths, reflectance, feature):
+    def cont_removal(cls, wavelengths, reflectance, feature, group):
         
         left_inds = np.where(np.logical_and(wavelengths >= feature[0], wavelengths <= feature[1]))[0]
         left_x = wavelengths[int(left_inds.mean())]
@@ -371,9 +382,15 @@ class spectra:
         feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
 
         continuum = interp1d([left_x, right_x], [left_y, right_y], bounds_error=False, fill_value='extrapolate')(wavelengths)
-        depths = reflectance[feature_inds] / continuum[feature_inds]
+        rb = reflectance[feature_inds]
+        rc = continuum[feature_inds]
+
+        group_wvl_center = spectra.group_wvl_center()
+        wl_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength=group_wvl_center[group])
+        rb = rb[wl_nearest_index]
+        rc = rc[wl_nearest_index]
             
-        return depths, wavelengths[feature_inds]
+        return rb, rc, wavelengths[feature_inds]
         
         
     @classmethod
@@ -381,6 +398,14 @@ class spectra:
         wvl_nearest_index = (np.abs(wavelengths - target_wavelength)).argmin()
 
         return wvl_nearest_index
+
+    @classmethod
+    def group_wvl_center(cls):
+        group_wvl_center = {
+            'group.2um': 2.24,
+            'group.1um': 0.79}
+
+        return group_wvl_center
 
     @classmethod
     def mineral_group_retrival(cls, mineral_index, spectra_observed):
@@ -392,9 +417,8 @@ class spectra:
 
         spectral_reference_library_files = SPECTRAL_REFERENCE_LIBRARY
 
-        group_wvl_center = {'group.2um': 2.24, 'group.1um': 0.79}
 
-        # array to be returned with following positions: group number, rb, rc, rbo, rco
+        # array to be returned with following positions: group number, rb, rc, rbo, rco, aggregated group num
         return_array = np.ones((6)) * -9999.
 
         # mineral matrix
@@ -414,6 +438,13 @@ class spectra:
                 mineral_group = mineral_row.idxmax()
                 aggregated_group = mineral_groupings.get(mineral_group, 3)
 
+            # row index pertains specifically to df; not value from Tetracorder!
+            row_index = df_mineral_matrix[df_mineral_matrix['Record'] == record].index[0]
+            mineral_row = df_mineral_matrix.iloc[row_index, 7:]
+            mineral_group = mineral_row.idxmax()
+
+            aggregated_group = mineral_groupings.get(mineral_group, 3)
+
             # this will loop through both libraries
             for key, item in spectral_reference_library_files.items():
                 library = envi.open(envi_header(item), item)
@@ -429,18 +460,10 @@ class spectra:
                 
                     for cont_feat in decoded_expert[filename.split('.depth.gz')[0]]['features']:
                         # get rc and rb from tetracorder library
-                        refl_cont, wl = spectra.cont_removal(wavelengths, library_reflectance[library_records.index(record), :], cont_feat['continuum'])
-                        rc_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wl, target_wavelength=group_wvl_center[group])
-                        rc = refl_cont[rc_nearest_index]
-                        rb_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength=group_wvl_center[group])
-                        rb = library_reflectance[library_records.index(record), :][rb_nearest_index]
+                        rb, rc, wl = spectra.cont_removal(wavelengths, library_reflectance[library_records.index(record), :], cont_feat['continuum'], group=group)
 
                         # get rco and rbo - observed spectra
-                        refl_cont_o, wl_o = spectra.cont_removal(wavelengths, spectra_observed, cont_feat['continuum'])
-                        rco_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wl_o, target_wavelength=group_wvl_center[group])
-                        rco = refl_cont_o[rco_nearest_index]
-                        rbo_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength=group_wvl_center[group])
-                        rbo = spectra_observed[rbo_nearest_index]
+                        rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed, cont_feat['continuum'], group=group)
 
                         return_array[:] = [group_num, rb, rc, rbo, rco, aggregated_group]
 

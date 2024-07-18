@@ -137,7 +137,6 @@ for row in range(nrows):
         ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=12,
                 verticalalignment='top', bbox=props)
 
-
 # fig.supylabel('AVIRIS$_{NG}$ Fractions', fontsize=self.axis_label_fontsize)
 plt.savefig(r'G:\My Drive\terraspec\shift\figures\wonderpole_sh.png', format="png", dpi=400,
             bbox_inches="tight")
