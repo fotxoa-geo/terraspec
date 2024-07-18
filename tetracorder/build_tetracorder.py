@@ -97,7 +97,7 @@ class tetracorder:
         em_file = os.path.join(self.simulation_output_directory, 'endmember_libraries',
                                'convex_hull__n_dims_4_unmix_library.csv')
 
-        optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization brightness']
+        optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization none']
 
         reflectance_files = glob(os.path.join(self.sim_spectra_dir, 'tetracorder_*_spectra*'))
         for i in reflectance_files:
@@ -124,7 +124,7 @@ class tetracorder:
             new_uncertainty_file = os.path.join(self.augmented_dir, basename + '_uncer')
             augment_envi(file=uncertainty_file, wvls=self.wvls, out_raster=new_uncertainty_file + '.hdr')
 
-            call_hypertrace_unmix(mode='sma-best', dry_run=False, reflectance_file=new_reflectance_file, em_file=em_file,
+            call_hypertrace_unmix(mode='sma', dry_run=False, reflectance_file=new_reflectance_file, em_file=em_file,
                                   parameters=optimal_parameters, output_dest=self.augmented_dir, scale='1',
                                   spectra_starting_column='8', uncertainty_file=new_uncertainty_file)
 
