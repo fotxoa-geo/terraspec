@@ -56,6 +56,10 @@ def gps_asd(latitude_ddmm, longitude_ddmm, file):
 
     return dd_lat, dd_long
 
+mineral_groupings = mineral_groups = {'Calcite': 1, 'Chlorite': 1, 'Dolomite': 1, 
+                                    'Goethite': 0, 'Gypsum': 1, 'Hematite': 0, 
+                                    'Illite+Muscovite': 2, 'Kaolinite': 2, 'Montmorillonite': 2, 'Vermiculite': 2}
+
 class spectra:
     "spectra class allows for different calls for instrument and asd wavelengths"
     def __init__(self):
@@ -391,7 +395,7 @@ class spectra:
         group_wvl_center = {'group.2um': 2.24, 'group.1um': 0.79}
 
         # array to be returned with following positions: group number, rb, rc, rbo, rco
-        return_array = np.ones((5)) * -9999.
+        return_array = np.ones((6)) * -9999.
 
         # mineral matrix
         if mineral_index != 0.:
@@ -400,6 +404,15 @@ class spectra:
             filename = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Filename'].iloc[0]
             group = filename.split('.depth.gz')[0].split(os.sep)[0]
             group_num = float(group.split('.')[1][0])
+            
+            # row index pertains specifically to df; not value from Tetracorder!
+            row_index = df_mineral_matrix[df_mineral_matrix['Record'] == record].index[0]
+            mineral_row = df_mineral_matrix.iloc[row_index, 7:]
+            if mineral_row.isna().all():
+                aggregated_group = 3 
+            else:
+                mineral_group = mineral_row.idxmax()
+                aggregated_group = mineral_groupings.get(mineral_group, 3)
 
             # this will loop through both libraries
             for key, item in spectral_reference_library_files.items():
@@ -429,17 +442,17 @@ class spectra:
                         rbo_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength=group_wvl_center[group])
                         rbo = spectra_observed[rbo_nearest_index]
 
-                        return_array[:] = [group_num, rb, rc, rbo, rco]
+                        return_array[:] = [group_num, rb, rc, rbo, rco, aggregated_group]
 
         else:
             pass
-
+        
         return return_array
 
     @classmethod
     def mineral_group_row(cls, mineral_index_row, spectra_row):
 
-        row_return_array = np.ones((mineral_index_row.shape[0], 10)) * -9999.
+        row_return_array = np.ones((mineral_index_row.shape[0], 12)) * -9999.
 
         for _col, col in enumerate(mineral_index_row):
             for _band, band in enumerate(col):
@@ -452,9 +465,9 @@ class spectra:
                     group_num = mineral_retrival[0]
 
                     if group_num == 1:
-                        row_return_array[_col, :5] = mineral_retrival
+                        row_return_array[_col, :6] = mineral_retrival
                     else:
-                        row_return_array[_col, 5:] = mineral_retrival
+                        row_return_array[_col, 6:] = mineral_retrival
 
         return row_return_array
 
@@ -462,7 +475,7 @@ class spectra:
     def mineral_components(cls, index_array, spectra_array, output_file):
 
         # cont grid - corresponds to Rc and Rc-observed - for both group 1 and group 2
-        output_grid = np.zeros((index_array.shape[0], index_array.shape[1], 10))
+        output_grid = np.zeros((index_array.shape[0], index_array.shape[1], 12))
 
         results = p_map(spectra.mineral_group_row, [index_array[_row, :, :] for _row, row in enumerate(index_array)],
                         [spectra_array[_row, :, :] for _row, row in enumerate(spectra_array)],
@@ -472,7 +485,7 @@ class spectra:
             output_grid[_row, :, :] = row
 
         # save spectra
-        meta = get_meta(lines=index_array.shape[0], samples= index_array.shape[1], bands=[i for i in range(10)], wvls=False)
+        meta = get_meta(lines=index_array.shape[0], samples= index_array.shape[1], bands=[i for i in range(12)], wvls=False)
         meta['data ignore value'] = -9999
         save_envi(output_file=output_file, meta=meta, grid=output_grid)
 
