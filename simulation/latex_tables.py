@@ -53,12 +53,11 @@ class latex:
             #df_mode['combined_pv'] = df_mode['pv_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_mode['pv_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
             #df_mode['combined_soil'] = df_mode['soil_mae'].apply('{:,.2f}'.format).astype(str) + '(' + df_mode['soil_rmse'].apply('{:,.2f}'.format).astype(str) + ')'
             
-            # mc unc avg std error for table 
-            df_mode['combined_npv'] =  df_mode['npv_mc_unc'].apply('{:,.3f}'.format).astype(str)
-            df_mode['combined_pv'] = df_mode['pv_mc_unc'].apply('{:,.3f}'.format).astype(str)
-            df_mode['combined_soil'] = df_mode['soil_mc_unc'].apply('{:,.3f}'.format).astype(str)
-
-
+            # U_se 
+            df_mode['combined_npv'] =  df_mode['npv_mc_unc'].apply('{:,.3f}'.format).astype(str) + '(' + df_mode['npv_mean_unc'].apply('{:,.2f}'.format).astype(str) + ')'
+            df_mode['combined_pv'] = df_mode['pv_mc_unc'].apply('{:,.3f}'.format).astype(str) + '(' + df_mode['pv_mean_unc'].apply('{:,.2f}'.format).astype(str) + ')'
+            df_mode['combined_soil'] = df_mode['soil_mc_unc'].apply('{:,.3f}'.format).astype(str) + '(' + df_mode['soil_mean_unc'].apply('{:,.2f}'.format).astype(str) + ')'
+            
 
             # remove reduntant information
             cols = df_mode.columns.tolist()
@@ -450,7 +449,7 @@ class latex:
         y_pred = model.predict(X)
 
         print(slope, intercept)
-        print('The r^2 value between n and time is : ', np.round(r2_score(avg_time_per_em, y_pred),2))
+        print('EM vs TIME: The r^2 value between n and time is : ', np.round(r2_score(avg_time_per_em, y_pred),2))
 
         # optimal settings - combinations increase for MESMA
         df_avg_mesma_cmb = df_time.loc[(df_time['normalization'] == 'brightness') & (df_time['n_mc'] == 25) & (
@@ -480,7 +479,7 @@ class latex:
         y_pred = model.predict(X)
         
         print(slope, intercept)
-        print('The r^2 value between number of combinations and time is : ', np.round(r2_score(avg_time_per_cmb, y_pred), 2))
+        print('CMB vs TIME: The r^2 value between number of combinations and time is : ', np.round(r2_score(avg_time_per_cmb, y_pred), 2))
 
         # optimal settings - find variations in normalization methods ; SMA
         df_avg_sma_normalization = df_time.loc[(df_time['n_mc'] == 25) & (df_time['num_endmembers'] == 30)].copy()
@@ -536,7 +535,7 @@ def run_latex_tables(base_directory: str):
     latex_class.optimal_parameters()
     # latex_class.atmosphere_table()
     #latex_class.summary_table()
-    latex_class.time_table()
+    #latex_class.time_table()
     # latex_class.baseline_setings()
 
     #latex_class.library_results()
