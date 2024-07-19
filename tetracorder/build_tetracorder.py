@@ -265,7 +265,7 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
         elif user_input == 'C':
             tc.unmix_tetracorder(dry_run=dry_run)
         elif user_input == 'D':
-            tc.reconstruct_em_sma(user_em='gv')
+            #tc.reconstruct_em_sma(user_em='gv')
             tc.mineral_lib_refl_cont()
         elif user_input == 'E':
             tc.augment_slpit_pixels()

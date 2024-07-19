@@ -362,34 +362,49 @@ class spectra:
 
 
     @classmethod
-    def cont_removal(cls, wavelengths, reflectance, feature, group):
+    def cont_removal(cls, wavelengths, reflectance, expert_file_selection, group):
         
-        left_inds = np.where(np.logical_and(wavelengths >= feature[0], wavelengths <= feature[1]))[0]
-        left_x = wavelengths[int(left_inds.mean())]
-        left_y = reflectance[left_inds].mean()
-        
-        right_inds = np.where(np.logical_and(wavelengths >= feature[2], wavelengths <= feature[3]))[0]
-        
-        if right_inds.size == 0:
-            right_inds = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength = feature[0])
-        else:
-            pass
+        # this holds the multiple values of rc, rb if multiple features are passed by the expert file
+        features_array = np.ones((len(expert_file_selection), 3)) * -9999
 
-        right_x = wavelengths[int(right_inds.mean())]
-         
-        right_y = reflectance[right_inds].mean()
+        for _cont_feat, cont_feat in enumerate(expert_file_selection):
+
+            feature = cont_feat['continuum']
+
+                        
+            left_inds = np.where(np.logical_and(wavelengths >= feature[0], wavelengths <= feature[1]))[0]
+            left_x = wavelengths[int(left_inds.mean())]
+            left_y = reflectance[left_inds].mean()
         
-        feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
+            right_inds = np.where(np.logical_and(wavelengths >= feature[2], wavelengths <= feature[3]))[0]
+        
+            if right_inds.size == 0:
+                right_inds = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength = (feature[2] + feature[3])/2) # this takes the mean of right bounds
+            else:
+                pass
 
-        continuum = interp1d([left_x, right_x], [left_y, right_y], bounds_error=False, fill_value='extrapolate')(wavelengths)
-        rb = reflectance[feature_inds]
-        rc = continuum[feature_inds]
+            right_x = wavelengths[int(right_inds.mean())]
+            right_y = reflectance[right_inds].mean()
+        
+            feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
 
-        group_wvl_center = spectra.group_wvl_center()
-        wl_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength=group_wvl_center[group])
-        rb = rb[wl_nearest_index]
-        rc = rc[wl_nearest_index]
+            continuum = interp1d([left_x, right_x], [left_y, right_y], bounds_error=False, fill_value='extrapolate')(wavelengths)
+        
+            group_wvl_center = spectra.group_wvl_center()
+            wl_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength=group_wvl_center[group])
+            rb = reflectance[wl_nearest_index]
+            rc = continuum[wl_nearest_index]
+
+            dist_to_feature = np.sum(np.abs(np.array(feature) - group_wvl_center[group]))
             
+            features_array[_cont_feat, :] = [rb, rc, dist_to_feature]
+        
+        dist_data = features_array[:, 2] # this is where data of distance is stored
+        min_dist_index = np.argmin(dist_data)
+
+        rb = features_array[min_dist_index, 0]
+        rc = features_array[min_dist_index, 1]
+        
         return rb, rc, wavelengths[feature_inds]
         
         
@@ -432,18 +447,12 @@ class spectra:
             # row index pertains specifically to df; not value from Tetracorder!
             row_index = df_mineral_matrix[df_mineral_matrix['Record'] == record].index[0]
             mineral_row = df_mineral_matrix.iloc[row_index, 7:]
+            
             if mineral_row.isna().all():
                 aggregated_group = 3 
             else:
                 mineral_group = mineral_row.idxmax()
                 aggregated_group = mineral_groupings.get(mineral_group, 3)
-
-            # row index pertains specifically to df; not value from Tetracorder!
-            row_index = df_mineral_matrix[df_mineral_matrix['Record'] == record].index[0]
-            mineral_row = df_mineral_matrix.iloc[row_index, 7:]
-            mineral_group = mineral_row.idxmax()
-
-            aggregated_group = mineral_groupings.get(mineral_group, 3)
 
             # this will loop through both libraries
             for key, item in spectral_reference_library_files.items():
@@ -457,15 +466,14 @@ class spectra:
                 else:
                     hdr = envi.read_envi_header(envi_header(item))
                     wavelengths = np.array([float(q) for q in hdr['wavelength']])
-                
-                    for cont_feat in decoded_expert[filename.split('.depth.gz')[0]]['features']:
-                        # get rc and rb from tetracorder library
-                        rb, rc, wl = spectra.cont_removal(wavelengths, library_reflectance[library_records.index(record), :], cont_feat['continuum'], group=group)
-
-                        # get rco and rbo - observed spectra
-                        rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed, cont_feat['continuum'], group=group)
-
-                        return_array[:] = [group_num, rb, rc, rbo, rco, aggregated_group]
+                    
+                    # get rc and rb from tetracorder library
+                    rb, rc, wl  = spectra.cont_removal(wavelengths, library_reflectance[library_records.index(record), :], decoded_expert[filename.split('.depth.gz')[0]]['features'], group=group)
+                    # get rco and rbo - observed spectra
+                    rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed,  decoded_expert[filename.split('.depth.gz')[0]]['features'], group=group)
+                    
+                    
+                    return_array[:] = [group_num, rb, rc, rbo, rco, aggregated_group]
 
         else:
             pass
