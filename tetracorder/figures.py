@@ -30,6 +30,7 @@ import sns
 from mpl_toolkits.basemap import Basemap
 from p_tqdm import p_map
 from matplotlib.ticker import MultipleLocator
+from utils.slpit_download import load_pickle, save_pickle
 
 mineral_groupings = {'group.1um/copper_precipitate_greenslime': 'Copper',
                      'group.1um/fe2+_chlor+muscphy': 'Fe Oxides',
@@ -1040,8 +1041,6 @@ class tetracorder_figures:
         band_depth_veg_correction(bd=bd_mix, fractions=sma_fractions, veg_rfl=veg_rfl_sma, output_file=output_file_case2)
 
 
-
-
     def veg_correction_fig(self):
         # this is case 1
         fig, axes = plt.subplots(1,3, figsize=(15, 9))
@@ -1093,7 +1092,7 @@ class tetracorder_figures:
             ax.set_ylabel('Band Depth')
 
             step = max(1, len(unique_x_val) // 10)
-            ticks = np.arange(1, len(unique_x_val) + 1, step)
+            ticks = np.arange(1, len(unique_x_val), step)
             labels = [f'{val * 100:.0f}%' for val in unique_x_val[::step]]
 
             ax.set_xticks(ticks=ticks, labels=labels)
@@ -1117,11 +1116,25 @@ class tetracorder_figures:
         plt.clf()
         plt.close()
 
+    def mineral_ref_figure(self):
+
+        try:
+            spectrum = load_pickle('soil_test_tc')
+        except:
+            spectrum = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_soil_spectra'))[0,20,:]
+            save_pickle(spectrum, 'soil_test_tc')
+
+        mineral_spectra, wvls = spectra.mineral_group_retrival(mineral_index=47, spectra_observed=spectrum, plot=True)
+
+        plt.plot(wvls, mineral_spectra)
+        plt.savefig(os.path.join(self.fig_directory, 'mineral_test_fig.png'))
+
 def run_figure_workflow(base_directory):
     ems = ['soil']
     tc = tetracorder_figures(base_directory=base_directory)
-    tc.veg_correction()
-    tc.veg_correction_fig()
+    tc.mineral_ref_figure()
+    #tc.veg_correction()
+    #tc.veg_correction_fig()
     #tc.confusion_matrix()
     #tc.tetracorder_libraries()
     #tc.mineral_validation(x_axis='contact')
