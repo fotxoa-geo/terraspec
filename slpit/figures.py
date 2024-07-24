@@ -59,18 +59,22 @@ def fraction_file_info(fraction_file):
 
     mean_fractions = []
     mean_se = []
+    
     for _band, band in enumerate(range(0, fraction_array.shape[2])):
             
-            selected_fractions = fraction_array[:, :, _band]
-            selected_fractions, duplicate_flag = duplicate_check_fractions(selected_fractions)
-            #if instrument == 'asd':
-             #   mean_fractions.append(np.mean(fraction_array[:, :, _band]))
-            #else:
-            #    mean_fractions.append(np.mean(fraction_array[:, :, _band]))
-            
-            mean_fractions.append(np.nanmean(selected_fractions))
+            if instrument == 'asd':
+                selected_fractions = fraction_array[7:, :, _band]
+                selected_unc = unc_array[7:, :, _band]
+            else:
+                selected_fractions = fraction_array[:, :, _band]
+                selected_unc = unc_array[:, :, _band]
 
-            se = np.mean(unc_array[:, :, _band]/np.sqrt(int(num_mc)))
+            selected_fractions = np.where(selected_fractions == -9999, np.nan, selected_fractions)
+            selected_fractions, duplicate_flag = duplicate_check_fractions(selected_fractions)
+            
+            selected_unc = np.where(selected_unc == -9999, np.nan, selected_unc)
+            mean_fractions.append(np.nanmean(selected_fractions))
+            se = np.mean(selected_unc/np.sqrt(int(num_mc)))
             mean_se.append(se)
 
     return [instrument, unmix_mode, plot, library_mode, int(num_cmb_em), int(num_mc), normalization, fraction_array.shape[0], fraction_array.shape[1], duplicate_flag] + mean_fractions + mean_se

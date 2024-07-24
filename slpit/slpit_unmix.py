@@ -92,35 +92,34 @@ class unmix_runs:
                 
                 if mode == 'mesma' or mode == 'mesma-best':
                     simulation_parameters = self.optimal_parameters_mesma
-                    
-                    for cmb in self.num_cmb:
-                        updated_parameters = [item.replace('--max_combinations 100', cmb) for item in simulation_parameters]
-                        out_param_string = " ".join(updated_parameters)
-                        out_param_name = plot.replace(" ", "") + "___" + out_param_string.replace('--','').replace('_', '-').replace(' ', '_')
+                    updated_parameters = simulation_parameters
 
-                        # unmix asd with local library
+                    out_param_string = " ".join(updated_parameters)
+                    out_param_name = plot.replace(" ", "") + "___" + out_param_string.replace('--','').replace('_', '-').replace(' ', '_')
 
-                        count = count + 1
-                        call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=em_local,
+                    # unmix asd with local library
+
+                    count = count + 1
+                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=em_local,
                            parameters=updated_parameters, output_dest=os.path.join(output_dest, 'asd-local___' + out_param_name),
                            scale=self.scale,  spectra_starting_column=self.spectra_starting_column_local)
 
-                        count = count + 1
-                        # unmix asd with global library
-                        call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=self.emit_global,
+                    count = count + 1
+                    # unmix asd with global library
+                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=self.emit_global,
                            parameters=updated_parameters, output_dest=os.path.join(output_dest, 'asd-global___' + out_param_name),
                            scale=self.scale,  spectra_starting_column=self.spectra_starting_column_global)
 
-                        count = count + 1
-                        # emit pixels unmixed with local em
-                        call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=em_local,
+                    count = count + 1
+                    # emit pixels unmixed with local em
+                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=em_local,
                            parameters=updated_parameters, output_dest=os.path.join(output_dest, 'emit-local___' + out_param_name),
                            scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
                            spectra_starting_column=self.spectra_starting_column_local)
 
-                        count = count + 1
-                        # emit pixels unmixed with global
-                        call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=self.emit_global,
+                    count = count + 1
+                    # emit pixels unmixed with global
+                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=self.emit_global,
                            parameters=updated_parameters, output_dest=os.path.join(output_dest, 'emit-global___' + out_param_name),
                            scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
                            spectra_starting_column=self.spectra_starting_column_global)
