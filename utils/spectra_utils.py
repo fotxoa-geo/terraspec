@@ -364,14 +364,15 @@ class spectra:
     @classmethod
     def cont_removal(cls, wavelengths, reflectance, expert_file_selection, group):
         
-        # this holds the multiple values of rc, rb if multiple features are passed by the expert file
-        features_array = np.ones((len(expert_file_selection), 3)) * -9999
+        # this holds the multiple values of bd if multiple features are passed by the expert file
+        features_array = np.ones((len(expert_file_selection))) * -9999
+        wavelength_array = np.ones((len(expert_file_selection))) * -9999
+        rc_array = np.ones((len(expert_file_selection))) * -9999
+        rb_array = np.ones((len(expert_file_selection))) * -9999
 
         for _cont_feat, cont_feat in enumerate(expert_file_selection):
-
             feature = cont_feat['continuum']
 
-                        
             left_inds = np.where(np.logical_and(wavelengths >= feature[0], wavelengths <= feature[1]))[0]
             left_x = wavelengths[int(left_inds.mean())]
             left_y = reflectance[left_inds].mean()
@@ -379,7 +380,7 @@ class spectra:
             right_inds = np.where(np.logical_and(wavelengths >= feature[2], wavelengths <= feature[3]))[0]
         
             if right_inds.size == 0:
-                right_inds = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength = (feature[2] + feature[3])/2) # this takes the mean of right bounds
+                right_inds = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength=(feature[2] + feature[3])/2) # this takes the mean of right bounds
             else:
                 pass
 
@@ -387,25 +388,32 @@ class spectra:
             right_y = reflectance[right_inds].mean()
         
             feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
-
             continuum = interp1d([left_x, right_x], [left_y, right_y], bounds_error=False, fill_value='extrapolate')(wavelengths)
-        
-            group_wvl_center = spectra.group_wvl_center()
-            wl_nearest_index = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength=group_wvl_center[group])
-            rb = reflectance[wl_nearest_index]
-            rc = continuum[wl_nearest_index]
 
-            dist_to_feature = np.sum(np.abs(np.array(feature) - group_wvl_center[group]))
-            
-            features_array[_cont_feat, :] = [rb, rc, dist_to_feature]
-        
-        dist_data = features_array[:, 2] # this is where data of distance is stored
-        min_dist_index = np.argmin(dist_data)
+            # calculate band depth; get max index of band depth
+            depth = np.abs(1 - np.array(reflectance[feature_inds]/continuum[feature_inds]))
+            depth_max_index = depth.argmax()
 
-        rb = features_array[min_dist_index, 0]
-        rc = features_array[min_dist_index, 1]
-        
-        return rb, rc, wavelengths[feature_inds]
+            # append max band bepth
+            bd = depth[depth_max_index]
+            features_array[_cont_feat] = bd
+
+            # append wvl center
+            bd_wl_max_center = wavelengths[feature_inds][depth_max_index]
+            wavelength_array[_cont_feat] = bd_wl_max_center
+
+            # append rb and rc
+            rc_array[_cont_feat] = continuum[feature_inds][depth_max_index]
+            rb_array[_cont_feat] = reflectance[feature_inds][depth_max_index]
+
+        # this is currently returning the biggest band depth
+        bd_max_index = features_array.argmax()
+        bd_return = features_array[bd_max_index]
+        rb_return = rb_array[bd_max_index]
+        rc_return = rc_array[bd_max_index]
+        wvl_return = wavelength_array[bd_max_index]
+
+        return bd_return, rb_return, rc_return, wvl_return
         
         
     @classmethod
@@ -423,67 +431,64 @@ class spectra:
         return group_wvl_center
 
     @classmethod
-    def mineral_group_retrival(cls, mineral_index, spectra_observed):
+    def mineral_group_retrival(cls, mineral_index, spectra_observed, plot=False):
         decoded_expert = tc.decode_expert_system(os.path.join('utils', 'tetracorder', 'cmd.lib.setup.t5.27c1'),
                                                           log_file=None, log_level='INFO')
 
         SPECTRAL_REFERENCE_LIBRARY = {'splib06': os.path.join('utils', 'tetracorder', 's06emitd_envi'),
                                       'sprlb06': os.path.join('utils', 'tetracorder', 'r06emitd_envi')}
 
-        spectral_reference_library_files = SPECTRAL_REFERENCE_LIBRARY
-
-
         # array to be returned with following positions: group number, rb, rc, rbo, rco, aggregated group num
-        return_array = np.ones((6)) * -9999.
+        return_array = np.ones((9)) * -9999.
 
         # mineral matrix
         if mineral_index != 0.:
             df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
+            df_mineral_matrix = df_mineral_matrix.fillna(-9999)
             record = df_mineral_matrix.loc[df_mineral_matrix['Index'] == int(mineral_index), 'Record'].iloc[0]
             filename = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Filename'].iloc[0]
-            group = filename.split('.depth.gz')[0].split(os.sep)[0]
-            group_num = float(group.split('.')[1][0])
-            
+            group_num = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Group'].iloc[0]
+            group = f'group.{group_num}um'
+            ref_library = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Library'].iloc[0]
+
             # row index pertains specifically to df; not value from Tetracorder!
             row_index = df_mineral_matrix[df_mineral_matrix['Record'] == record].index[0]
             mineral_row = df_mineral_matrix.iloc[row_index, 7:]
-            
+            mineral_row = mineral_row.apply(pd.to_numeric, errors='coerce')
+
             if mineral_row.isna().all():
-                aggregated_group = 3 
+                aggregated_group = 3
             else:
                 mineral_group = mineral_row.idxmax()
                 aggregated_group = mineral_groupings.get(mineral_group, 3)
 
-            # this will loop through both libraries
-            for key, item in spectral_reference_library_files.items():
-                library = envi.open(envi_header(item), item)
-                library_reflectance = library.spectra.copy()
-                library_records = [int(q) for q in library.metadata['record']]
+            # load library
+            item = SPECTRAL_REFERENCE_LIBRARY[ref_library]
+            library = envi.open(envi_header(item), item)
+            library_reflectance = library.spectra.copy()
+            library_records = [int(q) for q in library.metadata['record']]
 
-                if record not in library_records:
-                    continue
-                
-                else:
-                    hdr = envi.read_envi_header(envi_header(item))
-                    wavelengths = np.array([float(q) for q in hdr['wavelength']])
-                    
-                    # get rc and rb from tetracorder library
-                    rb, rc, wl  = spectra.cont_removal(wavelengths, library_reflectance[library_records.index(record), :], decoded_expert[filename.split('.depth.gz')[0]]['features'], group=group)
-                    # get rco and rbo - observed spectra
-                    rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed,  decoded_expert[filename.split('.depth.gz')[0]]['features'], group=group)
-                    
-                    
-                    return_array[:] = [group_num, rb, rc, rbo, rco, aggregated_group]
+            hdr = envi.read_envi_header(envi_header(item))
+            wavelengths = np.array([float(q) for q in hdr['wavelength']])
+            normalized_group_name = os.path.normpath(filename.split('.depth.gz')[0]) # need this to be compatible for windows; not sure if needed for linux.
+
+            # get rc and rb from tetracorder library
+            bd, rb, rc, wl = spectra.cont_removal(wavelengths, library_reflectance[library_records.index(record), :], decoded_expert[normalized_group_name]['features'], group=group)
+
+            # get rco and rbo - observed spectra
+            bdo, rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed,  decoded_expert[normalized_group_name]['features'], group=group)
+
+            return_array[:] = [aggregated_group, bd, rb, rc, wl, bdo, rbo, rco, wl_o]
 
         else:
             pass
-        
+
         return return_array
 
     @classmethod
     def mineral_group_row(cls, mineral_index_row, spectra_row):
 
-        row_return_array = np.ones((mineral_index_row.shape[0], 12)) * -9999.
+        row_return_array = np.ones((mineral_index_row.shape[0], 18)) * -9999.
 
         for _col, col in enumerate(mineral_index_row):
             for _band, band in enumerate(col):
@@ -496,9 +501,9 @@ class spectra:
                     group_num = mineral_retrival[0]
 
                     if group_num == 1:
-                        row_return_array[_col, :6] = mineral_retrival
+                        row_return_array[_col, :9] = mineral_retrival
                     else:
-                        row_return_array[_col, 6:] = mineral_retrival
+                        row_return_array[_col, 9:] = mineral_retrival
 
         return row_return_array
 
@@ -506,7 +511,7 @@ class spectra:
     def mineral_components(cls, index_array, spectra_array, output_file):
 
         # cont grid - corresponds to Rc and Rc-observed - for both group 1 and group 2
-        output_grid = np.zeros((index_array.shape[0], index_array.shape[1], 12))
+        output_grid = np.zeros((index_array.shape[0], index_array.shape[1], 18))
 
         results = p_map(spectra.mineral_group_row, [index_array[_row, :, :] for _row, row in enumerate(index_array)],
                         [spectra_array[_row, :, :] for _row, row in enumerate(spectra_array)],
@@ -516,7 +521,7 @@ class spectra:
             output_grid[_row, :, :] = row
 
         # save spectra
-        meta = get_meta(lines=index_array.shape[0], samples= index_array.shape[1], bands=[i for i in range(12)], wvls=False)
+        meta = get_meta(lines=index_array.shape[0], samples=index_array.shape[1], bands=[i for i in range(18)], wvls=False)
         meta['data ignore value'] = -9999
         save_envi(output_file=output_file, meta=meta, grid=output_grid)
 
