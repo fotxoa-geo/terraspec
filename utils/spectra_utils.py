@@ -362,13 +362,19 @@ class spectra:
 
 
     @classmethod
-    def cont_removal(cls, wavelengths, reflectance, expert_file_selection, group):
+    def cont_removal(cls, wavelengths, reflectance, expert_file_selection, veg_rfl=None, veg_correction=False):
         
         # this holds the multiple values of bd if multiple features are passed by the expert file
         features_array = np.ones((len(expert_file_selection))) * -9999
         wavelength_array = np.ones((len(expert_file_selection))) * -9999
         rc_array = np.ones((len(expert_file_selection))) * -9999
         rb_array = np.ones((len(expert_file_selection))) * -9999
+
+        if veg_correction:
+            # extract vegetation spectra from reflectance; leaves only the soil component
+            reflectance = reflectance - veg_rfl
+        else:
+            reflectance = reflectance
 
         for _cont_feat, cont_feat in enumerate(expert_file_selection):
             feature = cont_feat['continuum']
@@ -431,7 +437,7 @@ class spectra:
         return group_wvl_center
 
     @classmethod
-    def mineral_group_retrival(cls, mineral_index, spectra_observed, plot=False):
+    def mineral_group_retrival(cls, mineral_index, spectra_observed, veg_rfl=None, plot=False, veg_correction=False):
         decoded_expert = tc.decode_expert_system(os.path.join('utils', 'tetracorder', 'cmd.lib.setup.t5.27c1'),
                                                           log_file=None, log_level='INFO')
 
@@ -472,11 +478,24 @@ class spectra:
             wavelengths = np.array([float(q) for q in hdr['wavelength']])
             normalized_group_name = os.path.normpath(filename.split('.depth.gz')[0]) # need this to be compatible for windows; not sure if needed for linux.
 
-            # get rc and rb from tetracorder library
-            bd, rb, rc, wl = spectra.cont_removal(wavelengths, library_reflectance[library_records.index(record), :], decoded_expert[normalized_group_name]['features'], group=group)
+            if veg_correction:
+                # get rc and rb from tetracorder library
+                bd, rb, rc, wl = spectra.cont_removal(wavelengths,
+                                                      library_reflectance[library_records.index(record), :],
+                                                      decoded_expert[normalized_group_name]['features'],
+                                                      veg_correction=veg_correction, veg_rfl=veg_rfl)
 
-            # get rco and rbo - observed spectra
-            bdo, rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed,  decoded_expert[normalized_group_name]['features'], group=group)
+                # get rco and rbo - observed spectra
+                bdo, rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed,
+                                                           decoded_expert[normalized_group_name]['features'],
+                                                           veg_correction=veg_correction, veg_rfl=veg_rfl)
+
+            else:
+                # get rc and rb from tetracorder library
+                bd, rb, rc, wl = spectra.cont_removal(wavelengths, library_reflectance[library_records.index(record), :], decoded_expert[normalized_group_name]['features'], veg_correction=veg_correction)
+
+                # get rco and rbo - observed spectra
+                bdo, rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed,  decoded_expert[normalized_group_name]['features'], veg_correction=veg_correction)
 
             return_array[:] = [aggregated_group, bd, rb, rc, wl, bdo, rbo, rco, wl_o]
 
@@ -486,7 +505,7 @@ class spectra:
         return return_array
 
     @classmethod
-    def mineral_group_row(cls, mineral_index_row, spectra_row):
+    def mineral_group_row(cls, mineral_index_row, spectra_row, vegetation_row=None, veg_correction=False):
 
         row_return_array = np.ones((mineral_index_row.shape[0], 18)) * -9999.
 
@@ -495,27 +514,58 @@ class spectra:
                 if _band in [0, 2]:
                     pass
                 else:
-                    col_spectra = spectra_row[_col,:]
-                    mineral_retrival = spectra.mineral_group_retrival(mineral_index=band, spectra_observed=col_spectra)
 
-                    group_num = mineral_retrival[0]
+                    if veg_correction:
+                        col_spectra = spectra_row[_col, :]
+                        veg_rfl = vegetation_row[_col, :]
+                        mineral_retrival = spectra.mineral_group_retrival(mineral_index=band,
+                                                                          spectra_observed=col_spectra,
+                                                                          veg_correction=veg_correction,
+                                                                          veg_rfl=veg_rfl)
 
-                    if group_num == 1:
-                        row_return_array[_col, :9] = mineral_retrival
+                        group_num = mineral_retrival[0]
+
+                        if group_num == 1:
+                            row_return_array[_col, :9] = mineral_retrival
+                        else:
+                            row_return_array[_col, 9:] = mineral_retrival
+
                     else:
-                        row_return_array[_col, 9:] = mineral_retrival
+
+                        col_spectra = spectra_row[_col, :]
+                        mineral_retrival = spectra.mineral_group_retrival(mineral_index=band,
+                                                                          spectra_observed=col_spectra,
+                                                                          veg_correction=veg_correction)
+
+                        group_num = mineral_retrival[0]
+
+                        if group_num == 1:
+                            row_return_array[_col, :9] = mineral_retrival
+                        else:
+                            row_return_array[_col, 9:] = mineral_retrival
 
         return row_return_array
 
     @classmethod
-    def mineral_components(cls, index_array, spectra_array, output_file):
+    def mineral_components(cls, index_array, spectra_array, output_file, vegetation_array=None, veg_correction=False):
 
         # cont grid - corresponds to Rc and Rc-observed - for both group 1 and group 2
         output_grid = np.zeros((index_array.shape[0], index_array.shape[1], 18))
 
-        results = p_map(spectra.mineral_group_row, [index_array[_row, :, :] for _row, row in enumerate(index_array)],
-                        [spectra_array[_row, :, :] for _row, row in enumerate(spectra_array)],
-                        **{"desc": "\t\t processing continuum reflectance...", "ncols": 150})
+        if veg_correction:
+            results = p_map(partial(spectra.mineral_group_row, veg_correction=veg_correction),
+                            [index_array[_row, :, :] for _row, row in enumerate(index_array)],
+                            [spectra_array[_row, :, :] for _row, row in enumerate(spectra_array)],
+                            [vegetation_array[_row, :, :] for _row, row in enumerate(vegetation_array)],
+
+                            **{"desc": "\t\t processing continuum reflectance (veg correction enabled) ...",
+                                "ncols": 150})
+
+        else:
+            results = p_map(partial(spectra.mineral_group_row, veg_correction=veg_correction),
+                            [index_array[_row, :, :] for _row, row in enumerate(index_array)],
+                            [spectra_array[_row, :, :] for _row, row in enumerate(spectra_array)],
+                            **{"desc": "\t\t processing continuum reflectance...", "ncols": 150})
 
         for _row, row in enumerate(results):
             output_grid[_row, :, :] = row
