@@ -11,7 +11,7 @@ from matplotlib.ticker import FormatStrFormatter
 import matplotlib.ticker as ticker
 import geopandas as gp
 from glob import glob
-from utils.results_utils import r2_calculations, band_depth_veg_correction
+from utils.results_utils import r2_calculations, band_depth_group_aggregate
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from isofit.core.sunposition import sunpos
 from datetime import datetime, timezone
@@ -1021,32 +1021,24 @@ class tetracorder_figures:
 
     def veg_correction(self):
         # case 1 - band depth of pure soils and corrected mixed
-        bd_pure = envi_to_array(os.path.join(self.veg_correction_dir, 'tetracorder_soil_em_spectra_variables'))
-        bd_mix = envi_to_array(os.path.join(self.veg_correction_dir, 'tetracorder_soil_spectra_variables'))
-        fractions_pure = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_soil_fractions'))
-        veg_rfl = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_soil_extract_spectra'))
-        veg_rfl_sma = envi_to_array((os.path.join(self.sim_spectra_directory, 'unmixing-gv-no_brightness')))
-        sma_fractions = envi_to_array((os.path.join(self.output_fractions, 'sma', 'no-brightness', 'tetracorder_soil_spectra_fractional_cover')))
+        bd_pure = envi_to_array(os.path.join(self.veg_correction_dir, 'tetracorder_soil_only'))
+        bd_mix = envi_to_array(os.path.join(self.veg_correction_dir, 'tetracorder_vegetation_correction'))
 
         # save case 1 outputs
         output_file_case1 = os.path.join(self.veg_correction_dir, 'case1.hdr')
-        band_depth_veg_correction(bd=bd_mix, fractions=fractions_pure, veg_rfl=veg_rfl, output_file=output_file_case1)
+        band_depth_group_aggregate(bd=bd_mix, output_file=output_file_case1)
 
         output_pure_case1 = os.path.join(self.veg_correction_dir, 'pure_case1.hdr')
-        no_vg_rfl = veg_rfl * 0
-        band_depth_veg_correction(bd=bd_pure, fractions=fractions_pure, veg_rfl=no_vg_rfl, output_file=output_pure_case1)
-
-        # save case 2 outputs - SMA based vegetation
-        output_file_case2 = os.path.join(self.veg_correction_dir, 'case2.hdr')
-        band_depth_veg_correction(bd=bd_mix, fractions=sma_fractions, veg_rfl=veg_rfl_sma, output_file=output_file_case2)
+        band_depth_group_aggregate(bd=bd_pure, output_file=output_pure_case1)
 
 
     def veg_correction_fig(self):
         # this is case 1
-        fig, axes = plt.subplots(1,3, figsize=(15, 9))
+        fig, axes = plt.subplots(1,3, figsize=(15, 5))
 
         fractions = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_soil_fractions'))
-        unique_x_val = np.unique(fractions[0, :, 2])
+
+        unique_x_val = np.unique(fractions[0, :, 2]) * 100
 
         bd = envi_to_array(os.path.join(self.veg_correction_dir, 'pure_case1'))
         bd[bd == -9999.] = np.nan
@@ -1056,59 +1048,69 @@ class tetracorder_figures:
         bd_sma = envi_to_array(os.path.join(self.veg_correction_dir, 'case2'))
         bd_sma[bd_sma == -9999.] = np.nan
 
+        bd_mix_no_correction = envi_to_array(os.path.join(self.veg_correction_dir, 'case3'))
+        bd_mix_no_correction[bd_mix_no_correction == -9999.] = np.nan
+
         titles = {0: 'Iron Oxides', 1: 'Carbonates', 2: 'Clays'}
         for _ax, ax in enumerate(axes):
             # prepare the data
             y = bd[:, :, _ax]
             y_hat = bd_hat[:, :, _ax]
-            y_sma = bd_sma[:,:, _ax]
+            y_sma = bd_sma[:, :, _ax]
+            y_hat_no_correction = bd_mix_no_correction[:,:, _ax]
 
-            # filter out the NaNs
-            y_data = [y[:, i][~np.isnan(y[:, i])] for i in range(y.shape[1])]
-            y_hat_data = [y_hat[:, i][~np.isnan(y_hat[:, i])] for i in range(y_hat.shape[1])]
-            y_sma_data = [y_sma[:, i][~np.isnan(y_sma[:, i])] for i in range(y_sma.shape[1])]
+            # create lists to store the means
+            mean_y = []
+            mean_y_hat = []
+            mean_y_sma = []
+            mean_y_hat_no = []
 
-            # Filter out empty arrays
-            y_data = [d for d in y_data if d.size > 0]
-            y_hat_data = [d for d in y_hat_data if d.size > 0]
-            y_sma_data = [d for d in y_sma_data if d.size > 0]
+            for _col in range(y.shape[1]):
+                mean_y.append(np.nanmean(y[:, _col]))
+                mean_y_hat.append(np.nanmean(y_hat[:, _col]))
+                mean_y_sma.append(np.nanmean(y_sma[:, _col]))
+                mean_y_hat_no.append(np.nanmean(y_hat_no_correction[:, _col]))
 
-            if y_data:
-                #vp1 = ax.violinplot(y_data, showmeans=True, widths=0.4)
-                y_mean = [np.mean(d) for d in y_data]
-                vp1 = ax.plot(np.arange(len(y_mean)), y_mean, label='BD pure')
-            if y_hat_data:
-                #vp2 = ax.violinplot(y_hat_data, showmeans=True, widths=0.4)
-                y_hat_mean = [np.mean(d) for d in y_hat_data]
-                vp2 = ax.plot(np.arange(len(y_hat_mean)), y_hat_mean, label='BD mix')
-
-            if y_sma_data:
-                #vp3 = ax.violinplot(y_sma_data, showmeans=True, widths=0.4)
-                y_sma_mean = [np.mean(d) for d in y_sma_data]
-                vp3 = ax.plot(np.arange(len(y_sma_mean)), y_sma_mean, label='SMA')
+            ax.plot(unique_x_val, mean_y, label='BD pure no correction')
+            ax.plot(unique_x_val, mean_y_hat, label='BD mix; correction implemented')
+            #ax.plot(unique_x_val, mean_y_sma, label='SMA')
+            #ax.plot(unique_x_val, mean_y_hat_no, label='BD mix no correction')
 
             ax.set_title(titles[_ax])
             ax.set_xlabel('% Soil Cover')
-            ax.set_ylabel('Band Depth')
 
-            step = max(1, len(unique_x_val) // 10)
-            ticks = np.arange(1, len(unique_x_val), step)
-            labels = [f'{val * 100:.0f}%' for val in unique_x_val[::step]]
+            ax.set_aspect('auto')
 
-            ax.set_xticks(ticks=ticks, labels=labels)
+            # major ticks every 10 units
+            major_ticks = range(0, 101, 10)
+            ax.set_xticks(major_ticks)
 
-            # Add legend
-            # handles = [
-            #     plt.Line2D([0], [0], color=vp1['bodies'][0].get_facecolor().flatten(), lw=2, label='BD pure'),
-            #     plt.Line2D([0], [0], color=vp2['bodies'][0].get_facecolor().flatten(), lw=2, label='BD mix'),
-            #     plt.Line2D([0], [0], color=vp3['bodies'][0].get_facecolor().flatten(), lw=2, label='SMA')
-            # ]
+            # Minor ticks every 5 units
+            minor_ticks = range(0, 101, 5)
+            ax.set_xticks(minor_ticks, minor=True)
+
+            # set tick labels for x-axis
+            ax.set_xticklabels(major_ticks)
+
+            # major ticks every 10 units - y-axis
+            major_ticks = np.arange(0, 0.25, 0.05)
+            ax.set_yticks(major_ticks)
+
+            # Minor ticks every 5 units
+            minor_ticks = np.arange(0, 0.25, 0.01)
+            ax.set_yticks(minor_ticks, minor=True)
+
+            ax.set_yticklabels(major_ticks)
+            ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+
             ax.legend(loc='upper right')
 
-            ax.set_ylim(0, 1)
+            ax.set_ylim(0, .1)
 
-            ax.xaxis.set_minor_locator(MultipleLocator(20))
-            ax.tick_params(which='minor', length=4, color='b')
+            if _ax == 0:
+                ax.set_ylabel('Rb - Observed Reflectance')
+            else:
+                ax.set_yticklabels([])
 
         plt.savefig(os.path.join(self.fig_directory, 'veg_correction_case1_figure.png'), format="png", dpi=300,
                         bbox_inches="tight")
@@ -1121,20 +1123,21 @@ class tetracorder_figures:
         try:
             spectrum = load_pickle('soil_test_tc')
         except:
-            spectrum = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_soil_spectra'))[0,20,:]
+            spectrum = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_soil_spectra'))[0, 17, :]
             save_pickle(spectrum, 'soil_test_tc')
 
-        mineral_spectra, wvls = spectra.mineral_group_retrival(mineral_index=47, spectra_observed=spectrum, plot=True)
-
-        plt.plot(wvls, mineral_spectra)
-        plt.savefig(os.path.join(self.fig_directory, 'mineral_test_fig.png'))
+        data = spectra.mineral_group_retrival(mineral_index=47, spectra_observed=spectrum, plot=True)
+        formatted_list = [f"{num:.3f}" for num in data]
+        print(data)
+        #print(bd, wl)
+        #print(bdo, wl_o)
 
 def run_figure_workflow(base_directory):
     ems = ['soil']
     tc = tetracorder_figures(base_directory=base_directory)
     tc.mineral_ref_figure()
-    #tc.veg_correction()
-    #tc.veg_correction_fig()
+    tc.veg_correction()
+    tc.veg_correction_fig()
     #tc.confusion_matrix()
     #tc.tetracorder_libraries()
     #tc.mineral_validation(x_axis='contact')

@@ -236,18 +236,30 @@ class tetracorder:
         cursor_print("\t- done")
 
     def mineral_lib_refl_cont(self):
-        # case 1 - em spectra - this is pure soil!
-        em_tetracorder_index = envi_to_array(os.path.join(self.base_directory, 'output', 'spectral_abundance', 'tetracorder_soil_em_spectra_simulation_augmented_min'))
+
+        # case 1 - pure soil used in the simulated spectra
+        em_tetracorder_index = envi_to_array(os.path.join(self.base_directory, 'output', 'spectral_abundance',
+                                                          'tetracorder_soil_em_spectra_simulation_augmented_min'))[:, :21, :]
         em_spectra_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_em_spectra'))
-        output_file = os.path.join(self.veg_correction_dir, 'tetracorder_soil_em_spectra_variables.hdr')
-        
-        # mixed simulated spectra - this is pure soil mixed with random GV + NPV
-        mixed_tetracorder_index = envi_to_array(os.path.join(self.base_directory, 'output', 'spectral_abundance', 'tetracorder_soil_spectra_simulation_augmented_min'))
+        output_file = os.path.join(self.veg_correction_dir, 'tetracorder_soil_only.hdr')
+        spectra.mineral_components(index_array=em_tetracorder_index, spectra_array=em_spectra_array,
+                                   output_file=output_file)
+
+        # case 2 - mixed simulated spectra - this is pure soil mixed with random GV + NPV
+        mixed_tetracorder_index = envi_to_array(os.path.join(self.base_directory, 'output', 'spectral_abundance',
+                                                             'tetracorder_soil_spectra_simulation_augmented_min'))[:, :21, :]
         mixed_spectra_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_spectra'))
-        mix_output_file = os.path.join(self.veg_correction_dir, 'tetracorder_soil_spectra_variables.hdr')
-        
-        spectra.mineral_components(index_array=mixed_tetracorder_index[:, :21, :], spectra_array=mixed_spectra_array, output_file=mix_output_file)
-        spectra.mineral_components(index_array=em_tetracorder_index[:, :21, :], spectra_array=em_spectra_array, output_file=output_file)
+        vegetation_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_extract_spectra'))
+
+        mix_output_file = os.path.join(self.veg_correction_dir, 'tetracorder_vegetation_correction.hdr')
+        spectra.mineral_components(index_array=mixed_tetracorder_index, spectra_array=mixed_spectra_array,
+                                   output_file=mix_output_file, veg_correction=True, vegetation_array=vegetation_array)
+
+        # case 3 - sma derived signal from mixed spectra
+        veg_rfl_sma = envi_to_array((os.path.join(self.sim_spectra_dir, 'unmixing-gv-no_brightness')))  # sma based veg rfl
+        sma_output_file = os.path.join(self.veg_correction_dir, 'tetracorder_vegetation_correction_sma.hdr')
+        spectra.mineral_components(index_array=mixed_tetracorder_index, spectra_array=mixed_spectra_array,
+                                   output_file=sma_output_file, veg_correction=True, vegetation_array=veg_rfl_sma)
 
 
 def run_tetracorder_build(base_directory, sensor, dry_run):
