@@ -128,6 +128,35 @@ class tetracorder:
                                   parameters=optimal_parameters, output_dest=self.augmented_dir, scale='1',
                                   spectra_starting_column='8', uncertainty_file=new_uncertainty_file)
 
+    def reconstruct_veg_simulated_signal(self):
+        cursor_print(f'reconstructing simulated vegetation...')
+
+        fractions_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_fractions'))
+        index_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_index'))
+
+        simulated_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
+                                                         'convex_hull__n_dims_4_simulation_library'))
+
+        spectra_grid = np.zeros((fractions_array.shape[0], fractions_array.shape[1], len(self.wvls)))
+
+        for _row, row in enumerate(fractions_array):
+            for _col, col in enumerate(row):
+
+                gv_index = index_array[_row, _col, 1]
+                npv_index = index_array[_row, _col, 0]
+
+                gv_simulated_spectra = simulated_array[gv_index, 0, :] * fractions_array[_row, _col, 1]
+                npv_simulated_spectra = simulated_array[npv_index, 0, :] * fractions_array[_row, _col, 0]
+
+                spectra_grid[_row, _col, :] = gv_simulated_spectra + npv_simulated_spectra
+
+        meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls,
+                                wvls=True)
+        output_raster = os.path.join(self.sim_spectra_dir, f"vegetation_spectra_pure.hdr")
+        save_envi(output_raster, meta_spectra, spectra_grid)
+
+        print("\t- done")
+
 
     def reconstruct_em_sma(self, user_em):
         cursor_print(f'reconstructing {user_em} from sma...')
@@ -168,10 +197,6 @@ class tetracorder:
                                 wvls=True)
         output_raster = os.path.join(self.sim_spectra_dir, f"unmixing-{user_em}-no_brightness.hdr")
         save_envi(output_raster, meta_spectra, spectra_grid)
-
-        # augment the file
-        #aug_raster = os.path.join(self.sim_spectra_dir, "sma-unmixing-soil-reconstructed.hdr")
-        #augment_envi(file=os.path.splitext(output_raster)[0], wvls=self.wvls, out_raster=aug_raster, vertical_average=False)
 
         print("\t- done")
 
@@ -277,7 +302,8 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
         elif user_input == 'C':
             tc.unmix_tetracorder(dry_run=dry_run)
         elif user_input == 'D':
-            #tc.reconstruct_em_sma(user_em='gv')
+            tc.reconstruct_veg_simulated_signal()
+            tc.reconstruct_em_sma(user_em='gv')
             tc.mineral_lib_refl_cont()
         elif user_input == 'E':
             tc.augment_slpit_pixels()
