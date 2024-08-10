@@ -249,7 +249,7 @@ class tetracorder:
         mixed_tetracorder_index = envi_to_array(os.path.join(self.base_directory, 'output', 'spectral_abundance',
                                                              'tetracorder_soil_spectra_simulation_augmented_min'))[:, :21, :]
         mixed_spectra_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_spectra'))
-        vegetation_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_extract_spectra'))
+        vegetation_array = mixed_spectra_array - em_spectra_array
 
         mix_output_file = os.path.join(self.veg_correction_dir, 'tetracorder_vegetation_correction.hdr')
         spectra.mineral_components(index_array=mixed_tetracorder_index, spectra_array=mixed_spectra_array,
@@ -277,7 +277,7 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
         elif user_input == 'C':
             tc.unmix_tetracorder(dry_run=dry_run)
         elif user_input == 'D':
-            #tc.reconstruct_em_sma(user_em='gv')
+            tc.reconstruct_em_sma(user_em='gv')
             tc.mineral_lib_refl_cont()
         elif user_input == 'E':
             tc.augment_slpit_pixels()
