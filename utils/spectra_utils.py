@@ -407,7 +407,7 @@ class spectra:
             rb_array[_cont_feat] = reflectance[feature_inds][depth_max_index]
 
         # this is currently returning the biggest band depth
-        bd_max_index = features_array.argmax()
+        bd_max_index = features_array.argmin()
         bd_return = features_array[bd_max_index]
         rb_return = rb_array[bd_max_index]
         rc_return = rc_array[bd_max_index]
