@@ -23,7 +23,14 @@ from isofit.core.sunposition import sunpos
 import geopandas as gp
 from utils.results_utils import r2_calculations, load_data, error_metrics
 from matplotlib.ticker import FormatStrFormatter
-
+from spectral.io import envi
+from rasterio.plot import show
+import geopandas as gpd
+import rasterio
+from rasterio.features import geometry_mask
+from shapely.geometry import mapping
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes, mark_inset, InsetPosition
+from matplotlib_scalebar.scalebar import ScaleBar
 
 def duplicate_check_fractions(array):
     seen = set()
@@ -112,6 +119,230 @@ class figures:
             'xmin': 0,
             'xmax': 1}
 
+    # def full_spectrum_plots(self):
+    #     # spectral data
+    #     create_directory(os.path.join(self.fig_directory, 'plot_stats'))
+    #     transect_data = pd.read_csv(os.path.join(self.output_directory, 'all-transect-emit.csv'))
+    #
+    #     asd_wavelengths = np.array(transect_data.columns[9:]).astype(float)
+    #     good_bands = spectra.get_good_bands_mask(asd_wavelengths, wavelength_pairs=None)
+    #     asd_wavelengths[~good_bands] = np.nan
+    #
+    #     self.good_emit_bands = spectra.get_good_bands_mask(self.wvls, wavelength_pairs=None)
+    #     self.wvls[~self.good_emit_bands] = np.nan
+    #
+    #     # gis shapefile
+    #     df_gis = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
+    #     df_gis = df_gis.sort_values('Name')
+    #     df_gis['Team'] = df_gis['Name'].str.split('-').str[0].str.strip()
+    #     df_gis = df_gis[df_gis['Team'] != 'THERM']
+    #
+    #     fig, axs = plt.subplot_mosaic([['rgb', 'frac'],
+    #                                    ['photo', 'spec']], layout='constrained')
+    #     plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=0.4, hspace=0.4)
+    #
+    #     rgb_tif = r'G:\My Drive\terraspec\slpit\figures\frac_map_rgb data\20230927_rgb_sr.tif'
+    #     frac_tif = r'G:\My Drive\terraspec\slpit\figures\frac_map_rgb data\20230927_frac_sr.tif'
+    #     shp_path = r'G:\My Drive\terraspec\slpit\figures\frac_map_rgb data\sr_boundary_gcs.shp'
+    #
+    #     for name, ax in axs.items():
+    #         if name in ['rgb', 'frac']:
+    #             # plot the spatial data
+    #             if name == 'rgb':
+    #                     raster_path = rgb_tif
+    #                     plot_title = 'EMIT RGB'
+    #             else:
+    #                 raster_path = frac_tif
+    #                 plot_title = 'EMIT Fractional Cover'
+    #
+    #             with rasterio.open(raster_path) as src:
+    #                 raster_data = src.read([1,2,3])  # Read the first band
+    #                 raster_transform = src.transform
+    #                 raster_crs = src.crs
+    #                 raster_meta = src.meta
+    #                 nodata_value = src.nodata
+    #
+    #                 if nodata_value is None:
+    #                     nodata_value = 0  # or choose another value that doesn't appear in your data
+    #                     raster_meta.update(nodata=nodata_value)
+    #
+    #                 shapefile_data = gpd.read_file(shp_path)
+    #                 shapes = [mapping(geom) for geom in shapefile_data.geometry]
+    #                 mask = geometry_mask(shapes, transform=raster_transform, invert=True,
+    #                                      out_shape=raster_data.shape[1:])
+    #
+    #                 rgba_data = np.zeros((4, raster_data.shape[1], raster_data.shape[2]), dtype=raster_data.dtype)
+    #                 rgba_data[:3, :, :] = raster_data  # RGB channels
+    #                 rgba_data[3, :, :] = 255  # Alpha channel set to 255 (fully opaque)
+    #
+    #                 # Apply the mask to the alpha channel
+    #                 rgba_data[3, ~mask] = 0  # Set alpha to 0 (fully transparent) outside the shapefile
+    #
+    #                 ax.imshow(np.moveaxis(rgba_data, 0, -1), extent=(src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top))
+    #
+    #                 shapefile_data.plot(ax=ax, facecolor='none', edgecolor='red')
+    #                 ax.set_title(plot_title)
+    #                 ax.axis('off')
+    #
+    #                 # add scale bar to rgb and north arrow
+    #                 if name == 'rgb':
+    #                     # Adding scale bar
+    #                     # Calculate scale bar length and midpoint in kilometers at the specified latitude
+    #                     scalebar_length_km = 4  # 4 kilometers
+    #                     midpoint_km = 2  # 2 kilometers
+    #
+    #                     # Conversion factor from degrees to kilometers at given latitude
+    #                     km_per_degree = 111.32 * np.cos(np.deg2rad(latitude))
+    #
+    #                     scalebar_length_deg = scalebar_length_km / km_per_degree
+    #                     midpoint_deg = midpoint_km / km_per_degree
+    #
+    #                     scalebar = ScaleBar(scalebar_length_deg, location='lower right', units='km', scale_loc='bottom',
+    #                                         frameon=False, midpoint=midpoint_deg)  # Scale bar length in degrees
+    #                     ax.add_artist(scalebar)
+    #
+    #                 ax_inset = inset_axes(ax, width="10%", height="10%", loc='upper right')
+    #                     ax_inset.imshow([[1, 1], [0, 0]], cmap=plt.cm.gray, interpolation='nearest')
+    #                     ax_inset.axis('off')
+    #                     mark_inset(ax, ax_inset, loc1=1, loc2=3, fc="none", ec="black", lw=0.5)
+    #
+    #                 else:
+    #                     print('skip')
+    #
+    #             # plot the plot data
+    #         elif name in ['photo']:
+    #             ax.set_title('Landscape Picture')
+    #             pic_path = os.path.join(self.output_directory, 'plot_pictures', 'spectral_transects', 'Spectral - 051.jpg')
+    #             img = mpimg.imread(pic_path)
+    #             ax.imshow(img)
+    #
+    #             ax.axis('off')
+    #
+    #     plt.tight_layout()
+    #     plt.savefig(os.path.join(self.fig_directory, f'rgb-frac-map.png'), format="png", dpi=300)
+
+
+        # for plot in sorted(list(transect_data.plot_name.unique()), reverse=True):
+        #
+        #
+
+        #
+        #     # plot average of all EMIT files across time
+        #     reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data-clip',
+        #                                                  '*' + plot.replace("Spectral", "SPEC").replace(" ",
+        #                                                                                                 "") + '_RFL_' + '*[!.xml][!.csv][!.hdr]')))
+        #
+        #     if not reflectance_files:
+        #         reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data-clip',
+        #                                                      '*' + plot.replace("Thermal", "THERM").replace(" ",
+        #                                                                                                     "") + '_RFL_' + '*[!.xml][!.csv][!.hdr]')))
+        #
+        #     # plot average of SLPIT
+        #     refl_file_asd = glob(os.path.join(self.output_directory, 'spectral_transects', 'transect',
+        #                                       "*" + plot.replace(" ", "")))
+        #
+        #     df_refl_asd = gdal.Open(refl_file_asd[0], gdal.GA_ReadOnly)
+        #     refl_array_asd = df_refl_asd.ReadAsArray().transpose((1, 2, 0))
+        #     y = np.mean(refl_array_asd, axis=0).ravel()
+        #
+        #     # get date and time from slpit
+        #     df_transect = transect_data.loc[transect_data['plot_name'] == plot].copy()
+        #     slpit_date = df_transect['date'].unique()[0]
+        #     slpit_datetime = datetime.strptime(df_transect['date'].unique()[0], "%Y-%m-%d")
+        #
+        #     # Convert the time strings to datetime objects
+        #     df_transect['utc_time'] = pd.to_datetime(df_transect['utc_time'], format='%H:%M:%S')
+        #     df_transect['total_seconds'] = df_transect['utc_time'].dt.hour * 3600 + df_transect['utc_time'].dt.minute * 60 + \
+        #                                    df_transect['utc_time'].dt.second
+        #
+        #     # minimum and maximum total time in seconds for split
+        #     min_time_seconds = df_transect['total_seconds'].min()
+        #     max_time_seconds = df_transect['total_seconds'].max()
+        #
+        #     min_time_hhmmss = f"{min_time_seconds // 3600:02.0f}{(min_time_seconds % 3600) // 60:02.0f}{min_time_seconds % 60:02.0f}"
+        #     max_time_hhmmss = f"{max_time_seconds // 3600:02.0f}{(max_time_seconds % 3600) // 60:02.0f}{max_time_seconds % 60:02.0f}"
+        #
+        #     # Calculate mean time of ASD  collections
+        #     field_slpit_date_min = datetime.strptime(slpit_date + " " + min_time_hhmmss, "%Y-%m-%d %H%M%S").replace(
+        #         tzinfo=timezone.utc)
+        #     field_slpit_date_max = datetime.strptime(slpit_date + " " + max_time_hhmmss, "%Y-%m-%d %H%M%S").replace(
+        #         tzinfo=timezone.utc)
+        #
+        #     ax.set_title(f'Field Sample Date: {slpit_date}')
+        #     df_gis_select = df_gis.loc[df_gis['Name'] == plot.replace("Spectral", "SPEC")].copy().reset_index(drop=True)
+        #     # field_emit_date = df_gis_select.at[0, 'EMIT Overp']
+        #     # field_emit_date = datetime.strptime(field_emit_date, "%b %d, %Y at %I:%M:%S %p")
+        #     # field_emit_date = field_emit_date.strftime("%Y%m%dT%H%M")
+        #
+        #     for _i, i in enumerate(reflectance_files):
+        #         acquisition_date = os.path.basename(i).split("_")[2]
+        #
+        #         df_refl = gdal.Open(i, gdal.GA_ReadOnly)
+        #         refl_array = df_refl.ReadAsArray().transpose((1, 2, 0))
+        #         y_hat = np.mean(refl_array, axis=(0, 1))
+        #
+        #         acquisition_datetime_utc = datetime.strptime(acquisition_date, "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
+        #         geometry_results_emit = sunpos(acquisition_datetime_utc, np.mean(df_transect.latitude),
+        #                                        np.mean(df_transect.longitude), np.mean(df_transect.elevation))
+        #
+        #         acquisition_datetime = datetime.strptime(acquisition_date, "%Y%m%dT%H%M%S")
+        #         formatted_datetime = acquisition_datetime.strftime("%Y-%m-%d %I:%M %p")
+        #         delta = slpit_datetime - acquisition_datetime
+        #         days = np.absolute(delta.days)
+        #
+        #         cloud_mask = glob(os.path.join(self.gis_directory, 'emit-data-clip',
+        #                                        f'*{plot.replace("Spectral", "SPEC").replace(" ", "")}_MASK_{acquisition_date}'))
+        #
+        #         if not cloud_mask:
+        #             print('helloooooo')
+        #             cloud_mask = glob(os.path.join(self.gis_directory, 'emit-data-clip',
+        #                                            f'*{plot.replace("Thermal", "THERM").replace(" ", "")}_MASK_{acquisition_date}'))
+        #             if not cloud_mask:
+        #                 continue
+        #
+        #         ds_cloud = gdal.Open(cloud_mask[0], gdal.GA_ReadOnly)
+        #         cloud_array = ds_cloud.ReadAsArray().transpose((1, 2, 0))
+        #
+        #         if days <= 15:
+        #             cloud_check = np.any(cloud_array == 1)
+        #
+        #             if cloud_check:
+        #                 pass
+        #             else:
+        #                 base_label = f'{acquisition_date} (±{days:02d} days)  SZA : {str(int(geometry_results_emit[1]))}°'
+        #                 ax.plot(self.wvls, np.mean(refl_array, axis=(0, 1)), label=base_label, linewidth=1)
+        #
+        #                 # if field_emit_date == acquisition_date[:-2]:
+        #                 #     bold_label = base_label
+        #
+        #     geometry_results_slpit_min = sunpos(field_slpit_date_min, np.mean(df_transect.latitude),
+        #                                         np.mean(df_transect.longitude), np.mean(df_transect.elevation))
+        #
+        #     geometry_results_slpit_max = sunpos(field_slpit_date_max, np.mean(df_transect.latitude),
+        #                                         np.mean(df_transect.longitude), np.mean(df_transect.elevation))
+        #
+        #     slpit_label = f'SLPIT (SZA: {str(int(geometry_results_slpit_min[1]))} - {str(int(geometry_results_slpit_max[1]))}°)'
+        #     ax.plot(self.wvls, np.mean(refl_array_asd, axis=0).ravel(), color='black', label=slpit_label,
+        #             linewidth=1.5)
+        #
+        #     ax.set_xlabel('Wavelength (nm)')
+        #     ax.set_ylabel('Reflectance (%)')
+        #     ax.set_ylim(0, 1)
+        #     ax.set_xlim(320, 2550)
+        #
+        #     legend = ax.legend()
+        #
+        #     # make emit field date bold
+        #     for handle, text in zip(legend.legendHandles, legend.get_texts()):
+        #         if text.get_text() == bold_label:
+        #             text.set_fontweight('bold')
+        #
+        #     plt.savefig(os.path.join(self.fig_directory, 'plot_stats', f'full-spectrum{plot}.png'), format="png", dpi=300,
+        #                 bbox_inches="tight")
+        #     plt.clf()
+        #     plt.close()
+
+
     def plot_summary(self):
         # spectral data
         create_directory(os.path.join(self.fig_directory, 'plot_stats'))
@@ -183,14 +414,13 @@ class figures:
                                                  '*' + plot.replace("Thermal", "THERM").replace(" ",
                                                                                                 "") + '_RFL_' + '*[!.xml][!.csv][!.hdr]')))
 
-
                     # plot average of SLPIT
                     refl_file_asd = glob(os.path.join(self.output_directory, 'spectral_transects', 'transect',
                                                       "*" + plot.replace(" ", "")))
-                    print(plot)
-                    print(refl_file_asd)
+
                     df_refl_asd = gdal.Open(refl_file_asd[0], gdal.GA_ReadOnly)
                     refl_array_asd = df_refl_asd.ReadAsArray().transpose((1, 2, 0))
+                    refl_array_asd[refl_array_asd == -9999] = np.nan
                     y = np.mean(refl_array_asd, axis=0).ravel()
 
                     # get date and time from slpit
@@ -238,7 +468,6 @@ class figures:
                         cloud_mask = glob(os.path.join(self.gis_directory, 'emit-data-clip', f'*{plot.replace("Spectral", "SPEC").replace(" ", "")}_MASK_{acquisition_date}'))
 
                         if not cloud_mask:
-                            print('helloooooo')
                             cloud_mask = glob(os.path.join(self.gis_directory, 'emit-data-clip',
                                                            f'*{plot.replace("Thermal", "THERM").replace(" ", "")}_MASK_{acquisition_date}'))
                             if not cloud_mask:
@@ -247,7 +476,7 @@ class figures:
                         ds_cloud = gdal.Open(cloud_mask[0], gdal.GA_ReadOnly)
                         cloud_array = ds_cloud.ReadAsArray().transpose((1, 2, 0))
 
-                        if days <= 100:
+                        if days <= 30:
                             cloud_check = np.any(cloud_array == 1)
 
                             if cloud_check:
@@ -266,7 +495,8 @@ class figures:
                                                         np.mean(df_transect.longitude), np.mean(df_transect.elevation))
 
                     slpit_label = f'SLPIT (SZA: {str(int(geometry_results_slpit_min[1]))} - {str(int(geometry_results_slpit_max[1]))}°)'
-                    ax.plot(self.wvls, np.mean(refl_array_asd, axis=0).ravel(), color='black', label=slpit_label,
+
+                    ax.plot(self.wvls, np.nanmean(refl_array_asd, axis=(0, 1)), color='black', label=slpit_label,
                             linewidth=1.5)
 
                     ax.set_xlabel('Wavelength (nm)')
@@ -703,6 +933,130 @@ class figures:
         fig.colorbar(scatter, label='Plot Number')
         plt.savefig(os.path.join(self.fig_directory, 'regression_local.png'), format="png", dpi=300, bbox_inches="tight")
 
+
+    def map_detail_figure(self):
+        rgb_img_path = os.path.join(self.gis_directory, 'rgb-quick-look', 'emit_20230927T214531.tif')
+
+        rgb_img = envi_to_array()
+        frac_img = envi_to_array()
+
+
+    def av3_comparisson(self):
+        # spectral data
+        create_directory(os.path.join(self.fig_directory, 'plot_stats'))
+        sr_plots = ['SPEC - 045', 'SPEC - 046', 'SPEC - 047', 'SPEC - 048', 'SPEC - 049', 'SPEC - 050', 'SPEC - 051',
+                    'SPEC - 052', 'SPEC - 053', 'SPEC - 054', 'SPEC - 055']
+
+        transect_data = pd.read_csv(os.path.join(self.output_directory, 'all-transect-emit.csv'))
+        transect_data['plot_name'] = transect_data['plot_name'].str.replace('Spectral', 'SPEC')
+        transect_data = transect_data[transect_data['plot_name'].isin(sr_plots)]
+
+        asd_wavelengths = np.array(transect_data.columns[9:]).astype(float)
+        good_bands = spectra.get_good_bands_mask(asd_wavelengths, wavelength_pairs=None)
+        asd_wavelengths[~good_bands] = np.nan
+
+        self.good_emit_bands = spectra.get_good_bands_mask(self.wvls, wavelength_pairs=None)
+        self.wvls[~self.good_emit_bands] = np.nan
+
+        for plot in sorted(list(transect_data.plot_name.unique()), reverse=True):
+            fig, axs = plt.subplot_mosaic([['plot_pic', 'map'],
+                                           ['av1', 'av2']], figsize=(10, 10))
+            plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=0.4, hspace=0.4)
+
+            fig.suptitle(plot)
+            df_transect = transect_data.loc[transect_data['plot_name'] == plot].copy()
+            df_transect = df_transect[df_transect.longitude != 'unk']
+
+            for name, ax in axs.items():
+                if name in ['plot_pic']:
+                    ax.set_title('Landscape Picture')
+                    pic_path = os.path.join(self.output_directory, 'plot_pictures', 'spectral_transects', f'{plot.replace("SPEC","Spectral")}.jpg')
+                    img = mpimg.imread(pic_path)
+                    ax.imshow(img)
+                    ax.axis('off')
+
+                if name in ['map']:
+                    ax.set_title('Plot Map')
+                    # update to SR Boundaries
+                    m = Basemap(projection='merc', llcrnrlat=27, urcrnrlat=45,
+                                llcrnrlon=-125, urcrnrlon=-100, ax=ax, epsg=4326)
+                    m.arcgisimage(service='World_Imagery', xpixels=1000, ypixels=1000, dpi=300, verbose=True)
+                    ax.scatter(np.mean(df_transect.longitude), np.mean(df_transect.latitude), color='red', s=12)
+
+                if name in ['av1', 'av2']:
+
+                    if name == 'av1':
+                        av_flightline = 'AV320230926t200400'
+                    else:
+                        av_flightline = 'AV320231026t191939'
+
+                    ax.set_title(f'AVIRIS_$3$ Flightline: {av_flightline}')
+
+                    # get all emit rfl files
+                    emit_reflectance_files = sorted(glob(os.path.join(self.gis_directory, 'emit-data-clip', f'*{plot.replace(" ","")}_RFL_*[!.xml][!.csv][!.hdr]')))
+
+                    # plot average of av3
+                    av3_file = os.path.join(self.gis_directory, 'av3_sr', f'{plot}_RFL_{av_flightline}')
+                    av3_array = envi_to_array(av3_file)
+                    av3_array[av3_array == 0] = np.nan
+                    av3_array[av3_array == -0.01] = np.nan
+                    flight_datetime = datetime.strptime(av_flightline, "AV3%Y%m%dt%H%M%S")
+
+                    av3_label = f'AVIRIS_3: {av_flightline[3:]}'
+
+                    av3_meta = envi.read_envi_header(f'{av3_file}.hdr')
+                    av3_wvls = np.array(av3_meta['wavelength']).astype(float)
+                    ax.plot(av3_wvls, np.mean(av3_array, axis=(0, 1)).ravel(), color='blue', label=av3_label,
+                            linewidth=1, linestyle=':')
+
+                    # plot average of SLPIT
+                    refl_file_asd = os.path.join(self.output_directory, 'spectral_transects', 'transect',
+                                                 f'{plot.replace("SPEC", "Spectral").replace(" ", "")}')
+                    slpit_array = envi_to_array(refl_file_asd)
+
+                    slpit_field_date = sorted(df_transect.date.unique())[0]
+                    slpit_datetime = datetime.strptime(slpit_field_date, "%Y-%m-%d")
+                    delta = slpit_datetime - flight_datetime
+                    days = delta.days
+                    slpit_label = f'SLPIT Field Date: {slpit_field_date}  ({days:02d} days)'
+
+                    ax.plot(self.wvls, np.mean(slpit_array, axis=0).ravel(), color='black', label=slpit_label,
+                            linewidth=1.5, linestyle='-')
+
+                    for _i, i in enumerate(emit_reflectance_files):
+                        acquisition_date = os.path.basename(i).split("_")[2]
+                        refl_array = envi_to_array(i)
+
+                        acquisition_datetime = datetime.strptime(acquisition_date, "%Y%m%dT%H%M%S")
+                        delta = acquisition_datetime - flight_datetime
+                        days = delta.days
+
+                        cloud_mask = glob(os.path.join(self.gis_directory, 'emit-data-clip', f'*{plot.replace(" ", "")}_MASK_{acquisition_date}'))
+                        cloud_array = envi_to_array(cloud_mask[0])
+
+                        if -15 <= days <= 15:
+                            cloud_check = np.any(cloud_array == 1)
+
+                            if cloud_check:
+                                pass
+                            else:
+                                base_label = f'EMIT: {acquisition_date} ({days:02d} days)'
+                                ax.plot(self.wvls, np.mean(refl_array, axis=(0, 1)), label=base_label, linewidth=1, linestyle='--')
+
+                    ax.set_xlabel('Wavelength (nm)')
+                    ax.set_ylabel('Reflectance (%)')
+                    ax.set_ylim(0, 1)
+                    ax.set_xlim(320, 2550)
+
+                    ax.legend(prop={'size': 6})
+
+            plt.savefig(os.path.join(self.fig_directory, 'plot_stats', f'av3_{plot}.png'), format="png", dpi=300)
+            plt.clf()
+            plt.close()
+
+
+
+
 def run_figures(base_directory):
     base_directory = base_directory
     sensor = 'emit'
@@ -716,15 +1070,17 @@ def run_figures(base_directory):
     sig_figs = 2
 
 
-
     fig = figures(base_directory=base_directory, sensor=sensor, major_axis_fontsize=major_axis_fontsize,
                         minor_axis_fontsize=minor_axis_fontsize, title_fontsize=title_fontsize,
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs)
 
-    #fig.plot_summary()
+    #fig.full_spectrum_plots()
+    fig.plot_summary()
     fig.plot_rmse(norm_option='brightness')
     fig.plot_rmse(norm_option='none')
     # fig.local_slpit()
-    fig.sza_plot(norm_option='brightness')
-    fig.sza_plot(norm_option='none')
+    #fig.sza_plot(norm_option='brightness')
+    #fig.sza_plot(norm_option='none')
+    #fig.map_detail_figure()
+    #fig.av3_comparisson()

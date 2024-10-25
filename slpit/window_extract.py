@@ -131,8 +131,7 @@ def main():
                             if lats_in_window[i, j] > upper_left_latitude:
                                 upper_left_latitude = lats_in_window[i, j]
 
-
-                    meta['map info'] = f'{{Geographic Lat/Lon, 1, 1, {upper_left_longitude}, {upper_left_latitude}, {gt[1]}, {gt[5]*-1},WGS-84}}'
+                    meta['map info'] = f'{{Geographic Lat/Lon, 1, 1, {upper_left_longitude}, {upper_left_latitude}, {gt[1]}, {gt[5]*-1}, WGS-84}}'
 
                     output_name = os.path.join(args.output_directory, f'{plot.replace(" ", "")}_{acquisition_type}_{date_acquisition}.hdr')
                     save_envi(output_name, meta, window, ds)
