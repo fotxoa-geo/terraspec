@@ -395,7 +395,13 @@ class spectra:
         
             feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
             continuum = interp1d([left_x, right_x], [left_y, right_y], bounds_error=False, fill_value='extrapolate')(wavelengths)
-
+            
+            # this needs an rb and rc check - rc has to always be greater than rb ?
+            reflectance_feature = reflectance[feature_inds]
+            
+            if np.any(reflectance[feature_inds] <= 0): # this ensures that all of the reflectance values are positive and valid
+                continue
+             
             # calculate band depth; get max index of band depth
             depth = np.abs(1 - np.array(reflectance[feature_inds]/continuum[feature_inds]))
             depth_max_index = depth.argmax()
@@ -414,9 +420,15 @@ class spectra:
 
         # this is currently returning the biggest band depth
         bd_max_index = features_array.argmin()
+        
         bd_return = features_array[bd_max_index]
         rb_return = rb_array[bd_max_index]
         rc_return = rc_array[bd_max_index]
+
+        #bd_return = features_array[features_array != -9999].mean()
+        #rb_return = rb_array[rb_array != -9999].mean()
+        #rc_return = rc_array[rc_array != -9999].mean()
+
         wvl_return = wavelength_array[bd_max_index]
 
         return bd_return, rb_return, rc_return, wvl_return

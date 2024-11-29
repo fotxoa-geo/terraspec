@@ -74,7 +74,7 @@ def fraction_file_info(fraction_file):
             
             selected_unc = np.where(selected_unc == -9999, np.nan, selected_unc)
             mean_fractions.append(np.nanmean(selected_fractions))
-            se = np.mean(selected_unc/np.sqrt(int(num_mc)))
+            se = np.nanmean(selected_unc/np.sqrt(int(num_mc)))
             mean_se.append(se)
 
     return [instrument, unmix_mode, plot, library_mode, int(num_cmb_em), int(num_mc), normalization, fraction_array.shape[0], fraction_array.shape[1], duplicate_flag] + mean_fractions + mean_se

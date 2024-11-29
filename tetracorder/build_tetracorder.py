@@ -97,7 +97,7 @@ class tetracorder:
         em_file = os.path.join(self.simulation_output_directory, 'endmember_libraries',
                                'convex_hull__n_dims_4_unmix_library.csv')
 
-        optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization none']
+        optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization brightness']
 
         reflectance_files = glob(os.path.join(self.sim_spectra_dir, 'tetracorder_*_spectra*'))
         for i in reflectance_files:
@@ -127,6 +127,36 @@ class tetracorder:
             call_hypertrace_unmix(mode='sma', dry_run=False, reflectance_file=new_reflectance_file, em_file=em_file,
                                   parameters=optimal_parameters, output_dest=self.augmented_dir, scale='1',
                                   spectra_starting_column='8', uncertainty_file=new_uncertainty_file)
+
+    def reconstruct_veg_simulated_signal(self):
+        cursor_print(f'reconstructing simulated vegetation...')
+
+        fractions_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_fractions'))
+        index_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_index'))
+
+        simulated_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
+                                                         'convex_hull__n_dims_4_simulation_library'))
+        
+        print(simulated_array.shape)
+        spectra_grid = np.zeros((fractions_array.shape[0], fractions_array.shape[1], len(self.wvls)))
+
+        for _row, row in enumerate(fractions_array):
+            for _col, col in enumerate(row):
+
+                gv_index = int(index_array[_row, _col, 1])
+                npv_index = int(index_array[_row, _col, 0])
+
+                gv_simulated_spectra = simulated_array[gv_index, 0, :] * fractions_array[_row, _col, 1]
+                npv_simulated_spectra = simulated_array[npv_index, 0, :] * fractions_array[_row, _col, 0]
+
+                spectra_grid[_row, _col, :] = gv_simulated_spectra + npv_simulated_spectra
+
+        meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls,
+                                wvls=True)
+        output_raster = os.path.join(self.sim_spectra_dir, f"vegetation_spectra_pure.hdr")
+        save_envi(output_raster, meta_spectra, spectra_grid)
+
+        print("\t- done")
 
 
     def reconstruct_em_sma(self, user_em):
@@ -168,10 +198,9 @@ class tetracorder:
                                 wvls=True)
         output_raster = os.path.join(self.sim_spectra_dir, f"unmixing-{user_em}-no_brightness.hdr")
         save_envi(output_raster, meta_spectra, spectra_grid)
+        output_raster_aug = os.path.join(self.tetra_output_directory, 'augmented', f"unmixing-{user_em}-no_brightness-augmented.hdr")
+        augment_envi(file=os.path.join(self.sim_spectra_dir, f"unmixing-{user_em}-no_brightness"), wvls=self.wvls, out_raster=output_raster_aug)
 
-        # augment the file
-        #aug_raster = os.path.join(self.sim_spectra_dir, "sma-unmixing-soil-reconstructed.hdr")
-        #augment_envi(file=os.path.splitext(output_raster)[0], wvls=self.wvls, out_raster=aug_raster, vertical_average=False)
 
         print("\t- done")
 
@@ -249,7 +278,7 @@ class tetracorder:
         mixed_tetracorder_index = envi_to_array(os.path.join(self.base_directory, 'output', 'spectral_abundance',
                                                              'tetracorder_soil_spectra_simulation_augmented_min'))[:, :21, :]
         mixed_spectra_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'tetracorder_soil_spectra'))
-        vegetation_array = mixed_spectra_array - em_spectra_array
+        vegetation_array = envi_to_array(os.path.join(self.sim_spectra_dir, 'vegetation_spectra_pure'))
 
         mix_output_file = os.path.join(self.veg_correction_dir, 'tetracorder_vegetation_correction.hdr')
         spectra.mineral_components(index_array=mixed_tetracorder_index, spectra_array=mixed_spectra_array,
@@ -260,6 +289,18 @@ class tetracorder:
         sma_output_file = os.path.join(self.veg_correction_dir, 'tetracorder_vegetation_correction_sma.hdr')
         spectra.mineral_components(index_array=mixed_tetracorder_index, spectra_array=mixed_spectra_array,
                                    output_file=sma_output_file, veg_correction=True, vegetation_array=veg_rfl_sma)
+        
+        # case 4 - mixed sim spectra - no correction
+        mix_output_file = os.path.join(self.veg_correction_dir, 'tetracorder_no-vegetation_correction.hdr')
+        spectra.mineral_components(index_array=mixed_tetracorder_index, spectra_array=mixed_spectra_array,
+                                   output_file=mix_output_file)
+
+        
+        # case 5 
+        sma_soil_file = os.path.join(self.veg_correction_dir, 'sma_soil-only.hdr')
+        sma_soil_rfl = envi_to_array((os.path.join(self.sim_spectra_dir, 'unmixing-soil-no_brightness')))
+        sma_soil_index =  envi_to_array(os.path.join(self.base_directory, 'output', 'spectral_abundance', 'unmixing-soil-no_brightness-augmented_min'))[:, :21, :]
+        spectra.mineral_components(index_array=sma_soil_index, spectra_array=sma_soil_rfl, output_file=sma_soil_file)
 
 
 def run_tetracorder_build(base_directory, sensor, dry_run):
@@ -277,7 +318,9 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
         elif user_input == 'C':
             tc.unmix_tetracorder(dry_run=dry_run)
         elif user_input == 'D':
+            tc.reconstruct_veg_simulated_signal()
             tc.reconstruct_em_sma(user_em='gv')
+            tc.reconstruct_em_sma(user_em='soil')
             tc.mineral_lib_refl_cont()
         elif user_input == 'E':
             tc.augment_slpit_pixels()

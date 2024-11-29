@@ -8,7 +8,7 @@ import argparse
 import netCDF4
 import numpy as np
 from spectral.io import envi
-from emit_utils.file_checks import envi_header
+from file_checks import envi_header
 import os
 
 
