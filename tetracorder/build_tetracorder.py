@@ -28,7 +28,8 @@ def tetracorder_build_menu():
     print("C... Unmix simulated reflectance")
     print("D... Reconstruct soil simulation and band depths")
     print("E... Augment pixels ")
-    print("F... Exit")
+    print("F... Reconstruct SLPIT spectra")
+    print("G... Exit")
 
 
 class tetracorder:
@@ -251,9 +252,14 @@ class tetracorder:
         # load shapefile
         df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
         df = df.sort_values('Name')
+        print(df)
 
         for index, row in df.iterrows():
             plot = row['Name']
+            plot_num = int(plot.split('-')[1])
+
+            if plot_num > 60:
+                continue
             emit_filetime = row['EMIT DATE']
             reflectance_img_emit = glob(os.path.join(self.slpit_gis_directory, 'emit-data-clip',
                                                      f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
@@ -264,11 +270,17 @@ class tetracorder:
 
         for i in transect_files:
             basename = os.path.basename(i)
+            plot_num = int(basename.split('-')[1])
+            if plot_num > 60:
+                continue
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_transect_augmented.hdr")
             augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True)
 
         for i in em_files:
             basename = os.path.basename(i)
+            plot_num = int(basename.split('-')[1])
+            if plot_num > 60:
+                continue
             df_em = pd.read_csv(i + '.csv')
             soil_index = min(df_em.index[df_em['level_1'] == 'Soil'].tolist())
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_ems_augmented.hdr")
@@ -355,7 +367,20 @@ class tetracorder:
                                        output_file=sma_output_file, veg_correction=True, vegetation_array=veg_rfl_sma,
                                        group=group, fractions_array=sma_fractions)
 
-            # case 4 - removing reconstructed vegetation signal
+    def unmix_slpit_fractions(self, dry_run):
+        em_file = os.path.join(self.simulation_output_directory, 'endmember_libraries',
+                               'convex_hull__n_dims_4_unmix_library.csv')
+
+        optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization none']
+
+        emit_pixels = glob(os.path.join(self.tetra_output_directory, 'augmented', 'SPEC*_RFL*[!.csv][!.hdr][!.aux][!.xml]'))
+        transect_files = glob(os.path.join(self.tetra_output_directory, 'augmented', 'Spectral*_transect_augmented*[!.csv][!.hdr][!.aux][!.xml]'))
+        reflectance_files = emit_pixels + transect_files
+
+        for i in reflectance_files:
+            call_unmix(mode='sma', dry_run=dry_run, reflectance_file=i, em_file=em_file,
+                       parameters=optimal_parameters, output_dest=self.fractions_dir, scale='1',
+                       spectra_starting_column='8')
 
 def run_tetracorder_build(base_directory, sensor, dry_run):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
@@ -377,8 +402,10 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
             tc.mineral_lib_refl_cont()
         elif user_input == 'E':
             tc.augment_slpit_pixels()
-
         elif user_input == 'F':
+            tc.unmix_slpit_fractions(dry_run=dry_run)
+
+        elif user_input == 'G':
             print("Returning to Tetracorder main menu.")
             break
         else:
