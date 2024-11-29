@@ -20,6 +20,17 @@ from utils.results_utils import r2_calculations, load_data
 from matplotlib.ticker import FormatStrFormatter
 
 
+# quadrat groupings
+quad_phenophase_key = {'early leaf out': 'pv',
+                       'early senescence': 'npv',
+                       'flowers': 'pv',
+                       'full leaf out': 'pv',
+                       'full senescence': 'npv',
+                       'last year senescence': 'npv',
+                       'seeds': 'npv',
+                       'yellow flower': 'pv'}
+
+
 class figures:
     def __init__(self, base_directory: str, sensor: str, major_axis_fontsize, minor_axis_fontsize, title_fontsize,
                  axis_label_fontsize, fig_height, fig_width, linewidth, sig_figs):
@@ -58,9 +69,99 @@ class figures:
         terraspec_base = os.path.dirname(base_directory)
         self.slpit_figures = os.path.join(terraspec_base, 'slpit', 'figures')
 
+        self.col_map = {
+            0: 'npv',
+            1: 'pv',
+            2: 'soil'}
+
+        self.col_map_wp = {
+            0: 'npv',
+            1: 'pv',
+            2: 'soil'}
+
+    def quad_cover(self):
+        # load quadrat tallies
+        df_quad = pd.read_csv(os.path.join(self.base_directory, 'field', 'SHIFT_vegetation_quadrat_tallies.csv'))
+        #df_quad = df_quad.dropna(subset=['Phenophase'])
+        df_quad['Phenophase'] = df_quad['Phenophase'].replace(np.nan, 'na')
+        df_quad['Phenophase'] = df_quad['Phenophase'].str.strip()
+        df_quad['Phenophase'] = df_quad['Phenophase'].apply(str.lower)
+
+        df_quad['Species_or_type'] = df_quad['Species_or_type'].apply(str.lower)
+        df_quad['Species_or_type'] = df_quad['Species_or_type'].str.strip()
+        df_quad['cover'] = ''
+
+        df_quad['Date'] = pd.to_datetime(df_quad['Date'], format='%Y-%m-%d')
+
+        # df coords with data and dates
+        df_coords = pd.read_csv('gis/shift_plot_coordinates.csv')
+
+        df_quads_to_merge = []
+        for specie in sorted(list(df_quad.Species_or_type.unique())):
+            df_quad_select = df_quad.loc[df_quad['Species_or_type'] == specie].copy()
+
+            if specie in ['soil', 'rock', 'npv']:
+                if specie == 'rock':
+                    df_quad_select['cover'] = 'soil'
+                else:
+                    df_quad_select['cover'] = specie
+
+            elif specie in ['water']:
+                continue
+            else:
+                df_quad_select['cover'] = df_quad_select['Phenophase'].replace(quad_phenophase_key)
+
+
+            df_quads_to_merge.append(df_quad_select)
+
+        df_quad_cover = pd.concat(df_quads_to_merge, ignore_index=True)
+
+        df_agg_rows = []
+        for _plot, plot in enumerate(sorted(list(df_quad_cover['Plot_name'].unique()))):
+            df_plot = df_quad_cover.loc[df_quad_cover['Plot_name'] == plot].copy()
+            df_meta = df_coords.loc[df_coords['Plot Name'] == plot]
+
+            if df_meta.empty:
+                pass
+            else:
+                plot_date = df_meta['Date'].values[0]
+
+                df_plot = df_plot.loc[df_plot['Date'] == plot_date].copy()
+                df_plot = df_plot.drop(columns=['Date'])
+
+                df_agg = df_plot.groupby(['cover']).sum().reset_index()
+
+                df_agg['frac_cover'] = df_agg['Count'] / df_agg['Count'].sum()
+
+                row = [plot, plot_date, ]
+                for cover in sorted(list(df_agg.cover.unique())):
+                    frac = df_agg.loc[df_agg['cover'] == cover, 'frac_cover'].iloc[0]
+                    row.append((cover, frac))
+
+                df_agg_rows.append(row)
+
+        # aggregate all rows
+        df_to_concat = []
+        for row in df_agg_rows:
+            plot = row[0]
+            date = row[1]
+            frac_covers = row[2:]
+            cols = ['plot', 'date']
+            values = [plot, date]
+            for cover in frac_covers:
+                cols.append(cover[0])
+                values.append(cover[1])
+            df = pd.DataFrame(values).T
+            df.columns = cols
+            df_to_concat.append(df)
+
+        df_concat = pd.concat(df_to_concat)
+        df_concat = df_concat.fillna(0)
+        df_concat.to_csv(os.path.join(self.output_directory, 'quad_cover.csv'), index=False)
+
     def load_frac_data(self):
         skip = ['SRA-000-SPRING', 'SRB-047-SPRING', 'SRB-004-FALL', 'SRB-050-FALL', 'SRB-200-FALL', 'SRA-056-SPRING',
-                'DPA-004-FALL', 'DPB-027-SPRING', 'SRA-008-FALL', 'SRB-026-SPRING', 'SRA-109-SPRING'] # excluding shrubland plots
+                'DPA-004-FALL', 'DPB-027-SPRING', 'SRA-008-FALL', 'SRB-026-SPRING'] # excluding shrubland plots
 
         df_all = pd.read_csv(os.path.join(self.figure_directory, 'shift_fraction_output.csv'))
         df_all = df_all[~df_all['plot'].isin(skip)]
@@ -90,15 +191,7 @@ class figures:
         nrows = 3
         gs = gridspec.GridSpec(ncols=ncols, nrows=nrows,  wspace=0.05, hspace=0.05, width_ratios=[1] * ncols, height_ratios=[1] * nrows)
 
-        col_map = {
-            0: 'npv',
-            1: 'pv',
-            2: 'soil'}
 
-        col_map_wp = {
-            0: 'npv_sh',
-            1: 'pv_sh',
-            2: 'soil_sh'}
 
         # loop through figure columns
         for row in range(nrows):
@@ -106,6 +199,7 @@ class figures:
                 ax = fig.add_subplot(gs[row, col])
                 ax.set_ylim(self.axes_limits['ymin'], self.axes_limits['ymax'])
                 ax.set_xlim(self.axes_limits['xmin'], self.axes_limits['xmax'])
+                ax.set_aspect('auto')
 
                 ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
                 ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
@@ -141,14 +235,14 @@ class figures:
 
                 df_x = df_all[(df_all['instrument'] == 'asd')].copy().reset_index(drop=True)
                 df_x = df_x.sort_values('plot')
-                x = df_x[col_map[col]]
+                x = df_x[self.col_map[col]]
 
                 # plot aviris vs slpit
                 if row == 0:
                     df_y = df_all[(df_all['instrument'] == 'aviris')].copy().reset_index(drop=True)
                     df_y = df_y.sort_values('plot')
                     # plot fractional cover values
-                    y = df_y[col_map[col]]
+                    y = df_y[self.col_map[col]]
 
 
                     # plot uncertainty
@@ -156,10 +250,10 @@ class figures:
                     # y_u = df_y[f'{col_map[col]}_se']
 
                 if row == 1:
-                    y = df_wonderpole[col_map_wp[col]]/100
+                    y = df_wonderpole[self.col_map_wp[col]]/100
 
                 if row == 2:
-                    y = df_quad[col_map[col]]
+                    y = df_quad[self.col_map[col]]
 
                 m, b = np.polyfit(x, y, 1)
                 one_line = np.linspace(0, 1, 101)
@@ -170,8 +264,8 @@ class figures:
                 #ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='', linestyle='None', capsize=5)
                 ax.scatter(x, y, marker='^', edgecolor='black', color='orange', label='AVIRIS$_{ng}$', zorder=10)
 
-                #for i, label in enumerate(df_x['plot'].values):
-                #    ax.text(x[i], y[i], label, fontsize=12, ha='center', va='bottom')
+                for i, label in enumerate(df_x['plot'].values):
+                   ax.text(x[i], y[i], label, fontsize=12, ha='center', va='bottom')
 
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
@@ -204,15 +298,6 @@ class figures:
         gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.05, hspace=0.05, width_ratios=[1] * ncols,
                                height_ratios=[1] * nrows)
 
-        col_map = {
-            0: 'npv',
-            1: 'pv',
-            2: 'soil'}
-
-        col_map_wp = {
-            0: 'npv_sh',
-            1: 'pv_sh',
-            2: 'soil_sh'}
 
         # loop through figure columns
         for row in range(nrows):
@@ -220,6 +305,7 @@ class figures:
                 ax = fig.add_subplot(gs[row, col])
                 ax.set_ylim(self.axes_limits['ymin'], self.axes_limits['ymax'])
                 ax.set_xlim(self.axes_limits['xmin'], self.axes_limits['xmax'])
+                ax.set_aspect('auto')
 
                 ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
                 ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
@@ -250,21 +336,21 @@ class figures:
                     ax.set_yticklabels([''] + ax.get_yticklabels()[1:])
                     ax.set_xticklabels([])
 
-                x = df_wonderpole[col_map_wp[col]] / 100
+                x = df_wonderpole[self.col_map_wp[col]] / 100
 
                 # plot aviris vs slpit
                 if row == 0:
                     df_y = df_all[(df_all['instrument'] == 'aviris')].copy().reset_index(drop=True)
                     df_y = df_y.sort_values('plot')
                     # plot fractional cover values
-                    y = df_y[col_map[col]]
+                    y = df_y[self.col_map[col]]
 
                     # plot uncertainty
                     # x_u = df_x[f'{col_map[col]}_se']
                     # y_u = df_y[f'{col_map[col]}_se']
 
                 if row == 1:
-                    y = df_quad[col_map[col]]
+                    y = df_quad[self.col_map[col]]
 
                 m, b = np.polyfit(x, y, 1)
                 one_line = np.linspace(0, 1, 101)
@@ -275,8 +361,8 @@ class figures:
                 # ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='', linestyle='None', capsize=5)
                 ax.scatter(x, y, marker='^', edgecolor='black', color='orange', label='AVIRIS$_{ng}$', zorder=10)
 
-                # for i, label in enumerate(df_x['plot'].values):
-                #    ax.text(x[i], y[i], label, fontsize=12, ha='center', va='bottom')
+                for i, label in enumerate(df_wonderpole['plot'].values):
+                   ax.text(x.values[i], y.values[i], label, fontsize=12, ha='center', va='bottom')
 
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
@@ -310,11 +396,6 @@ class figures:
         gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.05, hspace=0.05, width_ratios=[1] * ncols,
                                height_ratios=[1] * nrows)
 
-        col_map = {
-            0: 'npv',
-            1: 'pv',
-            2: 'soil'}
-
 
         # loop through figure columns
         for row in range(nrows):
@@ -322,6 +403,7 @@ class figures:
                 ax = fig.add_subplot(gs[row, col])
                 ax.set_ylim(self.axes_limits['ymin'], self.axes_limits['ymax'])
                 ax.set_xlim(self.axes_limits['xmin'], self.axes_limits['xmax'])
+                ax.set_aspect('auto')
 
                 ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
                 ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
@@ -348,13 +430,13 @@ class figures:
                     ax.set_yticklabels([''] + ax.get_yticklabels()[1:])
                     ax.set_xticklabels([])
 
-                x = df_quad[col_map[col]]
+                x = df_quad[self.col_map[col]].values
 
                 # plot aviris vs quads
                 df_y = df_all[(df_all['instrument'] == 'aviris')].copy().reset_index(drop=True)
                 df_y = df_y.sort_values('plot')
                 # plot fractional cover values
-                y = df_y[col_map[col]]
+                y = df_y[self.col_map[col]]
 
                     # plot uncertainty
                     # x_u = df_x[f'{col_map[col]}_se']
@@ -369,7 +451,7 @@ class figures:
                 # ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='', linestyle='None', capsize=5)
                 ax.scatter(x, y, marker='^', edgecolor='black', color='orange', label='AVIRIS$_{ng}$', zorder=10)
 
-                # for i, label in enumerate(df_x['plot'].values):
+                # for i, label in enumerate(df_quad['plot'].values):
                 #    ax.text(x[i], y[i], label, fontsize=12, ha='center', va='bottom')
 
                 # Add error metrics
@@ -399,8 +481,8 @@ def run_figures(base_directory):
     minor_axis_fontsize = 12
     title_fontsize = 22
     axis_label_fontsize = 20
-    fig_height = 12
-    fig_width = 12
+    fig_height = 6
+    fig_width = 18
     linewidth = 1
     sig_figs = 2
 
@@ -409,6 +491,7 @@ def run_figures(base_directory):
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs)
     #fig.plot_summary()
-    fig.slpit_fig(norm_option='brightness')
+    fig.quad_cover()
+    #fig.slpit_fig(norm_option='brightness')
     fig.wonderpole_fig(norm_option='brightness')
     fig.quad_fig(norm_option='brightness')

@@ -88,9 +88,13 @@ class build_libraries:
             plot_directory = os.path.join(self.spectral_transect_directory, plot_name)
             plot_pic_url = i['landscape_pic']
             date = i['sample_date']
-            emit_date = i['overpass_date']
+            plot_measurements = i['plot_measurements'].split(",")
 
-            if os.path.isfile(os.path.join(self.output_transect_directory, plot_name + '- transect-' + self.instrument + '.csv')):
+            if 'slpit' not in plot_measurements:
+                continue
+
+            print(f'\t loading... {plot_name}')
+            if os.path.isfile(os.path.join(self.output_transect_directory, plot_name + f'- transect-{self.instrument}.csv')):
                 continue
 
             img_data = requests.get(plot_pic_url).content
@@ -107,6 +111,7 @@ class build_libraries:
             # get all asd files from folder
             all_asd_files = sorted(glob(os.path.join(plot_directory, '*.asd')))
             if not all_asd_files:
+                continue
                 print(".asd files not found! Looking for .sed files...")
                 all_asd_files = sorted(glob(os.path.join(plot_directory, '*.sed')))
 
@@ -248,7 +253,6 @@ class build_libraries:
                     adjusted_dfs.append(df_query)
                     print("\t\t no white ref correction available on: ", plot_name, line_num)
 
-
             df_corrected_all = pd.concat(adjusted_dfs)
             df_corrected_all.to_csv(os.path.join(self.output_transect_directory, plot_name + '- transect.csv'),
                                     index=False)
@@ -264,16 +268,28 @@ class build_libraries:
             df_convolve = pd.concat([df_corrected_all.iloc[:, :9].reset_index(drop=True), df_convolve], axis=1)
             df_convolve.to_csv(os.path.join(self.output_transect_directory, plot_name + '- transect-' + self.instrument + '.csv'), index=False)
 
-            # save files as envi files
-            spectra_grid = np.zeros((len(results_convolve), 1, len(self.wvls)))
+            # get the line counts
+            max_line_files = []
+            for _line, line in enumerate(sorted(df_convolve.line_num.unique())):
+                df_line_select = df_convolve[df_convolve['line_num'] == line].copy()
+                df_line_select = df_line_select.sort_values('file_num')
+                max_line_files.append(df_line_select.shape[0])
 
-            # fill spectral data
-            for _row, row in enumerate(results_convolve):
-                spectra_grid[_row, :, :] = row
+            # save files as envi files
+            spectra_grid = np.ones((max(max_line_files), len(df_convolve.line_num.unique()), len(self.wvls))) * -9999
+
+            for _line, line in enumerate(df_convolve.line_num.unique()):
+                df_line_select = df_convolve[df_convolve['line_num'] == line].copy()
+                df_line_select = df_line_select.sort_values('file_num')
+
+                line_spectra_array = df_line_select.iloc[:, 9:].to_numpy()
+
+                for _row, row in enumerate(line_spectra_array):
+                    spectra_grid[_row, _line, :] = line_spectra_array[_row, :]
 
             # save the spectra
             print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
-            meta_spectra = get_meta(lines=len(results_convolve), samples=spectra_grid.shape[1], bands=self.wvls,
+            meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls,
                                     wvls=True)
             output_raster = os.path.join(self.output_transect_directory, plot_name.replace(" ", "") + ".hdr")
             save_envi(output_raster, meta_spectra, spectra_grid)
@@ -286,10 +302,17 @@ class build_libraries:
 
         print("loading... Spectral Transects Endmembers")
         all_ems = ['NPV', 'PV', 'Soil']
+
         for i in records:
             plot_name = f"{i['team_names'].capitalize()} - {i['plot_num']:03d}"
             plot_directory = os.path.join(self.spectral_transect_directory, plot_name)
             date = i['sample_date']
+
+            plot_measurements = i['plot_measurements'].split(",")
+
+            if 'endmembers' not in plot_measurements:
+                continue
+
             if os.path.isfile(os.path.join(self.output_transect_em_directory_raw, f'{plot_name.replace(" ", "")}-{self.instrument}.csv')):
                 continue
 
@@ -603,5 +626,5 @@ def run_build_workflow(base_directory, sensor):
         lib.build_emit_endmembers()
         lib.build_em_collection()
         lib.build_gis_data()
-        lib.em_qty_check()
+        #lib.em_qty_check()
         #lib.build_derivative_library()

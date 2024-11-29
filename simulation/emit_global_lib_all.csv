@@ -1,0 +1,2006 @@
+dataset,level_1,level_2,level_3,fname,longitude,latitude
+MEYER-OKIN,npv,npv,stem ptero,s1t3ind_022,21.7716,-18.3886
+MEYER-OKIN,npv,npv,dry grass,s3T1win_072,22.0099,-19.0776
+MEYER-OKIN,npv,npv,dry grass,s3T1win_073,22.0099,-19.0776
+MEYER-OKIN,npv,npv,dry grass,s3T1win_074,22.0099,-19.0776
+SR,npv,UNKN-,UNKN-,SR0019_l1_06_npv,-120.04134,34.70292167
+MEYER-OKIN,npv,litter,litter,S14T1din_006,22.3547,-25.8497
+MEYER-OKIN,npv,litter,litter,S14T1din_005,22.3547,-25.8497
+MEYER-OKIN,npv,npv,dry shrub,S13T1din_056,22.2607,-25.0681
+MEYER-OKIN,npv,npv,dry shrub,S13T1din_055,22.2607,-25.0681
+MEYER-OKIN,npv,litter,litter ,S13T1din_052,22.2607,-25.0681
+MEYER-OKIN,npv,npv,dry shrub,S13T1din_049,22.2607,-25.0681
+MEYER-OKIN,npv,npv,dry grass,s3T1win_071,22.0099,-19.0776
+MEYER-OKIN,npv,npv,dry shrub,S13T1din_048,22.2607,-25.0681
+MEYER-OKIN,npv,litter,litter,s3T1win_103,22.0099,-19.0776
+MEYER-OKIN,npv,litter,litter ,S13T1din_036,22.2607,-25.0681
+MEYER-OKIN,npv,litter,litter ,S13T1din_035,22.2607,-25.0681
+MEYER-OKIN,npv,litter,litter ,S13T1din_034,22.2607,-25.0681
+SR,npv,UNKN-,UNKN-,SR0019_l2_05_npv,-120.0413683,34.70288333
+MEYER-OKIN,npv,npv,dry grass,s3t3ind_000,22.0099,-19.0776
+SR,npv,UNKN-,UNKN-,SR0019_l2_07_npv,-120.0413767,34.702925
+MEYER-OKIN,npv,npv,dry grass,S13T1din_029,22.2607,-25.0681
+MEYER-OKIN,npv,npv,stem,s3t3ind_009,22.0099,-19.0776
+MEYER-OKIN,npv,npv,stem,s3t3ind_010,22.0099,-19.0776
+MEYER-OKIN,npv,npv,dry shrub,S13T1din_047,22.2607,-25.0681
+MEYER-OKIN,npv,npv,dry grass,s3T1win_070,22.0099,-19.0776
+SR,npv,,,SR0000_l3_01_npv,-120.0341517,34.693025
+MEYER-OKIN,npv,npv,dry grass,S15T1din_007,20.6729,-26.8199
+MEYER-OKIN,npv,npv,stem terminalia,s1t1ind_008,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem terminalia,s1t1ind_007,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem terminalia,s1t1ind_006,21.7716,-18.3886
+MEYER-OKIN,npv,litter,litter,S15T1ind_040,20.6729,-26.8199
+MEYER-OKIN,npv,litter,litter,S15T1ind_039,20.6729,-26.8199
+MEYER-OKIN,npv,litter,litter,S15T1ind_038,20.6729,-26.8199
+MEYER-OKIN,npv,litter,litter,S15T1ind_037,20.6729,-26.8199
+MEYER-OKIN,npv,litter,litter,S15T1ind_036,20.6729,-26.8199
+MEYER-OKIN,npv,npv,dry grass,s3T1win_045,22.0099,-19.0776
+MEYER-OKIN,npv,npv,dry grass,s3T1win_046,22.0099,-19.0776
+MEYER-OKIN,npv,npv,dry grass,s3T1win_047,22.0099,-19.0776
+MEYER-OKIN,npv,npv,dry grass,s3T1win_048,22.0099,-19.0776
+MEYER-OKIN,npv,npv,dry grass,s3T1win_049,22.0099,-19.0776
+SR,npv,,,SR0000_l1_04_npv,-120.03376,34.69328167
+SR,npv,,,SR0000_l1_01_npv,-120.033835,34.69315167
+SR,npv,,,SR0000_l2_09_npv,-120.0336433,34.69258333
+SR,npv,,,SR0000_l2_07_npv,-120.0337017,34.692675
+MEYER-OKIN,npv,npv,dry grass,s3T1win_050,22.0099,-19.0776
+SR,npv,,,SR0000_l2_03_npv,-120.0337733,34.69275667
+SR,npv,,,SR0000_l3_09_npv,-120.03395,34.69307
+SR,npv,,,SR0000_l3_05_npv,-120.0340533,34.69305
+MEYER-OKIN,npv,npv,dry grass,S15T1din_013,20.6729,-26.8199
+MEYER-OKIN,npv,npv,dry grass,S15T1din_008,20.6729,-26.8199
+MEYER-OKIN,npv,npv,stem,s3t3ind_011,22.0099,-19.0776
+MEYER-OKIN,npv,npv,dry grass,S13T1din_005,22.2607,-25.0681
+MEYER-OKIN,npv,npv,dry grass,S13T1din_002,22.2607,-25.0681
+MEYER-OKIN,npv,npv,dry grass,S13T1din_001,22.2607,-25.0681
+MEYER-OKIN,npv,npv,dry grass,S12T3din_011,21.9163,-24.6304
+MEYER-OKIN,npv,npv,dry grass,S12T3din_010,21.9163,-24.6304
+MEYER-OKIN,npv,npv,dry grass,S12T3din_009,21.9163,-24.6304
+MEYER-OKIN,npv,npv,dry grass,S12T3din_008,21.9163,-24.6304
+MEYER-OKIN,npv,litter,stem,s4t2ind_030,21.8174,-19.5293
+MEYER-OKIN,npv,litter,stem,s4t2ind_031,21.8174,-19.5293
+SR,npv,UNKN-,UNKN-,SR0020_l2_13_npv,-120.042185,34.70336167
+MEYER-OKIN,npv,litter,litter,s4t3ind_024,21.8174,-19.5293
+MEYER-OKIN,npv,litter,litter,s4t3ind_025,21.8174,-19.5293
+SR,npv,UNKN-,UNKN-,SR0020_l1_14_npv,-120.0422933,34.70327833
+MEYER-OKIN,npv,npv,Baikiae plurijuga,s5t1ind_031,21.5742,-20.1019
+SR,npv,UNKN-,UNKN-,SR0020_l1_16_npv,-120.04228,34.70329333
+MEYER-OKIN,npv,litter,litter,s5t1ind_037,21.5742,-20.1019
+MEYER-OKIN,npv,litter,litter,s5t2ind_009,21.5742,-20.1019
+MEYER-OKIN,npv,litter,litter,s5t2ind_036,21.5742,-20.1019
+MEYER-OKIN,npv,npv,dry grass,S5T31win_025,21.5742,-20.1019
+MEYER-OKIN,npv,npv,dry grass,S5T31win_027,21.5742,-20.1019
+MEYER-OKIN,npv,litter,litter,S5T31win_059,21.5742,-20.1019
+MEYER-OKIN,npv,litter,litter,S5T31win_061,21.5742,-20.1019
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S5T31win_062,21.5742,-20.1019
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S5T31win_063,21.5742,-20.1019
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S5T31win_065,21.5742,-20.1019
+SR,npv,UNKN-,UNKN-,SR0021_l1_05_npv,-120.0416167,34.70347833
+MEYER-OKIN,npv,npv,dry grass,S12T3din_012,21.9163,-24.6304
+MEYER-OKIN,npv,npv,stem terminalia,s1t1ind_009,21.7716,-18.3886
+MEYER-OKIN,npv,npv,dry grass,S12T3din_013,21.9163,-24.6304
+MEYER-OKIN,npv,litter,litter,s4t2ind_023,21.8174,-19.5293
+MEYER-OKIN,npv,npv,dry grass,S13T1din_000,22.2607,-25.0681
+SR,npv,UNKN-,UNKN-,SR0019_l2_15_npv,-120.041415,34.70294167
+SR,npv,UNKN-,UNKN-,SR0019_l2_16_npv,-120.0413883,34.70296
+MEYER-OKIN,npv,npv,stem,s3t3ind_015,22.0099,-19.0776
+MEYER-OKIN,npv,npv,stem,s3t3ind_016,22.0099,-19.0776
+MEYER-OKIN,npv,litter,litter,s4t1ind_001,21.8174,-19.5293
+MEYER-OKIN,npv,litter,litter,s4t1ind_009,21.8174,-19.5293
+MEYER-OKIN,npv,litter,litter,s4t1ind_010,21.8174,-19.5293
+MEYER-OKIN,npv,npv,dry grass,S12T3ind_031,21.9163,-24.6304
+MEYER-OKIN,npv,npv,dry grass,S12T3ind_030,21.9163,-24.6304
+MEYER-OKIN,npv,npv,dry grass,S12T3ind_029,21.9163,-24.6304
+MEYER-OKIN,npv,npv,boscia albitrunca stem,S12T3din_070,21.9163,-24.6304
+MEYER-OKIN,npv,npv,boscia albitrunca stem,S12T3din_069,21.9163,-24.6304
+MEYER-OKIN,npv,npv,boscia albitrunca stem,S12T3din_068,21.9163,-24.6304
+MEYER-OKIN,npv,npv,leaf dry,s1t3ind_078,21.7716,-18.3886
+MEYER-OKIN,npv,npv,boscia albitrunca stem,S12T3din_066,21.9163,-24.6304
+MEYER-OKIN,npv,npv,dry grass,S12T3din_061,21.9163,-24.6304
+MEYER-OKIN,npv,npv,dry grass,S4T1win_024,21.8174,-19.5293
+MEYER-OKIN,npv,litter,litter ,S12T3din_049,21.9163,-24.6304
+MEYER-OKIN,npv,litter,litter,S4T1win_092,21.8174,-19.5293
+MEYER-OKIN,npv,litter,litter ,S12T3din_027,21.9163,-24.6304
+MEYER-OKIN,npv,litter,litter ,S12T3din_026,21.9163,-24.6304
+MEYER-OKIN,npv,litter,litter,s4t2ind_019,21.8174,-19.5293
+MEYER-OKIN,npv,litter,stem,s4t2ind_029,21.8174,-19.5293
+MEYER-OKIN,npv,npv,stem combretum,s1t1ind_020,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem combretum,s1t1ind_027,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem combretum,s1t1ind_028,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t2ind_026,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t2ind_025,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t2ind_024,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t2ind_013,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t2ind_012,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t2ind_011,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t2ind_010,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t2ind_009,21.7716,-18.3886
+MEYER-OKIN,npv,npv,leaf dry,s1t2ind_008,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Combretum spp stem,S1T1wind_157,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Combretum spp stem,S1T1wind_156,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Combretum spp stem,S1T1wind_155,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Combretum spp stem,S1T1wind_154,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Combretum spp stem,S1T1wind_153,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Combretum spp stem,S1T1wind_152,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Combretum spp stem,S1T1wind_151,21.7716,-18.3886
+MEYER-OKIN,npv,litter,Litter,S2T1win_063,21.8418,-18.6798
+MEYER-OKIN,npv,npv,grass dry stems,s2t2ind_000,21.8418,-18.6798
+MEYER-OKIN,npv,npv,grass dry stems,s2t2ind_001,21.8418,-18.6798
+MEYER-OKIN,npv,npv,acacia literetsi stem,s2t2ind_018,21.8418,-18.6798
+MEYER-OKIN,npv,npv,acacia literetsi stem,s2t2ind_019,21.8418,-18.6798
+MEYER-OKIN,npv,npv,boscia albitrunca stem,s2t2ind_021,21.8418,-18.6798
+MEYER-OKIN,npv,npv,acacia literetsi stem,s2t2ind_026,21.8418,-18.6798
+MEYER-OKIN,npv,npv,stem,s1t2ind_027,21.7716,-18.3886
+MEYER-OKIN,npv,npv,acacia literetsi stem,s2t2ind_033,21.8418,-18.6798
+MEYER-OKIN,npv,npv,stem,s1t2ind_029,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t2ind_031,21.7716,-18.3886
+MEYER-OKIN,npv,npv,leaf dry,s1t3ind_071,21.7716,-18.3886
+MEYER-OKIN,npv,npv,leaf dry,s1t3ind_070,21.7716,-18.3886
+MEYER-OKIN,npv,npv,leaf dry,s1t3ind_069,21.7716,-18.3886
+MEYER-OKIN,npv,npv,leaf dry,s1t3ind_068,21.7716,-18.3886
+MEYER-OKIN,npv,npv,grass dry stems,s2t1ind_021,21.8418,-18.6798
+MEYER-OKIN,npv,npv,grass dry stems,s2t1ind_022,21.8418,-18.6798
+MEYER-OKIN,npv,npv,grass dry stems,s2t1ind_023,21.8418,-18.6798
+MEYER-OKIN,npv,npv,stem,s1t3ind_036,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t3ind_035,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem ptero,s1t3ind_034,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem ptero,s1t3ind_033,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem ptero,s1t3ind_032,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem ptero,s1t3ind_031,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem ptero,s1t3ind_030,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem ptero,s1t3ind_029,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem ptero,s1t3ind_027,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem ptero,s1t3ind_026,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem ptero,s1t3ind_025,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem ptero,s1t3ind_024,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem terminalia,s1t3ind_020,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem terminalia,s1t3ind_019,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem terminalia,s1t3ind_018,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem terminalia,s1t3ind_017,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t2ind_030,21.7716,-18.3886
+MEYER-OKIN,npv,litter,litter,S10T3din_052,21.6773,-23.6335
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_088,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_086,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S1T1wind_045,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S1T1wind_044,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S1T1wind_042,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S1T1wind_039,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S1T1wind_038,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S1T1wind_037,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S1T1wind_036,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S1T1wind_035,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S1T1wind_034,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S1T1wind_026,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S1T1wind_017,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Baikiaea plurijuga stem,S1T1wind_014,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t1ind_066,21.7716,-18.3886
+MEYER-OKIN,npv,litter,litter,s1t1ind_060,21.7716,-18.3886
+MEYER-OKIN,npv,litter,litter,s1t1ind_059,21.7716,-18.3886
+MEYER-OKIN,npv,litter,litter,s1t1ind_056,21.7716,-18.3886
+MEYER-OKIN,npv,litter,litter,s1t1ind_055,21.7716,-18.3886
+MEYER-OKIN,npv,litter,litter,s1t1ind_054,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem terminalia,s1t1ind_052,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem terminalia,s1t1ind_051,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem terminalia,s1t1ind_050,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t1ind_040,21.7716,-18.3886
+MEYER-OKIN,npv,npv,stem,s1t1ind_039,21.7716,-18.3886
+MEYER-OKIN,npv,litter,litter,s3t1ind_044,22.0099,-19.0776
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_087,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_053,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_055,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_085,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_084,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_083,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_082,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_081,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_080,21.7716,-18.3886
+MEYER-OKIN,npv,litter,dry grass,s3t1ind_003,22.0099,-19.0776
+MEYER-OKIN,npv,litter,dry grass,s3t1ind_007,22.0099,-19.0776
+MEYER-OKIN,npv,litter,dry grass,s3t1ind_009,22.0099,-19.0776
+MEYER-OKIN,npv,npv,terminalia seretcea,s3t1ind_014,22.0099,-19.0776
+MEYER-OKIN,npv,npv,terminalia seretcea,s3t1ind_015,22.0099,-19.0776
+MEYER-OKIN,npv,npv,terminalia seretcea,s3t1ind_016,22.0099,-19.0776
+MEYER-OKIN,npv,npv,terminalia seretcea,s3t1ind_017,22.0099,-19.0776
+MEYER-OKIN,npv,litter,litter,S1T1wind_071,21.7716,-18.3886
+MEYER-OKIN,npv,litter,litter,S1T1wind_070,21.7716,-18.3886
+MEYER-OKIN,npv,litter,litter,S1T1wind_069,21.7716,-18.3886
+MEYER-OKIN,npv,npv,terminalia seretcea,s3t1ind_033,22.0099,-19.0776
+MEYER-OKIN,npv,litter,litter,s3t1ind_036,22.0099,-19.0776
+MEYER-OKIN,npv,litter,litter,s3t1ind_037,22.0099,-19.0776
+MEYER-OKIN,npv,litter,litter,s3t1ind_043,22.0099,-19.0776
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_058,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_057,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_056,21.7716,-18.3886
+MEYER-OKIN,npv,npv,Burkea africana stem,S1T1wind_054,21.7716,-18.3886
+MEYER-OKIN,npv,litter,litter,S10T3din_050,21.6773,-23.6335
+MEYER-OKIN,npv,npv,boscia albitrunca stem,S12T3din_067,21.9163,-24.6304
+MEYER-OKIN,npv,litter,litter,S8T1ind_011,21.6833,-21.7612
+MEYER-OKIN,npv,litter,litter,S10T2ind_026,21.6773,-23.6335
+MEYER-OKIN,npv,litter,litter,S10T2ind_027,21.6773,-23.6335
+MEYER-OKIN,npv,litter,litter,S10T2ind_029,21.6773,-23.6335
+MEYER-OKIN,npv,litter,litter,S10T2ind_030,21.6773,-23.6335
+JORN,npv,,,JORN0007_l1_02_npv,-106.77337,32.57638167
+SR,npv,UNKN-,UNKN-,SR0022_l1_16_npv,-120.0382333,34.70495833
+SR,npv,UNKN-,UNKN-,SR0022_l1_13_npv,-120.03825,34.70494
+SR,npv,UNKN-,UNKN-,SR0022_l1_12_npv,-120.0382517,34.70496167
+SR,npv,UNKN-,UNKN-,SR0022_l1_11_npv,-120.038275,34.70493667
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_061,21.6773,-23.6335
+MEYER-OKIN,npv,npv,dry grass,S10T1ind_060,21.6773,-23.6335
+MEYER-OKIN,npv,npv,Ziziphus mucronata,S8T1ind_044,21.6833,-21.7612
+MEYER-OKIN,npv,litter,litter,S8T2ind_046,21.6833,-21.7612
+MEYER-OKIN,npv,npv,Terminalia sericea stem,S9T1ind_020,21.8327,-22.3542
+MEYER-OKIN,npv,npv,Terminalia sericea stem,S9T1ind_019,21.8327,-22.3542
+SR,npv,UNKN-,UNKN-,SR0022_l1_09_npv,-120.0382717,34.70492333
+MEYER-OKIN,npv,npv,Boscia albitrunca stem,S9T1ind_004,21.8327,-22.3542
+SR,npv,UNKN-,UNKN-,SR0022_l1_03_npv,-120.0383267,34.704975
+MEYER-OKIN,npv,npv,Combretum hereroense leaf dry,S9T1din_044,21.8327,-22.3542
+SR,npv,UNKN-,UNKN-,SR0033_l1_14_npv,-120.0339267,34.68656667
+SR,npv,UNKN-,UNKN-,SR0033_l1_13_npv,-120.0339083,34.68657667
+SR,npv,UNKN-,UNKN-,SR0033_l1_12_npv,-120.0338917,34.686515
+SR,npv,UNKN-,UNKN-,SR0033_l1_11_npv,-120.0338783,34.68654167
+SR,npv,UNKN-,UNKN-,SR0021_l1_06_npv,-120.0416,34.703455
+SR,npv,UNKN-,UNKN-,SR0033_l1_10_npv,-120.0339367,34.68659667
+SR,npv,UNKN-,UNKN-,SR0022_l1_02_npv,-120.03828,34.70499
+MEYER-OKIN,npv,npv,dry grass,S10T2ind_046,21.6773,-23.6335
+MEYER-OKIN,npv,npv,dry grass,S10T2ind_047,21.6773,-23.6335
+MEYER-OKIN,npv,npv,dry grass,S10T2ind_048,21.6773,-23.6335
+MEYER-OKIN,npv,litter,litter,S10T2ind_025,21.6773,-23.6335
+MEYER-OKIN,npv,npv,dry grass,S10T2ind_049,21.6773,-23.6335
+MEYER-OKIN,npv,litter,litter,S10T2ind_022,21.6773,-23.6335
+MEYER-OKIN,npv,litter,litter,S8T1ind_009,21.6833,-21.7612
+SR,npv,UNKN-,UNKN-,SR0034_l1_06_npv,-120.03483,34.68668667
+SR,npv,UNKN-,UNKN-,SR0034_l1_04_npv,-120.0348717,34.686685
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_070,21.6773,-23.6335
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_071,21.6773,-23.6335
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_072,21.6773,-23.6335
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_073,21.6773,-23.6335
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_074,21.6773,-23.6335
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_075,21.6773,-23.6335
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_069,21.6773,-23.6335
+SR,npv,UNKN-,UNKN-,SR0047_l1_02_npv,-120.0381483,34.699415
+MEYER-OKIN,npv,npv,Ziziphus mucronata,S8T1ind_043,21.6833,-21.7612
+MEYER-OKIN,npv,npv,Combretum hereroense,S8T1ind_037,21.6833,-21.7612
+SR,npv,UNKN-,UNKN-,SR0047_l1_03_npv,-120.03819,34.69941167
+MEYER-OKIN,npv,npv,Combretum hereroense,S8T1ind_036,21.6833,-21.7612
+MEYER-OKIN,npv,npv,Combretum hereroense,S8T1ind_035,21.6833,-21.7612
+SR,npv,AVENFATU,AVENFATU,SR0047_l1_06_npv,-120.0383483,34.69929
+SR,npv,AVENFATU,AVENFATU,SR0047_l1_07_npv,-120.0384183,34.69927167
+MEYER-OKIN,npv,npv,Combretum hereroense,S8T1ind_034,21.6833,-21.7612
+MEYER-OKIN,npv,npv,Combretum hereroense,S8T1ind_033,21.6833,-21.7612
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_068,21.6773,-23.6335
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_067,21.6773,-23.6335
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_066,21.6773,-23.6335
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_065,21.6773,-23.6335
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_063,21.6773,-23.6335
+SR,npv,UNKN-,UNKN-,SR0034_l2_09_npv,-120.0348817,34.68672167
+MEYER-OKIN,npv,litter,burned grass tuff,S10T1ind_062,21.6773,-23.6335
+SR,npv,UNKN-,UNKN-,SR0034_l2_07_npv,-120.0349233,34.68669333
+JORN,npv,,,JORN0007_l1_01_npv,-106.773285,32.57645833
+MEYER-OKIN,npv,litter,litter,S8T1ind_010,21.6833,-21.7612
+MEYER-OKIN,npv,litter,litter,S8T1ind_008,21.6833,-21.7612
+MEYER-OKIN,npv,npv,dry grass,S10T2ind_050,21.6773,-23.6335
+SR,npv,UNKN-,UNKN-,SR0034_l1_10_npv,-120.03483,34.68663333
+MEYER-OKIN,npv,litter,litter,S9T1din_026,21.8327,-22.3542
+MEYER-OKIN,npv,litter,litter,S10T3din_029,21.6773,-23.6335
+MEYER-OKIN,npv,npv,dry grass,S10T3din_032,21.6773,-23.6335
+MEYER-OKIN,npv,npv,dry grass,S10T3din_033,21.6773,-23.6335
+DP,npv,UNKN-,UNKN-,DP0033_l1_01_npv,-120.398965,34.52641
+MEYER-OKIN,npv,npv,acacia erioloba stem,S10T1ind_021,21.6773,-23.6335
+DP,npv,,,DP0032_l1_14_npv,-120.4579,34.53748833
+DP,npv,,,DP0032_l1_13_npv,-120.4578983,34.53748167
+DP,npv,,,DP0032_l1_11_npv,-120.4579017,34.53745
+SR,npv,UNKN-,UNKN-,SR0022_l2_01_npv,-120.03824,34.704885
+DP,npv,,,DP0032_l2_13_npv,-120.4578783,34.53755833
+DP,npv,,,DP0032_l2_11_npv,-120.4578417,34.53755333
+DP,npv,,,DP0032_l2_09_npv,-120.4577783,34.53751333
+SR,npv,UNKN-,UNKN-,SR0022_l2_04_npv,-120.0382767,34.70489
+SR,npv,UNKN-,UNKN-,SR0022_l2_06_npv,-120.0382583,34.70490833
+MEYER-OKIN,npv,npv,combretum hereroense stem,S8T3ind_055,21.6833,-21.7612
+SR,npv,UNKN-,UNKN-,SR0022_l2_09_npv,-120.03827,34.70490833
+MEYER-OKIN,npv,litter,litter,S10T1ind_009,21.6773,-23.6335
+SR,npv,UNKN-,UNKN-,SR0022_l2_12_npv,-120.0383133,34.70493333
+MEYER-OKIN,npv,npv,dry grass,S10T3din_039,21.6773,-23.6335
+SR,npv,UNKN-,UNKN-,SR0026_l1_02_npv,-120.0509717,34.69239667
+SR,npv,UNKN-,UNKN-,SR0021_l2_03_npv,-120.0415083,34.70342667
+SR,npv,UNKN-,UNKN-,SR0021_l2_00_npv,-120.04152,34.703465
+SR,npv,UNKN-,UNKN-,SR0021_l1_17_npv,-120.0415933,34.70336833
+SR,npv,UNKN-,UNKN-,SR0021_l1_16_npv,-120.0415867,34.70341
+SR,npv,UNKN-,UNKN-,SR0021_l1_15_npv,-120.0415633,34.70338833
+MEYER-OKIN,npv,npv,terminalia sericea stem,S8T3ind_053,21.6833,-21.7612
+MEYER-OKIN,npv,npv,combretum hereroense stem,S8T3ind_054,21.6833,-21.7612
+SR,npv,UNKN-,UNKN-,SR0021_l1_12_npv,-120.0415883,34.70341333
+SR,npv,UNKN-,UNKN-,SR0021_l1_10_npv,-120.0415667,34.70342333
+DP,npv,UNKN-,UNKN-,DP0033_l1_05_npv,-120.3990117,34.526365
+SR,npv,UNKN-,UNKN-,SR0021_l2_05_npv,-120.0415433,34.70344667
+MEYER-OKIN,npv,npv,acacia erioloba stem,S10T1ind_022,21.6773,-23.6335
+MEYER-OKIN,npv,npv,acacia erioloba stem,S10T1ind_023,21.6773,-23.6335
+JORN,npv,UNKN-,UNKN-,JORN0007_l3_01_npv,-106.7740167,32.57603167
+JORN,npv,UNKN-,UNKN-,JORN0007_l3_04_npv,-106.7738883,32.57602833
+MEYER-OKIN,npv,npv,acacia luederitzii stem,S9T1din_014,21.8327,-22.3542
+MEYER-OKIN,npv,npv,acacia luederitzii stem,S9T1din_013,21.8327,-22.3542
+MEYER-OKIN,npv,litter,litter,S9T1din_004,21.8327,-22.3542
+MEYER-OKIN,npv,litter,litter ,S8T3ind_069,21.6833,-21.7612
+MEYER-OKIN,npv,litter,litter ,S8T3ind_065,21.6833,-21.7612
+SR,npv,UNKN-,UNKN-,SR0021_l2_06_npv,-120.04154,34.70344
+MEYER-OKIN,npv,litter,litter ,S8T3ind_064,21.6833,-21.7612
+MEYER-OKIN,npv,litter,litter,S10T3din_000,21.6773,-23.6335
+MEYER-OKIN,npv,litter,litter,S10T3din_003,21.6773,-23.6335
+MEYER-OKIN,npv,litter,litter ,S8T3ind_061,21.6833,-21.7612
+DP,npv,,,DP0033_l2_04_npv,-120.3989817,34.526405
+MEYER-OKIN,npv,npv,acacia erioloba stem,S10T1ind_024,21.6773,-23.6335
+SR,npv,UNKN-,UNKN-,SR0021_l2_08_npv,-120.0415367,34.70337833
+SR,npv,UNKN-,UNKN-,SR0021_l2_10_npv,-120.0415283,34.70339167
+SR,npv,UNKN-,UNKN-,SR0021_l2_12_npv,-120.0415467,34.70337833
+MEYER-OKIN,npv,litter,litter,S10T3din_007,21.6773,-23.6335
+MEYER-OKIN,npv,npv,dry grass,S10T3din_009,21.6773,-23.6335
+SR,npv,UNKN-,UNKN-,SR0021_l2_14_npv,-120.0415367,34.70335667
+MEYER-OKIN,npv,litter,litter,S10T3din_018,21.6773,-23.6335
+MEYER-OKIN,npv,npv,acacia erioloba stem,S10T1ind_025,21.6773,-23.6335
+MEYER-OKIN,pv,pv,Terminalia sericea,S9T1ind_028,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Terminalia sericea,s3T1win_007,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Terminalia sericea,s3T1win_006,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Terminalia sericea,s3T1win_005,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Terminalia sericea,S9T1ind_030,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Terminalia sericea,S9T1ind_026,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Grewia bicolor,s3T1win_000,22.0099,-19.0776
+MEYER-OKIN,pv,pv,lonchocarpus,s3t1ind_047,22.0099,-19.0776
+MEYER-OKIN,pv,pv,unknown,s3t1ind_048,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S9T1ind_024,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Terminalia sericea,s3T1win_004,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Grewia bicolor,s3T1win_003,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S9T1ind_022,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Grewia bicolor,s3T1win_001,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Grewia bicolor,s3T1win_002,22.0099,-19.0776
+MEYER-OKIN,pv,pv,green herb,S9T1din_050,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S9T1ind_021,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S9T1ind_023,21.8327,-22.3542
+MEYER-OKIN,pv,pv,unknown,s3t1ind_049,22.0099,-19.0776
+MEYER-OKIN,pv,pv,unknown,s3t1ind_050,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Grewia spp,s6t1ind_022,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Grewia bicolor,S9T1ind_036,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Bauhenia petersiana,S9T1ind_073,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Bauhenia petersiana,S9T1ind_072,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Terminalia sericea,S9T1ind_071,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Terminalia sericea,S9T1ind_069,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Terminalia sericea,S9T1ind_067,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Terminalia sericea,S9T1ind_065,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Bauhenia petersiana,S9T1ind_074,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S9T1ind_063,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Albizia harveyi,S2T1win_017,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S9T1ind_062,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S9T1ind_059,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S9T1ind_058,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S9T1ind_057,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S9T1ind_056,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Albizia harveyi,S2T1win_016,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Bauhenia petersiana,S9T1ind_075,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Rhigozum brevispinosum,S2T1win_015,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Bauhenia petersiana,S9T1ind_076,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Grewia flava,S9T1ind_097,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Acacia erioloba,S9T1ind_092,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Acacia erioloba,S9T1ind_091,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Acacia erioloba,S9T1ind_090,21.8327,-22.3542
+MEYER-OKIN,pv,pv,grewia leaf,s2t1ind_020,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Acacia erioloba,S9T1ind_088,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Bauhenia petersiana,S9T1ind_082,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Bauhenia petersiana,S9T1ind_081,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Dichrostachys cinera,S2T1win_007,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Acacia erubescense,S2T1win_008,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Acacia erubescense,S2T1win_009,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Bauhenia petersiana,S9T1ind_080,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Bauhenia petersiana,S9T1ind_079,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Bauhenia petersiana,S9T1ind_078,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Bauhenia petersiana,S9T1ind_077,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Acacia fleckii,S9T1ind_055,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Terminalia sericea,S9T1ind_032,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Albizia harveyi,S2T1win_018,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Grewia flava,S2T1win_021,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Catophractes alexandri,S2T1win_055,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Catophractes alexandri,S2T1win_056,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Catophractes alexandri,S2T1win_057,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Catophractes alexandri,S2T1win_058,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Green herb,S2T1win_060,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Green herb,S2T1win_061,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S2T1win_042,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Grewia flava,S9T1ind_045,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Grewia bicolor,S9T1ind_042,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Grewia bicolor,S9T1ind_041,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Grewia bicolor,S9T1ind_040,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Grewia bicolor,S9T1ind_039,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Grewia bicolor,S9T1ind_038,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Grewia bicolor,S9T1ind_037,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Grewia bicolor,S9T1ind_043,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Baphia massaiensis,s3T1win_008,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S2T1win_041,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S2T1win_040,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Grewia bicolor,S2T1win_023,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Green Grass,S2T1win_028,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Boscia albitrunca,S2T1win_029,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Acacia fleckii,S9T1ind_054,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Acacia fleckii,S9T1ind_053,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Acacia fleckii,S9T1ind_052,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Acacia fleckii,S9T1ind_051,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Acacia fleckii,S9T1ind_050,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Acacia fleckii,S9T1ind_048,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Grewia flava,S9T1ind_047,21.8327,-22.3542
+MEYER-OKIN,pv,pv,Boscia albitrunca,S2T1win_030,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Boscia albitrunca,S2T1win_031,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Boscia albitrunca,S2T1win_032,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Acacia mellifera,S2T1win_033,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Acacia luederitzii,S2T1win_039,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Grewia flava,S2T1win_020,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Baphia massaiensis,s3T1win_009,22.0099,-19.0776
+MEYER-OKIN,pv,pv,ziziphus mucronata,S8T3ind_024,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Baphia massaiensis,s3T1win_011,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia luederitzii,S4T1win_085,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Baphia massaiensis,S4T1win_041,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Baphia massaiensis,S4T1win_040,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Baphia massaiensis,S4T1win_039,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S4T1win_038,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Lonchocarpus nelsii,S4T1win_036,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Grewia spp.,s6t2ind_002,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Boscia albitrunca,S4T1win_028,21.8174,-19.5293
+MEYER-OKIN,pv,pv,green grass,s6t2ind_007,21.9933,-20.2981
+MEYER-OKIN,pv,pv,green grass,S4T1win_023,21.8174,-19.5293
+MEYER-OKIN,pv,pv,green grass,S4T1win_022,21.8174,-19.5293
+MEYER-OKIN,pv,pv,green grass,S4T1win_021,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Colophospermum mopane,S4T1win_020,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Colophospermum mopane,S4T1win_019,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Acacia luederitzii,S4T1win_086,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Colophospermum mopane,S4T1win_018,21.8174,-19.5293
+MEYER-OKIN,pv,pv,green herb,S4T1win_016,21.8174,-19.5293
+MEYER-OKIN,pv,pv,green herb,S4T1win_015,21.8174,-19.5293
+MEYER-OKIN,pv,pv,green herb,S4T1win_014,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Grewia flava,S4T1win_013,21.8174,-19.5293
+MEYER-OKIN,pv,pv,green grass ,s6t3ind_012,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Grewia flava,S4T1win_010,21.8174,-19.5293
+MEYER-OKIN,pv,pv,green herb,S4T1win_006,21.8174,-19.5293
+MEYER-OKIN,pv,pv,green herb,S4T1win_005,21.8174,-19.5293
+MEYER-OKIN,pv,pv,green herb,S4T1win_004,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Acacia erubescense,S4T1win_003,21.8174,-19.5293
+MEYER-OKIN,pv,pv,leaf mopane,s4t1ind_016,21.8174,-19.5293
+MEYER-OKIN,pv,pv,leaf mopane,s4t1ind_015,21.8174,-19.5293
+MEYER-OKIN,pv,pv,green grass ,s6t3ind_013,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Combretum hereroense,S8T1ind_023,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Colophospermum mopane,S4T1win_017,21.8174,-19.5293
+MEYER-OKIN,pv,pv,Ziziphus mucronata,S8T1ind_025,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Acacia luederitzii,S4T1win_087,21.8174,-19.5293
+MEYER-OKIN,pv,pv,green herb,S6T1win_039,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Acacia erubescense,s6t1ind_021,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Acacia erubescense,s6t1ind_020,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Acacia erubescense,s6t1ind_019,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Acacia erubescense,s6t1ind_018,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Acacia erubescense,s6t1ind_017,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Terminalia sericea,S5T31win_034,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Combretum collinum,S5T31win_030,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Grewia spp,s6t1ind_023,21.9933,-20.2981
+MEYER-OKIN,pv,pv,green grass,S5T31win_024,21.5742,-20.1019
+MEYER-OKIN,pv,pv,green grass,S5T31win_023,21.5742,-20.1019
+MEYER-OKIN,pv,pv,green grass,S5T31win_022,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Terminalia sericea,S5T31win_021,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Terminalia sericea,S5T31win_020,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S5T31win_015,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Grewia spp.,s6t2ind_000,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S5T31win_014,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Baphia massaiensis,S5T31win_012,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Baphia massaiensis,S5T31win_011,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Baphia massaiensis,S5T31win_010,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Acacia fleckii,S5T31win_009,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Acacia fleckii,S5T31win_008,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Acacia fleckii,S5T31win_007,21.5742,-20.1019
+MEYER-OKIN,pv,pv,green grass,s5t2ind_052,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Boscia albitrunca,s6t1ind_024,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Boscia albitrunca,s6t1ind_025,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Acacia erubescense,s6t1ind_046,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Acacia erubescense,S6T1win_020,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Acacia erubescense,S6T1win_021,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Acacia erubescense,S6T1win_023,21.9933,-20.2981
+MEYER-OKIN,pv,pv,green herb,S6T1win_033,21.9933,-20.2981
+MEYER-OKIN,pv,pv,Baphia massaiensis,S5T31win_013,21.5742,-20.1019
+MEYER-OKIN,pv,pv,Baphia massaiensis,s3T1win_010,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Ziziphus mucronata,S8T1ind_026,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Ziziphus mucronata,S8T1ind_028,21.6833,-21.7612
+MEYER-OKIN,pv,pv,terminalia sericea,S8T3ind_013,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Acacia fleckii,s3T1win_040,22.0099,-19.0776
+MEYER-OKIN,pv,pv,terminalia sericea,S8T3ind_019,21.6833,-21.7612
+MEYER-OKIN,pv,pv,green grass,S8T3ind_021,21.6833,-21.7612
+MEYER-OKIN,pv,pv,terminalia sericea,S8T3ind_022,21.6833,-21.7612
+MEYER-OKIN,pv,pv,ziziphus mucronata,S8T3ind_025,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Acacia fleckii,s3T1win_039,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia fleckii,s3T1win_038,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia fleckii,s3T1win_037,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Combretum psidioides,s3T1win_031,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Lonchocarpus nelsi,s3T1win_030,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Lonchocarpus nelsi,s3T1win_029,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Lonchocarpus nelsi,s3T1win_028,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Lonchocarpus nelsi,s3T1win_027,22.0099,-19.0776
+MEYER-OKIN,pv,pv,green herb,S8T3ind_011,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Lonchocarpus nelsi,s3T1win_026,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia fleckii,s3T1win_024,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia fleckii,s3T1win_023,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia fleckii,s3T1win_022,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia fleckii,s3T1win_021,22.0099,-19.0776
+MEYER-OKIN,pv,pv,ziziphus mucronata,S8T3ind_026,21.6833,-21.7612
+MEYER-OKIN,pv,pv,acacia erioloba,S8T3ind_027,21.6833,-21.7612
+MEYER-OKIN,pv,pv,acacia erioloba,S8T3ind_028,21.6833,-21.7612
+MEYER-OKIN,pv,pv,combretum hereroense,S8T3ind_029,21.6833,-21.7612
+MEYER-OKIN,pv,pv,grewia flava,S8T3ind_030,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Acacia fleckii,s3T1win_020,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Combretum collinum,s3T1win_016,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Combretum collinum,s3T1win_015,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Combretum collinum,s3T1win_014,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Combretum collinum,s3T1win_012,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia fleckii,s3T1win_025,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Ziziphus mucronata,S8T1ind_027,21.6833,-21.7612
+MEYER-OKIN,pv,pv,combretum hereroense,S8T3ind_009,21.6833,-21.7612
+MEYER-OKIN,pv,pv,combretum hereroense,S8T3ind_003,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Ziziphus mucronata,S8T1ind_029,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Acacia fleckii,S8T1ind_030,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Dichrostachys cinera,s3T1win_089,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia fleckii,S8T1ind_031,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Acacia fleckii,S8T1ind_032,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Dichrostachys cinera,s3T1win_088,22.0099,-19.0776
+MEYER-OKIN,pv,pv,green herb,s3T1win_081,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia erubescense,s3T1win_080,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia erubescense,s3T1win_079,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia erubescense,s3T1win_078,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia erubescense,s3T1win_077,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Acacia erubescense,s3T1win_076,22.0099,-19.0776
+MEYER-OKIN,pv,pv,green grass,s3T1win_069,22.0099,-19.0776
+MEYER-OKIN,pv,pv,green grass,s3T1win_068,22.0099,-19.0776
+MEYER-OKIN,pv,pv,combretum hereroense,S8T3ind_008,21.6833,-21.7612
+MEYER-OKIN,pv,pv,green grass,s3T1win_067,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Bauhinia pertersiana,s3T1win_064,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Bauhinia pertersiana,s3T1win_063,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Bauhinia pertersiana,s3T1win_062,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Bauhinia pertersiana,s3T1win_061,22.0099,-19.0776
+MEYER-OKIN,pv,pv,green herb,s3T1win_060,22.0099,-19.0776
+MEYER-OKIN,pv,pv,green herb,s3T1win_059,22.0099,-19.0776
+MEYER-OKIN,pv,pv,green herb,s3T1win_058,22.0099,-19.0776
+MEYER-OKIN,pv,pv,green herb,s3T1win_057,22.0099,-19.0776
+MEYER-OKIN,pv,pv,green herb,s3T1win_056,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Combretum hereroense,s3T1win_055,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Combretum hereroense,s3T1win_054,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Combretum hereroense,s3T1win_053,22.0099,-19.0776
+MEYER-OKIN,pv,pv,Combretum hereroense,s3T1win_051,22.0099,-19.0776
+MEYER-OKIN,pv,pv,combretum hereroense,S8T3ind_002,21.6833,-21.7612
+MEYER-OKIN,pv,pv,Bauhinia pertersiana,s3T1win_065,22.0099,-19.0776
+MEYER-OKIN,pv,pv,grewia leaf,s2t1ind_019,21.8418,-18.6798
+MEYER-OKIN,pv,pv,Combretum hereroense,s3T1win_052,22.0099,-19.0776
+MEYER-OKIN,pv,pv,acacia literetsi leaf,s2t1ind_011,21.8418,-18.6798
+MEYER-OKIN,pv,pv,green herb,S11T1ind_040,21.8899,-24.1679
+MEYER-OKIN,pv,pv,green herb,S11T1ind_039,21.8899,-24.1679
+MEYER-OKIN,pv,pv,green herb,S11T1ind_038,21.8899,-24.1679
+MEYER-OKIN,pv,pv,green herb,S11T1ind_037,21.8899,-24.1679
+MEYER-OKIN,pv,pv,green herb,S11T1ind_036,21.8899,-24.1679
+MEYER-OKIN,pv,pv,green herb,S11T1ind_035,21.8899,-24.1679
+MEYER-OKIN,pv,pv,green herb,S11T1ind_032,21.8899,-24.1679
+MEYER-OKIN,pv,pv,green herb,S11T1ind_031,21.8899,-24.1679
+MEYER-OKIN,pv,pv,green grass,S11T1ind_029,21.8899,-24.1679
+MEYER-OKIN,pv,pv,green grass,S11T1ind_026,21.8899,-24.1679
+MEYER-OKIN,pv,pv,green grass,S11T1ind_025,21.8899,-24.1679
+MEYER-OKIN,pv,pv,green grass,S11T1ind_024,21.8899,-24.1679
+MEYER-OKIN,pv,pv,lyzium cinerum,S11T1ind_018,21.8899,-24.1679
+MEYER-OKIN,pv,pv,lyzium cinerum,S11T1ind_017,21.8899,-24.1679
+SR,pv,UNKN-,UNKN-,SR0020_l1_23_pv,-120.04222,34.703385
+MEYER-OKIN,pv,pv,lyzium cinerum,S11T1ind_016,21.8899,-24.1679
+MEYER-OKIN,pv,pv,lyzium cinerum,S11T1ind_011,21.8899,-24.1679
+MEYER-OKIN,pv,pv,rhus tenuiveris,S11T1ind_010,21.8899,-24.1679
+MEYER-OKIN,pv,pv,rhus tenuiveris,S11T1ind_009,21.8899,-24.1679
+MEYER-OKIN,pv,pv,lonchocarpus leaf,s2t1ind_014,21.8418,-18.6798
+MEYER-OKIN,pv,pv,rhus tenuiveris,S11T1ind_008,21.8899,-24.1679
+MEYER-OKIN,pv,pv,rhus tenuiveris,S11T1ind_007,21.8899,-24.1679
+MEYER-OKIN,pv,pv,rhus tenuiveris,S11T1ind_006,21.8899,-24.1679
+MEYER-OKIN,pv,pv,rhus tenuiveris,S11T1ind_005,21.8899,-24.1679
+MEYER-OKIN,pv,pv,rhus tenuiveris,S11T1ind_004,21.8899,-24.1679
+MEYER-OKIN,pv,pv,rhus tenuiveris,S11T1ind_003,21.8899,-24.1679
+MEYER-OKIN,pv,pv,rhus tenuiveris,S11T1ind_002,21.8899,-24.1679
+MEYER-OKIN,pv,pv,rhus tenuiveris,S11T1ind_001,21.8899,-24.1679
+MEYER-OKIN,pv,pv,rhus tenuiveris,S11T1ind_000,21.8899,-24.1679
+SR,pv,UNKN-,UNKN-,SR0021_l1_03_pv,-120.0415917,34.70347667
+MEYER-OKIN,pv,pv,lyzium cinerum,S11T1ind_012,21.8899,-24.1679
+SR,pv,UNKN-,UNKN-,SR0021_l1_09_pv,-120.0415783,34.703415
+SR,pv,UNKN-,UNKN-,SR0020_l1_20_pv,-120.0422767,34.70328833
+SR,pv,UNKN-,UNKN-,SR0020_l1_15_pv,-120.04223,34.703285
+MEYER-OKIN,pv,pv,green grass,S13T1din_023,22.2607,-25.0681
+MEYER-OKIN,pv,pv,green grass,S13T1din_022,22.2607,-25.0681
+MEYER-OKIN,pv,pv,green grass,S13T1din_016,22.2607,-25.0681
+SR,pv,UNKN-,UNKN-,SR0019_l2_18_pv,-120.0413267,34.70293
+MEYER-OKIN,pv,pv,green grass,S12T3ind_039,21.9163,-24.6304
+MEYER-OKIN,pv,pv,green grass,S12T3ind_038,21.9163,-24.6304
+MEYER-OKIN,pv,pv,green grass,S12T3ind_037,21.9163,-24.6304
+MEYER-OKIN,pv,pv,green grass,S12T3ind_036,21.9163,-24.6304
+MEYER-OKIN,pv,pv,green grass,S12T3ind_035,21.9163,-24.6304
+MEYER-OKIN,pv,pv,acacia luederitzii,S12T3ind_034,21.9163,-24.6304
+MEYER-OKIN,pv,pv,acacia luederitzii,S12T3ind_033,21.9163,-24.6304
+MEYER-OKIN,pv,pv,acacia luederitzii,S12T3ind_032,21.9163,-24.6304
+MEYER-OKIN,pv,pv,green grass,S12T3ind_028,21.9163,-24.6304
+MEYER-OKIN,pv,pv,green grass,S12T3ind_027,21.9163,-24.6304
+SR,pv,UNKN-,UNKN-,SR0020_l1_18_pv,-120.0422883,34.70329667
+MEYER-OKIN,pv,pv,Grewia flava,S12T3ind_023,21.9163,-24.6304
+MEYER-OKIN,pv,pv,Lyzium cinera,S12T3ind_021,21.9163,-24.6304
+MEYER-OKIN,pv,pv,Lyzium cinera,S12T3ind_020,21.9163,-24.6304
+SR,pv,UNKN-,UNKN-,SR0034_l2_05_pv,-120.0348833,34.68664
+MEYER-OKIN,pv,pv,Rhus tenuiveris,S12T3ind_017,21.9163,-24.6304
+MEYER-OKIN,pv,pv,Rhus tenuiveris,S12T3ind_016,21.9163,-24.6304
+MEYER-OKIN,pv,pv,green grass,S12T3ind_010,21.9163,-24.6304
+MEYER-OKIN,pv,pv,green grass,S12T3ind_005,21.9163,-24.6304
+MEYER-OKIN,pv,pv,green herb,S12T3din_030,21.9163,-24.6304
+SR,pv,UNKN-,UNKN-,SR0020_l2_10_pv,-120.0421783,34.70335333
+SR,pv,UNKN-,UNKN-,SR0020_l2_11_pv,-120.04222,34.70333667
+MEYER-OKIN,pv,pv,rhigozum ,S12T3din_004,21.9163,-24.6304
+MEYER-OKIN,pv,pv,rhigozum ,S12T3din_003,21.9163,-24.6304
+SR,pv,BRASNIGR,BRASNIGR,SR0020_l2_14_pv,-120.0421517,34.70331167
+SR,pv,UNKN-,UNKN-,SR0020_l1_13_pv,-120.042285,34.70324333
+MEYER-OKIN,pv,pv,Grewia flava,S12T3ind_022,21.9163,-24.6304
+SR,pv,UNKN-,UNKN-,SR0019_l2_06_pv,-120.0413933,34.70292333
+MEYER-OKIN,pv,pv,acacia erioloba,S10T3din_038,21.6773,-23.6335
+SR,pv,UNKN-,UNKN-,SR0021_l2_04_pv,-120.0415233,34.70341667
+MEYER-OKIN,pv,pv,green grass,S10T1ind_055,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green grass,S10T1ind_050,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green grass,S10T1ind_049,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green grass,S10T1ind_048,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green grass,S10T1ind_047,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green grass,S10T1ind_046,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green herb,S10T1ind_045,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green herb,S10T1ind_044,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green herb,S10T1ind_043,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green herb,S10T1ind_042,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green herb,S10T1ind_041,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green herb,S10T1ind_040,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green herb,S10T1ind_039,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green herb,S10T1ind_038,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia haematoxilon,S10T2ind_001,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green herb,S10T1ind_037,21.6773,-23.6335
+SR,pv,UNKN-,UNKN-,SR0022_l2_08_pv,-120.038265,34.704925
+SR,pv,UNKN-,UNKN-,SR0022_l2_11_pv,-120.0382817,34.704915
+JORN,pv,PROSGLAN,PROSGLAN,JORN0005_l1_03_pv,-106.7724467,32.57042667
+SR,pv,AVENFATU,AVENFATU,SR0047_l1_05_pv,-120.0383233,34.699365
+SR,pv,AVENFATU,AVENFATU,SR0047_l1_01_pv,-120.038095,34.69947167
+SR,pv,UNKN-,UNKN-,SR0033_l1_06_pv,-120.0339267,34.68650833
+JORN,pv,UNKN-,UNKN-,JORN0007_l3_12_pv,-106.7740083,32.57597667
+SR,pv,UNKN-,UNKN-,SR0033_l1_08_pv,-120.03389,34.68658833
+SR,pv,UNKN-,UNKN-,SR0034_l1_07_pv,-120.034835,34.68667333
+SR,pv,UNKN-,UNKN-,SR0034_l1_03_pv,-120.0348667,34.68673833
+SR,pv,UNKN-,UNKN-,SR0034_l1_00_pv,-120.0349,34.68671667
+SR,pv,UNKN-,UNKN-,SR0034_l2_13_pv,-120.0349117,34.68674333
+SR,pv,UNKN-,UNKN-,SR0034_l2_11_pv,-120.0349083,34.68673333
+SR,pv,UNKN-,UNKN-,SR0034_l2_06_pv,-120.0349167,34.68669833
+MEYER-OKIN,pv,pv,green herb,S10T1ind_036,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia erioloba,S10T3din_037,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia haematoxilon,S10T2ind_002,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia haematoxilon,S10T2ind_004,21.6773,-23.6335
+SR,pv,UNKN-,UNKN-,SR0021_l2_07_pv,-120.0415367,34.70341167
+DP,pv,SALVMELL,SALVMELL,DP0032_l2_08_pv,-120.4578433,34.53752167
+DP,pv,BACCPILU,BACCPILU,DP0032_l1_06_pv,-120.4578983,34.53751833
+DP,pv,UNKN-,UNKN-,DP0033_l1_00_pv,-120.39898,34.52641333
+MEYER-OKIN,pv,pv,acacia erioloba,S10T2ind_055,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia erioloba,S10T2ind_053,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia erioloba,S10T2ind_052,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia erioloba,S10T2ind_051,21.6773,-23.6335
+SR,pv,UNKN-,UNKN-,SR0022_l1_01_pv,-120.0383333,34.70498167
+DP,pv,UNKN-,UNKN-,DP0033_l2_03_pv,-120.3989417,34.52642167
+DP,pv,UNKN-,UNKN-,DP0033_l2_05_pv,-120.3989483,34.52639667
+DP,pv,UNKN-,UNKN-,DP0033_l2_07_pv,-120.3989533,34.52636667
+DP,pv,UNKN-,UNKN-,DP0033_l2_08_pv,-120.3989417,34.52636
+SR,pv,UNKN-,UNKN-,SR0022_l1_04_pv,-120.0382867,34.70499333
+MEYER-OKIN,pv,pv,acacia haematoxilon,S10T2ind_003,21.6773,-23.6335
+SR,pv,UNKN-,UNKN-,SR0022_l1_18_pv,-120.0381733,34.70498333
+MEYER-OKIN,pv,pv,green grass,S10T2ind_019,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green grass,S10T2ind_018,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green grass,S10T2ind_017,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green grass,S10T2ind_016,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia melifera,S10T2ind_014,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia melifera,S10T2ind_013,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia melifera,S10T2ind_012,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia melifera,S10T2ind_011,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia haematoxilon,S10T2ind_010,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia haematoxilon,S10T2ind_009,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia haematoxilon,S10T2ind_008,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia haematoxilon,S10T2ind_007,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia haematoxilon,S10T2ind_006,21.6773,-23.6335
+MEYER-OKIN,pv,pv,acacia haematoxilon,S10T2ind_005,21.6773,-23.6335
+MEYER-OKIN,pv,pv,green grass,S10T2ind_020,21.6773,-23.6335
+SR,pv,UNKN-,UNKN-,SR0019_l1_12_pv,-120.0413383,34.70288833
+MEYER-OKIN,pv,pv,Rhus tenuiveris,S12T3ind_018,21.9163,-24.6304
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_000,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_007,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_008,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_009,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_010,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_027,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_028,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_047,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_006,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_048,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_050,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_051,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_052,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_073,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_074,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_075,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_076,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_049,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_077,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_005,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_003,21.7716,-18.3886
+MEYER-OKIN,pv,pv,green grass,S15T1ind_043,20.6729,-26.8199
+MEYER-OKIN,pv,pv,green grass,S15T1ind_044,20.6729,-26.8199
+MEYER-OKIN,pv,pv,green grass,S15T1ind_045,20.6729,-26.8199
+MEYER-OKIN,pv,pv,grewia bicolor,S15T1ind_052,20.6729,-26.8199
+MEYER-OKIN,pv,pv,grewia bicolor,S15T1ind_053,20.6729,-26.8199
+MEYER-OKIN,pv,pv,grewia bicolor,S15T1ind_054,20.6729,-26.8199
+MEYER-OKIN,pv,pv,grewia bicolor,S15T1ind_055,20.6729,-26.8199
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_004,21.7716,-18.3886
+MEYER-OKIN,pv,pv,terminalia sericea,S15T1ind_056,20.6729,-26.8199
+MEYER-OKIN,pv,pv,terminalia sericea,S15T1ind_058,20.6729,-26.8199
+MEYER-OKIN,pv,pv,terminalia sericea,S15T1ind_059,20.6729,-26.8199
+MEYER-OKIN,pv,pv,terminalia sericea,S15T1ind_060,20.6729,-26.8199
+MEYER-OKIN,pv,pv,Pluri leaf,s1t1ind_064,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Pluri leaf,s1t1ind_065,21.7716,-18.3886
+SR,pv,UNKN-,UNKN-,SR0019_l1_08_pv,-120.0413,34.70288
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_001,21.7716,-18.3886
+MEYER-OKIN,pv,pv,terminalia sericea,S15T1ind_057,20.6729,-26.8199
+MEYER-OKIN,pv,pv,green grass,S15T1ind_042,20.6729,-26.8199
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_078,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_121,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Combretum spp,S1T1wind_150,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Strychnos pungens,S1T1wind_158,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Strychnos pungens,S1T1wind_159,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Strychnos pungens,S1T1wind_160,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Strychnos pungens,S1T1wind_161,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Strychnos pungens,S1T1wind_162,21.7716,-18.3886
+MEYER-OKIN,pv,pv,leaf,s1t2ind_001,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Combretum spp,S1T1wind_149,21.7716,-18.3886
+MEYER-OKIN,pv,pv,leaf,s1t2ind_016,21.7716,-18.3886
+MEYER-OKIN,pv,pv,leaf ,s1t3ind_049,21.7716,-18.3886
+MEYER-OKIN,pv,pv,leaf ,s1t3ind_050,21.7716,-18.3886
+MEYER-OKIN,pv,pv,leaf ,s1t3ind_051,21.7716,-18.3886
+MEYER-OKIN,pv,pv,leaf,s1t3ind_054,21.7716,-18.3886
+MEYER-OKIN,pv,pv,leaf,s1t3ind_055,21.7716,-18.3886
+MEYER-OKIN,pv,pv,leaf,s1t3ind_062,21.7716,-18.3886
+MEYER-OKIN,pv,pv,leaf,s1t3ind_063,21.7716,-18.3886
+MEYER-OKIN,pv,pv,leaf,s1t2ind_017,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Burkea africana,S1T1wind_079,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Combretum spp,S1T1wind_148,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Grewia spp,S1T1wind_145,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_122,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_123,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_124,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_125,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_126,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_127,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_129,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Combretum spp,S1T1wind_147,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_131,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_133,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_134,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_135,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_136,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_137,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Bauhinia petersiana,S1T1wind_140,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Grewia spp,S1T1wind_144,21.7716,-18.3886
+MEYER-OKIN,pv,pv,Baikiaea plurijuga,S1T1wind_132,21.7716,-18.3886
+MEYER-OKIN,pv,pv,green grass,S15T1ind_041,20.6729,-26.8199
+SR,pv,UNKN-,UNKN-,SR0034_l2_04_pv,-120.0349617,34.68666
+MEYER-OKIN,pv,pv,boscia albitrunca,S14T1din_023,22.3547,-25.8497
+MEYER-OKIN,pv,pv,a mellifera,S14T1din_022,22.3547,-25.8497
+MEYER-OKIN,pv,pv,green grass,S15T1ind_008,20.6729,-26.8199
+SR,pv,BRASNIGR,BRASNIGR,SR0000_l1_11_pv,-120.033585,34.693485
+MEYER-OKIN,pv,pv,boscia albitrunca,S14T1din_024,22.3547,-25.8497
+MEYER-OKIN,pv,pv,green herb,S14T1din_015,22.3547,-25.8497
+MEYER-OKIN,pv,pv,green herb,S14T1din_017,22.3547,-25.8497
+MEYER-OKIN,pv,pv,green herb,S14T1din_018,22.3547,-25.8497
+MEYER-OKIN,pv,pv,a mellifera,S14T1din_021,22.3547,-25.8497
+MEYER-OKIN,pv,pv,boscia albitrunca,S14T1din_025,22.3547,-25.8497
+MEYER-OKIN,pv,pv,green grass,S14T1din_038,22.3547,-25.8497
+SR,pv,AVENFATU,AVENFATU,SR0000_l3_02_pv,-120.0341333,34.69303333
+SR,pv,UNKN-,UNKN-,SR0019_l1_07_pv,-120.0413117,34.70290333
+MEYER-OKIN,pv,pv,green grass,S14T1din_037,22.3547,-25.8497
+MEYER-OKIN,pv,pv,green grass,S14T1din_034,22.3547,-25.8497
+MEYER-OKIN,pv,pv,green grass,S14T1din_033,22.3547,-25.8497
+SR,pv,AVENFATU,AVENFATU,SR0000_l3_03_pv,-120.0341117,34.69305
+SR,pv,AVENFATU,AVENFATU,SR0000_l2_00_pv,-120.033845,34.69291333
+SR,pv,AVENFATU,AVENFATU,SR0000_l2_04_pv,-120.03377,34.69275833
+SR,pv,AVENFATU,AVENFATU,SR0000_l2_06_pv,-120.0337133,34.69267167
+MEYER-OKIN,pv,pv,green herb,S14T1din_029,22.3547,-25.8497
+MEYER-OKIN,pv,pv,green herb,S14T1din_028,22.3547,-25.8497
+MEYER-OKIN,pv,pv,green grass,S15T1ind_005,20.6729,-26.8199
+MEYER-OKIN,pv,pv,green herb,S14T1din_027,22.3547,-25.8497
+MEYER-OKIN,pv,pv,green grass,S14T1din_035,22.3547,-25.8497
+MEYER-OKIN,pv,pv,green grass,S15T1ind_007,20.6729,-26.8199
+ossl,soil,soil,308f5f6241dde45771ba4135db976c81,2125_308f5f6241dde45771ba4135db976c81,-121.25387,37.88985
+ossl,soil,soil,ed45674caa225449e53dcba8ee3a284c,2126_ed45674caa225449e53dcba8ee3a284c,-121.25387,37.88985
+ossl,soil,soil,deab6a74b7f9d3502b99101dc6405d05,2055_deab6a74b7f9d3502b99101dc6405d05,-121.44443,38.37741
+ossl,soil,soil,0bee32e3dfa37ec9e74ebd8553468c45,2123_0bee32e3dfa37ec9e74ebd8553468c45,-121.25387,37.88985
+ossl,soil,soil,f052d1708d0c10d62d856020ae4e5466,2127_f052d1708d0c10d62d856020ae4e5466,-121.25387,37.88985
+ossl,soil,soil,b8184df179f827a4e178dca86dfdfd73,2122_b8184df179f827a4e178dca86dfdfd73,-121.25387,37.88985
+ossl,soil,soil,2b55f994abac9ccd41510775b708de70,3134_2b55f994abac9ccd41510775b708de70,-121.25387,37.88985
+ossl,soil,soil,20f1be6a44609f71b81c497df8260e40,3133_20f1be6a44609f71b81c497df8260e40,-121.25387,37.88985
+ossl,soil,soil,2e7c3663a1dc1dfb68eaae5bfbcd22eb,2121_2e7c3663a1dc1dfb68eaae5bfbcd22eb,-121.25387,37.88985
+ossl,soil,soil,d49acbb4c9a55ca41cf849b9fbaa1137,3132_d49acbb4c9a55ca41cf849b9fbaa1137,-121.25387,37.88985
+ossl,soil,soil,a7bf87822994dc55c08f2f6c8ba90442,2855_a7bf87822994dc55c08f2f6c8ba90442,-121.25387,37.88985
+ossl,soil,soil,03c33f0a35cd8cee45eb9876f654f649,0572_03c33f0a35cd8cee45eb9876f654f649,-118.3069444,37.52997222
+ossl,soil,soil,03c33f0a35cd8cee45eb9876f654f649,0571_03c33f0a35cd8cee45eb9876f654f649,-118.3069444,37.52997222
+ossl,soil,soil,6d379a9f0331459c9e0063a9ed6165ea,2854_6d379a9f0331459c9e0063a9ed6165ea,-121.25387,37.88985
+ossl,soil,soil,25c820ef7f68b7ddd2632f926c3241c8,2853_25c820ef7f68b7ddd2632f926c3241c8,-121.25387,37.88985
+ossl,soil,soil,efadf4c1cd9f42797a69782f1d0fc0e2,2852_efadf4c1cd9f42797a69782f1d0fc0e2,-121.25387,37.88985
+ossl,soil,soil,8f1f94de9023170e516c3eb39e88d81f,2851_8f1f94de9023170e516c3eb39e88d81f,-121.25387,37.88985
+ossl,soil,soil,0c4f54575c69e0c77105be10f0499deb,2124_0c4f54575c69e0c77105be10f0499deb,-121.25387,37.88985
+ossl,soil,soil,bbb98e88e4094f1333e48563ce3db03a,2128_bbb98e88e4094f1333e48563ce3db03a,-121.25387,37.88985
+ossl,soil,soil,6f7b1a46e2e0f06fa771edded8d88cb2,2337_6f7b1a46e2e0f06fa771edded8d88cb2,-121.54585,37.90353056
+ossl,soil,soil,03c33f0a35cd8cee45eb9876f654f649,0574_03c33f0a35cd8cee45eb9876f654f649,-118.3069444,37.52997222
+ossl,soil,soil,972f8272bd58aeef3353afb9b441d620,2824_972f8272bd58aeef3353afb9b441d620,-121.25387,37.88985
+ossl,soil,soil,e65d9329de8c0cfb88e22b924208f9bc,0581_e65d9329de8c0cfb88e22b924208f9bc,-118.2984167,37.52958333
+ossl,soil,soil,e65d9329de8c0cfb88e22b924208f9bc,0582_e65d9329de8c0cfb88e22b924208f9bc,-118.2984167,37.52958333
+ossl,soil,soil,408ac1e5b2b05b63e650bd356018b62c,0592_408ac1e5b2b05b63e650bd356018b62c,-103.50554,36.36978
+ossl,soil,soil,ac1c07673c6f140032b48dcbe80606b5,2825_ac1c07673c6f140032b48dcbe80606b5,-121.25387,37.88985
+ossl,soil,soil,74a1b82718be54e4b80753248eb72138,3138_74a1b82718be54e4b80753248eb72138,-121.25387,37.88985
+ossl,soil,soil,a40d37a106d493f724012adf230b5369,2826_a40d37a106d493f724012adf230b5369,-121.25387,37.88985
+ossl,soil,soil,537959887962e1bb18794965ad9f73dc,0593_537959887962e1bb18794965ad9f73dc,-103.50554,36.36978
+ossl,soil,soil,2a17cd3a45ed87c2f638afb4917b463b,0594_2a17cd3a45ed87c2f638afb4917b463b,-103.50554,36.36978
+ossl,soil,soil,8d25153bec94068872e2a5ff021e5ff7,2827_8d25153bec94068872e2a5ff021e5ff7,-121.25387,37.88985
+ossl,soil,soil,62255f5fe0a53c41867287a4970fa778,2828_62255f5fe0a53c41867287a4970fa778,-121.25387,37.88985
+ossl,soil,soil,77c69cb83752706defb1594a36777a0a,2829_77c69cb83752706defb1594a36777a0a,-121.25387,37.88985
+ossl,soil,soil,b1511e19c0e6c4e25cad5700f8f01db0,2830_b1511e19c0e6c4e25cad5700f8f01db0,-121.25387,37.88985
+ossl,soil,soil,a0ea4af0c78eed075bb0dfc18fd33cde,2831_a0ea4af0c78eed075bb0dfc18fd33cde,-121.25387,37.88985
+ossl,soil,soil,b75c7cbf7accdaea8a1a14781bb29870,2832_b75c7cbf7accdaea8a1a14781bb29870,-121.25387,37.88985
+ossl,soil,soil,62b96ea23ebf14eac4998ed26c3bdd3a,2823_62b96ea23ebf14eac4998ed26c3bdd3a,-121.25387,37.88985
+ossl,soil,soil,c845495e09b2ef4d634f8919f10298eb,2822_c845495e09b2ef4d634f8919f10298eb,-121.25387,37.88985
+ossl,soil,soil,e65d9329de8c0cfb88e22b924208f9bc,0580_e65d9329de8c0cfb88e22b924208f9bc,-118.2984167,37.52958333
+ossl,soil,soil,e65d9329de8c0cfb88e22b924208f9bc,0579_e65d9329de8c0cfb88e22b924208f9bc,-118.2984167,37.52958333
+ossl,soil,soil,652901ebfb11a3676763839aa0a4c33f,0575_652901ebfb11a3676763839aa0a4c33f,-118.3069722,37.52980556
+ossl,soil,soil,d37e00774187186b405ec1e9860769dd,2230_d37e00774187186b405ec1e9860769dd,-121.44443,38.37741
+ossl,soil,soil,429a0bbb07ba5dfc73526d4d927c14f5,2850_429a0bbb07ba5dfc73526d4d927c14f5,-121.25387,37.88985
+ossl,soil,soil,f6ceca33d1b135d285eed4fc2ea3d5ce,3135_f6ceca33d1b135d285eed4fc2ea3d5ce,-121.25387,37.88985
+ossl,soil,soil,c34ec4446ec715359dbb187316adf87d,3136_c34ec4446ec715359dbb187316adf87d,-121.25387,37.88985
+ossl,soil,soil,532efdb1130eee335d7e9bbf215e105d,3137_532efdb1130eee335d7e9bbf215e105d,-121.25387,37.88985
+ossl,soil,soil,d6c6324dd148d549020f3b9701dc82b6,2376_d6c6324dd148d549020f3b9701dc82b6,-120.76025,36.73186111
+ossl,soil,soil,03c33f0a35cd8cee45eb9876f654f649,0573_03c33f0a35cd8cee45eb9876f654f649,-118.3069444,37.52997222
+ossl,soil,soil,f6bc91368bc6cf63e667323516a58838,2816_f6bc91368bc6cf63e667323516a58838,-121.25387,37.88985
+ossl,soil,soil,fdb2ab7c6d32198281dca52d36a8ac52,2818_fdb2ab7c6d32198281dca52d36a8ac52,-121.25387,37.88985
+ossl,soil,soil,c838466c0795116810f82497405542c0,2819_c838466c0795116810f82497405542c0,-121.25387,37.88985
+ossl,soil,soil,4f02077f0bdafec23821544f7448e7e7,2820_4f02077f0bdafec23821544f7448e7e7,-121.25387,37.88985
+ossl,soil,soil,8c4967fa62628e93463f33c2bbd9ee53,2821_8c4967fa62628e93463f33c2bbd9ee53,-121.25387,37.88985
+ossl,soil,soil,652901ebfb11a3676763839aa0a4c33f,0576_652901ebfb11a3676763839aa0a4c33f,-118.3069722,37.52980556
+ossl,soil,soil,652901ebfb11a3676763839aa0a4c33f,0577_652901ebfb11a3676763839aa0a4c33f,-118.3069722,37.52980556
+ossl,soil,soil,652901ebfb11a3676763839aa0a4c33f,0578_652901ebfb11a3676763839aa0a4c33f,-118.3069722,37.52980556
+ossl,soil,soil,82d7223e6dcbb883984a867d8895ae3d,2817_82d7223e6dcbb883984a867d8895ae3d,-121.25387,37.88985
+ossl,soil,soil,8bc5b16d23c99998ce1d4e78db1d790d,2849_8bc5b16d23c99998ce1d4e78db1d790d,-121.25387,37.88985
+ossl,soil,soil,531a377c94fa56202dbb7fd47ae217f5,0368_531a377c94fa56202dbb7fd47ae217f5,-119.2343333,38.07298333
+ossl,soil,soil,a0ad3c5a5be5fb82bcbd1f81999c8e44,0480_a0ad3c5a5be5fb82bcbd1f81999c8e44,-101.05949,41.56855
+ossl,soil,soil,6a9bc111cc44d70f5ec67c3b4861a781,2841_6a9bc111cc44d70f5ec67c3b4861a781,-121.25387,37.88985
+ossl,soil,soil,30f67efc417a4bc6a03779f50c3f9e42,2840_30f67efc417a4bc6a03779f50c3f9e42,-121.25387,37.88985
+ossl,soil,soil,4fa0a772af3d8cbed04b9353414b867e,2065_4fa0a772af3d8cbed04b9353414b867e,-121.25387,37.88985
+ossl,soil,soil,5a1d406f604c8b1f0d2c90cb8dd2ead8,2064_5a1d406f604c8b1f0d2c90cb8dd2ead8,-121.25387,37.88985
+ossl,soil,soil,accc518d3a7ff21f1a99dc00802eabc3,2063_accc518d3a7ff21f1a99dc00802eabc3,-121.25387,37.88985
+ossl,soil,soil,c9e956b9b84879b82f2e9595e8ba646c,2062_c9e956b9b84879b82f2e9595e8ba646c,-121.44443,38.37741
+ossl,soil,soil,42d80d796b6cedd222371f7a49ab57a3,2061_42d80d796b6cedd222371f7a49ab57a3,-121.44443,38.37741
+ossl,soil,soil,2f6060bed5f35ff37c550d9fece2f7f4,2060_2f6060bed5f35ff37c550d9fece2f7f4,-121.44443,38.37741
+ossl,soil,soil,1d638ac8da31cd3744d01f4845651b57,2835_1d638ac8da31cd3744d01f4845651b57,-121.25387,37.88985
+ossl,soil,soil,2aae40fa19776a62585c6b60d091354f,2836_2aae40fa19776a62585c6b60d091354f,-121.25387,37.88985
+ossl,soil,soil,1bf4b10b058cd14143bf1c9caeb5fe83,0331_1bf4b10b058cd14143bf1c9caeb5fe83,-102.5644,37.31875
+ossl,soil,soil,1bf4b10b058cd14143bf1c9caeb5fe83,0330_1bf4b10b058cd14143bf1c9caeb5fe83,-102.5644,37.31875
+ossl,soil,soil,cc07c69313c4cd2e2f0835a8b3102964,1763_cc07c69313c4cd2e2f0835a8b3102964,-121.25387,37.88985
+ossl,soil,soil,f5f4e71442d14e731bba118040c71f95,2059_f5f4e71442d14e731bba118040c71f95,-121.44443,38.37741
+ossl,soil,soil,09ba4ece60053dac8e123d46564013f6,2066_09ba4ece60053dac8e123d46564013f6,-121.25387,37.88985
+ossl,soil,soil,69a733c61d551457493452cfb7dc9bf4,1764_69a733c61d551457493452cfb7dc9bf4,-121.25387,37.88985
+ossl,soil,soil,febb7687c71fc43bbadd84ae18bc8626,1766_febb7687c71fc43bbadd84ae18bc8626,-121.25387,37.88985
+ossl,soil,soil,7d7c6bd4c7fa42d65cdcea5d1015a8d8,1767_7d7c6bd4c7fa42d65cdcea5d1015a8d8,-121.25387,37.88985
+ossl,soil,soil,852feb2869e09463b5ef4e52ad95b592,1768_852feb2869e09463b5ef4e52ad95b592,-121.25387,37.88985
+ossl,soil,soil,fbfd3785c41f4978383f2a5754f33ea9,2058_fbfd3785c41f4978383f2a5754f33ea9,-121.44443,38.37741
+ossl,soil,soil,b358e92503cf5188cd92088bb9bae5af,1854_b358e92503cf5188cd92088bb9bae5af,-122.39744,39.59175
+ossl,soil,soil,34ec178317640c8d1b10a9499b9beee7,2050_34ec178317640c8d1b10a9499b9beee7,-121.44443,38.37741
+ossl,soil,soil,be23e6c046151497242954a8ee4af075,2051_be23e6c046151497242954a8ee4af075,-121.44443,38.37741
+ossl,soil,soil,7bfa8c7daeb32a14dad9fe1219be09a1,2052_7bfa8c7daeb32a14dad9fe1219be09a1,-121.44443,38.37741
+ossl,soil,soil,ca416134face5da7787471cdac2c9b5b,2057_ca416134face5da7787471cdac2c9b5b,-121.44443,38.37741
+ossl,soil,soil,31b003a626248a656aec183841b155a4,2839_31b003a626248a656aec183841b155a4,-121.25387,37.88985
+ossl,soil,soil,a1fde6b743bdfa3c9798536192b9143d,2053_a1fde6b743bdfa3c9798536192b9143d,-121.44443,38.37741
+ossl,soil,soil,f684e4c32e742e0684a5855544fcf09a,2054_f684e4c32e742e0684a5855544fcf09a,-121.44443,38.37741
+ossl,soil,soil,83a96dabe23ac6b68e65edc23e176787,2838_83a96dabe23ac6b68e65edc23e176787,-121.25387,37.88985
+ossl,soil,soil,2d3da83a2ea25a2a59858deb7ff9c68e,2837_2d3da83a2ea25a2a59858deb7ff9c68e,-121.25387,37.88985
+ossl,soil,soil,99bcc0670755b041dcd6365218643de3,1765_99bcc0670755b041dcd6365218643de3,-121.25387,37.88985
+ossl,soil,soil,db130fbef530f2a6d2b28dd886f21c83,2067_db130fbef530f2a6d2b28dd886f21c83,-121.25387,37.88985
+ossl,soil,soil,f4a6f35fb13c67d4da63ed5b394a25df,2068_f4a6f35fb13c67d4da63ed5b394a25df,-121.961535,38.61955
+ossl,soil,soil,5dbdfb006bfb96cb7115ce3a5a985171,2071_5dbdfb006bfb96cb7115ce3a5a985171,-121.25387,37.88985
+ossl,soil,soil,a79d4d4a0aee199f9ffaf11baed6f180,0479_a79d4d4a0aee199f9ffaf11baed6f180,-101.126165,42.542635
+ossl,soil,soil,531a377c94fa56202dbb7fd47ae217f5,0369_531a377c94fa56202dbb7fd47ae217f5,-119.2343333,38.07298333
+ossl,soil,soil,c56ff9d8e9a0bcc230f64f66f918f6f7,2848_c56ff9d8e9a0bcc230f64f66f918f6f7,-121.25387,37.88985
+ossl,soil,soil,1e4a05538195067d4921d32961fed71a,2056_1e4a05538195067d4921d32961fed71a,-121.44443,38.37741
+ossl,soil,soil,531a377c94fa56202dbb7fd47ae217f5,0367_531a377c94fa56202dbb7fd47ae217f5,-119.2343333,38.07298333
+ossl,soil,soil,531a377c94fa56202dbb7fd47ae217f5,0366_531a377c94fa56202dbb7fd47ae217f5,-119.2343333,38.07298333
+ossl,soil,soil,a00bbd2f5b5a06011e938f7810dfccbe,2847_a00bbd2f5b5a06011e938f7810dfccbe,-121.25387,37.88985
+ossl,soil,soil,c215aecec860b306f6b7a964dbee45e2,0341_c215aecec860b306f6b7a964dbee45e2,-102.5644,37.31875
+ossl,soil,soil,c215aecec860b306f6b7a964dbee45e2,0340_c215aecec860b306f6b7a964dbee45e2,-102.5644,37.31875
+ossl,soil,soil,c215aecec860b306f6b7a964dbee45e2,0339_c215aecec860b306f6b7a964dbee45e2,-102.5644,37.31875
+ossl,soil,soil,18e52f13d6ae1af3b71b039721212b7b,2846_18e52f13d6ae1af3b71b039721212b7b,-121.25387,37.88985
+ossl,soil,soil,f921262f703431d377b919265c9bdaec,2845_f921262f703431d377b919265c9bdaec,-121.25387,37.88985
+ossl,soil,soil,99ebf946b5222e5150cd00a91d8e0d20,2844_99ebf946b5222e5150cd00a91d8e0d20,-121.25387,37.88985
+ossl,soil,soil,c215aecec860b306f6b7a964dbee45e2,0338_c215aecec860b306f6b7a964dbee45e2,-102.5644,37.31875
+ossl,soil,soil,d742f6d82d31615ed9aa4d351d1c0d6d,0337_d742f6d82d31615ed9aa4d351d1c0d6d,-102.5644,37.31875
+ossl,soil,soil,d742f6d82d31615ed9aa4d351d1c0d6d,0336_d742f6d82d31615ed9aa4d351d1c0d6d,-102.5644,37.31875
+ossl,soil,soil,d742f6d82d31615ed9aa4d351d1c0d6d,0335_d742f6d82d31615ed9aa4d351d1c0d6d,-102.5644,37.31875
+ossl,soil,soil,2abf112a6d77457fd3c50ae06d484e5c,2072_2abf112a6d77457fd3c50ae06d484e5c,-121.25387,37.88985
+ossl,soil,soil,e09a0e54ea7bbef9987e45352111f433,2073_e09a0e54ea7bbef9987e45352111f433,-121.25387,37.88985
+ossl,soil,soil,1bf4b10b058cd14143bf1c9caeb5fe83,0332_1bf4b10b058cd14143bf1c9caeb5fe83,-102.5644,37.31875
+ossl,soil,soil,0d6139fdbc7238dbf14cc1997b83ce58,2074_0d6139fdbc7238dbf14cc1997b83ce58,-121.25387,37.88985
+ossl,soil,soil,1bf4b10b058cd14143bf1c9caeb5fe83,0333_1bf4b10b058cd14143bf1c9caeb5fe83,-102.5644,37.31875
+ossl,soil,soil,754ded87195c267f7fe891cf33c9feb6,2075_754ded87195c267f7fe891cf33c9feb6,-121.25387,37.88985
+ossl,soil,soil,f18dbc0a1610fc1a119b7bb0dd8598ce,0482_f18dbc0a1610fc1a119b7bb0dd8598ce,-99.41182,40.51832
+ossl,soil,soil,99cc801d75cb19bfa907b4bc028dba4f,2076_99cc801d75cb19bfa907b4bc028dba4f,-121.25387,37.88985
+ossl,soil,soil,f424f9965bf47fb3742b6ff8999379fc,2119_f424f9965bf47fb3742b6ff8999379fc,-121.25387,37.88985
+ossl,soil,soil,f08967bd69e6a2764959ceeb70083c18,2120_f08967bd69e6a2764959ceeb70083c18,-121.25387,37.88985
+ossl,soil,soil,111c15bbb930192d179bea4cfe9aabe1,2834_111c15bbb930192d179bea4cfe9aabe1,-121.25387,37.88985
+ossl,soil,soil,d71cf28fa6dacdde49efd30a39491ece,2842_d71cf28fa6dacdde49efd30a39491ece,-121.25387,37.88985
+ossl,soil,soil,fdf189866392d55563da638d213039ff,2843_fdf189866392d55563da638d213039ff,-121.25387,37.88985
+ossl,soil,soil,d742f6d82d31615ed9aa4d351d1c0d6d,0334_d742f6d82d31615ed9aa4d351d1c0d6d,-102.5644,37.31875
+ossl,soil,soil,22eb494ae76102d28daf1f24c982452b,2077_22eb494ae76102d28daf1f24c982452b,-122.39744,39.59175
+ossl,soil,soil,5b08739fe3bcd5e8977d6f50ea2f407f,2833_5b08739fe3bcd5e8977d6f50ea2f407f,-121.25387,37.88985
+ossl,soil,soil,bf8d1b29cffe6e5d567a9b2b18bcb370,1688_bf8d1b29cffe6e5d567a9b2b18bcb370,-120.65035,37.18687
+ossl,soil,soil,5b096e40ae8b1b13416b0f995e175853,1762_5b096e40ae8b1b13416b0f995e175853,-121.25387,37.88985
+ossl,soil,soil,f260239ec67cd27244b331f247df08bb,1115_f260239ec67cd27244b331f247df08bb,-113.192945,38.361885
+ossl,soil,soil,9e8da6d0403cd5a61a3b86eb755d606b,2324_9e8da6d0403cd5a61a3b86eb755d606b,-113.64271,35.6053
+ossl,soil,soil,4953d02f5f8867ec9997d7d0348fe421,2323_4953d02f5f8867ec9997d7d0348fe421,-109.52295,35.23749
+ossl,soil,soil,5b395b01736651a45992d28fb1d22749,2321_5b395b01736651a45992d28fb1d22749,-108.62913,32.055005
+ossl,soil,soil,ef88a9ba99af7706e3e80e418f482e0a,2319_ef88a9ba99af7706e3e80e418f482e0a,-111.326045,32.98365
+ossl,soil,soil,a16d4dac876c707865562a25bbbaa10a,1116_a16d4dac876c707865562a25bbbaa10a,-113.192945,38.361885
+ossl,soil,soil,751aba6c2e6c52a659661171026ceef3,2325_751aba6c2e6c52a659661171026ceef3,-113.64271,35.6053
+ossl,soil,soil,99a995ffeb8f5182787abf380ba37fd2,2306_99a995ffeb8f5182787abf380ba37fd2,-109.52295,35.23749
+ossl,soil,soil,1fbef901b970a4dc580d55b6628a85ea,2295_1fbef901b970a4dc580d55b6628a85ea,-113.64271,35.6053
+ossl,soil,soil,fe3a9ef1bfa9a92bb74e69aa35cf4ddb,1117_fe3a9ef1bfa9a92bb74e69aa35cf4ddb,-113.192945,38.361885
+ossl,soil,soil,a6114a34b8d98577284cc7142d76854d,2287_a6114a34b8d98577284cc7142d76854d,-113.64271,35.6053
+ossl,soil,soil,a4ec060c82545f0534d4a63ff9e95b7e,2236_a4ec060c82545f0534d4a63ff9e95b7e,-115.96705,34.839965
+ossl,soil,soil,29572f3990c8278f3d2138da53885bc6,2234_29572f3990c8278f3d2138da53885bc6,-116.05562,33.752885
+ossl,soil,soil,cde6fcd0fe7d40f4d0a8dce57a0d3f75,2159_cde6fcd0fe7d40f4d0a8dce57a0d3f75,-115.3548056,36.43408333
+ossl,soil,soil,fd1764f21ce533cc362d9938d39b5d6e,2300_fd1764f21ce533cc362d9938d39b5d6e,-113.64271,35.6053
+ossl,soil,soil,246ab448e1106d1e73238e5a477f65d8,2069_246ab448e1106d1e73238e5a477f65d8,-115.28458,33.0262
+ossl,soil,soil,b2a7476dd57f82a9bb0c2d88eee60c7a,2326_b2a7476dd57f82a9bb0c2d88eee60c7a,-111.326045,32.98365
+ossl,soil,soil,b25cdd5f2416a279e04ebd9b6c9c18c5,2329_b25cdd5f2416a279e04ebd9b6c9c18c5,-108.327895,32.53667
+ossl,soil,soil,c30f0a9586d0f2f7cbb13ebfa943dd18,2333_c30f0a9586d0f2f7cbb13ebfa943dd18,-108.62913,32.055005
+ossl,soil,soil,d1189a6e530de53bd545ae83f266820c,1051_d1189a6e530de53bd545ae83f266820c,-101.05588,39.35065
+ossl,soil,soil,4205631c9c5730b9e4fec8f4c092d3f4,1104_4205631c9c5730b9e4fec8f4c092d3f4,-102.5326333,33.77298056
+ossl,soil,soil,97b617208bd1cd250cf5d578030ec2f6,1105_97b617208bd1cd250cf5d578030ec2f6,-102.5327222,33.77305556
+ossl,soil,soil,2a239e174a1443f8a4b19036e55fa5b1,1106_2a239e174a1443f8a4b19036e55fa5b1,-102.5326667,33.77305556
+ossl,soil,soil,86948033a74e774459dde8dc3ec8f7ce,1107_86948033a74e774459dde8dc3ec8f7ce,-102.5326111,33.77305556
+ossl,soil,soil,22b31b63c6eddd95e74e79a961f7fa1f,2328_22b31b63c6eddd95e74e79a961f7fa1f,-107.170505,33.042615
+ossl,soil,soil,c8e2579de5d5cbea8528f1006c5de2dc,1108_c8e2579de5d5cbea8528f1006c5de2dc,-102.4064528,33.05895
+ossl,soil,soil,2c9dbd893c2e35d8baea530bba2ff926,1110_2c9dbd893c2e35d8baea530bba2ff926,-102.4065,33.059
+ossl,soil,soil,54b590be2af984f6865daa11ab6f05ea,1111_54b590be2af984f6865daa11ab6f05ea,-102.4064722,33.05902778
+ossl,soil,soil,397522f6e273891919e90ff5f536334f,1113_397522f6e273891919e90ff5f536334f,-112.81631,39.663055
+ossl,soil,soil,bcf18c27b9473fb32cd0c1d73cc09428,2332_bcf18c27b9473fb32cd0c1d73cc09428,-111.89071,31.970135
+ossl,soil,soil,680c84f58f1c02ed0af19ef5b8c1899b,2330_680c84f58f1c02ed0af19ef5b8c1899b,-112.18717,33.27653
+ossl,soil,soil,97f7ffc895cd5ec8e787e65de72a17db,1114_97f7ffc895cd5ec8e787e65de72a17db,-112.81631,39.663055
+ossl,soil,soil,b7490cbbbd5cfd081d8ec1930914a677,1109_b7490cbbbd5cfd081d8ec1930914a677,-102.4065278,33.05897222
+ossl,soil,soil,78c9694b03af0188f572416c29f6ac36,1851_78c9694b03af0188f572416c29f6ac36,-116.2133083,33.21383056
+ossl,soil,soil,14981488235df29c0db87fb7aa15f65b,1850_14981488235df29c0db87fb7aa15f65b,-116.0913889,33.28555556
+ossl,soil,soil,17f2f4c9ffeb947152d485d752234a51,1849_17f2f4c9ffeb947152d485d752234a51,-116.1818889,33.16158333
+ossl,soil,soil,5c37abb0c3b15f9de5dd203efbf0dc6e,1712_5c37abb0c3b15f9de5dd203efbf0dc6e,-114.3089028,38.90601111
+ossl,soil,soil,8beaa78a86f38c137977270b39fbc98f,1704_8beaa78a86f38c137977270b39fbc98f,-114.3499028,38.89215
+ossl,soil,soil,eef87eff6c5bbf45001c0cec6cb05933,1703_eef87eff6c5bbf45001c0cec6cb05933,-114.3098028,39.00997222
+ossl,soil,soil,431d2bbc56ccca089d027f8e7ed5c04e,1664_431d2bbc56ccca089d027f8e7ed5c04e,-106.820075,32.418155
+ossl,soil,soil,27e538ed23bd3a0aab29792b6e0171e0,1658_27e538ed23bd3a0aab29792b6e0171e0,-109.52295,35.23749
+ossl,soil,soil,b61b5fcc84440ac40e81ca196d9b0b6e,1656_b61b5fcc84440ac40e81ca196d9b0b6e,-109.52295,35.23749
+ossl,soil,soil,da54e1c0378522514951e85e891cb2de,1713_da54e1c0378522514951e85e891cb2de,-114.177375,39.02080278
+ossl,soil,soil,5972349075a7c90049cfa845035b7ee5,1625_5972349075a7c90049cfa845035b7ee5,-105.023885,36.008305
+ossl,soil,soil,597627cd1aa1aabf2c1a95e73166a1c2,1529_597627cd1aa1aabf2c1a95e73166a1c2,-101.69724,40.52473
+ossl,soil,soil,6113dd6db6f606f145b6cbfc40176f5a,1508_6113dd6db6f606f145b6cbfc40176f5a,-103.77996,38.317855
+ossl,soil,soil,1935652b5eb49521a98addc236582be6,1500_1935652b5eb49521a98addc236582be6,-98.975995,41.220515
+ossl,soil,soil,38836c04f12c17986f83ef2ba7a53552,1486_38836c04f12c17986f83ef2ba7a53552,-105.8806,34.650925
+ossl,soil,soil,672f4a7993c417199ffa889f84f93a43,1423_672f4a7993c417199ffa889f84f93a43,-119.586935,40.58071
+ossl,soil,soil,300d0a259af94ac322cf9497f29aff45,3139_300d0a259af94ac322cf9497f29aff45,-121.25387,37.88985
+ossl,soil,soil,d6eab33032ebeb4e1f8a5891a29427df,1578_d6eab33032ebeb4e1f8a5891a29427df,-101.52165,31.365395
+ossl,soil,soil,b8b4e5f90c31944cc43fdadfd87bcd00,1780_b8b4e5f90c31944cc43fdadfd87bcd00,-100.850565,37.192935
+ossl,soil,soil,f6fdc0eb96eda02dfe3fe8573dbb5467,1840_f6fdc0eb96eda02dfe3fe8573dbb5467,-115.3050444,33.80219167
+ossl,soil,soil,12f4db557d4f9ab0c8f23bc53f0a58a2,1391_12f4db557d4f9ab0c8f23bc53f0a58a2,-115.28458,33.0262
+ossl,soil,soil,1d24ada5c5adf6be61f8b3760c354723,1118_1d24ada5c5adf6be61f8b3760c354723,-113.192945,38.361885
+ossl,soil,soil,28b934d12e06cf101026d2492c6ddf74,1234_28b934d12e06cf101026d2492c6ddf74,-101.3425472,35.12170833
+ossl,soil,soil,e9313ef27efd249e1f2ae40994ed5f72,1235_e9313ef27efd249e1f2ae40994ed5f72,-101.3426111,35.12172222
+ossl,soil,soil,604f6c6777d3485fd6073c202efed784,1236_604f6c6777d3485fd6073c202efed784,-101.3426139,35.12176944
+ossl,soil,soil,6cc0789098d13bbcd5b20bc504cf16e9,1841_6cc0789098d13bbcd5b20bc504cf16e9,-115.1671139,34.67228333
+ossl,soil,soil,aa1d68bdedbafbf4b4be59f1fb29051f,1237_aa1d68bdedbafbf4b4be59f1fb29051f,-101.3425639,35.12177222
+ossl,soil,soil,4135e89c3138834f30906c929a4f95c9,1249_4135e89c3138834f30906c929a4f95c9,-111.5334722,35.36097222
+ossl,soil,soil,e7569acb62d3c5fe5a734187d1b2901c,1250_e7569acb62d3c5fe5a734187d1b2901c,-111.5295556,35.54313889
+ossl,soil,soil,503866b3d385b7e7398be430763cdf71,1251_503866b3d385b7e7398be430763cdf71,-111.51525,35.57747222
+ossl,soil,soil,2a15c7daff76569445c2c8043f627d78,1252_2a15c7daff76569445c2c8043f627d78,-111.4436389,35.57744444
+ossl,soil,soil,e86b6bde427b52ebb83c5aeef9ec62ff,1296_e86b6bde427b52ebb83c5aeef9ec62ff,-104.6372556,32.05138611
+ossl,soil,soil,33bba5930705802a4791cb6967ef9c10,1297_33bba5930705802a4791cb6967ef9c10,-104.6372361,32.05128611
+ossl,soil,soil,356c81a9c4a917f99b35cc2692f6de9e,1298_356c81a9c4a917f99b35cc2692f6de9e,-104.6727028,32.10754167
+ossl,soil,soil,d40a8d6d7f644445c3cf53c1ba9a414a,1385_d40a8d6d7f644445c3cf53c1ba9a414a,-101.316085,38.00027
+ossl,soil,soil,fb442a93123799a70303a4bac5d3d94e,1390_fb442a93123799a70303a4bac5d3d94e,-100.476975,40.176505
+ossl,soil,soil,51109ddcafbf428ec0691a13f3044678,2334_51109ddcafbf428ec0691a13f3044678,-108.62913,32.055005
+ossl,soil,soil,0f0a46923fe371945d00aff58b3e218a,0609_0f0a46923fe371945d00aff58b3e218a,-102.34569,33.606725
+ossl,soil,soil,6fbb06a225065829f3aed7d9c861995c,2335_6fbb06a225065829f3aed7d9c861995c,-111.89071,31.970135
+ossl,soil,soil,50685788ee96a207ab8e1b536cd4e09d,2369_50685788ee96a207ab8e1b536cd4e09d,-108.327895,32.53667
+ossl,soil,soil,137f0a5de269001ff173f86f6f2adfa9,1754_137f0a5de269001ff173f86f6f2adfa9,-121.25387,37.88985
+ossl,soil,soil,35708d450ef1e5cb594bcc757c45796d,1753_35708d450ef1e5cb594bcc757c45796d,-121.25387,37.88985
+ossl,soil,soil,8f1beaaf070724447e2e677bcf3cf299,1752_8f1beaaf070724447e2e677bcf3cf299,-121.25387,37.88985
+ossl,soil,soil,bd6b74b9d261511238237b7e521e1b62,1751_bd6b74b9d261511238237b7e521e1b62,-121.25387,37.88985
+ossl,soil,soil,d00c6ccf7093bca0fbeb161823f193b6,1750_d00c6ccf7093bca0fbeb161823f193b6,-121.25387,37.88985
+ossl,soil,soil,ef9af9d488a881512e17e5463eca29f0,1749_ef9af9d488a881512e17e5463eca29f0,-121.25387,37.88985
+ossl,soil,soil,e6a0b506c2ee4bc207e3051c1a4df347,0955_e6a0b506c2ee4bc207e3051c1a4df347,-101.48886,36.7487
+ossl,soil,soil,ae934d990bb6f14c6df3c2c2ab9f5448,1748_ae934d990bb6f14c6df3c2c2ab9f5448,-121.25387,37.88985
+ossl,soil,soil,32b5f69aa205e9fd41756f753e91a1f2,1746_32b5f69aa205e9fd41756f753e91a1f2,-121.25387,37.88985
+ossl,soil,soil,1f4d65025f3483a4298211cebdca571f,1745_1f4d65025f3483a4298211cebdca571f,-121.25387,37.88985
+ossl,soil,soil,978f458cf124defc615164067eb4f8e9,1744_978f458cf124defc615164067eb4f8e9,-121.25387,37.88985
+ossl,soil,soil,2e5663190c8682fd9d30fd0fb7d42f41,1743_2e5663190c8682fd9d30fd0fb7d42f41,-121.25387,37.88985
+ossl,soil,soil,cccdeb5ebcd019d1b4985fb5adf5bdee,1742_cccdeb5ebcd019d1b4985fb5adf5bdee,-121.25387,37.88985
+ossl,soil,soil,6063044686185eb2b8f1c28095c4a3d1,1741_6063044686185eb2b8f1c28095c4a3d1,-121.25387,37.88985
+ossl,soil,soil,798ca8e08a3b6ee20e4bcfec047b34a6,1747_798ca8e08a3b6ee20e4bcfec047b34a6,-121.25387,37.88985
+ossl,soil,soil,6f78b0d1c4d7963d6dce6644e717ac2f,1740_6f78b0d1c4d7963d6dce6644e717ac2f,-121.25387,37.88985
+ossl,soil,soil,8434d10505a3c6757b420c228c09917c,0661_8434d10505a3c6757b420c228c09917c,-106.82525,34.027925
+ossl,soil,soil,d6f9622ea759024a57b87694cc2ee593,0659_d6f9622ea759024a57b87694cc2ee593,-106.82525,34.027925
+ossl,soil,soil,82c84e849b48654f188916b5f2c5764b,1761_82c84e849b48654f188916b5f2c5764b,-121.25387,37.88985
+ossl,soil,soil,18f8e79f22bfc726b2ca7ae5300a02be,1760_18f8e79f22bfc726b2ca7ae5300a02be,-121.25387,37.88985
+ossl,soil,soil,001c10d28e514c413b461eae83abdb4b,0647_001c10d28e514c413b461eae83abdb4b,-106.82525,34.027925
+ossl,soil,soil,773c0dac2ce5cbc77cc4f2f3602a173d,1759_773c0dac2ce5cbc77cc4f2f3602a173d,-121.25387,37.88985
+ossl,soil,soil,ecfaf27832aa24e4a6949bdf15acd1b6,1758_ecfaf27832aa24e4a6949bdf15acd1b6,-121.25387,37.88985
+ossl,soil,soil,802ffe1c2711c5643edd92090fdee036,0648_802ffe1c2711c5643edd92090fdee036,-106.82525,34.027925
+ossl,soil,soil,51defdbe0faa1d5b13a5855b19453dca,0660_51defdbe0faa1d5b13a5855b19453dca,-106.82525,34.027925
+ossl,soil,soil,fb142eb4eb2612b01f5c4d39f897638f,0649_fb142eb4eb2612b01f5c4d39f897638f,-106.82525,34.027925
+ossl,soil,soil,916c59992a25bbf4f3d72fabd9b5adce,0650_916c59992a25bbf4f3d72fabd9b5adce,-106.82525,34.027925
+ossl,soil,soil,9b7c5d523c210b335395f7a7698a565d,1756_9b7c5d523c210b335395f7a7698a565d,-121.25387,37.88985
+ossl,soil,soil,463ae8c64a8d7318129828b7570b4eeb,1755_463ae8c64a8d7318129828b7570b4eeb,-121.25387,37.88985
+ossl,soil,soil,41e9c697b36c6b038a95c7139e59fde3,0651_41e9c697b36c6b038a95c7139e59fde3,-106.82525,34.027925
+ossl,soil,soil,850c816bff99d955a9924f0105ad9827,0657_850c816bff99d955a9924f0105ad9827,-106.82525,34.027925
+ossl,soil,soil,ff18a48525fc0d783844ac5287b868ac,0658_ff18a48525fc0d783844ac5287b868ac,-106.82525,34.027925
+ossl,soil,soil,7de9dde6aaeb68d17aca0d206a4be336,1757_7de9dde6aaeb68d17aca0d206a4be336,-121.25387,37.88985
+ossl,soil,soil,c2d9bd985df122ea1d115b5226e377cb,1739_c2d9bd985df122ea1d115b5226e377cb,-121.25387,37.88985
+ossl,soil,soil,e4e443c66e6d298a308fc14c76339de7,0956_e4e443c66e6d298a308fc14c76339de7,-103.49645,34.087555
+ossl,soil,soil,deab7c87f4bff3dd50723b45b2032910,0957_deab7c87f4bff3dd50723b45b2032910,-101.23003,29.763175
+ossl,soil,soil,5d6f7cd1b5c229ddb4ec9b04a3e431bb,3462_5d6f7cd1b5c229ddb4ec9b04a3e431bb,-97.57722222,40.10195
+ossl,soil,soil,c14c6145cfc86c8346539aaf00fce094,3461_c14c6145cfc86c8346539aaf00fce094,-97.57736111,40.10197778
+ossl,soil,soil,b3e9662e233df47d338b14106368434c,3236_b3e9662e233df47d338b14106368434c,-100.4482444,39.20793333
+ossl,soil,soil,faa20f89c422cb778741bd0bb3e8f3d1,3121_faa20f89c422cb778741bd0bb3e8f3d1,-118.2820278,37.52666667
+ossl,soil,soil,01908a7ac50cd80bf536735910cac3f2,2980_01908a7ac50cd80bf536735910cac3f2,-112.4538139,40.17833889
+ossl,soil,soil,971f0776e7f046c8f9f70fe2bfab6af0,2904_971f0776e7f046c8f9f70fe2bfab6af0,-105.9859722,33.82658333
+ossl,soil,soil,4b9ba2f68a9dc0b7881f114e75685b15,3463_4b9ba2f68a9dc0b7881f114e75685b15,-97.57839167,40.10221111
+ossl,soil,soil,65b0f7b8049aff726c14e4e3894b76f8,2577_65b0f7b8049aff726c14e4e3894b76f8,-115.3462222,35.20372222
+ossl,soil,soil,69ee2a0a972443ca8f3abc60023d1c96,2575_69ee2a0a972443ca8f3abc60023d1c96,-115.2216417,35.23674722
+ossl,soil,soil,1a1a4a67edcd2cf0f208661de0afd901,2574_1a1a4a67edcd2cf0f208661de0afd901,-115.9592361,35.19873056
+ossl,soil,soil,90a89603bce2776fb3bd694903f0cd1b,2573_90a89603bce2776fb3bd694903f0cd1b,-116.0675278,35.14510278
+ossl,soil,soil,5bba8812f1914b63f99f330db6c6a0d5,2387_5bba8812f1914b63f99f330db6c6a0d5,-103.433805,32.78542
+ossl,soil,soil,858a2be748405d1cf063e97622abc791,1050_858a2be748405d1cf063e97622abc791,-102.394725,37.956165
+ossl,soil,soil,2b6ae6b0d41e8d863c9e7bd08f106328,2370_2b6ae6b0d41e8d863c9e7bd08f106328,-110.288705,35.285745
+ossl,soil,soil,473b0f8ca8a1699add03ec906143b29a,2576_473b0f8ca8a1699add03ec906143b29a,-115.3539444,35.14969444
+ossl,soil,soil,e40f6ea50db43e8dfff59dddb746e712,3464_e40f6ea50db43e8dfff59dddb746e712,-97.57857222,40.10223611
+ossl,soil,soil,360b37b93763a9b2b0bcde1d66f07013,3465_360b37b93763a9b2b0bcde1d66f07013,-97.57860278,40.10198611
+ossl,soil,soil,f7f7918593dc31534f525c24a71e3c74,1097_f7f7918593dc31534f525c24a71e3c74,-110.4916611,40.09116944
+ossl,soil,soil,b05a7a5c64a7b3683f86e5a82acded21,1037_b05a7a5c64a7b3683f86e5a82acded21,-103.7145,41.19801
+ossl,soil,soil,d9f2c8bd32befd0b0a1abd220a6cf8ad,1738_d9f2c8bd32befd0b0a1abd220a6cf8ad,-121.25387,37.88985
+ossl,soil,soil,042299d9de4dae3b82073c165a1041e7,1737_042299d9de4dae3b82073c165a1041e7,-121.25387,37.88985
+ossl,soil,soil,4e4c5110b62a1b268cf8e4e2f74265c5,1736_4e4c5110b62a1b268cf8e4e2f74265c5,-121.25387,37.88985
+ossl,soil,soil,4679a41c71fd74652a8bd8d4842310d8,1735_4679a41c71fd74652a8bd8d4842310d8,-121.25387,37.88985
+ossl,soil,soil,ca70cd053f8f9c1d5f4292da1e5983ff,1734_ca70cd053f8f9c1d5f4292da1e5983ff,-121.25387,37.88985
+ossl,soil,soil,729309644877acfb8dd4fd3587028ed1,1733_729309644877acfb8dd4fd3587028ed1,-121.25387,37.88985
+ossl,soil,soil,bf075a2e5050f9fb0e8c0726f9a6e082,1732_bf075a2e5050f9fb0e8c0726f9a6e082,-121.25387,37.88985
+ossl,soil,soil,b479c8d55e1b4da66cf94da821603925,1731_b479c8d55e1b4da66cf94da821603925,-121.25387,37.88985
+ossl,soil,soil,95ec542f0dcae37a45422236452db6fe,1730_95ec542f0dcae37a45422236452db6fe,-121.25387,37.88985
+ossl,soil,soil,44dce9bdff3ea067f7e51533e6c199b4,1646_44dce9bdff3ea067f7e51533e6c199b4,-121.961535,38.61955
+ossl,soil,soil,9809dbbb12ece8e06e3c948bff65e587,1527_9809dbbb12ece8e06e3c948bff65e587,-121.25387,37.88985
+ossl,soil,soil,0949baaf0ec2674bbe7f30c4972319a8,1495_0949baaf0ec2674bbe7f30c4972319a8,-121.961535,38.61955
+ossl,soil,soil,a4b8ce1d9d08d9c4b7a51281d769c745,1392_a4b8ce1d9d08d9c4b7a51281d769c745,-121.25387,37.88985
+ossl,soil,soil,410f1e08cb899850a1baca7bbc8432ad,1387_410f1e08cb899850a1baca7bbc8432ad,-119.63966,36.746375
+ossl,soil,soil,5e32a7c283f522cdb472f07a7504313c,2368_5e32a7c283f522cdb472f07a7504313c,-108.327895,32.53667
+ossl,soil,soil,113dcb50e06651fc39547257eb949794,3140_113dcb50e06651fc39547257eb949794,-121.25387,37.88985
+DP,soil,,,DP0032_l1_00_soil,-120.4578167,34.53751
+ossl,soil,soil,74d60b01b278d4b18d24671af4cee497,3142_74d60b01b278d4b18d24671af4cee497,-121.25387,37.88985
+pilot-2,soil,ENTISOLS,IL-CL-000-00203,IL-CL-000-00203,34.45048889,31.31366944
+pilot-2,soil,ENTISOLS,IL-CL-020-00204,IL-CL-020-00204,34.45048889,31.31366944
+pilot-2,soil,ENTISOLS,IL-CL-050-00205,IL-CL-050-00205,34.45048889,31.31366944
+ossl,soil,soil,65f929d77ace58c254700c1d65efb707,0329_65f929d77ace58c254700c1d65efb707,-102.5644,37.31875
+pilot-2,soil,ENTISOLS,IL-CL-080-00206,IL-CL-080-00206,34.45048889,31.31366944
+pilot-2,soil,ENTISOLS,IL-CL-000-00207,IL-CL-000-00207,34.450325,31.31384722
+pilot-2,soil,ENTISOLS,IL-CL-020-00208,IL-CL-020-00208,34.450325,31.31384722
+pilot-2,soil,ENTISOLS,IL-CL-050-00209,IL-CL-050-00209,34.450325,31.31384722
+pilot-2,soil,ENTISOLS,IL-CL-080-00210,IL-CL-080-00210,34.450325,31.31384722
+pilot-2,soil,ENTISOLS,IL-CL-000-00211,IL-CL-000-00211,34.45866389,31.31776389
+pilot-2,soil,ENTISOLS,IL-CL-020-00212,IL-CL-020-00212,34.45866389,31.31776389
+pilot-2,soil,ENTISOLS,IL-CL-050-00213,IL-CL-050-00213,34.45866389,31.31776389
+pilot-2,soil,ENTISOLS,IL-CL-080-00214,IL-CL-080-00214,34.45866389,31.31776389
+pilot-2,soil,ENTISOLS,IL-CL-000-00215,IL-CL-000-00215,34.35651111,31.193
+pilot-2,soil,ENTISOLS,IL-VR-160-00193,IL-VR-160-00193,34.6102346,31.61769571
+pilot-2,soil,ENTISOLS,IL-CL-020-00216,IL-CL-020-00216,34.35651111,31.193
+SR,soil,,,SR0000_l3_14_soil,-120.03415,34.69300667
+SR,soil,,,SR0000_l3_13_soil,-120.0341183,34.693025
+SR,soil,,,SR0000_l3_12_soil,-120.0340183,34.69302833
+SR,soil,,,SR0000_l3_10_soil,-120.0338617,34.69302333
+SR,soil,,,SR0000_l2_15_soil,-120.0336533,34.69257
+SR,soil,,,SR0000_l1_14_soil,-120.03364,34.69343333
+SR,soil,,,SR0000_l2_13_soil,-120.0337033,34.69269
+SR,soil,,,SR0000_l2_12_soil,-120.0338017,34.69279167
+SR,soil,,,SR0000_l2_11_soil,-120.0338067,34.692815
+SR,soil,,,SR0000_l2_10_soil,-120.0338367,34.692925
+SR,soil,,,SR0000_l1_18_soil,-120.03378,34.69315167
+SR,soil,,,SR0000_l1_17_soil,-120.0337733,34.69320833
+SR,soil,,,SR0000_l1_16_soil,-120.0337183,34.693325
+SR,soil,,,SR0000_l1_15_soil,-120.0336733,34.69337667
+SR,soil,,,SR0000_l3_15_soil,-120.0342083,34.69300833
+SR,soil,,,SR0000_l1_13_soil,-120.0335833,34.69347333
+pilot-2,soil,ENTISOLS,IL-VR-110-00192,IL-VR-110-00192,34.6102346,31.61769571
+pilot-2,soil,ENTISOLS,IL-VR-050-00190,IL-VR-050-00190,34.6102346,31.61769571
+pilot-2,soil,INCEPTISOLS,IL-VR-020-00160,IL-VR-020-00160,34.61718685,31.60167529
+pilot-2,soil,INCEPTISOLS,IL-VR-060-00161,IL-VR-060-00161,34.61718685,31.60167529
+pilot-2,soil,INCEPTISOLS,IL-VR-100-00162,IL-VR-100-00162,34.61718685,31.60167529
+pilot-2,soil,INCEPTISOLS,IL-VR-140-00163,IL-VR-140-00163,34.61718685,31.60167529
+pilot-2,soil,INCEPTISOLS,IL-VR-160-00164,IL-VR-160-00164,34.61718685,31.60167529
+pilot-2,soil,INCEPTISOLS,IL-VR-200-00165,IL-VR-200-00165,34.61718685,31.60167529
+pilot-2,soil,VERTISOLS,IL-VR-020-00166,IL-VR-020-00166,34.61687,31.6014
+pilot-2,soil,VERTISOLS,IL-VR-050-00167,IL-VR-050-00167,34.61687,31.6014
+pilot-2,soil,VERTISOLS,IL-VR-090-00168,IL-VR-090-00168,34.61687,31.6014
+pilot-2,soil,VERTISOLS,IL-VR-160-00169,IL-VR-160-00169,34.61687,31.6014
+pilot-2,soil,VERTISOLS,IL-VR-200-00170,IL-VR-200-00170,34.61687,31.6014
+pilot-2,soil,INCEPTISOLS,IL-VR-010-00171,IL-VR-010-00171,34.59862227,31.5885106
+pilot-2,soil,INCEPTISOLS,IL-VR-040-00172,IL-VR-040-00172,34.59862227,31.5885106
+pilot-2,soil,INCEPTISOLS,IL-VR-070-00173,IL-VR-070-00173,34.59862227,31.5885106
+pilot-2,soil,ENTISOLS,IL-VR-080-00191,IL-VR-080-00191,34.6102346,31.61769571
+pilot-2,soil,INCEPTISOLS,IL-VR-100-00174,IL-VR-100-00174,34.59862227,31.5885106
+pilot-2,soil,INCEPTISOLS,IL-VR-040-00176,IL-VR-040-00176,34.598627,31.58778914
+pilot-2,soil,INCEPTISOLS,IL-VR-070-00177,IL-VR-070-00177,34.598627,31.58778914
+pilot-2,soil,INCEPTISOLS,IL-VR-100-00178,IL-VR-100-00178,34.598627,31.58778914
+pilot-2,soil,INCEPTISOLS,IL-VR-150-00179,IL-VR-150-00179,34.598627,31.58778914
+pilot-2,soil,ENTISOLS,IL-VR-020-00180,IL-VR-020-00180,34.62573669,31.61614449
+pilot-2,soil,ENTISOLS,IL-VR-040-00181,IL-VR-040-00181,34.62573669,31.61614449
+pilot-2,soil,ENTISOLS,IL-VR-060-00182,IL-VR-060-00182,34.62573669,31.61614449
+pilot-2,soil,ENTISOLS,IL-VR-100-00183,IL-VR-100-00183,34.62573669,31.61614449
+pilot-2,soil,ENTISOLS,IL-VR-140-00184,IL-VR-140-00184,34.62573669,31.61614449
+pilot-2,soil,VERTISOLS,IL-VR-020-00185,IL-VR-020-00185,34.83788001,31.67015212
+pilot-2,soil,VERTISOLS,IL-VR-060-00186,IL-VR-060-00186,34.83788001,31.67015212
+pilot-2,soil,VERTISOLS,IL-VR-090-00187,IL-VR-090-00187,34.83788001,31.67015212
+pilot-2,soil,VERTISOLS,IL-VR-130-00188,IL-VR-130-00188,34.83788001,31.67015212
+pilot-2,soil,ENTISOLS,IL-VR-020-00189,IL-VR-020-00189,34.6102346,31.61769571
+pilot-2,soil,INCEPTISOLS,IL-VR-020-00175,IL-VR-020-00175,34.598627,31.58778914
+SR,soil,,,SR0019_l1_16_soil,-120.0413367,34.70290833
+SR,soil,,,SR0019_l1_17_soil,-120.0413067,34.70290667
+SR,soil,UNKN-,UNKN-,SR0019_l2_01_soil,-120.041395,34.70297333
+SR,soil,,,SR0034_l1_15_soil,-120.03478,34.68672333
+SR,soil,,,SR0047_l1_08_soil,-120.03852,34.699205
+SR,soil,,,SR0047_l1_10_soil,-120.0382367,34.69937
+SR,soil,,,SR0047_l1_11_soil,-120.038235,34.6994
+SR,soil,,,SR0047_l1_12_soil,-120.03818,34.69940167
+SR,soil,,,SR0047_l1_13_soil,-120.038115,34.69940333
+ssl-ir,soil,A4,A4,ssl-ir_A4,35.217018,31.771959
+ssl-ir,soil,B4,B4,ssl-ir_B4,35.217018,31.771959
+ssl-ir,soil,C11,C11,ssl-ir_C11,35.217018,31.771959
+ssl-ir,soil,E5,E5,ssl-ir_E5,35.217018,31.771959
+ssl-ir,soil,H10,H10,ssl-ir_H10,35.217018,31.771959
+ssl-ir,soil,H11,H11,ssl-ir_H11,35.217018,31.771959
+ssl-ir,soil,H12,H12,ssl-ir_H12,35.217018,31.771959
+ssl-ir,soil,H13,H13,ssl-ir_H13,35.217018,31.771959
+SR,soil,,,SR0034_l1_14_soil,-120.0347917,34.68669167
+ssl-ir,soil,H14,H14,ssl-ir_H14,35.217018,31.771959
+ssl-ir,soil,H6,H6,ssl-ir_H6,35.217018,31.771959
+ssl-ir,soil,H7,H7,ssl-ir_H7,35.217018,31.771959
+ssl-ir,soil,H8,H8,ssl-ir_H8,35.217018,31.771959
+ssl-ir,soil,H9,H9,ssl-ir_H9,35.217018,31.771959
+ssl-ir,soil,J1,J1,ssl-ir_J1,35.217018,31.771959
+ssl-ir,soil,J2,J2,ssl-ir_J2,35.217018,31.771959
+ssl-ir,soil,K1,K1,ssl-ir_K1,35.217018,31.771959
+ssl-ir,soil,K2,K2,ssl-ir_K2,35.217018,31.771959
+ssl-ir,soil,K3,K3,ssl-ir_K3,35.217018,31.771959
+ssl-ir,soil,K4,K4,ssl-ir_K4,35.217018,31.771959
+ssl-ir,soil,K5,K5,ssl-ir_K5,35.217018,31.771959
+ssl-ir,soil,K6,K6,ssl-ir_K6,35.217018,31.771959
+ssl-ir,soil,K7,K7,ssl-ir_K7,35.217018,31.771959
+ssl-ir,soil,K8,K8,ssl-ir_K8,35.217018,31.771959
+ssl-ir,soil,H5,H5,ssl-ir_H5,35.217018,31.771959
+SR,soil,,,SR0034_l1_13_soil,-120.03478,34.686695
+SR,soil,,,SR0034_l1_12_soil,-120.0348083,34.68667167
+SR,soil,UNKN-,UNKN-,SR0034_l1_11_soil,-120.0348117,34.686645
+SR,soil,UNKN-,UNKN-,SR0019_l2_02_soil,-120.04139,34.702895
+SR,soil,UNKN-,UNKN-,SR0019_l2_03_soil,-120.0413733,34.70293167
+SR,soil,,,SR0020_l1_00_soil,-120.042285,34.70335667
+SR,soil,,,SR0020_l1_01_soil,-120.042255,34.70336167
+SR,soil,,,SR0020_l1_02_soil,-120.0422567,34.70336167
+SR,soil,,,SR0020_l1_03_soil,-120.042265,34.70335667
+SR,soil,,,SR0020_l1_04_soil,-120.04226,34.70335833
+SR,soil,,,SR0020_l1_05_soil,-120.0422483,34.703315
+SR,soil,,,SR0020_l1_06_soil,-120.0422417,34.70332833
+SR,soil,,,SR0020_l1_07_soil,-120.0422133,34.70332833
+SR,soil,,,SR0020_l1_08_soil,-120.04223,34.70334167
+SR,soil,,,SR0020_l2_00_soil,-120.0422383,34.70327167
+SR,soil,,,SR0020_l2_01_soil,-120.0422533,34.70329167
+SR,soil,,,SR0020_l2_02_soil,-120.0422483,34.70328833
+SR,soil,,,SR0020_l2_03_soil,-120.0422567,34.70330167
+SR,soil,,,SR0020_l2_04_soil,-120.0422517,34.70332833
+SR,soil,UNKN-,UNKN-,SR0021_l2_15_soil,-120.041515,34.703375
+SR,soil,,,SR0034_l2_03_soil,-120.0348583,34.686675
+SR,soil,,,SR0034_l2_02_soil,-120.03484,34.686675
+SR,soil,,,SR0034_l2_01_soil,-120.034855,34.68667833
+SR,soil,,,SR0034_l2_00_soil,-120.03486,34.68668833
+SR,soil,,,SR0033_l1_04_soil,-120.0338983,34.68655833
+SR,soil,,,SR0033_l1_03_soil,-120.0339583,34.68651333
+pilot-2,soil,ENTISOLS,IL-SC-130-00159,IL-SC-130-00159,35.06505682,30.00194785
+SR,soil,,,SR0033_l1_02_soil,-120.033955,34.68655
+SR,soil,,,SR0033_l1_00_soil,-120.0338683,34.68664333
+SR,soil,,,SR0026_l1_06_soil,-120.05096,34.69239833
+SR,soil,,,SR0026_l1_05_soil,-120.05088,34.69229667
+SR,soil,,,SR0026_l1_04_soil,-120.05092,34.69232
+SR,soil,UNKN-,UNKN-,SR0021_l2_17_soil,-120.0415533,34.70347667
+SR,soil,UNKN-,UNKN-,SR0021_l2_16_soil,-120.0415633,34.70341
+SR,soil,,,SR0033_l1_01_soil,-120.033955,34.68658
+pilot-2,soil,ENTISOLS,IL-SC-110-00158,IL-SC-110-00158,35.06505682,30.00194785
+pilot-2,soil,ENTISOLS,IL-SC-090-00157,IL-SC-090-00157,35.06505682,30.00194785
+pilot-2,soil,ENTISOLS,IL-SC-060-00156,IL-SC-060-00156,35.06505682,30.00194785
+pilot-2,soil,ALFISOLS,IL-LV-000-00006,IL-LV-000-00006,34.8064232,31.9565029
+pilot-2,soil,ALFISOLS,IL-VR-000-00007,IL-VR-000-00007,34.84678479,31.91423728
+pilot-2,soil,ALFISOLS,IL-VR-000-00008,IL-VR-000-00008,34.8467827,31.914238
+pilot-2,soil,ENTISOLS,IL-CL-000-00009,IL-CL-000-00009,34.77576765,31.95279292
+pilot-2,soil,ENTISOLS,IL-VR-000-00010,IL-VR-000-00010,34.7876244,31.9041328
+pilot-2,soil,ENTISOLS,IL-VR-000-00011,IL-VR-000-00011,34.7876244,31.9041328
+pilot-2,soil,ENTISOLS,IL-VR-000-00012,IL-VR-000-00012,34.86928393,31.83403391
+pilot-2,soil,ENTISOLS,IL-VR-000-00013,IL-VR-000-00013,34.8671684,31.8340282
+pilot-2,soil,ENTISOLS,IL-VR-000-00014,IL-VR-000-00014,34.86505866,31.83402246
+pilot-2,soil,MOLLISOLS,IL-VR-000-00015,IL-VR-000-00015,34.8629494,31.8331146
+pilot-2,soil,ENTISOLS,IL-VR-000-00016,IL-VR-000-00016,34.9115982,31.8152008
+pilot-2,soil,ENTISOLS,IL-VR-000-00017,IL-VR-000-00017,34.9824028,31.7964096
+pilot-2,soil,ENTISOLS,IL-VR-000-00018,IL-VR-000-00018,34.9824028,31.7964096
+pilot-2,soil,ENTISOLS,IL-VR-000-00019,IL-VR-000-00019,34.95571,31.76875
+pilot-2,soil,ALFISOLS,IL-VR-000-00004,IL-VR-000-00004,34.78760915,31.90774036
+pilot-2,soil,ENTISOLS,IL-VR-000-00020,IL-VR-000-00020,35.0120811,31.7450523
+pilot-2,soil,ENTISOLS,IL-VR-000-00023,IL-VR-000-00023,34.9456,31.98066
+pilot-2,soil,MOLLISOLS,IL-VR-000-00024,IL-VR-000-00024,34.93971793,31.94964303
+pilot-2,soil,MOLLISOLS,IL-LV-000-00025,IL-LV-000-00025,35.0278969,31.7513885
+pilot-2,soil,MOLLISOLS,IL-KS-000-00026,IL-KS-000-00026,35.03211736,31.75229711
+pilot-2,soil,MOLLISOLS,IL-LV-000-00028,IL-LV-000-00028,35.03094245,31.8130779
+pilot-2,soil,MOLLISOLS,IL-LV-000-00029,IL-LV-000-00029,35.03094245,31.81362357
+pilot-2,soil,MOLLISOLS,IL-LV-000-00030,IL-LV-000-00030,34.9471169,31.9514618
+pilot-2,soil,MOLLISOLS,IL-VR-000-00031,IL-VR-000-00031,34.937603,31.9496384
+pilot-2,soil,ENTISOLS,IL-VR-000-00032,IL-VR-000-00032,34.9344297,31.94963158
+pilot-2,soil,MOLLISOLS,IL-LV-000-00033,IL-LV-000-00033,34.9397049,31.9541531
+pilot-2,soil,MOLLISOLS,IL-CL-000-00034,IL-CL-000-00034,34.8563309,31.3514786
+pilot-2,soil,INCEPTISOLS,IL-LV-000-00035,IL-LV-000-00035,35.07119,31.73521
+pilot-2,soil,INCEPTISOLS,IL-LV-000-00036,IL-LV-000-00036,35.0277672,31.8163242
+pilot-2,soil,ALFISOLS,IL-KS-000-00037,IL-KS-000-00037,35.0321312,31.7459831
+pilot-2,soil,ENTISOLS,IL-VR-000-00021,IL-VR-000-00021,34.947438,31.77898
+pilot-2,soil,ALFISOLS,IL-VR-000-00003,IL-VR-000-00003,34.7884636,31.9510326
+pilot-2,soil,ALFISOLS,IL-VR-000-00002,IL-VR-000-00002,34.7419701,31.9427528
+pilot-2,soil,ALFISOLS,IL-VR-000-00001,IL-VR-000-00001,34.7969589,31.9438457
+ossl,soil,soil,f7568654143f7781666e5b7ce89f3c34,3143_f7568654143f7781666e5b7ce89f3c34,-121.25387,37.88985
+ossl,soil,soil,13c9706fd7be005dc5305ba985c9a626,3145_13c9706fd7be005dc5305ba985c9a626,-121.25387,37.88985
+ossl,soil,soil,8888081df90183a61c15a948d7c6a012,3146_8888081df90183a61c15a948d7c6a012,-121.25387,37.88985
+ossl,soil,soil,0655cdbdb67db291f67952757c50ebc6,3147_0655cdbdb67db291f67952757c50ebc6,-121.25387,37.88985
+ossl,soil,soil,668030e804b952f2be5246a9bfbd1b39,3148_668030e804b952f2be5246a9bfbd1b39,-121.25387,37.88985
+ossl,soil,soil,036e42f141fb1c2ce8750f84f0bf9216,3149_036e42f141fb1c2ce8750f84f0bf9216,-121.25387,37.88985
+ossl,soil,soil,b90e7cdf13d8a84c7a6f64aa2e19cd2e,3150_b90e7cdf13d8a84c7a6f64aa2e19cd2e,-121.25387,37.88985
+ossl,soil,soil,566fe45c6e32e8f815ffe4035a7ffc32,3151_566fe45c6e32e8f815ffe4035a7ffc32,-121.25387,37.88985
+ossl,soil,soil,ee8d435a8f31c9b85c5e406cc51dc0c7,3152_ee8d435a8f31c9b85c5e406cc51dc0c7,-121.25387,37.88985
+ossl,soil,soil,a9577c7219c7a266c3b3997e8c9fe885,3153_a9577c7219c7a266c3b3997e8c9fe885,-121.25387,37.88985
+ossl,soil,soil,6c47bb846477e1e3e72c713b7157d302,3154_6c47bb846477e1e3e72c713b7157d302,-121.25387,37.88985
+ossl,soil,soil,fc7acd62489e1da5555d6634f0a741b2,3155_fc7acd62489e1da5555d6634f0a741b2,-121.25387,37.88985
+ossl,soil,soil,99bb8e1e2a25801a4172beb2b984dc2c,3156_99bb8e1e2a25801a4172beb2b984dc2c,-121.25387,37.88985
+ossl,soil,soil,e4dddd2e60230c6cab60005969c79472,3157_e4dddd2e60230c6cab60005969c79472,-121.25387,37.88985
+ossl,soil,soil,43371782238930ac9693594e389cc16c,3158_43371782238930ac9693594e389cc16c,-121.25387,37.88985
+ossl,soil,soil,d8e54df2174dfee84eac28d96977c53a,3159_d8e54df2174dfee84eac28d96977c53a,-121.25387,37.88985
+ossl,soil,soil,731d62e36096813259f4bf980a20f679,3160_731d62e36096813259f4bf980a20f679,-121.25387,37.88985
+ossl,soil,soil,6d4ebfdb52db429afb2fd8292bde3281,3241_6d4ebfdb52db429afb2fd8292bde3281,-121.6906111,39.1745
+ossl,soil,soil,aa4fd403229658ff1d2a10399259728d,3240_aa4fd403229658ff1d2a10399259728d,-121.6899722,39.1755
+ossl,soil,soil,58965b664485c7aa682ee62b5f5264ba,3239_58965b664485c7aa682ee62b5f5264ba,-121.69,39.17447222
+ossl,soil,soil,a3f9609137fe2bfb5644860a5739aec3,3238_a3f9609137fe2bfb5644860a5739aec3,-121.6893611,39.17555556
+ossl,soil,soil,3ac79afa9dd007b06fc3dfb2a7867f2a,3237_3ac79afa9dd007b06fc3dfb2a7867f2a,-121.6893611,39.17444444
+ossl,soil,soil,f757bb9b98e62438c2777582420b8cbc,3169_f757bb9b98e62438c2777582420b8cbc,-121.25387,37.88985
+pilot-2,soil,ENTISOLS,IL-AR-000-00038,IL-AR-000-00038,34.38228889,31.19324444
+ossl,soil,soil,c16dd1a10160c51e97dc468ec0dbeff9,3168_c16dd1a10160c51e97dc468ec0dbeff9,-121.25387,37.88985
+ossl,soil,soil,512f0926bc4b2f720435ca9e8643a2b1,3166_512f0926bc4b2f720435ca9e8643a2b1,-121.25387,37.88985
+ossl,soil,soil,92d0170c0afcdff54fe84a943d8306b5,3165_92d0170c0afcdff54fe84a943d8306b5,-121.25387,37.88985
+ossl,soil,soil,3d117175a1bd0c9c663d62c133ee8066,3164_3d117175a1bd0c9c663d62c133ee8066,-121.25387,37.88985
+ossl,soil,soil,461011dd89cb5ac7e4fa265be8815c1f,3163_461011dd89cb5ac7e4fa265be8815c1f,-121.25387,37.88985
+ossl,soil,soil,b27e1bd2464b647af392bcbbec3a3afa,3162_b27e1bd2464b647af392bcbbec3a3afa,-121.25387,37.88985
+ossl,soil,soil,98e4caff7dcb79be3080764e92440eff,3161_98e4caff7dcb79be3080764e92440eff,-121.25387,37.88985
+ossl,soil,soil,6d96343c63b2bc5be6c2e8f8005ca561,3167_6d96343c63b2bc5be6c2e8f8005ca561,-121.25387,37.88985
+ossl,soil,soil,8ae1c4fcc12b242de814d22537091def,3141_8ae1c4fcc12b242de814d22537091def,-121.25387,37.88985
+pilot-2,soil,INCEPTISOLS,IL-LP-000-00039,IL-LP-000-00039,35.0074806,31.9173031
+pilot-2,soil,VERTISOLS,IL-VR-000-00041,IL-VR-000-00041,34.74735606,31.92383289
+pilot-2,soil,ENTISOLS,IL-CL-000-00087,IL-CL-000-00087,34.9069138,31.3092175
+pilot-2,soil,ENTISOLS,IL-SC-000-00088,IL-SC-000-00088,34.93852486,31.27501473
+pilot-2,soil,ENTISOLS,IL-LP-000-00089,IL-LP-000-00089,34.968998,31.2669582
+pilot-2,soil,ALFISOLS,IL-SC-000-00090,IL-SC-000-00090,35.10550246,31.2581245
+pilot-2,soil,ENTISOLS,IL-SC-000-00091,IL-SC-000-00091,35.1957932,31.2500496
+pilot-2,soil,ALFISOLS,IL-VR-000-00131,IL-VR-000-00131,34.837766,32.001011
+pilot-2,soil,ALFISOLS,IL-VR-000-00132,IL-VR-000-00132,34.838283,32.001033
+pilot-2,soil,ALFISOLS,IL-VR-000-00133,IL-VR-000-00133,34.838318,32.00115
+pilot-2,soil,ALFISOLS,IL-VR-000-00134,IL-VR-000-00134,34.838436,32.001066
+pilot-2,soil,ALFISOLS,IL-VR-000-00135,IL-VR-000-00135,34.838441,32.000756
+pilot-2,soil,ALFISOLS,IL-VR-000-00136,IL-VR-000-00136,34.826206,31.97908
+pilot-2,soil,ALFISOLS,IL-VR-000-00137,IL-VR-000-00137,34.826274,31.979018
+pilot-2,soil,MOLLISOLS,IL-VR-000-00138,IL-VR-000-00138,34.82717,31.978051
+pilot-2,soil,ALFISOLS,IL-VR-000-00139,IL-VR-000-00139,34.822191,31.983164
+pilot-2,soil,ENTISOLS,IL-CM-000-00086,IL-CM-000-00086,34.78603452,31.32691232
+pilot-2,soil,ALFISOLS,IL-VR-000-00140,IL-VR-000-00140,34.786998,31.935584
+pilot-2,soil,ALFISOLS,IL-VR-000-00142,IL-VR-000-00142,34.787379,31.93542
+pilot-2,soil,MOLLISOLS,IL-VR-000-00143,IL-VR-000-00143,34.812867,31.936651
+pilot-2,soil,ENTISOLS,IL-SN-000-00144,IL-SN-000-00144,34.80240096,30.85471278
+pilot-2,soil,ENTISOLS,IL-SN-020-00145,IL-SN-020-00145,34.80240096,30.85471278
+pilot-2,soil,ENTISOLS,IL-SN-030-00146,IL-SN-030-00146,34.80240096,30.85471278
+pilot-2,soil,ENTISOLS,IL-SN-050-00147,IL-SN-050-00147,34.80240096,30.85471278
+pilot-2,soil,ENTISOLS,IL-SN-080-00148,IL-SN-080-00148,34.80240096,30.85471278
+pilot-2,soil,ENTISOLS,IL-SN-090-00149,IL-SN-090-00149,34.80240096,30.85471278
+pilot-2,soil,ENTISOLS,IL-SN-120-00150,IL-SN-120-00150,34.80240096,30.85471278
+pilot-2,soil,ENTISOLS,IL-SC-000-00151,IL-SC-000-00151,35.06505682,30.00194785
+pilot-2,soil,ENTISOLS,IL-SC-010-00152,IL-SC-010-00152,35.06505682,30.00194785
+pilot-2,soil,ENTISOLS,IL-SC-020-00153,IL-SC-020-00153,35.06505682,30.00194785
+pilot-2,soil,ENTISOLS,IL-SC-030-00154,IL-SC-030-00154,35.06505682,30.00194785
+pilot-2,soil,ENTISOLS,IL-SC-050-00155,IL-SC-050-00155,35.06505682,30.00194785
+pilot-2,soil,ALFISOLS,IL-VR-000-00141,IL-VR-000-00141,34.786745,31.935868
+pilot-2,soil,ENTISOLS,IL-CM-000-00085,IL-CM-000-00085,34.7459259,31.3637524
+pilot-2,soil,ENTISOLS,IL-CM-000-00084,IL-CM-000-00084,34.72805309,31.36548995
+pilot-2,soil,ENTISOLS,IL-CM-000-00083,IL-CM-000-00083,34.7112122,31.3690338
+pilot-2,soil,ENTISOLS,IL-VR-000-00042,IL-VR-000-00042,34.781208,31.9194431
+pilot-2,soil,VERTISOLS,IL-VR-000-00043,IL-VR-000-00043,34.9137103,31.81520649
+pilot-2,soil,ENTISOLS,IL-AR-000-00044,IL-AR-000-00044,34.38318333,31.19267778
+pilot-2,soil,ALFISOLS,IL-VR-000-00045,IL-VR-000-00045,34.61967222,31.52861667
+pilot-2,soil,ALFISOLS,IL-VR-020-00046,IL-VR-020-00046,34.61967222,31.52861667
+pilot-2,soil,ALFISOLS,IL-VR-010-00047,IL-VR-010-00047,34.64613895,31.65808246
+pilot-2,soil,ALFISOLS,IL-VR-030-00048,IL-VR-030-00048,34.64613895,31.65808246
+pilot-2,soil,ALFISOLS,IL-VR-060-00049,IL-VR-060-00049,34.64613895,31.65808246
+pilot-2,soil,ALFISOLS,IL-VR-100-00050,IL-VR-100-00050,34.64613895,31.65808246
+pilot-2,soil,ALFISOLS,IL-VR-140-00051,IL-VR-140-00051,34.64613895,31.65808246
+pilot-2,soil,ALFISOLS,IL-VR-180-00052,IL-VR-180-00052,34.64613895,31.65808246
+pilot-2,soil,ENTISOLS,IL-SN-150-00054,IL-SN-150-00054,34.80240096,30.85471278
+pilot-2,soil,ENTISOLS,IL-VR-000-00056,IL-VR-000-00056,34.835247,31.3685551
+pilot-2,soil,INCEPTISOLS,IL-SN-000-00057,IL-SN-000-00057,35.0681076,30.9938087
+pilot-2,soil,ENTISOLS,IL-SN-000-00060,IL-SN-000-00060,34.76801905,30.803
+pilot-2,soil,ENTISOLS,IL-SC-000-00061,IL-SC-000-00061,34.8865356,30.8166847
+pilot-2,soil,ENTISOLS,IL-AR-000-00062,IL-AR-000-00062,34.45451389,31.31718056
+pilot-2,soil,ENTISOLS,IL-CL-000-00082,IL-CL-000-00082,34.70811735,31.35909966
+pilot-2,soil,ENTISOLS,IL-CM-000-00081,IL-CM-000-00081,34.7040215,31.3383389
+pilot-2,soil,ALFISOLS,IL-CL-000-00080,IL-CL-000-00080,34.65990037,31.33725488
+pilot-2,soil,ALFISOLS,IL-LV-000-00079,IL-LV-000-00079,34.6053734,31.3189697
+pilot-2,soil,ALFISOLS,IL-VR-000-00078,IL-VR-000-00078,34.53204113,31.29154487
+pilot-2,soil,ENTISOLS,IL-CL-000-00077,IL-CL-000-00077,34.4499397,31.3127308
+pilot-2,soil,VERTISOLS,IL-VR-000-00040,IL-VR-000-00040,34.8343811,31.8447571
+pilot-2,soil,ALFISOLS,IL-AR-000-00076,IL-AR-000-00076,34.4379874,31.36316555
+pilot-2,soil,ALFISOLS,IL-AR-000-00074,IL-AR-000-00074,34.3918343,31.3502522
+pilot-2,soil,ALFISOLS,IL-AR-000-00073,IL-AR-000-00073,34.4229317,31.4018555
+pilot-2,soil,ENTISOLS,IL-GY-000-00072,IL-GY-000-00072,35.08993465,30.80299
+pilot-2,soil,ENTISOLS,IL-SN-000-00071,IL-SN-000-00071,34.7443314,30.8324852
+pilot-2,soil,ENTISOLS,IL-SN-000-00070,IL-SN-000-00070,34.73096711,30.82393419
+pilot-2,soil,ENTISOLS,IL-AR-020-00063,IL-AR-020-00063,34.45451389,31.31718056
+pilot-2,soil,ALFISOLS,IL-AR-000-00075,IL-AR-000-00075,34.3779251,31.38082706
+ossl,soil,soil,65f929d77ace58c254700c1d65efb707,0328_65f929d77ace58c254700c1d65efb707,-102.5644,37.31875
+ngsa,soil,soil,TS0071,TS0071,135.414,-29.005
+ossl,soil,soil,65f929d77ace58c254700c1d65efb707,0326_65f929d77ace58c254700c1d65efb707,-102.5644,37.31875
+MEYER-OKIN,soil,soil,red sand,S4T1win_091,21.8174,-19.5293
+MEYER-OKIN,soil,soil,red sand,S4T1win_090,21.8174,-19.5293
+MEYER-OKIN,soil,soil,red sand,S4T1win_089,21.8174,-19.5293
+MEYER-OKIN,soil,soil,red sand,S4T1win_088,21.8174,-19.5293
+MEYER-OKIN,soil,soil,sand,s4t1ind_020,21.8174,-19.5293
+MEYER-OKIN,soil,soil,sand,s4t1ind_019,21.8174,-19.5293
+MEYER-OKIN,soil,soil,sand,s4t1ind_008,21.8174,-19.5293
+MEYER-OKIN,soil,soil,sand,s4t2ind_017,21.8174,-19.5293
+MEYER-OKIN,soil,soil,sand,s4t1ind_007,21.8174,-19.5293
+MEYER-OKIN,soil,soil,sand,s4t1ind_002,21.8174,-19.5293
+MEYER-OKIN,soil,soil,sand,s3t3ind_020,22.0099,-19.0776
+MEYER-OKIN,soil,soil,sand,s3t3ind_019,22.0099,-19.0776
+MEYER-OKIN,soil,soil,sand,s3t3ind_018,22.0099,-19.0776
+MEYER-OKIN,soil,soil,sand,s3t3ind_017,22.0099,-19.0776
+MEYER-OKIN,soil,soil,crust,s3t3ind_005,22.0099,-19.0776
+MEYER-OKIN,soil,soil,crust,s3t3ind_004,22.0099,-19.0776
+MEYER-OKIN,soil,soil,sand,s4t1ind_005,21.8174,-19.5293
+MEYER-OKIN,soil,soil,crust,s3t3ind_003,22.0099,-19.0776
+MEYER-OKIN,soil,soil,sand,s4t2ind_018,21.8174,-19.5293
+MEYER-OKIN,soil,soil,sand,s4t2ind_032,21.8174,-19.5293
+MEYER-OKIN,soil,soil,white sand,s5t2ind_041,21.5742,-20.1019
+MEYER-OKIN,soil,soil,white sand,s5t2ind_029,21.5742,-20.1019
+MEYER-OKIN,soil,soil,black crust,s5t2ind_022,21.5742,-20.1019
+MEYER-OKIN,soil,soil,black crust,s5t2ind_021,21.5742,-20.1019
+MEYER-OKIN,soil,soil,white sand,s5t2ind_020,21.5742,-20.1019
+MEYER-OKIN,soil,soil,white sand,s5t2ind_011,21.5742,-20.1019
+MEYER-OKIN,soil,soil,white sand,s5t2ind_004,21.5742,-20.1019
+MEYER-OKIN,soil,soil,sand,s4t2ind_021,21.8174,-19.5293
+MEYER-OKIN,soil,soil,white sand,s5t2ind_003,21.5742,-20.1019
+MEYER-OKIN,soil,soil,white sand,s5t2ind_001,21.5742,-20.1019
+MEYER-OKIN,soil,soil,white sand,s5t1ind_005,21.5742,-20.1019
+MEYER-OKIN,soil,soil,white sand,s5t1ind_004,21.5742,-20.1019
+MEYER-OKIN,soil,soil,sand,s4t3ind_023,21.8174,-19.5293
+MEYER-OKIN,soil,soil,sand,s4t2ind_038,21.8174,-19.5293
+MEYER-OKIN,soil,soil,sand,s4t2ind_034,21.8174,-19.5293
+MEYER-OKIN,soil,soil,sand,s4t2ind_033,21.8174,-19.5293
+MEYER-OKIN,soil,soil,white sand,s5t2ind_002,21.5742,-20.1019
+MEYER-OKIN,soil,soil,white sand,s5t2ind_042,21.5742,-20.1019
+MEYER-OKIN,soil,soil,grey sand,s3T1win_098,22.0099,-19.0776
+MEYER-OKIN,soil,soil,grey sand,s3T1win_096,22.0099,-19.0776
+MEYER-OKIN,soil,soil,grey sand,S2T1win_047,21.8418,-18.6798
+MEYER-OKIN,soil,soil,brown sand,S1T1wind_068,21.7716,-18.3886
+MEYER-OKIN,soil,soil,brown sand,S1T1wind_067,21.7716,-18.3886
+MEYER-OKIN,soil,soil,brown sand,S1T1wind_066,21.7716,-18.3886
+MEYER-OKIN,soil,soil,brown sand,S1T1wind_064,21.7716,-18.3886
+MEYER-OKIN,soil,soil,sand,s1t1ind_058,21.7716,-18.3886
+MEYER-OKIN,soil,soil,sand,s1t1ind_057,21.7716,-18.3886
+MEYER-OKIN,soil,soil,grey sand,S2T1win_049,21.8418,-18.6798
+MEYER-OKIN,soil,soil,red sand ,S15T1ind_030,20.6729,-26.8199
+MEYER-OKIN,soil,soil,red sand ,S15T1ind_028,20.6729,-26.8199
+MEYER-OKIN,soil,soil,red sand ,S15T1ind_027,20.6729,-26.8199
+MEYER-OKIN,soil,soil,red sand ,S15T1ind_026,20.6729,-26.8199
+MEYER-OKIN,soil,soil,brown crust,S15T1ind_025,20.6729,-26.8199
+MEYER-OKIN,soil,soil,brown crust,S15T1ind_024,20.6729,-26.8199
+MEYER-OKIN,soil,soil,brown crust,S15T1ind_023,20.6729,-26.8199
+MEYER-OKIN,soil,soil,brown crust,S15T1ind_022,20.6729,-26.8199
+MEYER-OKIN,soil,soil,red sand ,S15T1ind_029,20.6729,-26.8199
+MEYER-OKIN,soil,soil,grey sand,s3T1win_097,22.0099,-19.0776
+MEYER-OKIN,soil,soil,grey sand,S2T1win_050,21.8418,-18.6798
+MEYER-OKIN,soil,soil,soil,s2t2ind_025,21.8418,-18.6798
+MEYER-OKIN,soil,soil,brown sand,s3T1win_095,22.0099,-19.0776
+MEYER-OKIN,soil,soil,brown sand,s3T1win_094,22.0099,-19.0776
+MEYER-OKIN,soil,soil,brown sand,s3T1win_093,22.0099,-19.0776
+MEYER-OKIN,soil,soil,brown sand,s3T1win_092,22.0099,-19.0776
+MEYER-OKIN,soil,soil,brown sand,s3T1win_091,22.0099,-19.0776
+MEYER-OKIN,soil,soil,sand,s3t1ind_024,22.0099,-19.0776
+MEYER-OKIN,soil,soil,sand,s3t1ind_010,22.0099,-19.0776
+MEYER-OKIN,soil,soil,soil,s2t2ind_023,21.8418,-18.6798
+MEYER-OKIN,soil,soil,sand,s3t1ind_006,22.0099,-19.0776
+MEYER-OKIN,soil,soil,soil crust,s2t3ind_021,21.8418,-18.6798
+MEYER-OKIN,soil,soil,soil,s2t3ind_018,21.8418,-18.6798
+MEYER-OKIN,soil,soil,soil,s2t3ind_017,21.8418,-18.6798
+MEYER-OKIN,soil,soil,soil,s2t3ind_013,21.8418,-18.6798
+MEYER-OKIN,soil,soil,soil,s2t3ind_012,21.8418,-18.6798
+MEYER-OKIN,soil,soil,soil,s2t2ind_035,21.8418,-18.6798
+MEYER-OKIN,soil,soil,soil,s2t2ind_034,21.8418,-18.6798
+MEYER-OKIN,soil,soil,sand,s3t1ind_002,22.0099,-19.0776
+MEYER-OKIN,soil,soil,white sand,s5t2ind_043,21.5742,-20.1019
+MEYER-OKIN,soil,soil,grey sand,S5T31win_053,21.5742,-20.1019
+MEYER-OKIN,soil,soil,grey sand,S5T31win_054,21.5742,-20.1019
+ngsa,soil,soil,TS0096,TS0096,136.831,-27.687
+ngsa,soil,soil,TS0093,TS0093,137.658,-27.711
+ngsa,soil,soil,TS0090,TS0090,136.076,-27.961
+ngsa,soil,soil,TS0089,TS0089,136.053,-28.041
+ngsa,soil,soil,TS0087,TS0087,136.787,-28.134
+ngsa,soil,soil,TS0086,TS0086,135.28,-28.151
+ngsa,soil,soil,TS0082,TS0082,135.09,-28.348
+ngsa,soil,soil,TS0098,TS0098,137.461,-27.605
+ngsa,soil,soil,TS0081,TS0081,136.847,-28.429
+ssl-ir,soil,O1,O1,ssl-ir_O1,35.217018,31.771959
+ngsa,soil,soil,TS0069,TS0069,136.326,-29.172
+ngsa,soil,soil,TS0066,TS0066,137.053,-29.384
+ngsa,soil,soil,TS0065,TS0065,137.076,-29.465
+ngsa,soil,soil,TS0058,TS0058,136.136,-30.096
+ngsa,soil,soil,TS0056,TS0056,136.935,-30.275
+ngsa,soil,soil,TS0052,TS0052,135.539,-30.535
+ngsa,soil,soil,TS0076,TS0076,135.156,-28.767
+ngsa,soil,soil,TS0050,TS0050,137.339,-30.616
+ngsa,soil,soil,TS0103,TS0103,134.553,-27.144
+ngsa,soil,soil,TS0105,TS0105,135.522,-27.084
+ngsa,soil,soil,TS0161,TS0161,140.699,-30.23
+ngsa,soil,soil,TS0159,TS0159,139.524,-30.723
+ngsa,soil,soil,TS0158,TS0158,140.66,-30.838
+ngsa,soil,soil,TS0156,TS0156,139.562,-31.123
+ngsa,soil,soil,TS0155,TS0155,140.616,-31.173
+ngsa,soil,soil,TS0154,TS0154,139.653,-31.224
+ngsa,soil,soil,TS0153,TS0153,140.718,-31.392
+ngsa,soil,soil,TS0104,TS0104,135.508,-27.097
+ngsa,soil,soil,TS0152,TS0152,140.015,-31.393
+ngsa,soil,soil,TS0132,TS0132,140.846,-34.405
+ngsa,soil,soil,TS0127,TS0127,139.885,-35.084
+ngsa,soil,soil,TS0123,TS0123,140.461,-35.777
+ngsa,soil,soil,TS0122,TS0122,140.813,-36.278
+ngsa,soil,soil,TS0115,TS0115,137.533,-26.167
+ngsa,soil,soil,TS0113,TS0113,136.915,-26.372
+ngsa,soil,soil,TS0107,TS0107,136.888,-27.012
+ngsa,soil,soil,TS0151,TS0151,140.571,-31.476
+ngsa,soil,soil,TS0043,TS0043,136.035,-30.948
+ngsa,soil,soil,TS0035,TS0035,137.356,-31.455
+ngsa,soil,soil,TS0033,TS0033,136.363,-31.558
+MEYER-OKIN,soil,soil,grey sand,s6t2ind_019,21.9933,-20.2981
+MEYER-OKIN,soil,soil,grey sand,s6t2ind_018,21.9933,-20.2981
+MEYER-OKIN,soil,soil,black crust,s6t2ind_016,21.9933,-20.2981
+MEYER-OKIN,soil,soil,grey sand,s6t2ind_015,21.9933,-20.2981
+MEYER-OKIN,soil,soil,black crust,s6t2ind_013,21.9933,-20.2981
+MEYER-OKIN,soil,soil,black crust,s6t2ind_012,21.9933,-20.2981
+MEYER-OKIN,soil,soil,grey sand,s6t2ind_011,21.9933,-20.2981
+MEYER-OKIN,soil,soil,grey sand,s6t3ind_000,21.9933,-20.2981
+MEYER-OKIN,soil,soil,black crust,S6T1win_016,21.9933,-20.2981
+MEYER-OKIN,soil,soil,black crust,S6T1win_014,21.9933,-20.2981
+MEYER-OKIN,soil,soil,grey sand,S6T1win_013,21.9933,-20.2981
+MEYER-OKIN,soil,soil,grey sand,S6T1win_012,21.9933,-20.2981
+MEYER-OKIN,soil,soil,grey sand,S6T1win_011,21.9933,-20.2981
+MEYER-OKIN,soil,soil,grey sand,S6T1win_010,21.9933,-20.2981
+MEYER-OKIN,soil,soil,grey sand,S6T1win_009,21.9933,-20.2981
+MEYER-OKIN,soil,soil,grey sand,S5T31win_055,21.5742,-20.1019
+MEYER-OKIN,soil,soil,black crust,S6T1win_015,21.9933,-20.2981
+MEYER-OKIN,soil,soil,grey sand,s6t3ind_001,21.9933,-20.2981
+MEYER-OKIN,soil,soil,black crust,s6t3ind_006,21.9933,-20.2981
+MEYER-OKIN,soil,soil,black crust,s6t3ind_007,21.9933,-20.2981
+ngsa,soil,soil,TS0025,TS0025,137.209,-31.988
+ngsa,soil,soil,TS0024,TS0024,135.857,-32.156
+ngsa,soil,soil,TS0023,TS0023,136.785,-32.158
+ngsa,soil,soil,TS0021,TS0021,136.005,-32.448
+MEYER-OKIN,soil,soil,beige sand,S9T1ind_015,21.8327,-22.3542
+MEYER-OKIN,soil,soil,grey soil,S9T1ind_006,21.8327,-22.3542
+MEYER-OKIN,soil,soil,grey soil,S9T1ind_005,21.8327,-22.3542
+MEYER-OKIN,soil,soil,grey sand,S9T1din_059,21.8327,-22.3542
+MEYER-OKIN,soil,soil,grey sand,S9T1din_058,21.8327,-22.3542
+MEYER-OKIN,soil,soil,grey sand,S9T1din_008,21.8327,-22.3542
+MEYER-OKIN,soil,soil,grey sand,S9T1din_003,21.8327,-22.3542
+MEYER-OKIN,soil,soil,grey sand,S9T1din_002,21.8327,-22.3542
+MEYER-OKIN,soil,soil,red sand,S8T2ind_042,21.6833,-21.7612
+MEYER-OKIN,soil,soil,red sand,S8T2ind_001,21.6833,-21.7612
+MEYER-OKIN,soil,soil,red sand,S8T2ind_000,21.6833,-21.7612
+MEYER-OKIN,soil,soil,grey sand,S8T1ind_014,21.6833,-21.7612
+MEYER-OKIN,soil,soil,grey sand,S8T1ind_013,21.6833,-21.7612
+MEYER-OKIN,soil,soil,brown crust,S15T1ind_021,20.6729,-26.8199
+MEYER-OKIN,soil,soil,orange sand,S15T1din_020,20.6729,-26.8199
+MEYER-OKIN,soil,soil,orange sand,S15T1din_019,20.6729,-26.8199
+MEYER-OKIN,soil,soil,orange sand,S15T1din_018,20.6729,-26.8199
+JORN,soil,,,JORN0007_l1_19_soil,-106.77331,32.57638667
+JORN,soil,,,JORN0007_l1_18_soil,-106.7733667,32.57625
+JORN,soil,,,JORN0007_l1_17_soil,-106.7734083,32.57616833
+JORN,soil,,,JORN0007_l1_16_soil,-106.7734133,32.57613667
+JORN,soil,,,JORN0007_l1_15_soil,-106.77349,32.57604
+JORN,soil,,,JORN0007_l1_14_soil,-106.7734733,32.57604167
+JORN,soil,,,JORN0006_l3_10_soil,-106.7733633,32.57393
+JORN,soil,,,JORN0007_l2_14_soil,-106.7734733,32.57585
+JORN,soil,,,JORN0006_l3_09_soil,-106.7734217,32.57393
+JORN,soil,,,JORN0006_l3_05_soil,-106.7736517,32.57395833
+JORN,soil,,,JORN0006_l3_04_soil,-106.7737017,32.57396833
+JORN,soil,,,JORN0006_l3_03_soil,-106.77369,32.57397
+JORN,soil,,,JORN0006_l3_02_soil,-106.7737417,32.57395833
+JORN,soil,,,JORN0006_l2_05_soil,-106.7729667,32.57361167
+JORN,soil,,,JORN0006_l2_04_soil,-106.773025,32.57362
+JORN,soil,,,JORN0006_l2_02_soil,-106.773105,32.57374833
+JORN,soil,,,JORN0006_l3_08_soil,-106.7734567,32.57394
+JORN,soil,,,JORN0006_l2_01_soil,-106.773145,32.57379833
+JORN,soil,,,JORN0007_l2_15_soil,-106.773385,32.57578667
+JORN,soil,,,JORN0007_l2_17_soil,-106.7732683,32.57558
+MEYER-OKIN,soil,soil,red sand,S10T1ind_017,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T1ind_016,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T1ind_015,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T1ind_014,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T1ind_013,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T1ind_012,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T1ind_011,21.6773,-23.6335
+JORN,soil,,,JORN0007_l2_16_soil,-106.77339,32.575705
+JORN,soil,,,JORN0007_l3_20_soil,-106.7742283,32.575925
+JORN,soil,,,JORN0007_l3_18_soil,-106.773835,32.575975
+JORN,soil,,,JORN0007_l3_17_soil,-106.7739167,32.57591333
+JORN,soil,,,JORN0007_l3_16_soil,-106.7738833,32.57592167
+JORN,soil,,,JORN0007_l3_15_soil,-106.7738433,32.575885
+JORN,soil,,,JORN0007_l3_14_soil,-106.7737533,32.57585333
+JORN,soil,,,JORN0007_l2_19_soil,-106.7732583,32.57545833
+JORN,soil,,,JORN0007_l2_18_soil,-106.7732383,32.575495
+JORN,soil,,,JORN0007_l3_19_soil,-106.7740617,32.57594833
+JORN,soil,,,JORN0006_l2_00_soil,-106.773135,32.5738
+JORN,soil,,,JORN0006_l1_05_soil,-106.7729183,32.574355
+JORN,soil,,,JORN0006_l1_04_soil,-106.7729567,32.57431833
+JORN,soil,UNKN-,UNKN-,JORN0004_l1_05_soil,-106.8530383,32.60727833
+DP,soil,,,DP0033_l2_02_soil,-120.3989367,34.52642833
+DP,soil,,,DP0033_l2_01_soil,-120.3989433,34.52639667
+DP,soil,,,DP0033_l2_00_soil,-120.3989267,34.52637333
+DP,soil,,,DP0033_l1_08_soil,-120.3989717,34.526395
+DP,soil,,,DP0033_l1_07_soil,-120.3989817,34.52641
+DP,soil,,,DP0033_l1_06_soil,-120.398995,34.52634833
+JORN,soil,,,JORN0004_l1_06_soil,-106.8530933,32.60715833
+DP,soil,,,DP0032_l2_03_soil,-120.457965,34.53753667
+DP,soil,,,DP0032_l2_01_soil,-120.4579833,34.53755
+DP,soil,,,DP0032_l2_00_soil,-120.45777,34.53750167
+DP,soil,,,DP0032_l1_05_soil,-120.4579,34.53746333
+DP,soil,,,DP0032_l1_04_soil,-120.4578717,34.537475
+DP,soil,,,DP0032_l1_03_soil,-120.4578683,34.53748833
+DP,soil,,,DP0032_l1_02_soil,-120.4577333,34.53749
+DP,soil,,,DP0032_l1_01_soil,-120.4578033,34.53749333
+DP,soil,,,DP0032_l2_02_soil,-120.4579233,34.53752167
+JORN,soil,,,JORN0004_l1_07_soil,-106.8531683,32.60704667
+JORN,soil,,,JORN0004_l1_08_soil,-106.8531883,32.60696
+JORN,soil,,,JORN0004_l2_00_soil,-106.8531633,32.606675
+JORN,soil,,,JORN0005_l3_01_soil,-106.7730683,32.570135
+JORN,soil,,,JORN0005_l3_00_soil,-106.7731233,32.570125
+JORN,soil,,,JORN0005_l2_04_soil,-106.7722317,32.56993167
+JORN,soil,,,JORN0005_l2_03_soil,-106.772285,32.569955
+JORN,soil,,,JORN0005_l2_02_soil,-106.7723217,32.56997
+JORN,soil,,,JORN0005_l1_02_soil,-106.7725033,32.57039667
+JORN,soil,,,JORN0005_l1_01_soil,-106.7725,32.57035
+JORN,soil,,,JORN0005_l1_00_soil,-106.7724817,32.57031167
+JORN,soil,,,JORN0004_l3_08_soil,-106.853645,32.60681333
+JORN,soil,,,JORN0004_l3_07_soil,-106.8536917,32.60681167
+JORN,soil,,,JORN0004_l3_06_soil,-106.8537417,32.60680167
+JORN,soil,,,JORN0004_l3_05_soil,-106.85383,32.60678833
+JORN,soil,,,JORN0004_l2_05_soil,-106.8528617,32.60640833
+JORN,soil,,,JORN0004_l2_04_soil,-106.8528883,32.60644333
+JORN,soil,,,JORN0004_l2_03_soil,-106.8530117,32.60654833
+JORN,soil,,,JORN0004_l2_02_soil,-106.8530883,32.606615
+JORN,soil,,,JORN0004_l2_01_soil,-106.8531333,32.60665167
+MEYER-OKIN,soil,soil,red sand,S10T1ind_018,21.6773,-23.6335
+ngsa,soil,soil,TS0162,TS0162,137.75,-30.166
+MEYER-OKIN,soil,soil,red sand,S10T1ind_019,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T2ind_031,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand ,S12T3ind_054,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand ,S12T3ind_053,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand ,S12T3ind_052,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand ,S12T3ind_051,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand,S12T3din_056,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand,S12T3din_051,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand,S12T3din_046,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand ,S12T3ind_055,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand,S12T3din_045,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand,S12T3din_042,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand,S12T3din_041,21.9163,-24.6304
+MEYER-OKIN,soil,soil,black crust,S12T3din_040,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand,S12T3din_038,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand,S12T3din_036,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand,S12T3din_021,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand,S12T3din_020,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand,S12T3din_043,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand,S12T3din_019,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand ,S12T3ind_056,21.9163,-24.6304
+MEYER-OKIN,soil,soil,red sand ,S13T1din_032,22.2607,-25.0681
+MEYER-OKIN,soil,soil,orange sand,S15T1din_017,20.6729,-26.8199
+MEYER-OKIN,soil,soil,orange sand,S15T1din_016,20.6729,-26.8199
+MEYER-OKIN,soil,soil,orange sand,S15T1din_015,20.6729,-26.8199
+MEYER-OKIN,soil,soil,orange sand,S15T1din_014,20.6729,-26.8199
+MEYER-OKIN,soil,soil,black crust,S15T1din_001,20.6729,-26.8199
+MEYER-OKIN,soil,soil,black crust,S15T1din_000,20.6729,-26.8199
+MEYER-OKIN,soil,soil,red sand,S14T1din_010,22.3547,-25.8497
+MEYER-OKIN,soil,soil,red sand ,S13T1din_031,22.2607,-25.0681
+MEYER-OKIN,soil,soil,red sand,S14T1din_009,22.3547,-25.8497
+MEYER-OKIN,soil,soil,red sand,S14T1din_004,22.3547,-25.8497
+MEYER-OKIN,soil,soil,red sand,S14T1din_003,22.3547,-25.8497
+MEYER-OKIN,soil,soil,red sand ,S13T1din_054,22.2607,-25.0681
+MEYER-OKIN,soil,soil,red sand ,S13T1din_053,22.2607,-25.0681
+MEYER-OKIN,soil,soil,red sand ,S13T1din_046,22.2607,-25.0681
+MEYER-OKIN,soil,soil,red sand ,S13T1din_045,22.2607,-25.0681
+MEYER-OKIN,soil,soil,red sand ,S13T1din_033,22.2607,-25.0681
+MEYER-OKIN,soil,soil,red sand,S14T1din_008,22.3547,-25.8497
+MEYER-OKIN,soil,soil,red sand ,S11T1ind_050,21.8899,-24.1679
+MEYER-OKIN,soil,soil,red sand ,S11T1ind_049,21.8899,-24.1679
+MEYER-OKIN,soil,soil,red sand ,S11T1ind_048,21.8899,-24.1679
+MEYER-OKIN,soil,soil,red sand,S10T3din_024,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_023,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_022,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_010,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_006,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_005,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_004,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_025,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T2ind_040,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T2ind_038,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T2ind_037,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T2ind_036,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T2ind_035,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T2ind_034,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T2ind_033,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T2ind_032,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T2ind_039,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_026,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_027,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_028,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand ,S11T1ind_047,21.8899,-24.1679
+MEYER-OKIN,soil,soil,red sand ,S11T1ind_046,21.8899,-24.1679
+MEYER-OKIN,soil,soil,red sand ,S11T1ind_045,21.8899,-24.1679
+MEYER-OKIN,soil,soil,red sand ,S11T1ind_044,21.8899,-24.1679
+MEYER-OKIN,soil,soil,red sand ,S11T1ind_043,21.8899,-24.1679
+MEYER-OKIN,soil,soil,red sand ,S11T1ind_042,21.8899,-24.1679
+MEYER-OKIN,soil,soil,red sand,S10T3din_054,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_053,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_048,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_047,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_046,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_045,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_044,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_043,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_042,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_041,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T3din_040,21.6773,-23.6335
+MEYER-OKIN,soil,soil,red sand,S10T1ind_020,21.6773,-23.6335
+ngsa,soil,soil,TS0163,TS0163,140.019,-30.081
+ngsa,soil,soil,TS0164,TS0164,140.24,-30.064
+ngsa,soil,soil,TS0165,TS0165,138.364,-29.803
+ngsa,soil,soil,TS1286,TS1286,144.826,-34.033
+ngsa,soil,soil,TS1284,TS1284,144.112,-34.197
+ngsa,soil,soil,TS1283,TS1283,141.915,-34.089
+ngsa,soil,soil,TS1282,TS1282,141.068,-34.05
+ngsa,soil,soil,TS1277,TS1277,143.526,-34.229
+ngsa,soil,soil,TS1272,TS1272,144.376,-33.541
+ngsa,soil,soil,TS1264,TS1264,144.571,-33.177
+ngsa,soil,soil,TS1287,TS1287,142.994,-34.17
+ngsa,soil,soil,TS1259,TS1259,143.632,-33.029
+ngsa,soil,soil,TS1257,TS1257,142.556,-33.137
+ngsa,soil,soil,TS1256,TS1256,142.528,-32.438
+ngsa,soil,soil,TS1255,TS1255,141.678,-32.681
+ngsa,soil,soil,TS1252,TS1252,142.083,-32.502
+ngsa,soil,soil,TS1250,TS1250,141.795,-34.056
+ngsa,soil,soil,TS1245,TS1245,142.165,-32.36
+ngsa,soil,soil,TS1239,TS1239,143.635,-32.017
+ngsa,soil,soil,TS1258,TS1258,141.452,-32.945
+ngsa,soil,soil,TS1234,TS1234,142.426,-32.397
+ngsa,soil,soil,TS1291,TS1291,141.992,-34.117
+ngsa,soil,soil,TS1297,TS1297,144.528,-35.023
+ngsa,soil,soil,TS0465,TS0465,117.715,-29.871
+ngsa,soil,soil,TS0461,TS0461,116.714,-29.545
+ngsa,soil,soil,TS0454,TS0454,117.277,-29.062
+ngsa,soil,soil,TS0451,TS0451,116.426,-29.273
+ngsa,soil,soil,TS0450,TS0450,116.386,-28.894
+ngsa,soil,soil,TS0447,TS0447,119.002,-29.157
+ngsa,soil,soil,TS1341,TS1341,142.617,-35.694
+ngsa,soil,soil,TS1293,TS1293,143.87,-34.87
+ngsa,soil,soil,TS1338,TS1338,143.66,-35.752
+ngsa,soil,soil,TS1335,TS1335,141.99,-35.477
+ngsa,soil,soil,TS1334,TS1334,143.649,-35.397
+ngsa,soil,soil,TS1333,TS1333,143.072,-35.389
+ngsa,soil,soil,TS1331,TS1331,142.06,-34.984
+ngsa,soil,soil,TS1330,TS1330,142.212,-34.36
+ngsa,soil,soil,TS1304,TS1304,143.7,-35.164
+ngsa,soil,soil,TS1302,TS1302,144.192,-35.037
+ngsa,soil,soil,TS1336,TS1336,142.947,-35.49
+ngsa,soil,soil,TS1232,TS1232,147.561,-30.277
+ngsa,soil,soil,TS1230,TS1230,143.137,-31.462
+ngsa,soil,soil,TS1228,TS1228,142.186,-31.49
+ngsa,soil,soil,TS1188,TS1188,147.369,-29.701
+ngsa,soil,soil,TS1186,TS1186,148.584,-29.654
+ngsa,soil,soil,TS1184,TS1184,142.718,-29.941
+ngsa,soil,soil,TS1183,TS1183,148.581,-29.547
+ngsa,soil,soil,TS1178,TS1178,142.521,-29.33
+ngsa,soil,soil,TS1176,TS1176,145.023,-29.297
+ngsa,soil,soil,TS1175,TS1175,143.18,-29.217
+ngsa,soil,soil,TS1190,TS1190,144.102,-30.275
+ngsa,soil,soil,TS1173,TS1173,146.651,-29.409
+ngsa,soil,soil,TS1169,TS1169,146.441,-29.851
+ngsa,soil,soil,TS1168,TS1168,147.114,-28.737
+ngsa,soil,soil,TS1165,TS1165,148.762,-28.926
+ngsa,soil,soil,TS1161,TS1161,143.247,-28.686
+ngsa,soil,soil,TS1159,TS1159,146.878,-28.918
+ngsa,soil,soil,TS1158,TS1158,142.578,-28.609
+ngsa,soil,soil,TS1156,TS1156,141.409,-28.321
+ngsa,soil,soil,TS1172,TS1172,149.001,-29.128
+ngsa,soil,soil,TS1192,TS1192,146.43,-29.945
+ngsa,soil,soil,TS1193,TS1193,148.148,-29.975
+ngsa,soil,soil,TS1194,TS1194,146.113,-29.53
+ngsa,soil,soil,TS1227,TS1227,143.478,-31.596
+ngsa,soil,soil,TS1224,TS1224,143.575,-31.363
+ngsa,soil,soil,TS1222,TS1222,141.914,-30.917
+ngsa,soil,soil,TS1219,TS1219,147.684,-30.458
+ngsa,soil,soil,TS1212,TS1212,141.026,-30.548
+ngsa,soil,soil,TS1211,TS1211,145.053,-30.645
+ngsa,soil,soil,TS1210,TS1210,147.22,-30.268
+ngsa,soil,soil,TS1209,TS1209,148.392,-30.148
+ngsa,soil,soil,TS1208,TS1208,145.619,-30.313
+ngsa,soil,soil,TS1207,TS1207,145.938,-30.249
+ngsa,soil,soil,TS1204,TS1204,144.065,-30.755
+ngsa,soil,soil,TS1203,TS1203,145.398,-30.023
+ngsa,soil,soil,TS1202,TS1202,142.45,-30.235
+ngsa,soil,soil,TS1199,TS1199,141.065,-30.312
+ngsa,soil,soil,TS1198,TS1198,142.013,-30.042
+ngsa,soil,soil,TS1197,TS1197,147.562,-30.077
+ngsa,soil,soil,TS1195,TS1195,144.019,-30.325
+ngsa,soil,soil,TS0467,TS0467,117.799,-29.742
+ngsa,soil,soil,TS1154,TS1154,147.407,-28.556
+ngsa,soil,soil,TS0468,TS0468,115.813,-29.551
+ngsa,soil,soil,TS0548,TS0548,118.267,-30.842
+ossl,soil,soil,34fc99320da3e4c777062699d4fc8e65,0273_34fc99320da3e4c777062699d4fc8e65,-118.2410278,37.58902778
+ossl,soil,soil,34fc99320da3e4c777062699d4fc8e65,0272_34fc99320da3e4c777062699d4fc8e65,-118.2410278,37.58902778
+ossl,soil,soil,34fc99320da3e4c777062699d4fc8e65,0271_34fc99320da3e4c777062699d4fc8e65,-118.2410278,37.58902778
+ossl,soil,soil,34fc99320da3e4c777062699d4fc8e65,0270_34fc99320da3e4c777062699d4fc8e65,-118.2410278,37.58902778
+ossl,soil,soil,4aa001426203213ec0ac95b41189287d,0217_4aa001426203213ec0ac95b41189287d,-102.34569,33.606725
+ossl,soil,soil,fe8ffa15ed9e53afbbec16bef36fa9fd,0216_fe8ffa15ed9e53afbbec16bef36fa9fd,-102.34569,33.606725
+ossl,soil,soil,14d5657ed4d877906b3dea94d577853d,0215_14d5657ed4d877906b3dea94d577853d,-102.34569,33.606725
+ossl,soil,soil,7787981698c0c4b7cdb0824c5f0ed814,0274_7787981698c0c4b7cdb0824c5f0ed814,-118.2426111,37.55730556
+ossl,soil,soil,e03d30bf03d025f4d9f239e540ac31cc,0214_e03d30bf03d025f4d9f239e540ac31cc,-102.34569,33.606725
+ossl,soil,soil,dcbe0f23081cb4b6ce27bf885cfdc0a8,0212_dcbe0f23081cb4b6ce27bf885cfdc0a8,-102.82575,33.606605
+ossl,soil,soil,a5d89a89b40da4d3ecac966bd58fe18c,0211_a5d89a89b40da4d3ecac966bd58fe18c,-102.82575,33.606605
+ossl,soil,soil,b48dd5fc197031c2049eee6b819c8768,0210_b48dd5fc197031c2049eee6b819c8768,-102.82575,33.606605
+ossl,soil,soil,695764d4325bcd3fc03ad95e7a6d1497,0209_695764d4325bcd3fc03ad95e7a6d1497,-102.82575,33.606605
+ossl,soil,soil,c343ad6508b1a2a4c0c8800c0dd34d8d,0208_c343ad6508b1a2a4c0c8800c0dd34d8d,-102.82575,33.606605
+ossl,soil,soil,98d1fb1e57153725761f4e02f72cdd2e,0207_98d1fb1e57153725761f4e02f72cdd2e,-102.82575,33.606605
+ossl,soil,soil,67de0228d7fd9f3f78d0e57157bfe4e5,0206_67de0228d7fd9f3f78d0e57157bfe4e5,-102.82575,33.606605
+ossl,soil,soil,5a5ad3596eda99cac370d9c6102936cc,0213_5a5ad3596eda99cac370d9c6102936cc,-102.34569,33.606725
+ossl,soil,soil,9dab9b6917d37dba5cb6d897f9649cc5,0205_9dab9b6917d37dba5cb6d897f9649cc5,-102.82575,33.606605
+ossl,soil,soil,7787981698c0c4b7cdb0824c5f0ed814,0275_7787981698c0c4b7cdb0824c5f0ed814,-118.2426111,37.55730556
+ossl,soil,soil,7787981698c0c4b7cdb0824c5f0ed814,0277_7787981698c0c4b7cdb0824c5f0ed814,-118.2426111,37.55730556
+ossl,soil,soil,cad4f62342b44466451dc77d1d02e783,0325_cad4f62342b44466451dc77d1d02e783,-108.62913,32.055005
+ossl,soil,soil,cad4f62342b44466451dc77d1d02e783,0324_cad4f62342b44466451dc77d1d02e783,-108.62913,32.055005
+ossl,soil,soil,cad4f62342b44466451dc77d1d02e783,0323_cad4f62342b44466451dc77d1d02e783,-108.62913,32.055005
+ossl,soil,soil,cad4f62342b44466451dc77d1d02e783,0322_cad4f62342b44466451dc77d1d02e783,-108.62913,32.055005
+ossl,soil,soil,4c32c52c6ba653f1ac69eccc09afc408,0321_4c32c52c6ba653f1ac69eccc09afc408,-112.39773,34.706725
+ossl,soil,soil,4c32c52c6ba653f1ac69eccc09afc408,0320_4c32c52c6ba653f1ac69eccc09afc408,-112.39773,34.706725
+ossl,soil,soil,4c32c52c6ba653f1ac69eccc09afc408,0319_4c32c52c6ba653f1ac69eccc09afc408,-112.39773,34.706725
+ossl,soil,soil,7787981698c0c4b7cdb0824c5f0ed814,0276_7787981698c0c4b7cdb0824c5f0ed814,-118.2426111,37.55730556
+ossl,soil,soil,4c32c52c6ba653f1ac69eccc09afc408,0318_4c32c52c6ba653f1ac69eccc09afc408,-112.39773,34.706725
+ossl,soil,soil,73bafebc1719de480f0970b3a6fa405d,0284_73bafebc1719de480f0970b3a6fa405d,-118.2953056,37.52105556
+ossl,soil,soil,73bafebc1719de480f0970b3a6fa405d,0283_73bafebc1719de480f0970b3a6fa405d,-118.2953056,37.52105556
+ossl,soil,soil,73bafebc1719de480f0970b3a6fa405d,0282_73bafebc1719de480f0970b3a6fa405d,-118.2953056,37.52105556
+ossl,soil,soil,cb15f03f140f28d81223f7b7c64e3a0d,0281_cb15f03f140f28d81223f7b7c64e3a0d,-118.52955,37.52895
+ossl,soil,soil,cb15f03f140f28d81223f7b7c64e3a0d,0280_cb15f03f140f28d81223f7b7c64e3a0d,-118.52955,37.52895
+ossl,soil,soil,cb15f03f140f28d81223f7b7c64e3a0d,0279_cb15f03f140f28d81223f7b7c64e3a0d,-118.52955,37.52895
+ossl,soil,soil,cb15f03f140f28d81223f7b7c64e3a0d,0278_cb15f03f140f28d81223f7b7c64e3a0d,-118.52955,37.52895
+ossl,soil,soil,73bafebc1719de480f0970b3a6fa405d,0285_73bafebc1719de480f0970b3a6fa405d,-118.2953056,37.52105556
+ossl,soil,soil,ff8f63ef94f3d55ff9bb6e79726b017e,0204_ff8f63ef94f3d55ff9bb6e79726b017e,-102.82575,33.606605
+ossl,soil,soil,f282615824815d9e7482a33dd5ceebfc,0203_f282615824815d9e7482a33dd5ceebfc,-102.82575,33.606605
+ossl,soil,soil,08041fb0d6821a29fb9caeb45ab513da,0140_08041fb0d6821a29fb9caeb45ab513da,-113.0209,40.16601667
+ngsa,soil,soil,TS0597,TS0597,120.578,-32.642
+ngsa,soil,soil,TS0593,TS0593,121.706,-32.345
+ngsa,soil,soil,TS0586,TS0586,118.166,-32.052
+ngsa,soil,soil,TS0584,TS0584,120.776,-31.954
+ngsa,soil,soil,TS0579,TS0579,119.999,-31.846
+ngsa,soil,soil,TS0578,TS0578,117.654,-31.807
+ngsa,soil,soil,TS0574,TS0574,116.721,-31.659
+ngsa,soil,soil,TS0598,TS0598,118.451,-32.573
+ngsa,soil,soil,TS0570,TS0570,116.721,-31.463
+ngsa,soil,soil,TS0564,TS0564,120.209,-31.351
+ngsa,soil,soil,TS0558,TS0558,118.478,-31.14
+ngsa,soil,soil,TS0555,TS0555,119.68,-31.228
+ngsa,soil,soil,TS0554,TS0554,118.796,-30.963
+ngsa,soil,soil,TS0553,TS0553,119.294,-31.202
+ngsa,soil,soil,TS0552,TS0552,119.927,-30.857
+ngsa,soil,soil,TS0551,TS0551,117.383,-30.928
+ngsa,soil,soil,TS0567,TS0567,118.011,-31.33
+ngsa,soil,soil,TS0602,TS0602,120.345,-32.941
+ngsa,soil,soil,TS0604,TS0604,118.555,-32.999
+ngsa,soil,soil,TS0606,TS0606,117.742,-33.403
+ossl,soil,soil,83d165df8a35a163dea7821654e0efcf,0103_83d165df8a35a163dea7821654e0efcf,-118.6906944,40.50436111
+ossl,soil,soil,3f2f7f2c3c4e8ac3451f68d2ef2179b5,0102_3f2f7f2c3c4e8ac3451f68d2ef2179b5,-118.6644167,40.04952778
+ossl,soil,soil,dbc97b125b9f02dee3823b2ca58a0f2d,0101_dbc97b125b9f02dee3823b2ca58a0f2d,-118.6710833,40.27041667
+ossl,soil,soil,bbd311d57a856ad0a5d57fb8781dda97,0100_bbd311d57a856ad0a5d57fb8781dda97,-118.5800833,40.08952778
+ossl,soil,soil,def4d5b3a34af9c93bb43bbb8868934e,0099_def4d5b3a34af9c93bb43bbb8868934e,-118.6222778,39.04719444
+ossl,soil,soil,c981fdf79a3aed20f4b35e8786325056,0098_c981fdf79a3aed20f4b35e8786325056,-119.2319167,39.244
+ossl,soil,soil,742ac6b5dc0109b50c1506eee8c8c895,0097_742ac6b5dc0109b50c1506eee8c8c895,-118.6955278,39.08725
+ossl,soil,soil,fa14e26aa100e41821a2050bf4edfb67,0096_fa14e26aa100e41821a2050bf4edfb67,-119.0143333,39.549
+ossl,soil,soil,06277c373fd4be8ecb96de3776dd0963,0094_06277c373fd4be8ecb96de3776dd0963,-104.3864972,31.76400833
+ossl,soil,soil,7eed86ac830118194de9b380748eb311,0071_7eed86ac830118194de9b380748eb311,-101.1076306,41.56757222
+ossl,soil,soil,edbdb49c269cbd977d7c31555bc03a9b,0065_edbdb49c269cbd977d7c31555bc03a9b,16.63333333,-23.225
+ossl,soil,soil,f6a274d9bd43311f4c3a39a03d46c2d8,0064_f6a274d9bd43311f4c3a39a03d46c2d8,15.81722222,-23.29083333
+ossl,soil,soil,fcd0d9f2a120c84ca65336888f626ec4,0044_fcd0d9f2a120c84ca65336888f626ec4,55.86666667,24.33333333
+ossl,soil,soil,03ef00a4280c8e5115edb34d00e29a06,0006_03ef00a4280c8e5115edb34d00e29a06,140.833,-36.28333333
+ngsa,soil,soil,TS0513,TS0513,117.984,-27.699
+ngsa,soil,soil,TS0613,TS0613,122.173,-33.592
+ngsa,soil,soil,TS0610,TS0610,121.56,-33.759
+ngsa,soil,soil,TS0538,TS0538,119.021,-30.312
+ossl,soil,soil,65f929d77ace58c254700c1d65efb707,0327_65f929d77ace58c254700c1d65efb707,-102.5644,37.31875
+ngsa,soil,soil,TS1149,TS1149,146.842,-28.346
+ngsa,soil,soil,TS1144,TS1144,148.84,-28.333
+ngsa,soil,soil,TS0942,TS0942,139.96,-19.241
+ngsa,soil,soil,TS0939,TS0939,141.195,-18.85
+ngsa,soil,soil,TS0931,TS0931,140.873,-18.437
+ngsa,soil,soil,TS0929,TS0929,139.9,-18.225
+ngsa,soil,soil,TS0927,TS0927,140.719,-18.561
+ngsa,soil,soil,TS0923,TS0923,139.136,-18.165
+ngsa,soil,soil,TS0922,TS0922,138.684,-18.204
+ngsa,soil,soil,TS0943,TS0943,141.306,-18.614
+ngsa,soil,soil,TS0921,TS0921,138.856,-18.045
+ngsa,soil,soil,TS0917,TS0917,140.564,-18.018
+ngsa,soil,soil,TS0916,TS0916,140.181,-17.947
+ngsa,soil,soil,TS0915,TS0915,139.745,-17.837
+ngsa,soil,soil,TS0912,TS0912,140.835,-17.962
+ngsa,soil,soil,TS0907,TS0907,139.182,-17.636
+ngsa,soil,soil,TS0856,TS0856,135.245,-25.849
+ngsa,soil,soil,TS0855,TS0855,135.778,-25.703
+ngsa,soil,soil,TS0918,TS0918,139.141,-17.936
+ngsa,soil,soil,TS0854,TS0854,137.232,-25.768
+ngsa,soil,soil,TS0946,TS0946,141.82,-19.456
+ngsa,soil,soil,TS0952,TS0952,141.797,-20
+ngsa,soil,soil,TS0989,TS0989,145.232,-21.875
+ngsa,soil,soil,TS0985,TS0985,144.284,-21.951
+ngsa,soil,soil,TS0984,TS0984,140.112,-22.089
+ngsa,soil,soil,TS0982,TS0982,145.821,-21.444
+ngsa,soil,soil,TS0978,TS0978,138.274,-21.365
+ngsa,soil,soil,TS0976,TS0976,141.159,-20.308
+ngsa,soil,soil,TS0974,TS0974,143.895,-20.668
+ngsa,soil,soil,TS0947,TS0947,141.014,-19.557
+ngsa,soil,soil,TS0972,TS0972,143.542,-20.804
+ngsa,soil,soil,TS0969,TS0969,143.134,-20.707
+ngsa,soil,soil,TS0967,TS0967,142.631,-20.639
+ngsa,soil,soil,TS0963,TS0963,140.155,-19.894
+ngsa,soil,soil,TS0962,TS0962,141.335,-20.402
+ngsa,soil,soil,TS0959,TS0959,143.108,-20.255
+ngsa,soil,soil,TS0955,TS0955,140.856,-19.543
+ngsa,soil,soil,TS0954,TS0954,138.039,-20.149
+ngsa,soil,soil,TS0971,TS0971,142.263,-20.803
+ngsa,soil,soil,TS0851,TS0851,137.889,-25.706
+ngsa,soil,soil,TS0847,TS0847,137.937,-25.192
+ngsa,soil,soil,TS0834,TS0834,137.608,-24.985
+ngsa,soil,soil,TS0185,TS0185,138.294,-26.773
+ngsa,soil,soil,TS0184,TS0184,140.68,-27.048
+ngsa,soil,soil,TS0183,TS0183,138.778,-27.062
+ngsa,soil,soil,TS0182,TS0182,138.096,-27.356
+ngsa,soil,soil,TS0181,TS0181,140.094,-27.472
+ngsa,soil,soil,TS0179,TS0179,140.783,-27.72
+ngsa,soil,soil,TS0178,TS0178,139.279,-28.064
+ngsa,soil,soil,TS0187,TS0187,139.386,-26.303
+ngsa,soil,soil,TS0177,TS0177,139.987,-28.482
+ngsa,soil,soil,TS0175,TS0175,140.889,-28.766
+ngsa,soil,soil,TS0174,TS0174,140.505,-29.011
+ngsa,soil,soil,TS0172,TS0172,137.904,-29.241
+ngsa,soil,soil,TS0170,TS0170,139.238,-29.266
+ngsa,soil,soil,TS0169,TS0169,139.982,-29.38
+ngsa,soil,soil,TS0168,TS0168,139.518,-29.414
+ngsa,soil,soil,TS0167,TS0167,137.746,-29.449
+ngsa,soil,soil,TS0176,TS0176,138.018,-28.559
+ngsa,soil,soil,TS0724,TS0724,133.834,-17.799
+ngsa,soil,soil,TS0725,TS0725,133.542,-17.658
+ngsa,soil,soil,TS0726,TS0726,135.707,-17.953
+ngsa,soil,soil,TS0830,TS0830,136.89,-24.118
+ngsa,soil,soil,TS0799,TS0799,137.112,-22.24
+ngsa,soil,soil,TS0795,TS0795,136.649,-21.652
+ngsa,soil,soil,TS0783,TS0783,137.933,-20.968
+ngsa,soil,soil,TS0772,TS0772,137.665,-20.576
+ngsa,soil,soil,TS0771,TS0771,137.143,-20.456
+ngsa,soil,soil,TS0769,TS0769,137.838,-20.452
+ngsa,soil,soil,TS0759,TS0759,137.015,-20.042
+ngsa,soil,soil,TS0752,TS0752,135.288,-19.478
+ngsa,soil,soil,TS0748,TS0748,136.068,-19.293
+ngsa,soil,soil,TS0747,TS0747,134.608,-19.139
+ngsa,soil,soil,TS0746,TS0746,134.848,-18.662
+ngsa,soil,soil,TS0741,TS0741,136.116,-18.577
+ngsa,soil,soil,TS0735,TS0735,137.968,-17.982
+ngsa,soil,soil,TS0733,TS0733,134.532,-18.278
+ngsa,soil,soil,TS0730,TS0730,135.15,-18.257
+ngsa,soil,soil,TS0728,TS0728,133.492,-18.171
+ngsa,soil,soil,TS0990,TS0990,138.458,-21.949
+ngsa,soil,soil,TS1147,TS1147,147.488,-27.992
+ngsa,soil,soil,TS0991,TS0991,142.407,-22.228
+ngsa,soil,soil,TS0993,TS0993,146.926,-21.928
+ngsa,soil,soil,TS1109,TS1109,141.623,-25.964
+ngsa,soil,soil,TS1107,TS1107,147.927,-26.475
+ngsa,soil,soil,TS1105,TS1105,144.309,-26.34
+ngsa,soil,soil,TS1101,TS1101,142.358,-25.755
+ngsa,soil,soil,TS1098,TS1098,139.476,-25.826
+ngsa,soil,soil,TS1093,TS1093,144.567,-25.919
+ngsa,soil,soil,TS1092,TS1092,145.581,-25.807
+ngsa,soil,soil,TS1110,TS1110,146.075,-26.387
+ngsa,soil,soil,TS1091,TS1091,142.175,-25.681
+ngsa,soil,soil,TS1087,TS1087,140.753,-25.694
+ngsa,soil,soil,TS1082,TS1082,140.886,-25.465
+ngsa,soil,soil,TS1079,TS1079,143.799,-25.238
+ngsa,soil,soil,TS1078,TS1078,143.004,-25.069
+ngsa,soil,soil,TS1077,TS1077,140.179,-25.056
+ngsa,soil,soil,TS1076,TS1076,143.26,-25.179
+ngsa,soil,soil,TS1074,TS1074,141.358,-25.064
+ngsa,soil,soil,TS1088,TS1088,142.79,-25.601
+ngsa,soil,soil,TS1073,TS1073,138.736,-24.977
+ngsa,soil,soil,TS1111,TS1111,143.169,-26.315
+ngsa,soil,soil,TS1113,TS1113,146.248,-26.392
+ngsa,soil,soil,TS1143,TS1143,144.259,-28.568
+ngsa,soil,soil,TS1142,TS1142,145.683,-28.059
+ngsa,soil,soil,TS1139,TS1139,148.506,-27.798
+ngsa,soil,soil,TS1138,TS1138,145.036,-28.159
+ngsa,soil,soil,TS1136,TS1136,142.264,-27.755
+ngsa,soil,soil,TS1135,TS1135,143.837,-27.989
+ngsa,soil,soil,TS1134,TS1134,142.781,-27.641
+ngsa,soil,soil,TS1112,TS1112,143.385,-26.296
+ngsa,soil,soil,TS1132,TS1132,144.085,-27.529
+ngsa,soil,soil,TS1128,TS1128,147.3,-27.468
+ngsa,soil,soil,TS1126,TS1126,145.18,-27.351
+ngsa,soil,soil,TS1123,TS1123,141.173,-27.085
+ngsa,soil,soil,TS1119,TS1119,141.984,-27.497
+ngsa,soil,soil,TS1116,TS1116,146.177,-26.654
+ngsa,soil,soil,TS1115,TS1115,144.311,-26.84
+ngsa,soil,soil,TS1114,TS1114,142.086,-26.923
+ngsa,soil,soil,TS1129,TS1129,145.218,-27.394
+ngsa,soil,soil,TS1069,TS1069,140.584,-24.837
+ngsa,soil,soil,TS1066,TS1066,143.901,-24.752
+ngsa,soil,soil,TS1062,TS1062,142.055,-24.448
+ngsa,soil,soil,TS1018,TS1018,138.761,-22.874
+ngsa,soil,soil,TS1016,TS1016,140.338,-23.04
+ngsa,soil,soil,TS1015,TS1015,139.942,-22.891
+ngsa,soil,soil,TS1013,TS1013,141.738,-23.034
+ngsa,soil,soil,TS1012,TS1012,141.65,-23.054
+ngsa,soil,soil,TS1011,TS1011,141.954,-22.814
+ngsa,soil,soil,TS1007,TS1007,138.441,-22.512
+ngsa,soil,soil,TS1019,TS1019,144.551,-22.993
+ngsa,soil,soil,TS1005,TS1005,144.654,-22.479
+ngsa,soil,soil,TS1003,TS1003,138.862,-22.908
+ngsa,soil,soil,TS1002,TS1002,144.698,-22.303
+ngsa,soil,soil,TS1001,TS1001,144.516,-22.42
+ngsa,soil,soil,TS0999,TS0999,139.96,-22.411
+ngsa,soil,soil,TS0998,TS0998,146.556,-22.222
+ngsa,soil,soil,TS0996,TS0996,142.515,-22.282
+ngsa,soil,soil,TS0995,TS0995,143.101,-22.385
+ngsa,soil,soil,TS1004,TS1004,140.563,-22.612
+ngsa,soil,soil,TS1022,TS1022,145.247,-22.98
+ngsa,soil,soil,TS1023,TS1023,146.684,-23.14
+ngsa,soil,soil,TS1024,TS1024,139.574,-23.217
+ngsa,soil,soil,TS1061,TS1061,138.636,-24.928
+ngsa,soil,soil,TS1059,TS1059,145.201,-24.496
+ngsa,soil,soil,TS1057,TS1057,145.203,-24.312
+ngsa,soil,soil,TS1056,TS1056,144.969,-24.072
+ngsa,soil,soil,TS1053,TS1053,138.83,-24.312
+ngsa,soil,soil,TS1051,TS1051,143.353,-24.109
+ngsa,soil,soil,TS1046,TS1046,144.853,-24.023
+ngsa,soil,soil,TS1045,TS1045,143.132,-24.085
+ngsa,soil,soil,TS1044,TS1044,141.091,-24.168
+ngsa,soil,soil,TS1042,TS1042,141.097,-23.706
+ngsa,soil,soil,TS1038,TS1038,143.877,-23.636
+ngsa,soil,soil,TS1037,TS1037,139.471,-24.361
+ngsa,soil,soil,TS1035,TS1035,143.846,-23.616
+ngsa,soil,soil,TS1032,TS1032,145.805,-23.557
+ngsa,soil,soil,TS1030,TS1030,141.51,-23.349
+ngsa,soil,soil,TS1027,TS1027,139.875,-23.661
+ngsa,soil,soil,TS1025,TS1025,144.383,-23.193
+ngsa,soil,soil,TS0992,TS0992,138.698,-22.19
+ssl-ir,soil,O2,O2,ssl-ir_O2,35.217018,31.771959

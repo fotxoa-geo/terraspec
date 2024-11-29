@@ -7,6 +7,7 @@ from simulation.sim_workflow import run_sim_workflow
 from slpit.slpit_workflow import run_slpit_workflow
 from tetracorder.tetracorder_workflow import run_tetracorder_workflow
 from shift.shift_workflow import run_shift_workflow
+from utils.ecosis_format import run_ecosis
 import time
 def display_menu():
     print("Welcome to the Interactive Menu")
@@ -14,7 +15,8 @@ def display_menu():
     print("B... SLPIT")
     print("C... Tetracorder")
     print('D... SHIFT')
-    print("E... Exit")
+    print("E... ECOSIS tables")
+    print("F... Exit")
 
 def main():
     parser = argparse.ArgumentParser(description='Run Terraspec')
@@ -51,7 +53,10 @@ def main():
         elif choice == 'D':
             run_shift_workflow(os.path.join(base_directory, 'shift'), sensor='aviris_ng', dry_run=args.dry_run)
 
-        elif choice == "E":
+        elif choice == 'E':
+            run_ecosis(base_directory=base_directory)
+
+        elif choice == "F":
             outro = "TerraSpec processes complete. Thank you for using Terraspec!"
             cursor_print(outro)
             time.sleep(1)

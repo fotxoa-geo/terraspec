@@ -19,15 +19,7 @@ import geopandas as gpd
 from utils.results_utils import r2_calculations, load_data
 from matplotlib.ticker import FormatStrFormatter
 
-# quadrat groupings
-quad_phenophase_key = {'early leaf out': 'pv',
-                       'early senescence': 'npv',
-                       'flowers': 'pv',
-                       'full leaf out': 'pv',
-                       'full senescence': 'npv',
-                       'last year senescence': 'npv',
-                       'seeds': 'npv',
-                       'yellow flower': 'pv'}
+
 
 
 class figures:
@@ -68,75 +60,7 @@ class figures:
         terraspec_base = os.path.dirname(base_directory)
         self.slpit_figures = os.path.join(terraspec_base, 'slpit', 'figures')
 
-    def quad_cover(self):
-        # load quadrat tallies
-        df_quad = pd.read_excel(os.path.join(self.base_directory, 'field', '20230516_quadrat_tallies_fixkey.xlsx'))
-        df_quad['phenophase'] = df_quad['phenophase'].apply(str.lower)
-        df_quad['cover_species'] = df_quad['cover_species'].apply(str.lower)
-        df_quad['cover'] = ''
 
-        # df coords with data and dates
-        df_coords = pd.read_csv('gis/shift_plot_coordinates.csv')
-
-        df_quads_to_merge = []
-        for specie in sorted(list(df_quad.cover_species.unique())):
-            df_quad_select = df_quad.loc[df_quad['cover_species'] == specie].copy()
-
-            if specie in ['soil', 'rock', 'npv']:
-                if specie == 'rock':
-                    df_quad_select['cover'] = 'soil'
-                else:
-                    df_quad_select['cover'] = specie
-
-            elif specie in ['water']:
-                continue
-            else:
-                df_quad_select['cover'] = df_quad_select['phenophase'].replace(quad_phenophase_key)
-
-            df_quads_to_merge.append(df_quad_select)
-
-        df_quad_cover = pd.concat(df_quads_to_merge, ignore_index=True)
-
-        df_agg_rows = []
-        for _plot, plot in enumerate(sorted(list(df_quad_cover['plot_name'].unique()))):
-            df_plot = df_quad_cover.loc[df_quad_cover['plot_name'] == plot].copy()
-            df_meta = df_coords.loc[df_coords['Plot Name'] == plot]
-
-            if df_meta.empty:
-                pass
-            else:
-                plot_date = df_meta['Date'].values[0]
-                df_plot = df_plot.loc[df_plot['date'] == df_meta['Date'].values[0]].copy()
-                df_plot = df_plot.drop(columns=['date'])
-
-                df_agg = df_plot.groupby(['cover']).sum().reset_index()
-                df_agg['frac_cover'] = df_agg['count'] / df_agg['count'].sum()
-
-                row = [plot, plot_date, ]
-                for cover in sorted(list(df_agg.cover.unique())):
-                    frac = df_agg.loc[df_agg['cover'] == cover, 'frac_cover'].iloc[0]
-                    row.append((cover, frac))
-
-                df_agg_rows.append(row)
-
-        # aggregate all rows
-        df_to_concat = []
-        for row in df_agg_rows:
-            plot = row[0]
-            date = row[1]
-            frac_covers = row[2:]
-            cols = ['plot', 'date']
-            values = [plot, date]
-            for cover in frac_covers:
-                cols.append(cover[0])
-                values.append(cover[1])
-            df = pd.DataFrame(values).T
-            df.columns = cols
-            df_to_concat.append(df)
-
-        df_concat = pd.concat(df_to_concat)
-        df_concat = df_concat.fillna(0)
-        df_concat.to_csv(os.path.join(self.output_directory, 'quad_cover.csv'), index=False)
 
     def plot_summary(self):
         # spectral data
@@ -604,8 +528,8 @@ def run_figures(base_directory):
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs)
     #fig.plot_summary()
-    #fig.quad_cover()
-    #fig.plot_rmse(norm_option='brightness')
+
+    #fig.plot_remse(norm_option='brightness')
     #fig.plot_rmse(norm_option='none')
     #fig.plot_combined(norm_option='brightness')
     #fig.plot_combined(norm_option='none')

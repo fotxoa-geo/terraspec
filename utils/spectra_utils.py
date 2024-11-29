@@ -19,6 +19,7 @@ import tetracorder.tetracorder as tc
 import spectral.io.envi as envi
 from emit_utils.file_checks import envi_header
 from scipy.interpolate import interp1d
+import ast
 
 def get_dd_coords(coord):
     dd_mm = float(str(coord).split(".")[0][-2:] + "." + str(coord).split(".")[1])/60
@@ -233,7 +234,7 @@ class spectra:
         return row_spectra, row_fractions, row_index
 
     @classmethod
-    def create_spectral_bundles(cls, df, level, spectral_bundles):
+    def create_spectral_bundles(cls, df, level, spectral_bundles, spectral_bundle_project):
         ts = time.time()
         # define seed for random sampling of spectral bundles
         np.random.seed(13)
@@ -249,8 +250,8 @@ class spectra:
             df_select = df_select.values.tolist()
             class_lists.append(df_select)
 
-        output_pickle = 'spectraL_bundles'
-        if os.path.isfile(os.path.join('objects', output_pickle + '.pickle')):
+        output_pickle = f'spectral_bundles_{spectral_bundle_project}'
+        if os.path.isfile(os.path.join('objects', f"output_pickle_{spectral_bundle_project}.pickle")):
             all_combinations = load_pickle(output_pickle)
         else:
             all_combinations = list(itertools.product(*class_lists))
@@ -298,6 +299,8 @@ class spectra:
         mixed_spectra = np.zeros((1, columns, len(wavelengths)))
         index = np.zeros((1, columns, 3))
         fractions = np.zeros((1, columns, 3))
+        vegetation_spectra = np.zeros((1, columns, len(wavelengths)))
+        soil_spectra = np.zeros((1, columns, len(wavelengths)))
 
         for _col, col in enumerate(range(0, columns)):
             increment_frac = np.round(col * col_size, 2)
@@ -306,105 +309,177 @@ class spectra:
             mixed_spectra[0, _col, :] = (spectral_bundle[0][spectra_start:].astype(dtype=float) * npv_frac) + \
                                         (spectral_bundle[1][spectra_start:].astype(dtype=float) * pv_frac) + \
                                         (spectral_bundle[2][spectra_start:].astype(dtype=float) * soil_frac)
+
+            vegetation_spectra[0, _col, :] = (spectral_bundle[0][spectra_start:].astype(dtype=float) * npv_frac) + \
+                                             (spectral_bundle[1][spectra_start:].astype(dtype=float) * pv_frac)
+
+            soil_spectra[0, _col, :] = spectral_bundle[2][spectra_start:].astype(dtype=float) * soil_frac
+
             fractions[0, _col, :] = [npv_frac, pv_frac, soil_frac]
             index[0, _col, :] = list(map(int, [spectral_bundle[0][0], spectral_bundle[1][0], spectral_bundle[2][0]]))
 
-        return mixed_spectra, fractions, index
+        return mixed_spectra, fractions, index, vegetation_spectra, soil_spectra
 
     @classmethod
-    def increment_reflectance(cls, class_names: list, simulation_table: str, level: str, spectral_bundles:int,
+    def increment_reflectance(cls, class_names: list, simulation_table, level: str, spectral_bundles:int,
                               increment_size:float, output_directory: str, wvls, name: str, spectra_starting_col:int,
-                              endmember:str, simulation_library_array):
+                              endmember:str, simulation_library_array, spectral_bundle_project):
+
+        spec_array = spectra.create_spectral_bundles(df=simulation_table, level=level,
+                                                     spectral_bundles=spectral_bundles,
+                                                     spectral_bundle_project=spectral_bundle_project)
 
         cols = int(1 / increment_size) + 1
-        fraction_grid = np.zeros((spectral_bundles, cols, len(class_names)))
-        spectra_grid = np.zeros((spectral_bundles, cols, len(wvls)))
-        index_grid = np.zeros((spectral_bundles, cols, len(class_names)))
-        em_grid = np.zeros((spectral_bundles, cols, len(wvls)))
-        em_extract_grid = np.zeros((spectral_bundles, cols, len(wvls)))
-
-        spec_array = spectra.create_spectral_bundles(df=simulation_table, level=level, spectral_bundles=spectral_bundles)
+        fraction_grid = np.zeros((len(spec_array), cols, len(class_names)))
+        spectra_grid = np.zeros((len(spec_array), cols, len(wvls)))
+        index_grid = np.zeros((len(spec_array), cols, len(class_names)))
+        veg_grid = np.zeros((len(spec_array), cols, len(wvls)))
+        soil_grid = np.zeros((len(spec_array), cols, len(wvls)))
 
         results = p_map(partial(spectra.row_reflectance, increment_size, cols, wvls,spectra_starting_col, endmember),
                         [bundle for bundle in spec_array], [_index for _index,index in enumerate(spectra_grid)],
                         **{"desc": "\t\t processing reflectance...", "ncols": 150})
-        em_indices = {'npv': 0, 'pv': 1, 'soil': 2}
 
         # populate the results
         for _row, row in enumerate(results):
             spectra_grid[_row, :, :] = row[0]
             fraction_grid[_row, :, :] = row[1]
             index_grid[_row, :, :] = row[2]
-            picked_em = int(row[2][0][0][em_indices[endmember]])
-            #em_spectra = simulation_library_array[picked_em, :, :] * row[1][0][:,[em_indices[endmember]]]
-            em_grid[_row, :, :] = simulation_library_array[picked_em, :, :] * row[1][0][:,[em_indices[endmember]]]
-            em_extract_grid[_row, :, :] = row[0] - (simulation_library_array[picked_em, :, :] * row[1][0][:,[em_indices[endmember]]])
+            veg_grid[_row, :, :] = row[3]
+            soil_grid[_row, :, :] = row[4]
 
         # save the datasets
-        refl_meta = get_meta(lines=spectral_bundles, samples=cols, bands=wvls, wvls=True)
-        index_meta = get_meta(lines=spectral_bundles, samples=cols, bands=class_names, wvls=False)
-        fraction_meta = get_meta(lines=spectral_bundles, samples=cols, bands=class_names, wvls=False)
-        em_meta = get_meta(lines=spectral_bundles, samples=cols, bands=wvls, wvls=True)
-        em_extract_meta = get_meta(lines=spectral_bundles, samples=cols, bands=wvls, wvls=True)
+        refl_meta = get_meta(lines=spectra_grid.shape[0], samples=cols, bands=wvls, wvls=True)
+        index_meta = get_meta(lines=index_grid.shape[0], samples=cols, bands=class_names, wvls=False)
+        fraction_meta = get_meta(lines=fraction_grid.shape[0], samples=cols, bands=class_names, wvls=False)
+        veg_meta = get_meta(lines=veg_grid.shape[0], samples=cols, bands=wvls, wvls=True)
+        soil_meta = get_meta(lines=soil_grid.shape[0], samples=cols, bands=wvls, wvls=True)
 
         # save index, spectra, fraction grid
         output_files = [os.path.join(output_directory, f'{name}_index.hdr'),
                         os.path.join(output_directory, f'{name}_spectra.hdr'),
                         os.path.join(output_directory, f'{name}_fractions.hdr'),
-                        os.path.join(output_directory, f'{name}_em_spectra.hdr'),
-                        os.path.join(output_directory, f'{name}_extract_spectra.hdr')]
+                        os.path.join(output_directory, f'{name}_vegetation.hdr'),
+                        os.path.join(output_directory, f'{name}_soils.hdr')]
 
-        meta_docs = [index_meta, refl_meta, fraction_meta, em_meta, em_extract_meta]
-        grids = [index_grid, spectra_grid, fraction_grid, em_grid, em_extract_grid]
+        meta_docs = [index_meta, refl_meta, fraction_meta, veg_meta, soil_meta]
+        grids = [index_grid, spectra_grid, fraction_grid, veg_grid, soil_grid]
 
         p_map(save_envi, output_files, meta_docs, grids, **{"desc": "\t\t saving envi files...", "ncols": 150})
         del index_grid, spectra_grid, fraction_grid
 
 
     @classmethod
-    def cont_removal(cls, wavelengths, reflectance, expert_file_selection, veg_rfl=None, veg_correction=False):
-        
+    def cont_removal(cls, wavelengths, reflectance, library_reflectance, expert_file_selection, veg_rfl=None, veg_correction=False,
+                     constraints=None):
+
+        #thresholds from expert file system
+        ct_thresholds = {'CTHRESH1': 0.01, 'CTHRESH2': 0.02, 'CTHRESH4': 0.04, 'CTHRESH5': 0.05}
+
         # this holds the multiple values of bd if multiple features are passed by the expert file
         features_array = np.ones((len(expert_file_selection))) * -9999
         wavelength_array = np.ones((len(expert_file_selection))) * -9999
+        integrals_array = np.ones((len(expert_file_selection))) * -9999
+        fit_array = np.ones((len(expert_file_selection))) * -9999
+
         rc_array = np.ones((len(expert_file_selection))) * -9999
         rb_array = np.ones((len(expert_file_selection))) * -9999
 
+        # subtract vegetation from spectra leaving only soil spectra
         if veg_correction:
             # extract vegetation spectra from reflectance; leaves only the soil component
             reflectance = reflectance - veg_rfl
         else:
             reflectance = reflectance
 
+        # loop through features
         for _cont_feat, cont_feat in enumerate(expert_file_selection):
             feature = cont_feat['continuum']
 
+            # calculate left indices
             left_inds = np.where(np.logical_and(wavelengths >= feature[0], wavelengths <= feature[1]))[0]
             left_x = wavelengths[int(left_inds.mean())]
-            left_y = reflectance[left_inds].mean()
-        
+            left_y_obs = reflectance[left_inds].mean()
+            left_y_lib = library_reflectance[left_inds].mean()
+
+            # calculate right indices
             right_inds = np.where(np.logical_and(wavelengths >= feature[2], wavelengths <= feature[3]))[0]
-        
             if right_inds.size == 0:
-                right_inds = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength=(feature[2] + feature[3])/2) # this takes the mean of right bounds
+                right_inds = spectra.nearest_index_to_wavelength(wavelengths=wavelengths,
+                                                                 target_wavelength=(feature[2] + feature[3])/2) # this takes the mean of right bounds
             else:
                 pass
 
             right_x = wavelengths[int(right_inds.mean())]
-            right_y = reflectance[right_inds].mean()
-        
+            right_y_obs = reflectance[right_inds].mean()
+            right_y_lib = library_reflectance[right_inds].mean()
+
+            # calculate features
             feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
-            continuum = interp1d([left_x, right_x], [left_y, right_y], bounds_error=False, fill_value='extrapolate')(wavelengths)
-            
-            # this needs an rb and rc check - rc has to always be greater than rb ?
-            reflectance_feature = reflectance[feature_inds]
-            
-            if np.any(reflectance[feature_inds] <= 0): # this ensures that all of the reflectance values are positive and valid
+
+            # calculate continuum
+            continuum_obs = interp1d([left_x, right_x], [left_y_obs, right_y_obs], bounds_error=False,
+                                 fill_value='extrapolate')(wavelengths)
+
+            continuum_lib = interp1d([left_x, right_x], [left_y_lib, right_y_lib], bounds_error=False,
+                                     fill_value='extrapolate')(wavelengths)
+
+            # calculate fit
+            oc = reflectance/continuum_obs
+            lc = library_reflectance/continuum_lib
+            f = np.corrcoef(oc[feature_inds], lc[feature_inds])[0, 1]
+
+            # implement fit constraint
+            #if None != constraints:
+            #    depth_fit_constraint = float(constraints['DEPTH-FIT'][0])
+            #
+            #    if f < depth_fit_constraint:
+            #        continue
+            #else:
+            #    pass
+
+            fit_array[_cont_feat] = f
+
+            # implement threshold from tetracorder detections is found!
+            try:
+                feature_threshold = ct_thresholds[cont_feat['ct'][0][1:-1]]
+                if np.any(reflectance[feature_inds] < feature_threshold):
+                    continue
+            except:
+                pass
+
+            # implement rct/lct threshold ratio
+            try:
+                right_cont_ratio = cont_feat['rct/lct>'][0]
+                rct = continuum_obs[feature_inds][-1]
+                lct = continuum_obs[feature_inds][0]
+
+                if not rct/lct > right_cont_ratio:
+                    continue
+            except:
+                pass
+
+            # implement lct/rct threshold ratio
+            try:
+                left_cont_ratio = cont_feat['lct/rct>'][0]
+                rct = continuum_obs[feature_inds][-1]
+                lct = continuum_obs[feature_inds][0]
+
+                if not lct / rct > left_cont_ratio:
+                    continue
+            except:
+                pass
+
+            # calculate band depth; get max index of band depth ignore calculations with negative reflectance!
+            if np.any(reflectance[feature_inds] < 0):
                 continue
-             
-            # calculate band depth; get max index of band depth
-            depth = np.abs(1 - np.array(reflectance[feature_inds]/continuum[feature_inds]))
+
+            depth = 1 - np.array(reflectance[feature_inds]/continuum_obs[feature_inds])
             depth_max_index = depth.argmax()
+
+            # calculate integral of library reference
+            h_x = lc[feature_inds]/lc[feature_inds] - lc[feature_inds]
+            integral = np.trapz(h_x, wavelengths[feature_inds])
 
             # append max band bepth
             bd = depth[depth_max_index]
@@ -415,23 +490,26 @@ class spectra:
             wavelength_array[_cont_feat] = bd_wl_max_center
 
             # append rb and rc
-            rc_array[_cont_feat] = continuum[feature_inds][depth_max_index]
+            rc_array[_cont_feat] = continuum_obs[feature_inds][depth_max_index]
             rb_array[_cont_feat] = reflectance[feature_inds][depth_max_index]
 
-        # this is currently returning the biggest band depth
-        bd_max_index = features_array.argmin()
-        
-        bd_return = features_array[bd_max_index]
-        rb_return = rb_array[bd_max_index]
-        rc_return = rc_array[bd_max_index]
+            # append integral area
+            integrals_array[_cont_feat] = integral
 
-        #bd_return = features_array[features_array != -9999].mean()
-        #rb_return = rb_array[rb_array != -9999].mean()
-        #rc_return = rc_array[rc_array != -9999].mean()
+        # correct data for -9999.
+        integrals_array[integrals_array == -9999] = np.nan
+        features_array[features_array == -9999] = np.nan
+        fit_array[fit_array == -9999] = np.nan
 
-        wvl_return = wavelength_array[bd_max_index]
+        # this will return depths that are weighted
+        relative_area = integrals_array/np.nansum(integrals_array)
+        bd_w = np.nansum(relative_area * features_array * fit_array)
 
-        return bd_return, rb_return, rc_return, wvl_return
+        rb_return = -9999
+        rc_return = -9999
+        wvl_return = -9999
+
+        return bd_w, rb_return, rc_return, wvl_return
         
         
     @classmethod
@@ -449,7 +527,8 @@ class spectra:
         return group_wvl_center
 
     @classmethod
-    def mineral_group_retrival(cls, mineral_index, spectra_observed, veg_rfl=None, plot=False, veg_correction=False):
+    def mineral_group_retrival(cls, mineral_index, spectra_observed, veg_rfl=None, plot=False, veg_correction=False,
+                               veg_fraction=None):
         decoded_expert = tc.decode_expert_system(os.path.join('utils', 'tetracorder', 'cmd.lib.setup.t5.27c1'),
                                                           log_file=None, log_level='INFO')
 
@@ -457,133 +536,125 @@ class spectra:
                                       'sprlb06': os.path.join('utils', 'tetracorder', 'r06emitd_envi')}
 
         # array to be returned with following positions: group number, rb, rc, rbo, rco, aggregated group num
-        return_array = np.ones((9)) * -9999.
+        return_array = np.ones((10)) * -9999.
+        soil_fraction = 1 - veg_fraction
 
-        # mineral matrix
-        if mineral_index != 0.:
-            df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
-            df_mineral_matrix = df_mineral_matrix.fillna(-9999)
-            record = df_mineral_matrix.loc[df_mineral_matrix['Index'] == int(mineral_index), 'Record'].iloc[0]
-            filename = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Filename'].iloc[0]
-            group_num = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Group'].iloc[0]
-            group = f'group.{group_num}um'
-            ref_library = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Library'].iloc[0]
-
-            # row index pertains specifically to df; not value from Tetracorder!
-            row_index = df_mineral_matrix[df_mineral_matrix['Record'] == record].index[0]
-            mineral_row = df_mineral_matrix.iloc[row_index, 7:]
-            mineral_row = mineral_row.apply(pd.to_numeric, errors='coerce')
-
-            if mineral_row.isna().all():
-                aggregated_group = 3
-            else:
-                mineral_group = mineral_row.idxmax()
-                aggregated_group = mineral_groupings.get(mineral_group, 3)
-
-            # load library
-            item = SPECTRAL_REFERENCE_LIBRARY[ref_library]
-            library = envi.open(envi_header(item), item)
-            library_reflectance = library.spectra.copy()
-            library_records = [int(q) for q in library.metadata['record']]
-
-            hdr = envi.read_envi_header(envi_header(item))
-            wavelengths = np.array([float(q) for q in hdr['wavelength']])
-            normalized_group_name = os.path.normpath(filename.split('.depth.gz')[0]) # need this to be compatible for windows; not sure if needed for linux.
-
-            if veg_correction:
-                # get rc and rb from tetracorder library
-                bd, rb, rc, wl = spectra.cont_removal(wavelengths,
-                                                      library_reflectance[library_records.index(record), :],
-                                                      decoded_expert[normalized_group_name]['features'],
-                                                      veg_correction=veg_correction, veg_rfl=veg_rfl)
-
-                # get rco and rbo - observed spectra
-                bdo, rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed,
-                                                           decoded_expert[normalized_group_name]['features'],
-                                                           veg_correction=veg_correction, veg_rfl=veg_rfl)
-
-            else:
-                # get rc and rb from tetracorder library
-                bd, rb, rc, wl = spectra.cont_removal(wavelengths, library_reflectance[library_records.index(record), :], decoded_expert[normalized_group_name]['features'], veg_correction=veg_correction)
-
-                # get rco and rbo - observed spectra
-                bdo, rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed,  decoded_expert[normalized_group_name]['features'], veg_correction=veg_correction)
-
-            return_array[:] = [aggregated_group, bd, rb, rc, wl, bdo, rbo, rco, wl_o]
-
-        else:
+        if soil_fraction < .15: # vegetation fraction check; ignoring very low values; no sense in wasting computing resources here
             pass
+        else:
+
+            # mineral matrix
+            if mineral_index not in [0, 1, 13, 15, 20, 21, 22, 25, 28, 29, 37, 38, 40, 41, 49, 56, 57, 60, 82, 83, 94,
+                                     96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 194, 196, 228, 234,
+                                     238, 270, 271]: # this excludes minerals not used for simulation!
+
+                df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
+                df_mineral_matrix = df_mineral_matrix.fillna(-9999)
+                record = df_mineral_matrix.loc[df_mineral_matrix['Index'] == int(mineral_index), 'Record'].iloc[0]
+                filename = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Filename'].iloc[0]
+                group_num = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Group'].iloc[0]
+                group = f'group.{group_num}um'
+                ref_library = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Library'].iloc[0]
+
+                # row index pertains specifically to df; not value from Tetracorder!
+                row_index = df_mineral_matrix[df_mineral_matrix['Record'] == record].index[0]
+                mineral_row = df_mineral_matrix.iloc[row_index, 7:]
+                mineral_row = mineral_row.apply(pd.to_numeric, errors='coerce')
+
+                # load library
+                item = SPECTRAL_REFERENCE_LIBRARY[ref_library]
+                library = envi.open(envi_header(item), item)
+                library_reflectance = library.spectra.copy()
+                library_records = [int(q) for q in library.metadata['record']]
+
+                hdr = envi.read_envi_header(envi_header(item))
+                wavelengths = np.array([float(q) for q in hdr['wavelength']])
+                normalized_group_name = os.path.normpath(filename.split('.depth.gz')[0]) # need this to be compatible for windows; not sure if needed for linux.
+
+                try:
+                    constraints = decoded_expert[normalized_group_name]['constituent_constraints']
+                except:
+                    constraints = None
+                    print(decoded_expert[normalized_group_name]['longname'], 'has no constraints!')
+
+                if veg_correction:
+                    # get rco and rbo - observed spectra
+                    bdo, rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed, library_reflectance[library_records.index(record), :],
+                                                               decoded_expert[normalized_group_name]['features'],
+                                                               veg_correction=veg_correction, veg_rfl=veg_rfl,
+                                                               constraints=constraints)
+
+                else:
+                    # get rco and rbo - observed spectra
+                    bdo, rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed, library_reflectance[library_records.index(record), :],
+                                                               decoded_expert[normalized_group_name]['features'],
+                                                               veg_correction=veg_correction, constraints=constraints)
+
+                return_array[:] = [group_num, mineral_index, -9999, -9999, -9999, -9999, bdo, rbo, rco, wl_o]
+
+            else:
+                pass
 
         return return_array
 
     @classmethod
-    def mineral_group_row(cls, mineral_index_row, spectra_row, vegetation_row=None, veg_correction=False):
+    def mineral_group_row(cls, mineral_index_row, spectra_row, fraction_row=None, vegetation_row=None,
+                          veg_correction=False, group=None):
 
-        row_return_array = np.ones((mineral_index_row.shape[0], 18)) * -9999.
+        group_band_index = {'g1': 1, 'g2': 3}
+        row_return_array = np.ones((mineral_index_row.shape[0], 10)) * -9999.
 
         for _col, col in enumerate(mineral_index_row):
-            for _band, band in enumerate(col):
-                if _band in [0, 2]:
-                    pass
-                else:
+            mineral_index = mineral_index_row[_col, group_band_index[group]]
+            veg_fraction = fraction_row[_col, 0] + fraction_row[_col, 1]
+            col_spectra = spectra_row[_col, :]
 
-                    if veg_correction:
-                        col_spectra = spectra_row[_col, :]
-                        veg_rfl = vegetation_row[_col, :]
-                        mineral_retrival = spectra.mineral_group_retrival(mineral_index=band,
-                                                                          spectra_observed=col_spectra,
-                                                                          veg_correction=veg_correction,
-                                                                          veg_rfl=veg_rfl)
+            if veg_correction:
+                veg_rfl = vegetation_row[_col, :]
+                mineral_retrival = spectra.mineral_group_retrival(mineral_index=mineral_index,
+                                                                  spectra_observed=col_spectra,
+                                                                  veg_correction=veg_correction,
+                                                                  veg_rfl=veg_rfl, veg_fraction=veg_fraction)
 
-                        group_num = mineral_retrival[0]
+            else:
+                mineral_retrival = spectra.mineral_group_retrival(mineral_index=mineral_index,
+                                                                  spectra_observed=col_spectra,
+                                                                  veg_correction=veg_correction,
+                                                                  veg_fraction=veg_fraction)
 
-                        if group_num == 1:
-                            row_return_array[_col, :9] = mineral_retrival
-                        else:
-                            row_return_array[_col, 9:] = mineral_retrival
-
-                    else:
-
-                        col_spectra = spectra_row[_col, :]
-                        mineral_retrival = spectra.mineral_group_retrival(mineral_index=band,
-                                                                          spectra_observed=col_spectra,
-                                                                          veg_correction=veg_correction)
-
-                        group_num = mineral_retrival[0]
-
-                        if group_num == 1:
-                            row_return_array[_col, :9] = mineral_retrival
-                        else:
-                            row_return_array[_col, 9:] = mineral_retrival
+            row_return_array[_col, :] = mineral_retrival
 
         return row_return_array
 
     @classmethod
-    def mineral_components(cls, index_array, spectra_array, output_file, vegetation_array=None, veg_correction=False):
+    def mineral_components(cls, index_array, spectra_array, output_file, group, fractions_array=None,
+                           vegetation_array=None, veg_correction=False):
 
-        # cont grid - corresponds to Rc and Rc-observed - for both group 1 and group 2
-        output_grid = np.zeros((index_array.shape[0], index_array.shape[1], 18))
+        # cont grid - corresponds to Rc and Rc-observed
+        output_grid = np.zeros((index_array.shape[0], index_array.shape[1], 10))
 
         if veg_correction:
-            results = p_map(partial(spectra.mineral_group_row, veg_correction=veg_correction),
+            results = p_map(partial(spectra.mineral_group_row, veg_correction=veg_correction, group=group),
                             [index_array[_row, :, :] for _row, row in enumerate(index_array)],
                             [spectra_array[_row, :, :] for _row, row in enumerate(spectra_array)],
+                            [fractions_array[_row, :, :] for _row, row in enumerate(fractions_array)],
                             [vegetation_array[_row, :, :] for _row, row in enumerate(vegetation_array)],
 
                             **{"desc": "\t\t processing continuum reflectance (veg correction enabled) ...",
                                 "ncols": 150})
 
         else:
-            results = p_map(partial(spectra.mineral_group_row, veg_correction=veg_correction),
+            results = p_map(partial(spectra.mineral_group_row, veg_correction=veg_correction,  group=group),
                             [index_array[_row, :, :] for _row, row in enumerate(index_array)],
                             [spectra_array[_row, :, :] for _row, row in enumerate(spectra_array)],
+                            [fractions_array[_row, :, :] for _row, row in enumerate(fractions_array)],
                             **{"desc": "\t\t processing continuum reflectance...", "ncols": 150})
 
         for _row, row in enumerate(results):
             output_grid[_row, :, :] = row
 
         # save spectra
-        meta = get_meta(lines=index_array.shape[0], samples=index_array.shape[1], bands=[i for i in range(18)], wvls=False)
+        meta = get_meta(lines=index_array.shape[0], samples=index_array.shape[1], bands=[i for i in range(10)], wvls=False)
         meta['data ignore value'] = -9999
         save_envi(output_file=output_file, meta=meta, grid=output_grid)
 

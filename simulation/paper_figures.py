@@ -45,7 +45,7 @@ class figures:
         self.linewidth = linewidth
         self.sig_figs = sig_figs
         self.cmap_kw = 'copper'
-        self.axes_limits = {'ymin': 0.04,
+        self.axes_limits = {'ymin': 0.0,
                             'ymax': 0.20,
                             'xmin':1.8,
                             'xmax': 6.2}

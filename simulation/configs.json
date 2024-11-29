@@ -2,8 +2,7 @@
   "urls": {
     "PILOT-2" : "http://datahub.geocradle.eu/sites/default/files/SSL_GEOCRADLE_1.csv",
     "OSSL": "UNK",
-    "MEYER_OKIN" : "UNK",
-    "ASTER": "UNK",
+    "MEYER_OKIN" : "https://ecosis.org/api/package/meyer-okin",
     "NGSA": "UNK"
   },
 
