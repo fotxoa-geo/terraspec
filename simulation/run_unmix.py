@@ -23,7 +23,8 @@ def unmix_sim_menu():
     print("You are in unmixing mode for simulations...")
     print("A... Unmix the no atmosphere reflectances")
     print("B... Unmix Hypertrace")
-    print("C... Exit")
+    print('C... Unmix geographic')
+    print("D... Exit")
 
 
 
@@ -47,7 +48,6 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
     
     create_directory( os.path.join(out_dir_path, 'outlogs'))
     outlog_name = os.path.join(out_dir_path, 'outlogs', f"{mode}-{os.path.basename(output_dest)}.out")  
-    
 
     if scenes == None:
         scrtch_rfl = os.path.join(out_dir_path, 'scratch', f"{mode}-{os.path.basename(output_dest)}")
@@ -167,29 +167,27 @@ class runs:
         # set scale to 1 reflectance
         self.scale = '1'
         self.spectra_starting_col_julia = '8'
+        self.spectra_starting_col_julia_spatial = '9'
 
     def geographic_sma(self, mode:str):
         print("commencing geographic spectral unmixing...")
 
         # Start unmixing process
-        reflectance_files = glob(os.path.join(self.output_directory, '*withold--*spectra'))
+        reflectance_files = glob(os.path.join(self.output_directory, '*geographic_*spectra'))
         create_directory((os.path.join(self.base_directory, "output", 'spatial')))
         
         for reflectance_file in reflectance_files:
             basename = os.path.basename(reflectance_file)
+            continent = basename.split('_')[3]
 
-            site = os.path.basename(reflectance_file)
-
-            # output destination
-            output_dest = os.path.join(self.base_directory, "output", 'spatial', site + "_" + mode + " ".join(self.optimal_parameters)).replace(
-                "--", "_").replace(" ", "_").replace("__", "_")
-
-            # get em file
-            em_file = os.path.join(self.em_libraries_output, "_".join(basename.split("__")[0:1]) + '__n_dims_4_unmix_library.csv')
+            # # output destination
+            output_dest = os.path.join(self.base_directory, "output", 'spatial', basename + "_" + mode + " ".join(self.optimal_parameters_sma)).replace("--", "_").replace(" ", "_").replace("__", "_")
+            # # get em file
+            em_file = os.path.join(self.em_libraries_output, f'geographic_convex_hull__n_dims_4_{continent}_unmix_library.csv')
 
             call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=em_file,
-                       parameters=self.optimal_parameters, output_dest=output_dest, scale=self.scale,
-                       spectra_starting_column=self.spectra_starting_col_julia)
+                      parameters=self.optimal_parameters_sma, output_dest=output_dest, scale=self.scale,
+                      spectra_starting_column=self.spectra_starting_col_julia_spatial)
 
 
     def latin_hypercubes(self, mode:str, io_bug):
@@ -292,7 +290,6 @@ def run_unmix_workflow(base_directory, dry_run, io_bug):
         unmix_sim_menu()
         user_input = input('\nPlease indicate the desired unmix mode: ').upper()
 
-    #geo = all_runs.geographic_sma(mode='sma-best')
         if user_input == 'A':
             sma_convex = all_runs.convex_hulls(mode='sma', io_bug=io_bug)
             mesma_convex = all_runs.convex_hulls(mode='mesma', io_bug=io_bug)
@@ -304,5 +301,7 @@ def run_unmix_workflow(base_directory, dry_run, io_bug):
             all_runs.hypertrace_call(mode='mesma')
             all_runs.hypertrace_call(mode='sma')
         elif user_input == 'C':
+            all_runs.geographic_sma(mode='sma')
+        elif user_input == 'D':
             print('returning to main menu...')
             break
