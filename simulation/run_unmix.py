@@ -175,19 +175,22 @@ class runs:
         # Start unmixing process
         reflectance_files = glob(os.path.join(self.output_directory, '*geographic_*spectra'))
         create_directory((os.path.join(self.base_directory, "output", 'spatial')))
-        
+
         for reflectance_file in reflectance_files:
             basename = os.path.basename(reflectance_file)
             continent = basename.split('_')[3]
+            dims = basename.split('_')[-2]
 
             # # output destination
-            output_dest = os.path.join(self.base_directory, "output", 'spatial', basename + "_" + mode + " ".join(self.optimal_parameters_sma)).replace("--", "_").replace(" ", "_").replace("__", "_")
+            output_dest = os.path.join(self.base_directory, "output", 'spatial', basename + "_" + mode + " ".join(self.optimal_parameters_sma)).replace("--","_").replace(" ", "_").replace("__", "_")
+
             # # get em file
-            em_file = os.path.join(self.em_libraries_output, f'geographic_convex_hull__n_dims_4_{continent}_unmix_library.csv')
+
+            em_file = os.path.join(self.em_libraries_output, f'geographic_convex_hull__n_dims_{dims}_{continent}_unmix_library.csv')
 
             call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=em_file,
-                      parameters=self.optimal_parameters_sma, output_dest=output_dest, scale=self.scale,
-                      spectra_starting_column=self.spectra_starting_col_julia_spatial)
+                       parameters = self.optimal_parameters_sma, output_dest = output_dest, scale = self.scale,
+                       spectra_starting_column = self.spectra_starting_col_julia_spatial)
 
 
     def latin_hypercubes(self, mode:str, io_bug):
