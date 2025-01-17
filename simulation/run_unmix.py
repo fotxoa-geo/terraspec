@@ -179,11 +179,13 @@ class runs:
         for reflectance_file in reflectance_files:
             basename = os.path.basename(reflectance_file)
             continent = basename.split('_')[3]
+            dims = basename.split('_')[-2]
 
             # # output destination
             output_dest = os.path.join(self.base_directory, "output", 'spatial', basename + "_" + mode + " ".join(self.optimal_parameters_sma)).replace("--", "_").replace(" ", "_").replace("__", "_")
+            
             # # get em file
-            em_file = os.path.join(self.em_libraries_output, f'geographic_convex_hull__n_dims_4_{continent}_unmix_library.csv')
+            em_file = os.path.join(self.em_libraries_output, f'convex_hull__n_dims_4_unmix_library.csv')
 
             call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_file, em_file=em_file,
                       parameters=self.optimal_parameters_sma, output_dest=output_dest, scale=self.scale,
