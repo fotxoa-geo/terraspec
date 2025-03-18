@@ -22,7 +22,8 @@ def table_sim_menu():
     print("A... Computing Performance Tables")
     print("B... Error Tables")
     print("C... Latex Tables")
-    print("D... Exit")
+    print("D... Geographic Tables")
+    print("E... Exit")
 
 
 class tables:
@@ -51,17 +52,16 @@ class tables:
         df = pd.DataFrame(results, columns=cols_df)
         df.to_csv(os.path.join(self.fig_directory, f'{mode}_unmix_error_report.csv'), index=False)
 
-    
     def geographic_table(self, mode:str):
-        fraction_files = load_fraction_files(self.base_directory, mode, '*withold*_fractional_cover')
-        results = p_umap(partial(error_processing, output_directory=self.output_directory), fraction_files,
-                         **{
-                             "desc": f"\t\t processing {mode} error tables...",
-                             "ncols": 150})
 
-        cols_df = ['scenario', 'normalization', 'num_em', 'cmbs', 'dims', 'mc_runs', 'npv_mae', 'pv_mae', 'soil_mae',
-                   'npv_rmse', 'pv_rmse', 'soil_rmse', 'npv_r2', 'pv_r2', 'soil_r2', 'npv_std', 'pv_std', 'soil_std',
-                   'npv_stde', 'pv_stde', 'soil_stde']
+        fraction_files = load_fraction_files(self.base_directory, mode, '*_fractional_cover')
+
+        results = p_umap(partial(error_processing, output_directory=self.output_directory), fraction_files,
+                         **{"desc": f"\t\t processing {mode} error tables...", "ncols": 150})
+
+        cols_df = ['scenario', 'normalization', 'num_em', 'dimensions', 'continent_sim', 'mc_runs', 'npv_mae', 'pv_mae', 'soil_mae',
+                   'npv_rmse', 'pv_rmse', 'soil_rmse', 'npv_r2', 'pv_r2', 'soil_r2', 'npv_mc_unc', 'pv_mc_unc', 'soil_mc_unc',
+                   'npv_stde', 'pv_stde', 'soil_stde', 'npv_mean_unc', 'pv_mean_unc', 'soil_mean_unc']
 
         df = pd.DataFrame(results, columns=cols_df)
         df.to_csv(os.path.join(self.fig_directory, "geographic_error_report.csv"), index=False)
@@ -108,7 +108,8 @@ def run_build_tables(base_directory):
             run_tables.atmosphere_table()
         elif user_input == 'C':
             run_latex_tables(base_directory=base_directory)
-
         elif user_input == 'D':
+            run_tables.geographic_table(mode='spatial')
+        elif user_input == 'E':
             print("returning to simulation main menu...")
             break
