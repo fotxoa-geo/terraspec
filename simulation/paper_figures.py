@@ -156,7 +156,7 @@ class figures:
                                 ax.set_ylabel('Convex Hull\n\nMAE', fontsize=self.axis_label_fontsize)
 
                         if row == 0 and col == 1:
-                            ax.legend(prop={'size': 12})
+                            ax.legend(prop={'size': 10})
 
             counter += 1
         plt.savefig(os.path.join(self.fig_directory, 'endmember_selection_figure.png'), bbox_inches="tight", dpi=400)
@@ -212,7 +212,7 @@ class figures:
             for mode in df_error['mode'].unique():
                 if mode == 'sma':
                     df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['num_em'] == 30) & (df_error['mc_runs'] == mc_runs)].copy()
-                    mode_label = 'SMA'
+                    mode_label = 'E(MC)$^2$'
                     linestyle = 'solid'
                 if mode == 'mesma':
                     df_select = df_error.loc[(df_error['normalization'] == 'Brightness') & (df_error['cmbs'] == 100) & (df_error['mc_runs'] == mc_runs)].copy()
@@ -248,9 +248,8 @@ class figures:
                                 if col == 0:
                                     ax.set_ylabel('Convex Hull\n\nMAE', fontsize=self.axis_label_fontsize)
 
-                            if row == 0 and col == 1:
-                                ax.legend(prop={'size': 12})
-
+                            if row == 0 and col == 2:
+                                ax.legend(loc="upper left", bbox_to_anchor=(1.05, 1), borderaxespad=0)
 
                 counter += 1
 
@@ -310,7 +309,7 @@ class figures:
 
                             if mode == 'sma':
                                 linestyle = 'solid'
-                                label_mode = "SMA"
+                                label_mode = 'E(MC)$^2$'
                                 df_optimized = df_optimized_sma
 
                             elif mode == 'mesma':
@@ -340,7 +339,7 @@ class figures:
 
                     for mode in df_error['mode'].unique():
                         if mode == 'sma':
-                            label_mode = "SMA"
+                            label_mode = 'E(MC)$^2$'
                             df_optimized = df_optimized_sma
                             linestyle = 'solid'
                         elif mode == 'mesma':
@@ -369,8 +368,8 @@ class figures:
 
                         ax.set_xticklabels([])
 
-                    if col == 1:
-                        ax.legend(prop={'size': 12})
+                    if col == 2:
+                        ax.legend(loc="upper left", bbox_to_anchor=(1.05, 1), borderaxespad=0)
 
                 if row == 1:  # h20
 
@@ -383,7 +382,7 @@ class figures:
 
                             if mode == 'sma':
                                 linestyle = 'solid'
-                                label_mode = "SMA"
+                                label_mode = 'E(MC)$^2$'
                                 df_optimized = df_optimized_sma
 
                             elif mode == 'mesma':
@@ -412,7 +411,7 @@ class figures:
 
                     for mode in df_error['mode'].unique():
                         if mode == 'sma':
-                            label_mode = "SMA"
+                            label_mode = "E(MC)$^2$"
                             df_optimized = df_optimized_sma
                             linestyle = 'solid'
                         elif mode == 'mesma':
@@ -437,15 +436,14 @@ class figures:
                                     yerr=optimized_uncer, solid_capstyle='projecting', capsize=2,
                                     label=f'{label_mode} (no atmosphere)', linestyle=linestyle, color=cmap(_h2o + 1))
 
-
                     # add legend
-                    if col == 1:
-                        ax.legend(prop={'size': 12})
+                    if col == 2:
+                        ax.legend(loc="upper left", bbox_to_anchor=(1.05, 1), borderaxespad=0)
 
                 if col != 0:
                     ax.set_yticklabels([])
 
-                ax.set_box_aspect(1)
+                #ax.set_box_aspect(1)
         plt.savefig(os.path.join(self.fig_directory, "atmosphere_error_sun_angles.png"), bbox_inches="tight", dpi=400)
 
 
@@ -530,8 +528,8 @@ class figures:
                             if col == 0:
                                 ax.set_ylabel('Convex Hull\n\nMAE', fontsize=self.axis_label_fontsize)
 
-                        if row == 0 and col == 1:
-                            ax.legend(prop={'size': 12})
+                        if row == 0 and col == 2:
+                            ax.legend(prop={'size': 10}, loc="upper left", bbox_to_anchor=(1.05, 1), borderaxespad=0)
 
             counter += 1
 
@@ -586,7 +584,7 @@ class figures:
             for mode in df_error['mode'].unique():
                 if mode == 'sma':
                     df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['num_em'] == 30) & (df_error['mc_runs'] == 25)].copy()
-                    label = 'SMA'
+                    label = 'E(MC)$^2$'
                     linestyle = 'solid'
                 if mode == 'mesma':
                     df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['cmbs'] == 100) & (df_error['mc_runs'] == 25)].copy()
@@ -623,8 +621,8 @@ class figures:
                                             label=f"{norm_label} ({label})", solid_capstyle='projecting', capsize=capsize[col], linestyle=linestyle,  color=cmap(_norm_option))
                                 if col == 0:
                                     ax.set_ylabel('Convex Hull\n\nMAE', fontsize=self.axis_label_fontsize)
-                            if row == 0 and col == 0:
-                                ax.legend(prop={'size': 10})
+                            if row == 0 and col == 2:
+                                ax.legend(loc="upper left", bbox_to_anchor=(1.05, 1), borderaxespad=0)
 
         plt.savefig(os.path.join(self.fig_directory, 'normalization_figure.png'), bbox_inches="tight", dpi=400)
         plt.clf()
@@ -643,7 +641,7 @@ class figures:
         ncols = 2  # for each em
         nrows = 1  # top row normal, middle water, aod; x-axis solar angle
 
-        fig, axs = plt.subplots(nrows, ncols, figsize=(8, 12))
+        fig, axs = plt.subplots(nrows, ncols, figsize=(self.fig_width, self.fig_height))
         fig.subplots_adjust(wspace=0.02, hspace=0)
 
         for row in range(nrows):
@@ -659,7 +657,7 @@ class figures:
 
                 if col == 0:
                     ax.set_title('Latin Hypercube', fontsize=self.title_fontsize)
-                    ax.set_ylabel("Principal Component 2", fontsize=self.axis_label_fontsize)
+                    ax.set_ylabel("Principal\nComponent 2", fontsize=self.axis_label_fontsize)
 
                     # get the latin hypercube
                     cubes = spectra.latin_hypercubes(points=pc_array, get_quadrants_index=False)
@@ -683,8 +681,6 @@ class figures:
                     for simplex in ch.simplices:
                         ax.plot(pc_array[simplex, 0], pc_array[simplex, 1], 'c', lw=0.75)
 
-                    #
-
                     # plot the vertices
                     ax.plot(pc_array[ch.vertices, 0], pc_array[ch.vertices, 1], 'o', mec='r', color='none', lw=0.75,
                             markersize=14)
@@ -697,14 +693,101 @@ class figures:
         plt.close()
 
 
+    def endmember_figures(self):
+        # load global library
+        df = pd.read_csv(os.path.join(self.output_directory, 'convolved', 'geofilter_convolved.csv'))
+        df = df.sort_values('level_1')
+
+        df['dataset'] = df['dataset'].replace('DP', 'Ochoa et al. (2024)')
+        df['dataset'] = df['dataset'].replace('JORN', 'Ochoa et al. (2024)')
+        df['dataset'] = df['dataset'].replace('SR', 'Ochoa et al. (2024)')
+        df['dataset'] = df['dataset'].replace('MEYER-OKIN', 'Meyer et al. (2022)')
+        df['dataset'] = df['dataset'].replace('ngsa', 'Lau et al. (2016)')
+        df['dataset'] = df['dataset'].replace('ossl', 'Safanelli et al. (2021)')
+        df['dataset'] = df['dataset'].replace('pilot-2', 'Tziolas et al. (2019)')
+        df['dataset'] = df['dataset'].replace('ssl-ir', 'Ben Dor et al. (2022)')
+
+        # create new figure
+        ncols = 3  # for each em
+        nrows = 1  # top row normal,
+
+        fig, axs = plt.subplots(nrows, ncols, figsize=(self.fig_width, self.fig_height))
+        fig.subplots_adjust(wspace=0.1)
+
+        colors = {'Ochoa et al. (2024)': 'blue',
+                  'Meyer et al. (2022)': 'green',
+                  'Lau et al. (2016)': 'red',
+                  'Safanelli et al. (2021)': 'orange',
+                  'Tziolas et al. (2019)': 'magenta',
+                  'Ben Dor et al. (2022)': 'black'}
+
+        col_map = {0: 'NPV', 1: 'GV', 2: "Soil"}
+        col_map_select = {
+            0: 'npv',
+            1: 'pv',
+            2: "soil"}
+
+        good_band_mask = spectra.get_good_bands_mask(wavelengths=self.wvls, wavelength_pairs=None)
+        self.wvls[~good_band_mask] = np.nan
+        from matplotlib.ticker import MultipleLocator
+
+        for row in range(nrows):
+            for col in range(ncols):
+                ax = axs[col]
+
+                ax.set_xlabel("Wavelength (nm)", fontsize=self.axis_label_fontsize)
+                ax.tick_params(axis='both', which='major', labelsize=self.major_axis_fontsize)
+                ax.tick_params(axis='both', which='minor', labelsize=self.minor_axis_fontsize)
+                ax.xaxis.set_minor_locator(MultipleLocator(100))  # Minor ticks every 100 nm on the x-axis
+                ax.yaxis.set_minor_locator(MultipleLocator(0.1))
+                ax.xaxis.set_major_locator(MultipleLocator(500))
+                ax.set_ylim(0, 1)
+                ax.set_xlim(325, 2525)
+                ax.set_aspect('auto')
+
+                ax.set_title(col_map[col], fontsize=self.title_fontsize)
+
+                em_select = col_map_select[col]
+
+                df_select = df.loc[(df['level_1'] == em_select)].copy()
+                datasets = sorted(list(df_select.dataset.unique()))
+
+                for _i, i in enumerate(datasets):
+                    df_dataset = df_select[df_select['dataset'] == i].copy()
+                    df_subset = df_dataset.iloc[:, 7:]
+                    df_subset = df_subset.sample(n=5, random_state=13)
+
+                    if not df_subset.empty:
+                        for idx, df_row in df_subset.iterrows():
+                            ax.plot(self.wvls, df_row.values, color=colors[i], label=i)
+                    else:
+                        pass
+
+                if col == 0:
+                    ax.set_ylabel("Reflectance (%)", fontsize=self.axis_label_fontsize)
+                else:
+                    ax.set_yticklabels([])
+
+                if col == 2:
+                    # Remove repeated legend entries (if any)
+                    handles, labels = ax.get_legend_handles_labels()
+                    unique_labels = dict(zip(labels, handles))
+                    ax.legend(unique_labels.values(), unique_labels.keys(), loc="upper left", bbox_to_anchor=(1.05, 1), borderaxespad=0)
+
+
+        plt.savefig(os.path.join(self.fig_directory, 'endmembers_figures.png'), bbox_inches="tight",
+                    dpi=400)
+        plt.clf()
+        plt.close()
+
 def run_figures(base_directory, sensor):
     base_directory = base_directory
     sensor = sensor
     major_axis_fontsize = 14
     minor_axis_fontsize = 12
     title_fontsize = 26
-    axis_label_fontsize = 22
-    fig_height = 8
+    axis_label_fontsize = 20
+    fig_height = 6
     fig_width = 12
     linewidth = 1
     sig_figs = 2
@@ -720,3 +803,4 @@ def run_figures(base_directory, sensor):
     fig_class.combinations_figure(cmap_kw='brg')
     fig_class.uncertainty_figure(cmap_kw='brg')
     fig_class.atmosphere(cmap_kw='brg')
+    fig_class.endmember_figures()
