@@ -8,40 +8,59 @@ from simulation.build_tables import run_build_tables
 from simulation.paper_figures import run_figures
 
 
+def display_menu():
+    print("Welcome to the simulation menu")
+    print("A... Clean libraries")
+    print("B... Build libraries")
+    print("C... Hypertrace workflow")
+    print('D... Unmix')
+    print("E... Tables")
+    print('F... Figures')
+    print("G... Exit")
+
+
 def run_sim_workflow(base_directory, dry_run, io_bug):
     msg = f"You have entered simulation mode! " \
-          f"\nThere are various options to chose from: " \
-          f"\n\tclean, build, hypertrace, unmix, figures, tables"
+          f"\nThere are various options to chose from: "
 
     cursor_print(msg)
-    user_input = query_sim_mode('\nPlease indicate the desired mode: ', default="yes")
 
     output_directory = os.path.join(base_directory, 'output')
 
-    # run clean libraries workflow
-    if user_input == 'clean':
-        run_clean_workflow(base_directory=base_directory, output_directory=output_directory,
-                           geo_filter=True)
+    while True:
+        display_menu()
+        choice = input("Enter desired mode: ").upper()
 
-    # build and convolve the libraries
-    if user_input == 'build':
-        run_build_reflectance(output_directory=output_directory)
+        # run clean libraries workflow
+        if choice == 'A':
+            run_clean_workflow(base_directory=base_directory, output_directory=output_directory,
+                               geo_filter=True)
 
-    # run hypertrace
-    if user_input == 'hypertrace':
-        run_hypertrace_workflow()
+        # build and convolve the libraries
+        elif choice == 'B':
+            run_build_reflectance(output_directory=output_directory)
 
-    # run unmixing code
-    if user_input == 'unmix':
-        run_unmix_workflow(base_directory=base_directory, dry_run=dry_run, io_bug=io_bug)
+        # run hypertrace
+        elif choice == 'C':
+            run_hypertrace_workflow()
 
-    # build csv report tables and latex tables
-    if user_input == 'tables':
-        run_build_tables(base_directory=base_directory)
+        # run unmixing code
+        elif choice == 'D':
+            run_unmix_workflow(base_directory=base_directory, dry_run=dry_run, io_bug=io_bug)
 
-    # run the figure set
-    if user_input == 'figures':
-        run_figures(base_directory=base_directory, sensor='emit')
+        # build csv report tables and latex tables
+        elif choice == 'E':
+            run_build_tables(base_directory=base_directory)
+
+        # run the figure set
+        elif choice == 'F':
+            run_figures(base_directory=base_directory, sensor='emit')
+
+        elif choice == "G":
+            print("Returning to main menu.")
+            break
+        else:
+            print("Invalid choice. Please choose a valid option.")
 
 
 
