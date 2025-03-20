@@ -13,7 +13,7 @@ import geopandas as gpd
 from shapely.geometry import Point
 
 
-def build_geographic(dimensions, output_directory, spectra_starting_col, normalize):
+def build_geographic(dimensions, output_directory, spectra_starting_col, normalize, sensor, level):
     df = spectra.load_global_library(output_directory=output_directory)
 
     world_continents_gdf = gpd.read_file(os.path.join('gis', 'World_Continents.geojson'))
@@ -74,10 +74,10 @@ def build_geographic(dimensions, output_directory, spectra_starting_col, normali
                         index=False)
 
         #df_sim = pd.concat([df_veg_sim, df_sim_soils], axis=0).sort_values("level_1")
-        df_to_sim = df_to_sim.sort_values("level_1")
+        df_to_sim = df_to_sim.sort_values(level)
 
         # get simulation parameters
-        spectral_bundles, cols, level, wvls = get_sim_parameters()
+        spectral_bundles, cols, level, wvls = get_sim_parameters(sensor, level=level)
 
         # save unmix library as envi
         spectra.df_to_envi(df=df_unmix, spectral_starting_column=spectra_starting_col, wvls=wvls,
@@ -126,7 +126,8 @@ def get_library_outputs(output_directory):
     return em_lib_output, sim_lib_output
 
 
-def build_hypercubes(dimensions: int, max_dimension: int, spectra_starting_col:int, output_directory:str):
+def build_hypercubes(dimensions: int, max_dimension: int, spectra_starting_col:int, output_directory:str,
+                     sensor, level):
     df = spectra.load_global_library(output_directory=output_directory)
 
     # get output paths
@@ -174,7 +175,7 @@ def build_hypercubes(dimensions: int, max_dimension: int, spectra_starting_col:i
 
     df_sim = pd.concat([df, df_unmix]).drop_duplicates(keep=False).sort_values("level_1")
 
-    spectral_bundles, cols, level, wvls = get_sim_parameters()
+    spectral_bundles, cols, level, wvls = get_sim_parameters(sensor, level=level)
 
     # save unmix library as envi
     spectra.df_to_envi(df=df_unmix, spectral_starting_column=spectra_starting_col, wvls=wvls,
@@ -192,7 +193,7 @@ def build_hypercubes(dimensions: int, max_dimension: int, spectra_starting_col:i
                                  wvls=wvls, spectra_starting_col=spectra_starting_col)
 
 
-def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int, normalize=False):
+def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int, sensor, level, normalize=False):
     df = spectra.load_global_library(output_directory=output_directory)
     df_soil = df.loc[(df['level_1'] == 'soil')].copy().reset_index(drop=True)
 
@@ -209,10 +210,9 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int,
 
     # # pc analysis for em library
     cursor_print(f"loading convex hull... d = {dimensions}")
-    print()
 
     # use test train split on pv and npv for unmmix library
-    unmix_npv_pv = test_train_split(df)
+    unmix_npv_pv, sim_npv_gv = test_train_split(df)
 
     # get output paths
     em_libraries_output, sim_libraries_output = get_library_outputs(output_directory=output_directory)
@@ -244,7 +244,7 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int,
     df_sim = pd.concat([df, df_unmix]).drop_duplicates(keep=False).sort_values("level_1")
 
     # get simulation parameters
-    spectral_bundles, cols, level, wvls = get_sim_parameters()
+    spectral_bundles, cols, level, wvls = get_sim_parameters(sensor=sensor, level=level)
 
     # save unmix library as envi
     spectra.df_to_envi(df=df_unmix, spectral_starting_column=spectra_starting_col, wvls=wvls,
@@ -261,25 +261,25 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int,
                                  wvls=wvls, spectra_starting_col=spectra_starting_col)
 
 
-def get_sim_parameters():
+def get_sim_parameters(sensor, level):
     cols = 1
-    level = 'level_1'
+    level = level
     spectral_bundles = 1000
-    emit_wvls, emit_fwhm = spectra.load_wavelengths(sensor='emit')
+    emit_wvls, emit_fwhm = spectra.load_wavelengths(sensor=sensor)
 
     return spectral_bundles, cols, level, emit_wvls
 
 
-def run_build_reflectance(output_directory):
+def run_build_reflectance(output_directory, sensor, level):
     #num_dimensions = [2, 3, 4, 5, 6]  # dimensions to use for convex hull and latin hypercubes
     num_dimensions = [4]  # dimensions to use for convex hull and latin hypercubes
     max_dimension = max(num_dimensions)
     spectral_starting_col = 7
 
     # build convex hulls and latin hypercubes across different dimensional space
-    #for i in num_dimensions:
-        #build_hypercubes(dimensions=i, max_dimension=max_dimension, spectra_starting_col=spectral_starting_col,
-        #                 output_directory=output_directory)
-    #    build_hull(dimensions=i, spectra_starting_col=spectral_starting_col, output_directory=output_directory, normalize=True)
+    for i in num_dimensions:
+        #build_hypercubes(dimensions=i, max_dimension=max_dimension, spectra_starting_col=spectral_starting_col, output_directory=output_directory)
+        build_hull(dimensions=i, spectra_starting_col=spectral_starting_col, output_directory=output_directory,
+                   normalize=True, sensor=sensor, level=level)
 
-    build_geographic(dimensions=4, output_directory=output_directory, spectra_starting_col=spectral_starting_col+1, normalize=True)
+    #build_geographic(dimensions=4, output_directory=output_directory, spectra_starting_col=spectral_starting_col+1, normalize=True)

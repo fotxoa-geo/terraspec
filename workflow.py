@@ -43,7 +43,7 @@ def main():
 
         if choice == "A":
             run_sim_workflow(os.path.join(base_directory, 'simulation'), dry_run=args.dry_run, io_bug=args.io_bug,
-                             sensor=args.sensor)
+                             sensor=args.sensor, level=args.level)
 
         elif choice == 'B':
             run_slpit_workflow(os.path.join(base_directory, 'slpit'), dry_run=args.dry_run, sensor=args.sensor)

@@ -19,7 +19,7 @@ def display_menu():
     print("G... Exit")
 
 
-def run_sim_workflow(base_directory, dry_run, sensor, io_bug):
+def run_sim_workflow(base_directory, dry_run, sensor, level, io_bug):
     msg = f"You have entered simulation mode! " \
           f"\nThere are various options to chose from: "
 
@@ -38,7 +38,7 @@ def run_sim_workflow(base_directory, dry_run, sensor, io_bug):
 
         # build and convolve the libraries
         elif choice == 'B':
-            run_build_reflectance(output_directory=output_directory)
+            run_build_reflectance(output_directory=output_directory, sensor=sensor, level=level)
 
         # run hypertrace
         elif choice == 'C':
