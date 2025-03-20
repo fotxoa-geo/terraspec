@@ -10,7 +10,7 @@ from simulation.paper_figures import run_figures
 
 def display_menu():
     print("Welcome to the simulation menu")
-    print("A... Clean libraries")
+    print("A... Download and clean libraries")
     print("B... Build libraries")
     print("C... Hypertrace workflow")
     print('D... Unmix')
@@ -19,7 +19,7 @@ def display_menu():
     print("G... Exit")
 
 
-def run_sim_workflow(base_directory, dry_run, io_bug):
+def run_sim_workflow(base_directory, dry_run, sensor, io_bug):
     msg = f"You have entered simulation mode! " \
           f"\nThere are various options to chose from: "
 
@@ -34,7 +34,7 @@ def run_sim_workflow(base_directory, dry_run, io_bug):
         # run clean libraries workflow
         if choice == 'A':
             run_clean_workflow(base_directory=base_directory, output_directory=output_directory,
-                               geo_filter=True)
+                               geo_filter=True, sensor=sensor)
 
         # build and convolve the libraries
         elif choice == 'B':
