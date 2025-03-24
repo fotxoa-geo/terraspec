@@ -4,23 +4,23 @@ message: "If you use this software for research we would appreciate appropriate 
 
 type: software
 authors:
-    - family-names: "Ochoa"
-    given-names: "Francisco"
+    - family-names: Ochoa
+    given-names: Francisco
     affiliation: "University of California, Los Angeles"
-    orcid: "https://orcid.org/0000-0003-3363-2496"
+    orcid: https://orcid.org/0000-0003-3363-2496
 
-    -family-names: "Brodrick"
-    given-names: "Philip G."
+    -family-names: Brodrick
+    given-names: Philip
     affiliation: "Jet Propulsion Laboratory, California Institute of Technology"
-    orcid: "https://orcid.org/0000-0001-9497-7661"
+    orcid: https://orcid.org/0000-0001-9497-7661
 
-    -family-names: "Okin"
-    given-names: "Gregory S."
+    -family-names: Okin
+    given-names: Gregory
     affiliation: "University of California, Los Angeles"
-    orcid: "https://orcid.org/0000-0002-0484-3537"
+    orcid: https://orcid.org/0000-0002-0484-3537
 
 identifiers:
   - type: doi
-    value: "10.5281/zenodo.14867412"
+    value: 0.5281/zenodo.14867412
 
 license: Apache-2.0
