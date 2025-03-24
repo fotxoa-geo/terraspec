@@ -30,6 +30,6 @@ authors:
 
 identifiers:
   - type: doi
-    value: 10.5281/zenodo.14867412
+    value: "10.5281/zenodo.14867412"
 
 license: Apache-2.0
