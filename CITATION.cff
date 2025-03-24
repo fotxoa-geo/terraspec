@@ -1,7 +1,6 @@
 cff-version: 1.2.0
 title: terraspec
-message: >-
-  If you use this software for research we would appreciate
+message: "If you use this software for research we would appreciate
   appropriate citation. This may be prepared using the
   bibliographic metadata contained in our DOI, accessible
   through the DOI system and at https://doi.org/10.5281/zenodo.14867412.
@@ -10,24 +9,27 @@ message: >-
   you cite the precursor publication:
   Ochoa, F., Brodrick, P. G., Okin, G. S., Ben-Dor, E., Meyer, T., Thompson, D. R., & Green, R. O. (2024).
   Optimal soil and vegetation cover estimation for global imaging spectroscopy using spectral mixture analysis.
-  Authorea Preprints.
+  Authorea Preprints."
+
 type: software
 authors:
-    - given-names: Francisco Ochoa
-    affiliation: >-
-      University of California, Los Angeles
-    orcid: 'https://orcid.org/0000-0003-3363-2496'
-  - given-names: Philip G. Brodrick
-    affiliation: >-
-      Jet Propulsion Laboratory, California Institute of
-      Technology
-    orcid: 'https://orcid.org/0000-0001-9497-7661'
-  - given-names: Gregory S. Okin
-    affiliation: >-
-      University of California, Los Angeles
-    orcid: 'https://orcid.org/0000-0002-0484-3537'
+    - family-names: "Ochoa"
+        given-names: "Francisco"
+        affiliation: "University of California, Los Angeles"
+        orcid: 'https://orcid.org/0000-0003-3363-2496'
+
+    -family-names: "Brodrick"
+        - given-names: "Philip G."
+        affiliation: "Jet Propulsion Laboratory, California Institute of Technology"
+        orcid: 'https://orcid.org/0000-0001-9497-7661'
+
+    -family-names: "Okin"
+        - given-names: "Gregory S."
+        affiliation: "University of California, Los Angeles"
+        orcid: 'https://orcid.org/0000-0002-0484-3537'
 
 identifiers:
   - type: doi
     value: 10.5281/zenodo.14867412
+
 license: Apache-2.0
