@@ -1,14 +1,6 @@
 cff-version: 1.2.0
 title: terraspec
-message: "If you use this software for research we would appreciate
-appropriate citation. This may be prepared using the
-bibliographic metadata contained in our DOI, accessible
-through the DOI system and at https://doi.org/10.5281/zenodo.14867412.
-
-If you use terraspec in your research or production, we ask that ou cite the precursor publication:
-    Ochoa, F., Brodrick, P. G., Okin, G. S., Ben-Dor, E., Meyer, T., Thompson, D. R., & Green, R. O. (2024).
-    Optimal soil and vegetation cover estimation for global imaging spectroscopy using spectral mixture analysis.
-    Authorea Preprints."
+message: "If you use this software for research we would appreciate appropriate citation."
 
 type: software
 authors:
