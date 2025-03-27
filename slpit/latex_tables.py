@@ -32,3 +32,77 @@ for i in sorted(list(df.unmix_mode.unique())):
 
 
             print(f"{i}, {instrument}, {campaign}, , {mean:.2f}")
+
+
+gis_data = os.path.join(r'C:\Users\spect\PycharmProjects\pythonProject\terraspec\gis\Observation.shp')
+df = gp.read_file(gis_data)
+print(df)
+df = df.drop(columns='Type')
+
+df['longitude'] = df['geometry'].x.round(4).map("{:.4f}".format)
+df['latitude'] = df['geometry'].y.round(4).map("{:.4f}".format)
+#df = df.drop(columns='geometry')
+#df = df.drop(columns='Date & Tim')
+#df = df.drop(columns='EMIT DATE')
+df['lat_long_combined'] = df['latitude'] + ', ' + df['longitude']
+
+print(df)
+df = df.drop(columns=['latitude', 'longitude'])
+df['Ground'] = ''
+df = df.reindex(columns=['Name', 'lat_long_combined', 'Ground', 'EMIT DATE'])
+#df['EMIT DATE'] = pd.to_datetime(df['EMIT DATE'])
+#df['EMIT DATE'] = df['EMIT DATE'].dt.strftime('%Y-%m-%d')
+print(df.columns)
+print(df.to_latex(index=False))
+
+gis_data = os.path.join(r'C:\Users\spect\PycharmProjects\pythonProject\terraspec\gis\shift_transects_centroid.shp')
+df = gp.read_file(gis_data)
+print(df.columns)
+
+df['longitude'] = df['geometry'].x.round(4).map("{:.4f}".format)
+df['latitude'] = df['geometry'].y.round(4).map("{:.4f}".format)
+df['lat_long_combined'] = df['latitude'] + ', ' + df['longitude']
+
+print(df)
+df = df.drop(columns=['latitude', 'longitude'])
+df['Ground'] = ''
+df = df.reindex(columns=['plot', 'lat_long_combined', 'Ground', 'EMIT DATE'])
+df['EMIT DATE'] = pd.to_datetime(df['EMIT DATE'])
+df['EMIT DATE'] = df['EMIT DATE'].dt.strftime('%Y-%m-%d')
+print(df.columns)
+print(df.to_latex(index=False))
+
+
+
+corresponding_flight = { 'DPA-004-FALL' : '20220915t195816',
+                         'DPB-003-FALL' : '20220915t195816',
+                         'DPB-004-FALL' : '20220915t200714',
+                         'DPB-005-FALL' : '20220915t195816',
+                         'DPB-020-SPRING' : '20220322t204749',
+                         'DPB-027-SPRING' : '20220412t205405',
+                         'SRA-000-SPRING' : '20220420t195351',
+                         'SRA-007-FALL': '20220914t184300',
+                         'SRA-008-FALL': '20220914t184300',
+                         'SRA-019-SPRING' : '20220308t190523',
+                         'SRA-020-SPRING' : '20220308t205512',
+                         'SRA-021-SPRING' : '20220308t204043',
+                         'SRA-033-SPRING' : '20220316t210303',
+                         'SRA-034-SPRING' : '20220316t210303',
+                         'SRA-056-FALL' : '20220914t184300',
+                         'SRA-109-SPRING' : '20220511t190344',
+                         'SRB-004-FALL' : '20220914t184300',
+                         'SRB-010-FALL' : '20220915t203517',
+                         'SRB-021-SPRING' : '20220308t205512',
+                         'SRB-026-SPRING' : '20220308t191151',
+                         'SRB-045-FALL' : '20220915t185652',
+                         'SRB-046-FALL' : '20220915t203517',
+                         'SRB-047-SPRING' : '20220405t201359',
+                         'SRB-050-FALL' : '',
+                         'SRB-084-SPRING' : '20220511t212317',
+                         'SRB-100-FALL' : '20220915t203517',
+                         'SRB-200-FALL' : '',}
+
+for key, value in corresponding_flight.items():
+    print(key, value)
+
+

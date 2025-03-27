@@ -374,7 +374,7 @@ class tetracorder:
         optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization none']
 
         emit_pixels = glob(os.path.join(self.tetra_output_directory, 'augmented', 'SPEC*_RFL*[!.csv][!.hdr][!.aux][!.xml]'))
-        transect_files = glob(os.path.join(self.tetra_output_directory, 'augmented', 'Spectral*_transect_augmented*[!.csv][!.hdr][!.aux][!.xml]'))
+        transect_files = glob(os.path.join(self.tetra_output_directory, 'augmented', 'Spectral-*_tra*[!.csv][!.hdr][!.aux][!.xml]'))
         reflectance_files = emit_pixels + transect_files
 
         for i in reflectance_files:

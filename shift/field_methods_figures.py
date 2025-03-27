@@ -33,7 +33,7 @@ quad_phenophase_key = {'early leaf out': 'pv',
 
 class figures:
     def __init__(self, base_directory: str, sensor: str, major_axis_fontsize, minor_axis_fontsize, title_fontsize,
-                 axis_label_fontsize, fig_height, fig_width, linewidth, sig_figs):
+                 axis_label_fontsize, fig_height, fig_width, linewidth, sig_figs, legend_text):
 
         self.base_directory = base_directory
         self.figure_directory = os.path.join(base_directory, 'figures')
@@ -50,6 +50,7 @@ class figures:
         self.ems_short = ['npv', 'GV', 'soil']
 
         # figure fonts, font size, etc
+        self.legend_text = legend_text
         self.major_axis_fontsize = major_axis_fontsize
         self.minor_axis_fontsize = minor_axis_fontsize
         self.title_fontsize = title_fontsize
@@ -83,6 +84,9 @@ class figures:
         # load quadrat tallies
         df_quad = pd.read_csv(os.path.join(self.base_directory, 'field', 'SHIFT_vegetation_quadrat_tallies.csv'))
         #df_quad = df_quad.dropna(subset=['Phenophase'])
+        for i in sorted(list(df_quad.Species_or_type.unique())):
+            print(i)
+
         df_quad['Phenophase'] = df_quad['Phenophase'].replace(np.nan, 'na')
         df_quad['Phenophase'] = df_quad['Phenophase'].str.strip()
         df_quad['Phenophase'] = df_quad['Phenophase'].apply(str.lower)
@@ -189,9 +193,7 @@ class figures:
         fig = plt.figure(figsize=(self.fig_width, self.fig_height))
         ncols = 3
         nrows = 3
-        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows,  wspace=0.05, hspace=0.05, width_ratios=[1] * ncols, height_ratios=[1] * nrows)
-
-
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows,  wspace=0.15, hspace=0.05, width_ratios=[1] * ncols, height_ratios=[1] * nrows)
 
         # loop through figure columns
         for row in range(nrows):
@@ -214,13 +216,13 @@ class figures:
 
                 # y axis
                 if row == 0 and col == 0:
-                    ax.set_ylabel(f'AVIRIS', fontsize=18)
+                    ax.set_ylabel(f'AVIRIS', fontsize=self.axis_label_fontsize)
 
                 if row == 1 and col == 0:
-                    ax.set_ylabel(f'Wonderpole', fontsize=18)
+                    ax.set_ylabel(f'Wonderpole', fontsize=self.axis_label_fontsize)
 
                 if row == 2 and col == 0:
-                    ax.set_ylabel(f'Quadrats', fontsize=18)
+                    ax.set_ylabel(f'Quadrats', fontsize=self.axis_label_fontsize)
 
                 ax.set_yticks(np.arange(0, 1 + 0.2, 0.2))
 
@@ -261,11 +263,12 @@ class figures:
                 # plot 1 to 1 line
                 ax.plot(one_line, one_line, color='red')
                 ax.plot(one_line, m * one_line + b, color='black')
-                #ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='', linestyle='None', capsize=5)
-                ax.scatter(x, y, marker='^', edgecolor='black', color='orange', label='AVIRIS$_{ng}$', zorder=10)
+                ax.scatter(x, y, marker='^', edgecolor='black', color='orange', label='AVIRIS$_{ng}$', zorder=10,
+                           s=150)
+                ax.tick_params(axis='both', labelsize=self.legend_text)
 
-                for i, label in enumerate(df_x['plot'].values):
-                   ax.text(x[i], y[i], label, fontsize=12, ha='center', va='bottom')
+                #for i, label in enumerate(df_wonderpole['plot'].values):
+                #    ax.text(x.values[i], y.values[i], label, fontsize=8, ha='center', va='bottom')
 
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
@@ -278,11 +281,12 @@ class figures:
                     r'n = ' + str(len(x)),))
 
                 props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
-                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=12,
+                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=self.legend_text,
                         verticalalignment='top', bbox=props)
 
+
         plt.savefig(os.path.join(self.figure_directory, f'methods_fig_1.png'), format="png", dpi=400,
-                    bbox_inches="tight")
+                  bbox_inches="tight")
         plt.clf()
         plt.close()
 
@@ -295,8 +299,7 @@ class figures:
         fig = plt.figure(figsize=(self.fig_width, self.fig_height))
         ncols = 3
         nrows = 2
-        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.05, hspace=0.05, width_ratios=[1] * ncols,
-                               height_ratios=[1] * nrows)
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows,  wspace=0.15, hspace=0.05, width_ratios=[1] * ncols, height_ratios=[1] * nrows)
 
 
         # loop through figure columns
@@ -320,10 +323,10 @@ class figures:
 
                 # y axis
                 if row == 0 and col == 0:
-                    ax.set_ylabel(f'AVIRIS', fontsize=18)
+                    ax.set_ylabel(f'AVIRIS', fontsize=self.axis_label_fontsize)
 
                 if row == 1 and col == 0:
-                    ax.set_ylabel(f'Quadrats', fontsize=18)
+                    ax.set_ylabel(f'Quadrats', fontsize=self.axis_label_fontsize)
 
                 ax.set_yticks(np.arange(0, 1 + 0.2, 0.2))
 
@@ -359,10 +362,11 @@ class figures:
                 ax.plot(one_line, one_line, color='red')
                 ax.plot(one_line, m * one_line + b, color='black')
                 # ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='', linestyle='None', capsize=5)
-                ax.scatter(x, y, marker='^', edgecolor='black', color='orange', label='AVIRIS$_{ng}$', zorder=10)
+                ax.scatter(x, y, marker='^', edgecolor='black', color='orange', label='AVIRIS$_{ng}$', zorder=10, s=150)
+                ax.tick_params(axis='both', labelsize=self.legend_text)
 
-                for i, label in enumerate(df_wonderpole['plot'].values):
-                   ax.text(x.values[i], y.values[i], label, fontsize=12, ha='center', va='bottom')
+                #for i, label in enumerate(df_wonderpole['plot'].values):
+                #   ax.text(x.values[i], y.values[i], label, fontsize=8, ha='center', va='bottom')
 
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
@@ -375,7 +379,7 @@ class figures:
                     r'n = ' + str(len(x)),))
 
                 props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
-                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=12,
+                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=self.legend_text,
                         verticalalignment='top', bbox=props)
 
         plt.savefig(os.path.join(self.figure_directory, f'methods_fig_2.png'), format="png", dpi=400,
@@ -392,14 +396,15 @@ class figures:
         # # # create figure
         fig = plt.figure(figsize=(self.fig_width, self.fig_height))
         ncols = 3
-        nrows = 1
-        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.05, hspace=0.05, width_ratios=[1] * ncols,
-                               height_ratios=[1] * nrows)
+        nrows = 2
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows,  wspace=0.15, hspace=0.05, width_ratios=[1] * ncols, height_ratios=[1] * nrows)
 
 
         # loop through figure columns
         for row in range(nrows):
             for col in range(ncols):
+                if row == 1:
+                    continue
                 ax = fig.add_subplot(gs[row, col])
                 ax.set_ylim(self.axes_limits['ymin'], self.axes_limits['ymax'])
                 ax.set_xlim(self.axes_limits['xmin'], self.axes_limits['xmax'])
@@ -417,7 +422,7 @@ class figures:
 
                 # y axis
                 if col == 0:
-                    ax.set_ylabel(f'AVIRIS', fontsize=18)
+                    ax.set_ylabel(f'AVIRIS', fontsize=self.axis_label_fontsize)
 
                 ax.set_yticks(np.arange(0, 1 + 0.2, 0.2))
 
@@ -426,9 +431,7 @@ class figures:
                     ax.set_yticklabels([])
 
                 # set blank ticks for for row 0 and 1
-                if row != 1:
-                    ax.set_yticklabels([''] + ax.get_yticklabels()[1:])
-                    ax.set_xticklabels([])
+                ax.set_yticklabels([''] + ax.get_yticklabels()[1:])
 
                 x = df_quad[self.col_map[col]].values
 
@@ -438,9 +441,6 @@ class figures:
                 # plot fractional cover values
                 y = df_y[self.col_map[col]]
 
-                    # plot uncertainty
-                    # x_u = df_x[f'{col_map[col]}_se']
-                    # y_u = df_y[f'{col_map[col]}_se']
 
                 m, b = np.polyfit(x, y, 1)
                 one_line = np.linspace(0, 1, 101)
@@ -448,8 +448,9 @@ class figures:
                 # plot 1 to 1 line
                 ax.plot(one_line, one_line, color='red')
                 ax.plot(one_line, m * one_line + b, color='black')
-                # ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='', linestyle='None', capsize=5)
-                ax.scatter(x, y, marker='^', edgecolor='black', color='orange', label='AVIRIS$_{ng}$', zorder=10)
+                ax.scatter(x, y, marker='^', edgecolor='black', color='orange', label='AVIRIS$_{ng}$', zorder=10,
+                           s=150)
+                ax.tick_params(axis='both', labelsize=self.legend_text)
 
                 # for i, label in enumerate(df_quad['plot'].values):
                 #    ax.text(x[i], y[i], label, fontsize=12, ha='center', va='bottom')
@@ -465,7 +466,7 @@ class figures:
                     r'n = ' + str(len(x)),))
 
                 props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
-                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=12,
+                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=self.legend_text,
                         verticalalignment='top', bbox=props)
 
         plt.savefig(os.path.join(self.figure_directory, f'methods_fig_3.png'), format="png", dpi=400,
@@ -477,21 +478,22 @@ class figures:
 def run_figures(base_directory):
     base_directory = base_directory
     sensor = 'aviris_ng'
-    major_axis_fontsize = 14
-    minor_axis_fontsize = 12
-    title_fontsize = 22
-    axis_label_fontsize = 20
-    fig_height = 6
-    fig_width = 18
-    linewidth = 1
+    major_axis_fontsize = 22
+    minor_axis_fontsize = 20
+    title_fontsize = 30
+    axis_label_fontsize = 26
+    fig_height = 10
+    fig_width = 17
+    linewidth = 3
     sig_figs = 2
+    legend_text = 20
 
     fig = figures(base_directory=base_directory, sensor=sensor, major_axis_fontsize=major_axis_fontsize,
                         minor_axis_fontsize=minor_axis_fontsize, title_fontsize=title_fontsize,
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
-                        linewidth=linewidth, sig_figs=sig_figs)
+                        linewidth=linewidth, sig_figs=sig_figs, legend_text=legend_text)
     #fig.plot_summary()
     fig.quad_cover()
-    #fig.slpit_fig(norm_option='brightness')
+    fig.slpit_fig(norm_option='brightness')
     fig.wonderpole_fig(norm_option='brightness')
     fig.quad_fig(norm_option='brightness')

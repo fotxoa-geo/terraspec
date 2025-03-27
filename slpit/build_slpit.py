@@ -354,6 +354,7 @@ class build_libraries:
             df_results.insert(3, "line_num", '')
             df_results.insert(4, "level_1", '')
             df_results.insert(5, "species", '')
+            df_results.insert(6, "notes", '')
 
             for file_num in df_results.file_num.values:
                 if file_num in df_transect_em.asd_file_num.values:
@@ -361,9 +362,9 @@ class build_libraries:
                     line_num = df_transect_em.loc[df_transect_em['asd_file_num'] == file_num, 'transect_line_num'].iloc[
                         0]
                     species = df_transect_em.loc[df_transect_em['asd_file_num'] == file_num, 'species'].iloc[0]
-
+                    notes = df_transect_em.loc[df_transect_em['asd_file_num'] == file_num, 'notes'].iloc[0]
                     df_results.loc[df_results['file_num'] == file_num, ['line_num', 'level_1',
-                                                                        'species']] = line_num, em_clas, species
+                                                                        'species', 'notes']] = line_num, em_clas, species, notes
 
             df_results = df_results.sort_values("level_1")
             df_results.to_csv(os.path.join(self.output_transect_em_directory_raw, plot_name.replace(" ", "") + '-asd.csv'),
@@ -377,7 +378,7 @@ class build_libraries:
                                          "ncols": 150})
             df_convolve = pd.DataFrame(results_convolve)
             df_convolve.columns = list(self.wvls)
-            df_convolve = pd.concat([df_results.iloc[:, :10].reset_index(drop=True), df_convolve], axis=1)
+            df_convolve = pd.concat([df_results.iloc[:, :11].reset_index(drop=True), df_convolve], axis=1)
 
             df_convolve = df_convolve.sort_values("level_1")
             df_convolve.to_csv(os.path.join(self.output_transect_em_directory_raw,

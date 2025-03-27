@@ -86,8 +86,7 @@ def param_search(vars, key):
 def error_processing(file, output_directory):
     basename = os.path.basename(file)
 
-    
-    if any("withold" in s for s in basename.split("_")):
+    if any("geographic" in s for s in basename.split("_")):
         truth_base = 'geographic'
     else:
         truth_base = basename.split("_")[0]
@@ -101,12 +100,18 @@ def error_processing(file, output_directory):
         truth_file = os.path.join(output_directory, 'latin_hypercube__n_dims_' + dims + '_fractions')
 
     elif truth_base == 'geographic':
-        file_path = basename.split("_")[:7]
-        truth_base = file_path[2]
-        del file_path[file_path.index("spectra")]
-        file_path[1] += "--"
-        file_path = "_".join(file_path).replace("--_", "--").replace("_n", "__n")
-        truth_file = os.path.join(output_directory, file_path + '_fractions')
+        file_path = basename.split("_")
+        continent = file_path[3]
+        if continent == 'North':
+            continent = 'North America'
+            dims = file_path[7]
+        else:
+            dims = file_path[6]
+
+        truth_file = os.path.join(output_directory, f'geographic_convex_hull_{continent}__n_dims_{dims}_fractions')
+        combs = dims
+        dims = continent
+        truth_base = file_path[-11]
     else:
         raise FileNotFoundError(basename + "not found.")
 
@@ -138,7 +143,8 @@ def error_processing(file, output_directory):
         norm_opts = param_search(basename, 'combinations')
         combs = norm_opts[1]
     else:
-        combs = np.nan
+        if truth_base != 'geographic':
+            combs = np.nan
     
     if mc_runs > 1:
         unc_file = f"{file}_uncertainty"
@@ -146,10 +152,10 @@ def error_processing(file, output_directory):
     else:
         mc_unc_array = False
 
-
     error = error_metrics(truth_array, estimated_array, mc_unc_array, mc_runs)
     
     return [truth_base, normalization, num_em, combs, dims, mc_runs] + error
+
     del truth_array, estimated_array
 
 

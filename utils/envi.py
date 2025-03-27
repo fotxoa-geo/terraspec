@@ -174,11 +174,12 @@ def load_band_names(file):
 def  augment_envi(file, out_raster, wvls, vertical_average=False, em_index=None):
     ds = gdal.Open(file, gdal.GA_ReadOnly)
     ds_array = envi_to_array(file)
+    ds_array[ds_array == -9999.] = np.nan
 
     if ds.RasterYSize == 3: # this is for the EMIT 3x3 windows
-        spectra_grid = np.zeros((100, 100, len(wvls)))
+        spectra_grid = np.ones((100, 100, len(wvls))) * -9999
     else:
-        spectra_grid = np.zeros((ds.RasterYSize, 100, len(wvls)))
+        spectra_grid = np.ones((ds.RasterYSize, 100, len(wvls))) * -9999
 
     if not vertical_average:
         for _row, row in enumerate(ds_array):
@@ -187,10 +188,10 @@ def  augment_envi(file, out_raster, wvls, vertical_average=False, em_index=None)
 
     else:
         if em_index == None: # this averages all spectral readings from slpit into tone
-            spectra_grid[0, 0, :] = np.mean(ds_array, axis=(0, 1))
+            spectra_grid[0, 0, :] = np.nanmean(ds_array, axis=(0, 1))
 
         else:
-            spectra_grid[0, 0, :] = np.mean(ds_array[em_index:, :, :], axis=(0, 1))
+            spectra_grid[0, 0, :] = np.nanmean(ds_array[em_index:, :, :], axis=(0, 1))
 
     meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=wvls,
                             wvls=True)

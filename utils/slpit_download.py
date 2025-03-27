@@ -10,13 +10,18 @@ import pandas as pd
 import geopandas as gp
 from utils.create_tree import create_directory
 from sys import platform
-
+import json
 
 # create object folder to store the pickle objects
 create_directory('objects')
 
-ck = r'rnrLR3K9SHt3DopUdvqSXN7me4FGtjblRyuqSzL6.YquivC50dLbkqWfBZ7AH'
-sk = r'7Og6inIanLbg0G6xwSvwrOGUTilBqm4htXQ1N1oX'
+
+f = open('slpit/config.json')
+data = json.load(f)
+metadata = data['keys']  # geodata from spec library
+
+ck = metadata['ck']
+sk = metadata['cs']
 profile_id = 504019
 spectral_endmembers_page_id = 3856841
 emit_transects_page_id = 3856847
