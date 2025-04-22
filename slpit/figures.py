@@ -70,8 +70,8 @@ def fraction_file_info(fraction_file):
     for _band, band in enumerate(range(0, fraction_array.shape[2])):
             
             if instrument == 'asd':
-                selected_fractions = fraction_array[7:, :, _band]
-                selected_unc = unc_array[7:, :, _band]
+                selected_fractions = fraction_array[:, :, _band]
+                selected_unc = unc_array[:, :, _band]
             else:
                 selected_fractions = fraction_array[:, :, _band]
                 selected_unc = unc_array[:, :, _band]

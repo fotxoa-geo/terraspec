@@ -35,9 +35,9 @@ class unmix_runs:
         self.scene_directory = os.path.join(self.output_directory, 'scenes')
 
         # simulation parameters for spatial and hypertrace unmix
-        self.optimal_parameters_sma = ['--num_endmembers 20', '--n_mc 25', '--normalization brightness']
-        self.optimal_parameters_mesma = ['--max_combinations 100', '--n_mc 25', '--normalization brightness']
-        self.non_opt_mesma = ['max_combinations 100', '--n_mc 1', '--normalization brightness']
+        self.optimal_parameters_sma = ['--num_endmembers 20', '--n_mc 25', '--normalization none']
+        self.optimal_parameters_mesma = ['--max_combinations 100', '--n_mc 25', '--normalization none']
+        self.non_opt_mesma = ['max_combinations 100', '--n_mc 1', '--normalization none']
 
         self.num_cmb = ['--max_combinations 10', '--max_combinations 20', '--max_combinations 30',
                         '--max_combinations 40',
@@ -227,6 +227,7 @@ def run_slipt_unmix(base_directory, dry_run):
         if user_input == 'A':
             all_runs.unmix_calls(mode='sma')
             all_runs.unmix_calls(mode='mesma')
+            all_runs.unmix_calls(mode='sma-best')
         elif user_input == 'B':
             all_runs.unmix_scenes(mode='sma')
         elif user_input == 'C':

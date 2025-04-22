@@ -29,9 +29,7 @@ def build_geographic(dimensions, output_directory, spectra_starting_col, normali
     df_only = df.iloc[:, spectra_starting_col:]
     df_array = df_only.to_numpy()
     norm = p_map(spectra.vector_normalize_spectrum, df_array,
-                 **{
-                     "desc": f"\t\t\tnormalizing spectrum: CH d = {dimensions}...",
-                     "ncols": 150})
+                 **{"desc": f"\t\t\tnormalizing spectrum: CH d = {dimensions}...", "ncols": 150})
     df_norm = pd.DataFrame(norm)
     df_norm.columns = df_only.columns
     df_norm = pd.concat([df.iloc[:, :spectra_starting_col].reset_index(drop=True), df_norm], axis=1)
@@ -43,15 +41,19 @@ def build_geographic(dimensions, output_directory, spectra_starting_col, normali
     em_libraries_output, sim_libraries_output = get_library_outputs(output_directory=output_directory)
 
     for continent in sorted(df.CONTINENT.unique()):
+        if continent in ['Australia', 'Asia']:
+            continue
+
         # filter out current continent, current continent is in simulation; this gets passed to pc analysis
-        df_all_soils_to_unmix = df_norm.loc[(df_norm['CONTINENT'] != continent)].copy().reset_index(drop=True)
-        df_all_soils_to_unmix = df_all_soils_to_unmix.loc[(df_all_soils_to_unmix['level_1'] == 'soil')].copy().reset_index(drop=True)
+        df_to_unmix = df_norm.loc[(df_norm['CONTINENT'] != continent)].copy().reset_index(drop=True)
+        df_to_unmix_soils = df_to_unmix.loc[(df_to_unmix['level_1'] == 'soil')].copy().reset_index(drop=True)
+        df_to_unmix_veg = df_to_unmix.loc[(df_to_unmix['level_1'] != 'soil')].copy().reset_index(drop=True)
 
         # soils for simulation
-        df_sim_soils = df_norm.loc[(df_norm['CONTINENT'] == continent) & (df_norm['level_1'] == 'soil')].copy().reset_index(drop=True)
+        df_to_sim = df_norm.loc[(df_norm['CONTINENT'] == continent)].copy().reset_index(drop=True)
 
         # run soil PCA;
-        pc_components = spectra.pca_analysis(df_all_soils_to_unmix, spectra_starting_col=spectra_starting_col)
+        pc_components = spectra.pca_analysis(df_to_unmix, spectra_starting_col=spectra_starting_col)
         pc_array = np.asarray(pc_components)[:, spectra_starting_col: spectra_starting_col + dimensions]
 
         # get the convex hull of n-dimensions
@@ -61,15 +63,16 @@ def build_geographic(dimensions, output_directory, spectra_starting_col, normali
         hull_indices = ch.vertices
 
         # hull merged df with metadata
-        df_ch = df_all_soils_to_unmix.iloc[hull_indices]
+        df_ch = df_to_unmix_soils.iloc[hull_indices]
 
         # merge the em dataframes
-        df_unmix = pd.concat([df_veg_unmix, df_ch], axis=0).sort_values("level_1")
+        df_unmix = pd.concat([df_to_unmix_veg, df_ch], axis=0).sort_values("level_1")
 
         # save the dataframes to a csv - unmixing library
         df_unmix.to_csv(os.path.join(em_libraries_output, f'geographic_convex_hull__n_dims_{str(dimensions)}_{continent}_unmix_library.csv'), index=False)
 
-        df_sim = pd.concat([df_veg_sim, df_sim_soils], axis=0).sort_values("level_1")
+        #df_sim = pd.concat([df_veg_sim, df_sim_soils], axis=0).sort_values("level_1")
+        df_to_sim = df_to_sim.sort_values("level_1")
 
         # get simulation parameters
         spectral_bundles, cols, level, wvls = get_sim_parameters()
@@ -80,12 +83,12 @@ def build_geographic(dimensions, output_directory, spectra_starting_col, normali
                                                        f'geographic_convex_hull__n_dims_{str(dimensions)}_{continent}_unmix_library.hdr'))
 
         # save simulation library as envi
-        spectra.df_to_envi(df=df_sim, spectral_starting_column=spectra_starting_col, wvls=wvls,
+        spectra.df_to_envi(df=df_to_sim, spectral_starting_column=spectra_starting_col, wvls=wvls,
                            output_raster=os.path.join(sim_libraries_output,
                                                        f'geographic_convex_hull__n_dims_{str(dimensions)}_{continent}_simulation_library.hdr'))
 
         # # simulate the reflectance
-        spectra.simulate_reflectance(df_sim=df_sim, df_unmix=df_unmix, dimensions=dimensions,
+        spectra.simulate_reflectance(df_sim=df_to_sim, df_unmix=df_unmix, dimensions=dimensions,
                                      sim_libraries_output=sim_libraries_output, mode=f'geographic_convex_hull_{continent}', level=level,
                                      spectral_bundles=spectral_bundles, cols=cols, output_directory=output_directory,
                                      wvls=wvls, spectra_starting_col=spectra_starting_col)
