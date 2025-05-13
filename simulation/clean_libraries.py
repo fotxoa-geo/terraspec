@@ -143,6 +143,7 @@ def download_data(base_directory, output_directory):
         response = requests.get(url)
         ecosis_data = response.json()
         url = ecosis_data['ecosis']['resources'][0]['url']
+
         url_content = requests.get(url)
         ecosis_csv_name = ecosis_data['ecosis']['resources'][0]['name']
 

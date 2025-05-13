@@ -114,8 +114,6 @@ class figures:
                 continue
             else:
                 df_quad_select['cover'] = df_quad_select['Phenophase'].replace(quad_phenophase_key)
-
-
             df_quads_to_merge.append(df_quad_select)
 
         df_quad_cover = pd.concat(df_quads_to_merge, ignore_index=True)
@@ -185,15 +183,17 @@ class figures:
 
         return df_all, df_wonderpole, df_quad
 
-    def slpit_fig(self, norm_option):
+    def slpit_fig(self, norm_option, mode, lib):
         df_all, df_wonderpole, df_quad = figures.load_frac_data(self)
-        df_all = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global') & (df_all['normalization'] == norm_option)].copy()
+        df_all = df_all[(df_all['unmix_mode'] == mode) & (df_all['lib_mode'] == lib) & (df_all['normalization'] == norm_option)].copy()
 
         # # # create figure
         fig = plt.figure(figsize=(self.fig_width, self.fig_height))
         ncols = 3
         nrows = 3
         gs = gridspec.GridSpec(ncols=ncols, nrows=nrows,  wspace=0.15, hspace=0.05, width_ratios=[1] * ncols, height_ratios=[1] * nrows)
+
+        df_cols = []
 
         # loop through figure columns
         for row in range(nrows):
@@ -267,32 +267,41 @@ class figures:
                            s=150)
                 ax.tick_params(axis='both', labelsize=self.legend_text)
 
-                #for i, label in enumerate(df_wonderpole['plot'].values):
-                #    ax.text(x.values[i], y.values[i], label, fontsize=8, ha='center', va='bottom')
+                for i, label in enumerate(df_wonderpole['plot'].values):
+                   ax.text(x.values[i], y.values[i], label, fontsize=8, ha='center', va='bottom')
 
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
                 mae = mean_absolute_error(x, y)
-                r2 = r2_calculations(x, y)
+                r2, bias = r2_calculations(x, y)
 
                 txtstr = '\n'.join((
                     r'MAE(RMSE): %.2f(%.2f)' % (mae, rmse),
                     r'R$^2$: %.2f' % (r2,),
                     r'n = ' + str(len(x)),))
 
+                if row == 0:
+                    error = np.absolute(x - y)
+                    df_error = pd.DataFrame({'Plot': df_y['plot'].values,
+                                             self.ems[col] : error})
+                    df_error = df_error.sort_values(by=self.ems[col]).reset_index(drop=True)
+                    df_error.to_csv(os.path.join(self.figure_directory, f'error_quality_{self.ems[col]}_{mode}_{norm_option}_{lib}.csv'), index=False)
+
+
                 props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=self.legend_text,
                         verticalalignment='top', bbox=props)
 
-
-        plt.savefig(os.path.join(self.figure_directory, f'methods_fig_1.png'), format="png", dpi=400,
+        plt.savefig(os.path.join(self.figure_directory, f'methods_fig_1_{mode}_{norm_option}_{lib}.png'), format="png", dpi=400,
                   bbox_inches="tight")
         plt.clf()
         plt.close()
 
-    def wonderpole_fig(self, norm_option):
+
+
+    def wonderpole_fig(self, norm_option, mode, lib):
         df_all, df_wonderpole, df_quad = figures.load_frac_data(self)
-        df_all = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global') & (
+        df_all = df_all[(df_all['unmix_mode'] == mode) & (df_all['lib_mode'] == lib) & (
                     df_all['normalization'] == norm_option)].copy()
 
         # # # create figure
@@ -371,7 +380,7 @@ class figures:
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
                 mae = mean_absolute_error(x, y)
-                r2 = r2_calculations(x, y)
+                r2, bias = r2_calculations(x, y)
 
                 txtstr = '\n'.join((
                     r'MAE(RMSE): %.2f(%.2f)' % (mae, rmse),
@@ -382,15 +391,15 @@ class figures:
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=self.legend_text,
                         verticalalignment='top', bbox=props)
 
-        plt.savefig(os.path.join(self.figure_directory, f'methods_fig_2.png'), format="png", dpi=400,
+        plt.savefig(os.path.join(self.figure_directory, f'methods_fig_2_{mode}_{norm_option}_{lib}.png'), format="png", dpi=400,
                     bbox_inches="tight")
         plt.clf()
         plt.close()
 
 
-    def quad_fig(self, norm_option):
+    def quad_fig(self, norm_option, mode, lib):
         df_all, df_wonderpole, df_quad = figures.load_frac_data(self)
-        df_all = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global') & (
+        df_all = df_all[(df_all['unmix_mode'] == mode) & (df_all['lib_mode'] == lib) & (
                 df_all['normalization'] == norm_option)].copy()
 
         # # # create figure
@@ -458,7 +467,7 @@ class figures:
                 # Add error metrics
                 rmse = mean_squared_error(x, y, squared=False)
                 mae = mean_absolute_error(x, y)
-                r2 = r2_calculations(x, y)
+                r2,bias = r2_calculations(x, y)
 
                 txtstr = '\n'.join((
                     r'MAE(RMSE): %.2f(%.2f)' % (mae, rmse),
@@ -469,10 +478,491 @@ class figures:
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=self.legend_text,
                         verticalalignment='top', bbox=props)
 
-        plt.savefig(os.path.join(self.figure_directory, f'methods_fig_3.png'), format="png", dpi=400,
+        plt.savefig(os.path.join(self.figure_directory, f'methods_fig_3_{mode}_{norm_option}_{lib}.png'), format="png", dpi=400,
                     bbox_inches="tight")
         plt.clf()
         plt.close()
+
+    def mesma_vs_emc2_1(self):
+        df_all, df_wonderpole, df_quad = figures.load_frac_data(self)
+
+        #  create figure
+        fig = plt.figure(figsize=(20, 20))
+        ncols = 3
+        nrows = 6
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.30, width_ratios=[1] * ncols,
+                               height_ratios=[1] * nrows)
+
+        col_map = {
+            0: 'npv',
+            1: 'pv',
+            2: 'soil'}
+
+        df_select_shift = df_all[(df_all['lib_mode'] == 'global') & (df_all['num_mc'] == 25)].copy()
+
+        for row in range(nrows):
+            for col in range(ncols):
+                ax = fig.add_subplot(gs[row, col])
+                ax.set_ylim(self.axes_limits['ymin'], self.axes_limits['ymax'])
+                ax.set_xlim(self.axes_limits['xmin'], self.axes_limits['xmax'])
+                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+                ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+
+                if row == 0:
+                    ax.set_xlabel("SLPIT - EMC2 - Bright", fontsize=8)
+                    ax.set_ylabel("SLPIT - MESMA - Bright", fontsize=8)
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma')  & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+
+                if row == 1:
+                    ax.set_xlabel("SLPIT - EMC2 - Bright", fontsize=8)
+                    ax.set_ylabel("AVIRIS - MESMA - Bright", fontsize=8)
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+
+                if row == 2:
+                    ax.set_xlabel("SLPIT - EMC2 - Bright", fontsize=8)
+                    ax.set_ylabel("SLPIT - EMC2 - NN", fontsize=8)
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 3:
+                    ax.set_xlabel("SLPIT - EMC2 - Bright", fontsize=8)
+                    ax.set_ylabel("SLPIT -MESMA - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 4:
+                    ax.set_xlabel("SLPIT - MESMA - Bright", fontsize=8)
+                    ax.set_ylabel("AVIRIS - EMC2 - Bright", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+
+                if row == 5:
+                    ax.set_xlabel("AVIRIS - MESMA - Bright", fontsize=8)
+                    ax.set_ylabel("AVIRIS - EMC2 - Bright", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+
+                ax.set_yticks(np.arange(self.axes_limits['ymin'], self.axes_limits['ymax'] + 0.2, 0.2))
+
+                x_shift = df_x_shift[col_map[col]]
+                y_shift = df_y_shift[col_map[col]]
+                x_u_shift = df_x_shift[f'{col_map[col]}_sigma']
+                y_u_shift = df_y_shift[f'{col_map[col]}_sigma']
+
+                x =  list(x_shift.values)
+                y =  list(y_shift.values)
+                x_u = list(x_u_shift.values)
+                y_u = list(y_u_shift.values)
+
+                m, b = np.polyfit(x, y, 1)
+                one_line = np.linspace(0, 1, 101)
+
+                ax.plot(one_line, one_line, color='red', zorder=1)
+                ax.plot(one_line, m * one_line + b, color='black', zorder=2)
+                ax.scatter(x_shift, y_shift, marker='^', color='orange', edgecolor='black', label='AVIRIS$_{NG}$',
+                           zorder=10)
+
+                # Add labels to each point
+                # for xi, yi,xu,yu, label in zip(x, y, x_u, y_u, df_x['plot']):
+                #     ax.errorbar(xi, yi, yerr=yu, xerr=xu, fmt='o')
+                #     plt.annotate(label, (xi, yi), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=8)
+
+                if col == 2 and row == 0:
+                    ax.legend(loc='lower right')
+
+                # Add error metrics
+                rmse = mean_squared_error(x, y, squared=False)
+                mae = mean_absolute_error(x, y)
+                r2, bias = r2_calculations(x, y)
+
+                txtstr = '\n'.join((
+                    r'MAE(RMSE): %.2f(%.2f)' % (mae, rmse),
+                    r'R$^2$: %.2f' % (r2,),
+                    r'Bias: %.2f ' % (bias),
+                ))
+
+                props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
+                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
+                        verticalalignment='top', bbox=props)
+
+        fig.supylabel('Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
+        plt.savefig(os.path.join(self.figure_directory, f'mesma_vs_emc2_1.png'), format="png",
+                    dpi=400, bbox_inches="tight")  # load all fraction files
+
+
+    def mesma_vs_emc2_2(self):
+        df_all, df_wonderpole, df_quad = figures.load_frac_data(self)
+
+        #  create figure
+        fig = plt.figure(figsize=(40, 40))
+        ncols = 3
+        nrows = 18
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.35, width_ratios=[1] * ncols,
+                               height_ratios=[1] * nrows)
+
+        col_map = {
+            0: 'npv',
+            1: 'pv',
+            2: 'soil'}
+
+        df_select_shift = df_all[(df_all['lib_mode'] == 'global') & (df_all['num_mc'] == 25)].copy()
+
+        for row in range(nrows):
+            for col in range(ncols):
+                ax = fig.add_subplot(gs[row, col])
+                ax.set_ylim(self.axes_limits['ymin'], self.axes_limits['ymax'])
+                ax.set_xlim(self.axes_limits['xmin'], self.axes_limits['xmax'])
+                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+                ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+
+                if row == 0:
+                    ax.set_xlabel("SLPIT - MESMA - Bright", fontsize=8)
+                    ax.set_ylabel("SLPIT - EMC2 - NN", fontsize=8)
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma')  & (df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 1:
+                    ax.set_xlabel("SLPIT - MESMA - Bright", fontsize=8)
+                    ax.set_ylabel("SLPIT - MESMA - NN", fontsize=8)
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 2:
+                    ax.set_xlabel("SLPIT - MESMA - Bright", fontsize=8)
+                    ax.set_ylabel("AVIRIS - EMC2 - NN", fontsize=8)
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 3:
+                    ax.set_xlabel("SLPIT - MESMA - Bright", fontsize=8)
+                    ax.set_ylabel("AVIRIS -MESMA - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 4:
+                    ax.set_xlabel("AVIRIS - MESMA - Bright", fontsize=8)
+                    ax.set_ylabel("SLPIT - EMC2 - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 5:
+                    ax.set_xlabel("AVIRIS - MESMA - Bright", fontsize=8)
+                    ax.set_ylabel("SLPIT - MESMA - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 6:
+                    ax.set_xlabel("AVIRIS - MESMA - Bright", fontsize=8)
+                    ax.set_ylabel("AVIRIS - EMC2 - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                    df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 7:
+                    ax.set_xlabel("AVIRIS - MESMA - Bright", fontsize=8)
+                    ax.set_ylabel("AVIRIS - MESMA - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                    df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 8:
+                    ax.set_xlabel("AVIRIS - EMC2 - Bright", fontsize=8)
+                    ax.set_ylabel("SLPIT - EMC2 - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 9:
+                    ax.set_xlabel("AVIRIS - EMC2 - Bright", fontsize=8)
+                    ax.set_ylabel("SLPIT - MESMA - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 10:
+                    ax.set_xlabel("AVIRIS - EMC2 - Bright", fontsize=8)
+                    ax.set_ylabel("AVIRIS - EMC2 - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 11:
+                    ax.set_xlabel("AVIRIS - EMC2 - Bright", fontsize=8)
+                    ax.set_ylabel("AVIRIS - MESMA - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+
+                if row == 12:
+                    ax.set_xlabel("SLPIT - EMC2 - NN", fontsize=8)
+                    ax.set_ylabel("SLPIT - MESMA - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+
+                if row == 13:
+                    ax.set_xlabel("SLPIT - EMC2 - NN", fontsize=8)
+                    ax.set_ylabel("AVIRIS - MESMA - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 14:
+                    ax.set_xlabel("SLPIT - MESMA - NN", fontsize=8)
+                    ax.set_ylabel("AVIRIS - EMC2 - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 15:
+                    ax.set_xlabel("AVIRIS - MESMA - NN", fontsize=8)
+                    ax.set_ylabel("AVIRIS - EMC2 - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 16:
+                    ax.set_xlabel("SLPIT - EMC2 - Bright", fontsize=8)
+                    ax.set_ylabel("AVIRIS - EMC2 - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+
+                if row == 17:
+                    ax.set_xlabel("SLPIT - EMC2 - Bright", fontsize=8)
+                    ax.set_ylabel("AVIRIS - MESMA - NN", fontsize=8)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                ax.set_yticks(np.arange(self.axes_limits['ymin'], self.axes_limits['ymax'] + 0.2, 0.2))
+
+                x_shift = df_x_shift[col_map[col]]
+                y_shift = df_y_shift[col_map[col]]
+                x_u_shift = df_x_shift[f'{col_map[col]}_sigma']
+                y_u_shift = df_y_shift[f'{col_map[col]}_sigma']
+
+                x =  list(x_shift.values)
+                y =  list(y_shift.values)
+                x_u = list(x_u_shift.values)
+                y_u = list(y_u_shift.values)
+
+                m, b = np.polyfit(x, y, 1)
+                one_line = np.linspace(0, 1, 101)
+
+                ax.plot(one_line, one_line, color='red', zorder=1)
+                ax.plot(one_line, m * one_line + b, color='black', zorder=2)
+                ax.scatter(x_shift, y_shift, marker='^', color='orange', edgecolor='black', label='AVIRIS$_{NG}$',
+                           zorder=10)
+
+                # Add labels to each point
+                # for xi, yi,xu,yu, label in zip(x, y, x_u, y_u, df_x['plot']):
+                #     ax.errorbar(xi, yi, yerr=yu, xerr=xu, fmt='o')
+                #     plt.annotate(label, (xi, yi), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=8)
+
+                if col == 2 and row == 0:
+                    ax.legend(loc='lower right')
+
+                # Add error metrics
+                rmse = mean_squared_error(x, y, squared=False)
+                mae = mean_absolute_error(x, y)
+                r2, bias = r2_calculations(x, y)
+
+                txtstr = '\n'.join((
+                    r'MAE(RMSE): %.2f(%.2f)' % (mae, rmse),
+                    r'R$^2$: %.2f' % (r2,),
+                    r'Bias: %.2f ' % (bias),
+                ))
+
+                props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
+                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
+                        verticalalignment='top', bbox=props)
+
+        fig.supylabel('Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
+        plt.savefig(os.path.join(self.figure_directory, f'mesma_vs_emc2_2.png'), format="png",
+                    dpi=400, bbox_inches="tight")  # load all fraction file
+
+    def slpit_fig_by_site(self):
+        df_all, df_wonderpole, df_quad = figures.load_frac_data(self)
+
+        # # # create figure
+        fig = plt.figure(figsize=(self.fig_width, 20))
+        ncols = 3
+        nrows = 4
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows,  wspace=0.15, hspace=0.35, width_ratios=[1] * ncols, height_ratios=[1] * nrows)
+
+
+        df_select_shift = df_all[(df_all['lib_mode'] == 'global') & (df_all['num_mc'] == 25)].copy()
+
+        col_map = {
+            0: 'npv',
+            1: 'pv',
+            2: 'soil'}
+
+        # loop through figure columns
+        for row in range(nrows):
+            for col in range(ncols):
+                ax = fig.add_subplot(gs[row, col])
+                ax.set_ylim(self.axes_limits['ymin'], self.axes_limits['ymax'])
+                ax.set_xlim(self.axes_limits['xmin'], self.axes_limits['xmax'])
+                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+                ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+
+
+                if row == 0:
+                    ax.set_ylabel("EMC2 - Normalized", fontsize=8)
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+
+                if row == 1:
+                    ax.set_ylabel("EMC2 - NN", fontsize=8)
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma') & (
+                                    df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                if row == 2:
+                    ax.set_ylabel("MESMA - Normalized", fontsize=8)
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
+
+                if row == 3:
+                    ax.set_ylabel("MESMA - NN", fontsize=8)
+                    df_x_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[
+                        (df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma') & (
+                                df_select_shift['normalization'] == 'none')].copy().reset_index(drop=True)
+
+                x_shift = df_x_shift[col_map[col]]
+                y_shift = df_y_shift[col_map[col]]
+
+                x = list(x_shift.values)
+                y = list(y_shift.values)
+
+                error = np.array(x) - np.array(y)
+                m, b = np.polyfit(x, error, 1)
+                one_line = np.linspace(0, 1, 101)
+
+                # plot 1 to 1 line
+                ax.plot(one_line, one_line, color='red')
+                ax.plot(one_line, m * one_line + b, color='black')
+
+                ax.scatter(x_shift, error, marker='^', edgecolor='black', color='orange', label='AVIRIS$_{ng}$', zorder=10,
+                           s=150)
+
+                r2, bias = r2_calculations(x, error)
+
+                txtstr = '\n'.join((
+                    r'R$^2$: %.2f' % (r2,),
+                    r'n = ' + str(len(x)),))
+
+                props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
+                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=self.legend_text,
+                        verticalalignment='top', bbox=props)
+
+                #ax.tick_params(axis='both', labelsize=self.legend_text)
+                #ax.set_xticklabels(df_x_shift['plot'].values, rotation=90, fontsize=8)
+
+        plt.savefig(os.path.join(self.figure_directory, f'error_quality_all.png'), format="png", dpi=400,
+                  bbox_inches="tight")
+        plt.clf()
+        plt.close()
+
+
+
+
 
 
 def run_figures(base_directory):
@@ -494,6 +984,12 @@ def run_figures(base_directory):
                         linewidth=linewidth, sig_figs=sig_figs, legend_text=legend_text)
     #fig.plot_summary()
     fig.quad_cover()
-    fig.slpit_fig(norm_option='brightness')
-    fig.wonderpole_fig(norm_option='brightness')
-    fig.quad_fig(norm_option='brightness')
+    fig.mesma_vs_emc2_1()
+    fig.mesma_vs_emc2_2()
+    fig.slpit_fig_by_site()
+    for mode in ['sma', 'mesma']:
+        for norm in ['brightness', 'none']:
+            for lib in ['global']:
+                fig.slpit_fig(norm_option=norm, mode=mode, lib=lib)
+                fig.wonderpole_fig(norm_option=norm, mode=mode, lib=lib)
+                fig.quad_fig(norm_option=norm, mode=mode, lib=lib)
