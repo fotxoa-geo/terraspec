@@ -16,19 +16,6 @@ import json
 create_directory('objects')
 
 
-f = open('slpit/config.json')
-data = json.load(f)
-metadata = data['keys']  # geodata from spec library
-
-ck = metadata['ck']
-sk = metadata['cs']
-profile_id = 504019
-spectral_endmembers_page_id = 3856841
-emit_transects_page_id = 3856847
-shift_transects_id = 3856837
-server_name = 'tech-ate'
-
-
 def get_iform_records(server_name:str, client_key:str, secret_key:str, profile_id:int, page_id: int):
     api = IFB(server_name, 'us', client_key, secret_key, 6)
     results = api.getRecords(profile_id, page_id).response
@@ -131,12 +118,29 @@ def sync_extracts(base_directory, project):
         print("Extracts are being done in cluster! Cannot sync between local machine.")
 
 
+def get_ck_sk():
+    f = open('slpit/config.json')
+    data = json.load(f)
+    metadata = data['keys']  # geodata from spec library
+
+    ck = metadata['ck']
+    sk = metadata['cs']
+
+    return ck, sk
+profile_id = 504019
+spectral_endmembers_page_id = 3856841
+emit_transects_page_id = 3856847
+shift_transects_id = 3856837
+server_name = 'tech-ate'
+
 def run_dowloand_slpit():
+    ck, sk = get_ck_sk()
     emit_slpit_recrods = get_iform_records(server_name=server_name, client_key=ck, secret_key=sk, profile_id=profile_id,
                                            page_id=emit_transects_page_id)
     save_pickle(emit_slpit_recrods, 'emit_slpit')
 
 def download_shift_slpit():
+    ck, sk = get_ck_sk()
     shift_slpit_recrods = get_iform_records(server_name=server_name, client_key=ck, secret_key=sk, profile_id=profile_id,
                                            page_id=shift_transects_id)
     save_pickle(shift_slpit_recrods, 'shift_slpit')
