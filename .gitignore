@@ -153,7 +153,10 @@ dmypy.json
 cython_debug/
 
 emit_utils/
-bo_level4.py
+
+slpit/configs.json
+*.ipynb
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
