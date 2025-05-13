@@ -42,7 +42,7 @@ class tables:
         df_all = pd.DataFrame(results)
 
         df_all.columns = ['instrument', 'unmix_mode', 'plot', 'lib_mode', 'num_cmb_em', 'num_mc', 'normalization', 'rows', 'cols', 'duplicate_flag',
-                                                 'npv', 'pv', 'soil', 'shade', 'npv_se', 'pv_se', 'soil_se', 'shade_se']
+                                                 'npv', 'pv', 'soil', 'shade', 'npv_se', 'pv_se', 'soil_se', 'shade_se', 'npv_sigma', 'pv_sigma', 'soil_sigma', 'shade_sigma', 'npv_use', 'pv_use', 'soil_use', 'shade_use']
 
         df_all.to_csv(os.path.join(self.fig_directory, 'shift_fraction_output.csv'), index=False)
 

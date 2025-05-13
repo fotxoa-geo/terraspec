@@ -66,7 +66,9 @@ def fraction_file_info(fraction_file):
 
     mean_fractions = []
     mean_se = []
-    
+    mean_sigma = []
+    mean_use = []
+
     for _band, band in enumerate(range(0, fraction_array.shape[2])):
             
             if instrument == 'asd':
@@ -81,11 +83,22 @@ def fraction_file_info(fraction_file):
             
             selected_unc = np.where(selected_unc == -9999, np.nan, selected_unc)
             mean_fractions.append(np.nanmean(selected_fractions))
+            
+            # calculate se
             se = np.nanmean(selected_unc/np.sqrt(int(num_mc)))
             mean_se.append(se)
+            
+            # caluclate mean sigma
+            sigma = np.nanmean(selected_unc)
+            mean_sigma.append(sigma)
+            
+            # calculate U_se
+            sstd = selected_unc.flatten()
+            sum_square_sstd = np.nansum(np.square(sstd))
+            use = np.sqrt(sum_square_sstd)/sstd.shape[0]
+            mean_use.append(use)
 
-    return [instrument, unmix_mode, plot, library_mode, int(num_cmb_em), int(num_mc), normalization, fraction_array.shape[0], fraction_array.shape[1], duplicate_flag] + mean_fractions + mean_se
-
+    return [instrument, unmix_mode, plot, library_mode, int(num_cmb_em), int(num_mc), normalization, fraction_array.shape[0], fraction_array.shape[1], duplicate_flag] + mean_fractions + mean_se + mean_sigma + mean_use
 
 class figures:
     def __init__(self, base_directory: str, sensor: str, major_axis_fontsize, minor_axis_fontsize, title_fontsize,
