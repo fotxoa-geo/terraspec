@@ -713,7 +713,14 @@ class figures:
                     ax.set_xticklabels([''] + ax.get_xticklabels()[1:])
 
                 if col == 0:
-                    ax.set_ylabel(mode.upper() + '$_{' + lib_mode + '}$',
+                    if mode == 'sma':
+                        mode_to_plot = 'E(MC)$^2$'
+                    else:
+                        mode_to_plot = "MESMA"
+                    # ax.set_ylabel(mode_to_plot.upper() + '$_{' + lib_mode + '}$',
+                    #               fontsize=self.axis_label_fontsize)
+
+                    ax.set_ylabel(mode_to_plot.upper(),
                                   fontsize=self.axis_label_fontsize)
 
                 ax.set_yticks(np.arange(self.axes_limits['ymin'], self.axes_limits['ymax'] + 0.2, 0.2))
@@ -788,14 +795,20 @@ class figures:
         df_rows = []
         for index, row in df_gis.iterrows():
             plot = row['Name']
-            emit_filetime = row['EMIT DATE']
+            plot_num = int(plot.split('-')[1])
 
-            df_transect = transect_data.loc[transect_data['plot_name'] == plot.replace("SPEC", "Spectral")].copy()
-            acquisition_datetime_utc = datetime.strptime(emit_filetime, "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
-            geometry_results_emit = sunpos(acquisition_datetime_utc, row['latitude'], row['longitude'], np.mean(df_transect['elevation']))
+            if plot_num > 60:
+                continue
 
-            df_row = [plot, geometry_results_emit[1]]
-            df_rows.append(df_row)
+            else:
+                emit_filetime = row['EMIT DATE']
+
+                df_transect = transect_data.loc[transect_data['plot_name'] == plot.replace("SPEC", "Spectral")].copy()
+                acquisition_datetime_utc = datetime.strptime(emit_filetime, "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
+                geometry_results_emit = sunpos(acquisition_datetime_utc, row['latitude'], row['longitude'], np.mean(df_transect['elevation']))
+
+                df_row = [plot, geometry_results_emit[1]]
+                df_rows.append(df_row)
 
         df = pd.DataFrame(df_rows)
         df.columns = ['plot', 'sza']
@@ -846,6 +859,9 @@ class figures:
                     ax.set_xticklabels([''] + ax.get_xticklabels()[1:])
 
                 if col == 0:
+                    if mode == 'sma':
+                        mode = 'E(MC)$^2$'
+
                     ax.set_ylabel(mode.upper() + '$_{' + lib_mode + '}$',
                                   fontsize=self.axis_label_fontsize)
 
@@ -1093,11 +1109,11 @@ def run_figures(base_directory):
                         linewidth=linewidth, sig_figs=sig_figs)
 
     #fig.full_spectrum_plots()
-    fig.plot_summary()
-    fig.plot_rmse(norm_option='brightness')
-    fig.plot_rmse(norm_option='none')
-    # fig.local_slpit()
-    #fig.sza_plot(norm_option='brightness')
+    #fig.plot_summary()
+    #fig.plot_rmse(norm_option='brightness')
+    #fig.plot_rmse(norm_option='none')
+    #fig.local_slpit()
+    fig.sza_plot(norm_option='brightness')
     #fig.sza_plot(norm_option='none')
     #fig.map_detail_figure()
     #fig.av3_comparisson()

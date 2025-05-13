@@ -43,17 +43,23 @@ def gps_asd(latitude_ddmm, longitude_ddmm, file):
         dd_long = get_dd_coords(longitude_ddmm) * -1  # used to correct longitude
 
     except:
-        gdf = gpd.read_file('gis/Observation.shp')
-        gdf['longitude'] = gdf['geometry'].x
-        gdf['latitude'] = gdf['geometry'].y
-        plot_name = os.path.basename(os.path.dirname(file)).replace('Spectral', 'SPEC')
-        df = gdf.drop(columns='geometry')
 
-        long = df.loc[(df['Name'] == plot_name), 'longitude'].iloc[0]
-        lat = df.loc[(df['Name'] == plot_name), 'latitude'].iloc[0]
+        try:
+            gdf = gpd.read_file('gis/Observation.json')
+            gdf['longitude'] = gdf['geometry'].x
+            gdf['latitude'] = gdf['geometry'].y
+            plot_name = os.path.basename(os.path.dirname(file)).replace('Spectral', 'SPEC')
+            df = gdf.drop(columns='geometry')
 
-        dd_lat = lat
-        dd_long = long
+            long = df.loc[(df['Name'] == plot_name), 'longitude'].iloc[0]
+            lat = df.loc[(df['Name'] == plot_name), 'latitude'].iloc[0]
+
+            dd_lat = lat
+            dd_long = long
+
+        except:
+            dd_lat = -9999.
+            dd_long = -9999.
 
     return dd_lat, dd_long
 
@@ -141,6 +147,10 @@ class spectra:
         df = pd.read_csv(os.path.join(output_directory, 'convolved', 'geofilter_convolved.csv'))
         return df
 
+    @classmethod
+    def load_global_library_metadata(cls):
+        df = pd.read_csv(os.path.join('simulation', 'emit_global_lib_all.csv'))
+        return df
     @classmethod
     def latin_hypercubes(cls, points, get_quadrants_index=False):
         ndims = points.shape[1]
@@ -392,9 +402,11 @@ class spectra:
         else:
             reflectance = reflectance
 
+        print(len(expert_file_selection))
         # loop through features
         for _cont_feat, cont_feat in enumerate(expert_file_selection):
             feature = cont_feat['continuum']
+
 
             # calculate left indices
             left_inds = np.where(np.logical_and(wavelengths >= feature[0], wavelengths <= feature[1]))[0]
@@ -413,6 +425,8 @@ class spectra:
             right_x = wavelengths[int(right_inds.mean())]
             right_y_obs = reflectance[right_inds].mean()
             right_y_lib = library_reflectance[right_inds].mean()
+
+            print(np.round(left_x, 3), np.round(right_x, 3))
 
             # calculate features
             feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
@@ -544,8 +558,8 @@ class spectra:
         else:
 
             # mineral matrix
-            if mineral_index not in [0, 1, 13, 15, 20, 21, 22, 25, 28, 29, 37, 38, 40, 41, 49, 56, 57, 60, 82, 83, 94,
-                                     96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 194, 196, 228, 234,
+            if mineral_index not in [0, 1, 13, 15, 22, 25, 28, 29, 37, 38, 40, 41, 49, 56, 57, 60, 82, 83, 94,
+                                     96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 196, 228, 234,
                                      238, 270, 271]: # this excludes minerals not used for simulation!
 
                 df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
@@ -756,6 +770,7 @@ class spectra:
             os.path.join(sim_libraries_output, mode + '__n_dims_' + str(dimensions) + '_simulation_library.csv'),
             index=False)
 
+        print('__n_dims_' + str(dimensions))
         # # create the reflectance file
         spectra.generate_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim, level=level,
                          spectral_bundles=spectral_bundles, cols=cols, output_directory=output_directory,

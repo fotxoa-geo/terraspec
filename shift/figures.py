@@ -440,7 +440,139 @@ class figures:
                     ax.set_xticklabels([''] + ax.get_xticklabels()[1:])
 
                 if col == 0:
+                    #ax.set_ylabel(mode.upper() + '$_{'+lib_mode +'}$', fontsize=self.axis_label_fontsize)
+                    if mode == 'sma':
+                        mode = 'E(MC)$^2$'
+
                     ax.set_ylabel(mode.upper() + '$_{'+lib_mode +'}$', fontsize=self.axis_label_fontsize)
+
+                ax.set_yticks(np.arange(self.axes_limits['ymin'], self.axes_limits['ymax'] + 0.2, 0.2))
+
+                if col != 0:
+                    ax.set_yticklabels([])
+
+                if row != 3:
+                    ax.set_yticklabels([''] + ax.get_yticklabels()[1:])
+                    ax.set_xticklabels([])
+
+                # emit variables
+                df_x_emit = df_select_emit[(df_select_emit['instrument'] == 'asd')].copy().reset_index(drop=True)
+                df_y_emit = df_select_emit[(df_select_emit['instrument'] == 'emit')].copy().reset_index(drop=True)
+
+                # aviris variables
+                df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd')].copy().reset_index(drop=True)
+                df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris')].copy().reset_index(drop=True)
+
+                # plot fractional cover values
+                x_emit = df_x_emit[col_map[col]]
+                y_emit = df_y_emit[col_map[col]]
+                x_u_emit = df_x_emit[f'{col_map[col]}_se']
+                y_u_emit = df_y_emit[f'{col_map[col]}_se']
+
+                x_shift = df_x_shift[col_map[col]]
+                y_shift = df_y_shift[col_map[col]]
+                x_u_shift = df_x_shift[f'{col_map[col]}_se']
+                y_u_shift = df_y_shift[f'{col_map[col]}_se']
+
+                x = list(x_emit.values) + list(x_shift.values)
+                y = list(y_emit.values) + list(y_shift.values)
+                x_u = list(x_u_emit.values) + list(x_u_shift.values)
+                y_u = list(y_u_emit.values) + list(y_u_shift.values)
+
+                m, b = np.polyfit(x, y, 1)
+                one_line = np.linspace(0, 1, 101)
+
+                ax.plot(one_line, one_line, color='red', zorder=1)
+                ax.plot(one_line, m * one_line + b, color='black', zorder=2)
+                ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='none', markersize=4, linestyle='None', zorder=9)
+                ax.scatter(x_emit, y_emit, marker='s', color='blue', edgecolor='black', label='EMIT', zorder=10)
+                ax.scatter(x_shift,y_shift, marker='^', color='orange', edgecolor='black', label='AVIRIS$_{NG}$', zorder=10)
+
+                # Add labels to each point
+                # for xi, yi,xu,yu, label in zip(x, y, x_u, y_u, df_x['plot']):
+                #     ax.errorbar(xi, yi, yerr=yu, xerr=xu, fmt='o')
+                #     plt.annotate(label, (xi, yi), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=8)
+
+                if col == 2 and row == 0:
+                    ax.legend(loc='lower right')
+
+                # Add error metrics
+                rmse = mean_squared_error(x, y, squared=False)
+                mae = mean_absolute_error(x, y)
+                r2 = r2_calculations(x, y)
+
+                txtstr = '\n'.join((
+                     r'MAE(RMSE): %.2f(%.2f)' % (mae,rmse),
+                    r'R$^2$: %.2f' % (r2,),
+                    r'n = ' + str(len(x)),
+                ))
+
+                props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
+                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
+                        verticalalignment='top', bbox=props)
+
+        fig.supylabel('Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
+        plt.savefig(os.path.join(self.figure_directory, f'regression_combined_{norm_option}.png'), format="png", dpi=400, bbox_inches="tight")# load all fraction files
+
+    def plot_combined_npp(self, norm_option):
+
+        # load fraction plots
+        df_emit = pd.read_csv(os.path.join(self.slpit_figures, 'fraction_output.csv'))
+        df_emit['Team'] = df_emit['plot'].str.split('-').str[0].str.strip()
+        df_emit = df_emit[df_emit['Team'] != 'THERM']
+        df_emit['campaign'] = 'emit'
+
+        skip = ['SRA-000-SPRING', 'SRB-047-SPRING', 'SRB-004-FALL', 'SRB-050-FALL', 'SRB-200-FALL']
+        df_aviris = pd.read_csv(os.path.join(self.figure_directory, 'shift_fraction_output.csv'))
+        df_aviris = df_aviris[~df_aviris['plot'].isin(skip)]
+        df_aviris['campaign'] = 'shift'
+        df_all = pd.concat([df_emit, df_aviris], ignore_index=True)
+
+        #  create figure
+        fig = plt.figure(figsize=(self.fig_width, self.fig_height))
+        ncols = 3
+        nrows = 2
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.05, hspace=0.05, width_ratios=[1] * ncols,
+                               height_ratios=[1] * nrows)
+
+        col_map = {
+            0: 'npv',
+            1: 'pv',
+            2: 'soil'}
+
+        # # loop through figure columns
+        for row in range(nrows):
+            if row == 0:
+                df_select_emit = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global') & (df_all['campaign'] == 'emit') & (df_all['normalization'] == norm_option) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 20)].copy()
+                df_select_shift = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global') & (df_all['campaign'] == 'shift') & (df_all['normalization'] == norm_option) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 20)].copy()
+
+            if row == 1:
+                df_select_emit = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['num_mc'] == 25) & (df_all['campaign'] == 'emit') & (df_all['normalization'] == norm_option) & (df_all['num_cmb_em'] == 100)].copy()
+                df_select_shift = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['campaign'] == 'shift') & (df_all['normalization'] == norm_option) & (df_all['num_cmb_em'] == 100)].copy()
+
+            for col in range(ncols):
+                ax = fig.add_subplot(gs[row, col])
+                ax.set_ylim(self.axes_limits['ymin'], self.axes_limits['ymax'])
+                ax.set_xlim(self.axes_limits['xmin'], self.axes_limits['xmax'])
+                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+                ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+
+                mode = list(df_select_emit['unmix_mode'].unique())[0]
+                lib_mode = list(df_select_emit['lib_mode'].unique())[0]
+
+                if row == 0:
+                    ax.set_title(self.ems[col], fontsize=self.title_fontsize)
+
+
+                if row == 3 and col != 0:
+                    ax.set_xticklabels([''] + ax.get_xticklabels()[1:])
+
+                if col == 0:
+                    #ax.set_ylabel(mode.upper() + '$_{'+lib_mode +'}$', fontsize=self.axis_label_fontsize)
+                    if mode == 'sma':
+                        mode = 'E(MC)$^2$'
+
+                    ax.set_ylabel(mode.upper(), fontsize=self.axis_label_fontsize)
 
                 ax.set_yticks(np.arange(self.axes_limits['ymin'], self.axes_limits['ymax'] + 0.2, 0.2))
 
@@ -507,8 +639,279 @@ class figures:
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=12,
                         verticalalignment='top', bbox=props)
 
+        fig.supylabel('Spaceborne/Airborne Fractions', fontsize=self.axis_label_fontsize)
+        fig.supxlabel('SLPIT Ground Fractions', fontsize=self.axis_label_fontsize)
+        plt.savefig(os.path.join(self.figure_directory, f'regression_combined_{norm_option}_npp.png'), format="png", dpi=400, bbox_inches="tight")# load all fraction files
+
+    def mesma_vs_emc2(self, norm_option):
+
+        # load fraction plots
+        df_emit = pd.read_csv(os.path.join(self.slpit_figures, 'fraction_output.csv'))
+        df_emit['Team'] = df_emit['plot'].str.split('-').str[0].str.strip()
+        df_emit = df_emit[df_emit['Team'] != 'THERM']
+        df_emit['campaign'] = 'emit'
+
+        skip = ['SRA-000-SPRING', 'SRB-047-SPRING', 'SRB-004-FALL', 'SRB-050-FALL', 'SRB-200-FALL']
+        df_aviris = pd.read_csv(os.path.join(self.figure_directory, 'shift_fraction_output.csv'))
+        df_aviris = df_aviris[~df_aviris['plot'].isin(skip)]
+        df_aviris['campaign'] = 'shift'
+        df_all = pd.concat([df_emit, df_aviris], ignore_index=True)
+
+        #  create figure
+        fig = plt.figure(figsize=(self.fig_width, self.fig_height))
+        ncols = 3
+        nrows = 1
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.05, hspace=0.20, width_ratios=[1] * ncols,
+                               height_ratios=[1] * nrows)
+
+        col_map = {
+            0: 'npv',
+            1: 'pv',
+            2: 'soil'}
+
+        # # loop through figure columns
+        df_select_emit = df_all[(df_all['lib_mode'] == 'global') & (
+                df_all['num_mc'] == 25) & (df_all['campaign'] == 'emit') & (
+                                        df_all['normalization'] == norm_option)].copy()
+        df_select_shift = df_all[
+            (df_all['lib_mode'] == 'global') & (df_all['num_mc'] == 25) & (df_all['campaign'] == 'shift') & (
+                    df_all['normalization'] == norm_option)].copy()
+
+        for row in range(nrows):
+            for col in range(ncols):
+                ax = fig.add_subplot(gs[row, col])
+                ax.set_ylim(self.axes_limits['ymin'], self.axes_limits['ymax'])
+                ax.set_xlim(self.axes_limits['xmin'], self.axes_limits['xmax'])
+                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+                ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+
+                mode = list(df_select_emit['unmix_mode'].unique())[0]
+                lib_mode = list(df_select_emit['lib_mode'].unique())[0]
+
+                #if row == 0:
+                #    ax.set_title(self.ems[col], fontsize=self.title_fontsize)
+                #    ax.set_xlabel("SLPIT - E(MC)$^2$", fontsize=self.axis_label_fontsize)
+
+                if row == 0:
+                    ax.set_xlabel("SLPIT - MESMA", fontsize=self.axis_label_fontsize)
+
+                if row == 0 and col != 0:
+                    ax.set_xticklabels([''] + ax.get_xticklabels()[1:])
+
+                if col == 0:
+                    # ax.set_ylabel(mode.upper() + '$_{'+lib_mode +'}$', fontsize=self.axis_label_fontsize)
+                    if row == 0:
+                        if mode == 'sma':
+                            mode = 'MESMA'
+
+                        ax.set_ylabel(mode.upper() + '$_{' + lib_mode + '}$', fontsize=self.axis_label_fontsize)
+
+                    if row == 0:
+                        mode = 'E(MC)$^2$'
+                        ax.set_ylabel(mode.upper() + '$_{' + lib_mode + '}$', fontsize=self.axis_label_fontsize)
+
+                ax.set_yticks(np.arange(self.axes_limits['ymin'], self.axes_limits['ymax'] + 0.2, 0.2))
+
+                if col != 0:
+                    ax.set_yticklabels([])
+
+                # emit variables
+                # if row == 0:
+                #     df_x_emit = df_select_emit[(df_select_emit['instrument'] == 'asd') & (df_select_emit['unmix_mode'] == 'sma')].copy().reset_index(drop=True)
+                #     df_y_emit = df_select_emit[(df_select_emit['instrument'] == 'emit') & (df_select_emit['unmix_mode'] == 'mesma')].copy().reset_index(drop=True)
+                #
+                #     # aviris variables
+                #     df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'sma')].copy().reset_index(drop=True)
+                #     df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'mesma')].copy().reset_index(drop=True)
+
+                if row == 0:
+                    df_x_emit = df_select_emit[(df_select_emit['instrument'] == 'asd') & (df_select_emit['unmix_mode'] == 'mesma')].copy().reset_index(drop=True)
+                    df_y_emit = df_select_emit[(df_select_emit['instrument'] == 'emit') & (df_select_emit['unmix_mode'] == 'sma')].copy().reset_index(drop=True)
+
+                    # aviris variables
+                    df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd') & (df_select_shift['unmix_mode'] == 'mesma')].copy().reset_index(drop=True)
+                    df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris') & (df_select_shift['unmix_mode'] == 'sma')].copy().reset_index(drop=True)
+
+                # plot fractional cover values
+                x_emit = df_x_emit[col_map[col]]
+                y_emit = df_y_emit[col_map[col]]
+                x_u_emit = df_x_emit[f'{col_map[col]}_se']
+                y_u_emit = df_y_emit[f'{col_map[col]}_se']
+
+                x_shift = df_x_shift[col_map[col]]
+                y_shift = df_y_shift[col_map[col]]
+                x_u_shift = df_x_shift[f'{col_map[col]}_se']
+                y_u_shift = df_y_shift[f'{col_map[col]}_se']
+
+                x = list(x_emit.values) + list(x_shift.values)
+                y = list(y_emit.values) + list(y_shift.values)
+                x_u = list(x_u_emit.values) + list(x_u_shift.values)
+                y_u = list(y_u_emit.values) + list(y_u_shift.values)
+
+                m, b = np.polyfit(x, y, 1)
+                one_line = np.linspace(0, 1, 101)
+
+                ax.plot(one_line, one_line, color='red', zorder=1)
+                ax.plot(one_line, m * one_line + b, color='black', zorder=2)
+                ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='none', markersize=4, linestyle='None', zorder=9)
+                ax.scatter(x_emit, y_emit, marker='s', color='blue', edgecolor='black', label='EMIT', zorder=10)
+                ax.scatter(x_shift, y_shift, marker='^', color='orange', edgecolor='black', label='AVIRIS$_{NG}$',
+                           zorder=10)
+
+                # Add labels to each point
+                # for xi, yi,xu,yu, label in zip(x, y, x_u, y_u, df_x['plot']):
+                #     ax.errorbar(xi, yi, yerr=yu, xerr=xu, fmt='o')
+                #     plt.annotate(label, (xi, yi), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=8)
+
+                if col == 2 and row == 0:
+                    ax.legend(loc='lower right')
+
+                # Add error metrics
+                rmse = mean_squared_error(x, y, squared=False)
+                mae = mean_absolute_error(x, y)
+                r2 = r2_calculations(x, y)
+
+                txtstr = '\n'.join((
+                    r'MAE(RMSE): %.2f(%.2f)' % (mae, rmse),
+                    r'R$^2$: %.2f' % (r2,),
+                    r'n = ' + str(len(x)),
+                ))
+
+                props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
+                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
+                        verticalalignment='top', bbox=props)
+
         fig.supylabel('Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
-        plt.savefig(os.path.join(self.figure_directory, f'regression_combined_{norm_option}.png'), format="png", dpi=400, bbox_inches="tight")# load all fraction files
+        plt.savefig(os.path.join(self.figure_directory, f'mesma_vs_emc2_{norm_option}.png'), format="png",
+                    dpi=400, bbox_inches="tight")  # load all fraction files
+
+
+    def  error_vs_time(self, norm_option):
+
+        # days table
+        df_days = pd.read_csv(r'G:\Other computers\My Computer\Papers\Validation Field Spectra\table_for_overpass.csv')
+        df_days['Site ID'] = df_days['Site ID'].str.replace(" ", "")
+        df_days_emit = df_days[df_days['Sensor'] == 'EMIT']
+        df_days_avr = df_days[df_days['Sensor'] == 'AVIRISNG']
+
+        # load fraction plots
+        df_emit = pd.read_csv(os.path.join(self.slpit_figures, 'fraction_output.csv'))
+        df_emit['Team'] = df_emit['plot'].str.split('-').str[0].str.strip()
+        df_emit = df_emit[df_emit['Team'] != 'THERM']
+        df_emit['campaign'] = 'emit'
+
+        skip = ['SRA-000-SPRING', 'SRB-047-SPRING', 'SRB-004-FALL', 'SRB-050-FALL', 'SRB-200-FALL']
+        df_aviris = pd.read_csv(os.path.join(self.figure_directory, 'shift_fraction_output.csv'))
+        df_aviris = df_aviris[~df_aviris['plot'].isin(skip)]
+        df_aviris['campaign'] = 'shift'
+        df_all = pd.concat([df_emit, df_aviris], ignore_index=True)
+
+        #  create figure
+        fig = plt.figure(figsize=(self.fig_width, self.fig_height))
+        ncols = 3
+        nrows = 1
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.15, hspace=0.05, width_ratios=[1] * ncols,
+                               height_ratios=[1] * nrows)
+
+        col_map = {
+            0: 'npv',
+            1: 'pv',
+            2: 'soil'}
+
+        df_select_emit = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global') & (df_all['campaign'] == 'emit') & (df_all['normalization'] == norm_option) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 20)].copy()
+        df_select_emit = df_days_emit.merge(df_select_emit, left_on='Site ID', right_on='plot', how='inner')
+
+        df_select_shift = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global') & (df_all['campaign'] == 'shift') & (df_all['normalization'] == norm_option) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 20)].copy()
+        df_select_shift['plot'] = df_select_shift['plot'].str.split('-').str[:2].str.join('-') + '-' + df_select_shift['plot'].str.split('-').str[-1].str[0]
+        df_select_shift = df_days_avr.merge(df_select_shift, left_on='Site ID', right_on='plot', how='inner')
+
+        mode = list(df_select_emit['unmix_mode'].unique())[0]
+        lib_mode = list(df_select_emit['lib_mode'].unique())[0]
+
+        # emit variables
+        df_x_emit = df_select_emit[(df_select_emit['instrument'] == 'asd')].copy().reset_index(drop=True)
+        df_y_emit = df_select_emit[(df_select_emit['instrument'] == 'emit')].copy().reset_index(drop=True)
+
+        # aviris variables
+        df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd')].copy().reset_index(drop=True)
+        df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris')].copy().reset_index(drop=True)
+
+        for col in range(0, 3):
+            ax = fig.add_subplot(gs[col])
+            ax.set_ylim(self.axes_limits['ymin'], 0.25)
+            #ax.set_xlim(-100, 100)
+
+            ax.set_title(self.ems[col], fontsize=self.title_fontsize)
+            ax.set_yticks(np.arange(self.axes_limits['ymin'], 0.25 + 0.05, 0.05))
+
+            ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+            ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(0)}f'))
+
+            if col == 1:
+                ax.set_xlabel('', fontsize=self.axis_label_fontsize)
+
+            if mode == 'sma':
+                mode = 'E(MC)$^2$'
+
+            if col == 0:
+                ax.set_ylabel(mode.upper() + '$_{' + lib_mode + '}$ Absolute Error', fontsize=self.axis_label_fontsize)
+
+            if col != 0:
+                ax.set_yticklabels([])
+
+
+
+            # plot fractional cover values
+            x_emit = df_x_emit[col_map[col]]
+            y_emit = df_y_emit[col_map[col]]
+            emit_days = df_x_emit['Day Difference*']
+            emit_error = np.absolute(x_emit - y_emit)
+
+            x_shift = df_x_shift[col_map[col]]
+            y_shift = df_y_shift[col_map[col]]
+            avr_days = df_x_shift['Day Difference*']
+            avr_error = np.absolute(x_shift - y_shift)
+
+            x = list(x_emit.values) + list(x_shift.values)
+            y = list(y_emit.values) + list(y_shift.values)
+            days = list(emit_days.values) + list(avr_days.values)
+            ax.set_xscale('symlog', linthresh=1)
+
+            error = np.absolute(np.array(x) - np.array(y))
+
+            mae = []
+            for day in sorted(list(set(days))):
+                indices = [i for i, val in enumerate(days) if val == day]
+                selected_error = np.mean([error[i] for i in indices])
+                mae.append(selected_error)
+            ax.scatter(days, error)
+
+            #ax.plot(sorted(list(set(days))), mae)
+            #ax.scatter(emit_days, emit_error, marker='s', color='blue', edgecolor='black', label='EMIT', zorder=10)
+            #ax.scatter(avr_days, avr_error, marker='^', color='orange', edgecolor='black', label='AVIRIS$_{NG}$', zorder=10)
+
+            # Adjust subplot to make space for arrows
+            plt.subplots_adjust(bottom=0.2)
+
+            # Add arrows spanning the specified ranges below the x-axis
+            ax.annotate('', xy=(-100, -0.08), xytext=(-25, -0.08),
+                        arrowprops=dict(arrowstyle='->', lw=1.5), fontsize=8, ha='center',
+                        xycoords=('data', 'axes fraction'))
+
+            ax.annotate('', xy=(100, -0.08), xytext=(25, -0.08),
+                        arrowprops=dict(arrowstyle='->', lw=1.5), fontsize=8, ha='center',
+                        xycoords=('data', 'axes fraction'))
+
+            # Add labels at the center of the arrows
+            ax.text((-100 + -25) / 2, -0.08 - 0.04, 'Days before\noverpass', fontsize=8, ha='center', va='center',
+                    transform=ax.get_xaxis_transform())
+
+            ax.text((100 + 25) / 2, -0.08 - 0.04, 'Days after\noverpass', fontsize=8, ha='center', va='center',
+                    transform=ax.get_xaxis_transform())
+
+
+            ax.legend(loc='upper right')
+        plt.savefig(os.path.join(self.figure_directory, f'error_vs_time_{norm_option}.png'), format="png", dpi=400, bbox_inches="tight")# load all fraction files
 
 
 def run_figures(base_directory):
@@ -518,7 +921,7 @@ def run_figures(base_directory):
     minor_axis_fontsize = 12
     title_fontsize = 22
     axis_label_fontsize = 20
-    fig_height = 12
+    fig_height = 8
     fig_width = 12
     linewidth = 1
     sig_figs = 2
@@ -530,7 +933,10 @@ def run_figures(base_directory):
     #fig.plot_summary()
 
     #fig.plot_remse(norm_option='brightness')
+    #fig.mesma_vs_emc2(norm_option='brightness')
+    fig.error_vs_time(norm_option='brightness')
     #fig.plot_rmse(norm_option='none')
     #fig.plot_combined(norm_option='brightness')
+    #fig.plot_combined_npp(norm_option='brightness')
     #fig.plot_combined(norm_option='none')
     #fig.local_slpit()
