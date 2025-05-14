@@ -154,7 +154,7 @@ cython_debug/
 
 emit_utils/
 
-slpit/configs.json
+slpit/config.json
 *.ipynb
 
 # PyCharm
