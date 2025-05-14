@@ -90,6 +90,7 @@ for i in ['pv', 'npv']:
 
     # Find the index of the row with the max PC1 value (overall)
     max_pc1_index = df_select['PC1'].idxmax()
+    # lost test
 
     plt.xlabel('Principal Component 1')
     plt.ylabel('Principal Component 2')
