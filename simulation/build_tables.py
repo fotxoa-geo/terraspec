@@ -101,7 +101,7 @@ def run_build_tables(base_directory):
         if user_input == 'A':
             run_tables.performance_table()
         elif user_input == 'B':
-            modes = ['mesma', 'sma']
+            modes = ['mesma', 'sma', 'sma-best']
             for i in modes:
                 run_tables.unmix_error_table(mode=i)
             

@@ -67,25 +67,38 @@ def fraction_file_info(fraction_file):
     mean_fractions = []
     mean_se = []
     mean_sigma = []
+    mean_use = []
+
     for _band, band in enumerate(range(0, fraction_array.shape[2])):
             
-            selected_fractions = fraction_array[:, :, _band]
+            if instrument == 'asd':
+                selected_fractions = fraction_array[:, :, _band]
+                selected_unc = unc_array[:, :, _band]
+            else:
+                selected_fractions = fraction_array[:, :, _band]
+                selected_unc = unc_array[:, :, _band]
+
+            selected_fractions = np.where(selected_fractions == -9999, np.nan, selected_fractions)
             selected_fractions, duplicate_flag = duplicate_check_fractions(selected_fractions)
-            #if instrument == 'asd':
-             #   mean_fractions.append(np.mean(fraction_array[:, :, _band]))
-            #else:
-            #    mean_fractions.append(np.mean(fraction_array[:, :, _band]))
             
+            selected_unc = np.where(selected_unc == -9999, np.nan, selected_unc)
             mean_fractions.append(np.nanmean(selected_fractions))
 
-            se = np.mean(unc_array[:, :, _band]/np.sqrt(int(num_mc)))
+            # calculate se
+            se = np.nanmean(selected_unc/np.sqrt(int(num_mc)))
             mean_se.append(se)
 
-            sigma = np.mean(unc_array[:, :, _band])
+            # caluclate mean sigma
+            sigma = np.nanmean(selected_unc)
             mean_sigma.append(sigma)
 
-    return [instrument, unmix_mode, plot, library_mode, int(num_cmb_em), int(num_mc), normalization, fraction_array.shape[0], fraction_array.shape[1], duplicate_flag] + mean_fractions + mean_se + mean_sigma
+            # calculate U_se
+            sstd = selected_unc.flatten()
+            sum_square_sstd = np.nansum(np.square(sstd))
+            use = np.sqrt(sum_square_sstd)/sstd.shape[0]
+            mean_use.append(use)
 
+    return [instrument, unmix_mode, plot, library_mode, int(num_cmb_em), int(num_mc), normalization, fraction_array.shape[0], fraction_array.shape[1], duplicate_flag] + mean_fractions + mean_se + mean_sigma + mean_use
 
 class figures:
     def __init__(self, base_directory: str, sensor: str, major_axis_fontsize, minor_axis_fontsize, title_fontsize,
@@ -666,11 +679,11 @@ class figures:
         # loop through figure columns
         for row in range(nrows):
             if row == 0:
-                df_select = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'kalahari') & (df_all['normalization'] == norm_option)].copy()
-                df_performance = df_cpu[(df_cpu['library'] == 'kalahari') & (df_cpu['mode'] == 'sma') & (df_cpu['normalization'] == norm_option) & (df_cpu['instrument'] == 'emit')].copy()
+                df_select = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'local') & (df_all['normalization'] == norm_option)].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'local') & (df_cpu['mode'] == 'sma') & (df_cpu['normalization'] == norm_option) & (df_cpu['instrument'] == 'emit')].copy()
             if row == 1:
-                df_select = df_all[(df_all['unmix_mode'] == 'sma-best') & (df_all['lib_mode'] == 'global') & (df_all['normalization'] == norm_option)].copy()
-                df_performance = df_cpu[(df_cpu['library'] == 'kalahari') & (df_cpu['mode'] == 'sma')& (df_cpu['normalization'] == norm_option) & (df_cpu['instrument'] == 'emit')].copy()
+                df_select = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global') & (df_all['normalization'] == norm_option)].copy()
+                df_performance = df_cpu[(df_cpu['library'] == 'global') & (df_cpu['mode'] == 'sma')& (df_cpu['normalization'] == norm_option) & (df_cpu['instrument'] == 'emit')].copy()
             if row == 2:
                 df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 100) &  (df_all['normalization'] == norm_option)].copy()
                 df_performance = df_cpu[(df_cpu['library'] == 'local') & (df_cpu['mode'] == 'mesma')& (df_cpu['normalization'] == norm_option) & (df_cpu['instrument'] == 'emit')].copy()
@@ -1097,7 +1110,7 @@ def run_figures(base_directory):
 
     #fig.full_spectrum_plots()
     #fig.plot_summary()
-    fig.plot_rmse(norm_option='brightness')
+    #fig.plot_rmse(norm_option='brightness')
     #fig.plot_rmse(norm_option='none')
     #fig.local_slpit()
     fig.sza_plot(norm_option='brightness')

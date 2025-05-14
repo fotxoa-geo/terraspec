@@ -140,7 +140,7 @@ class tetracorder:
         em_file = os.path.join(self.simulation_output_directory, 'endmember_libraries',
                                'convex_hull__n_dims_4_unmix_library.csv')
 
-        optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization none']
+        optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization brightness']
 
         reflectance_files = glob(os.path.join(self.sim_spectra_dir, 'tetracorder_*_spectra*'))
         for i in reflectance_files:
@@ -179,14 +179,15 @@ class tetracorder:
 
         simulated_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
                                                          'convex_hull__n_dims_4_simulation_library'))
-
+        
+        print(simulated_array.shape)
         spectra_grid = np.zeros((fractions_array.shape[0], fractions_array.shape[1], len(self.wvls)))
 
         for _row, row in enumerate(fractions_array):
             for _col, col in enumerate(row):
 
-                gv_index = index_array[_row, _col, 1]
-                npv_index = index_array[_row, _col, 0]
+                gv_index = int(index_array[_row, _col, 1])
+                npv_index = int(index_array[_row, _col, 0])
 
                 gv_simulated_spectra = simulated_array[gv_index, 0, :] * fractions_array[_row, _col, 1]
                 npv_simulated_spectra = simulated_array[npv_index, 0, :] * fractions_array[_row, _col, 0]
@@ -399,6 +400,7 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
         elif user_input == 'D':
             #tc.reconstruct_veg_simulated_signal()
             tc.reconstruct_em_sma(user_em='gv')
+            tc.reconstruct_em_sma(user_em='soil')
             tc.mineral_lib_refl_cont()
         elif user_input == 'E':
             tc.augment_slpit_pixels()

@@ -191,3 +191,4 @@ def run_shift_unmix(base_directory, dry_run):
     all_runs = unmix_runs(base_directory, dry_run)
     all_runs.unmix_calls(mode='sma')
     all_runs.unmix_calls(mode='mesma')
+    all_runs.unmix_calls(mode='sma-best')

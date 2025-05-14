@@ -69,9 +69,7 @@ def build_geographic(dimensions, output_directory, spectra_starting_col, normali
         df_unmix = pd.concat([df_to_unmix_veg, df_ch], axis=0).sort_values("level_1")
 
         # save the dataframes to a csv - unmixing library
-        df_unmix.to_csv(os.path.join(em_libraries_output,
-                                     f'geographic_convex_hull__n_dims_{str(dimensions)}_{continent}_unmix_library.csv'),
-                        index=False)
+        df_unmix.to_csv(os.path.join(em_libraries_output, f'geographic_convex_hull__n_dims_{str(dimensions)}_{continent}_unmix_library.csv'), index=False)
 
         #df_sim = pd.concat([df_veg_sim, df_sim_soils], axis=0).sort_values("level_1")
         df_to_sim = df_to_sim.sort_values(level)

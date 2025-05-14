@@ -37,7 +37,7 @@ class unmix_runs:
         # simulation parameters for spatial and hypertrace unmix
         self.optimal_parameters_sma = ['--num_endmembers 20', '--n_mc 25', '--normalization brightness']
         self.optimal_parameters_mesma = ['--max_combinations 100', '--n_mc 25', '--normalization brightness']
-        self.non_opt_mesma = ['max_combinations 100', '--n_mc 1', '--normalization brightness']
+        self.non_opt_mesma = ['max_combinations 100', '--n_mc 1', '--normalization none']
 
         self.num_cmb = ['--max_combinations 10', '--max_combinations 20', '--max_combinations 30',
                         '--max_combinations 40',
@@ -58,6 +58,7 @@ class unmix_runs:
         terraspec_base = os.path.join(base_directory, "..")
         em_sim_directory = os.path.join(terraspec_base, 'simulation', 'output', 'endmember_libraries')
         self.emit_global = os.path.join(em_sim_directory, 'convex_hull__n_dims_4_unmix_library.csv')
+        self.kalahari = '/data1/geog/gregokin/terraspec/simulation/raw_data/MEYER-OKIN/geofilter_meyer-okin_ecosis_20220804.csv'
         self.spectra_starting_column_local = '11'
         self.spectra_starting_column_global = '8'
 
@@ -92,45 +93,12 @@ class unmix_runs:
                 
                 if mode == 'mesma' or mode == 'mesma-best':
                     simulation_parameters = self.optimal_parameters_mesma
-                    
-                    for cmb in self.num_cmb:
-                        updated_parameters = [item.replace('--max_combinations 100', cmb) for item in simulation_parameters]
-                        out_param_string = " ".join(updated_parameters)
-                        out_param_name = plot.replace(" ", "") + "___" + out_param_string.replace('--','').replace('_', '-').replace(' ', '_')
+                    updated_parameters = simulation_parameters
 
-                        # unmix asd with local library
-
-                        count = count + 1
-                        call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=em_local,
-                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'asd-local___' + out_param_name),
-                           scale=self.scale,  spectra_starting_column=self.spectra_starting_column_local)
-
-                        count = count + 1
-                        # unmix asd with global library
-                        call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=self.emit_global,
-                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'asd-global___' + out_param_name),
-                           scale=self.scale,  spectra_starting_column=self.spectra_starting_column_global)
-
-                        count = count + 1
-                        # emit pixels unmixed with local em
-                        call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=em_local,
-                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'emit-local___' + out_param_name),
-                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
-                           spectra_starting_column=self.spectra_starting_column_local)
-
-                        count = count + 1
-                        # emit pixels unmixed with global
-                        call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=self.emit_global,
-                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'emit-global___' + out_param_name),
-                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
-                           spectra_starting_column=self.spectra_starting_column_global)
-               
-                
-                else:
-                    updated_parameters = self.optimal_parameters_sma
-                    
                     out_param_string = " ".join(updated_parameters)
                     out_param_name = plot.replace(" ", "") + "___" + out_param_string.replace('--','').replace('_', '-').replace(' ', '_')
+
+                    # unmix asd with local library
 
                     count = count + 1
                     call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=em_local,
@@ -157,6 +125,52 @@ class unmix_runs:
                            scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
                            spectra_starting_column=self.spectra_starting_column_global)
                
+                
+                else:
+                    updated_parameters = self.optimal_parameters_sma
+                    
+                    out_param_string = " ".join(updated_parameters)
+                    out_param_name = plot.replace(" ", "") + "___" + out_param_string.replace('--','').replace('_', '-').replace(' ', '_')
+
+                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=self.emit_global,
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'emit-global___' + out_param_name),
+                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
+                           spectra_starting_column=self.spectra_starting_column_global)
+                    
+                    count = count + 1
+                    # unmix asd with global library
+                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=self.emit_global,
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'asd-global___' + out_param_name),
+                           scale=self.scale,  spectra_starting_column=self.spectra_starting_column_global)
+
+                    count = count + 1
+                    # emit pixels unmixed with local em
+                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=em_local,
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'emit-local___' + out_param_name),
+                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
+                           spectra_starting_column=self.spectra_starting_column_local)
+
+                    count = count + 1
+                    # emit pixels unmixed with global
+                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=self.emit_global,
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'emit-global___' + out_param_name),
+                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
+                           spectra_starting_column=self.spectra_starting_column_global)
+                    
+                    # unmix emit with kalahari data
+                    count = count + 1
+                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=reflectance_img_emit[0], em_file=self.kalahari,
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'emit-kalahari___' + out_param_name),
+                           scale=self.scale, uncertainty_file=reflectance_uncer_img_emit[0],
+                           spectra_starting_column=self.spectra_starting_column_global)
+                    
+                    # unmix asd with kalahari
+                    count = count + 1
+                    call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=asd_reflectance[0], em_file=self.kalahari,
+                           parameters=updated_parameters, output_dest=os.path.join(output_dest, 'asd-kalahari___' + out_param_name),
+                           scale=self.scale,  spectra_starting_column=self.spectra_starting_column_global)
+
+
             else:
                 print(em_local, " does not exist.")
 
@@ -228,6 +242,7 @@ def run_slipt_unmix(base_directory, dry_run):
         if user_input == 'A':
             all_runs.unmix_calls(mode='sma')
             all_runs.unmix_calls(mode='mesma')
+            all_runs.unmix_calls(mode='sma-best')
         elif user_input == 'B':
             all_runs.unmix_scenes(mode='sma')
         elif user_input == 'C':
