@@ -1,6 +1,5 @@
 # Philip G. Brodrick
 
-
 import argparse
 import yaml
 import json

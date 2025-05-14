@@ -55,7 +55,7 @@ def encodeIdentifier(identifier, **kwargs):
     return identifier
 
 # Load configs
-f = open('simulation/config.json')
+f = open('simulation/configs.json')
 data = json.load(f)
 
 spectra_files = data['spectra_file']  # spectral files
