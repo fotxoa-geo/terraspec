@@ -5,17 +5,21 @@ dependencies:
   - gdal=3.5.2
   - python=3.10.9
   - geopandas=0.12.2
-  - tqdm
-  - xlrd
+  - tqdm=4.66.1
+  - xlrd=2.0.1
+  - pip=23.3.1
+  - rasterio
   - pip:
       - isofit==2.9.8
-      - p_tqdm
-      - matplotlib
-      - zerionPy
-      - earthaccess
+      - p_tqdm==1.4.0
+      - matplotlib==3.7.3
+      - zerionPy==1.1.3
+      - earthaccess==0.7.0
       - tensorflow==2.8.0
-      - pypdf
-      - netCDF4
-      - basemap
-      - openpyxl
+      - pypdf==3.17.0
+      - netCDF4==1.6.5
+      - basemap==1.3.8
+      - openpyxl==3.1.2
+      - matplotlib_scalebar
+      - seaborn
 
