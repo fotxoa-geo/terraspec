@@ -165,11 +165,9 @@ def download_data(base_directory, output_directory):
 
     print(f"File downloaded to: {os.path.join(output_directory, 'production', 'SSL_GEOCRADLE_1.csv')}")
 
-
-
-    #df_ssl_il = pd.read_excel(os.path.join('objects', 'SSL_IL.xlsx'))
-    #df_ssl_il.to_csv(os.path.join(output_directory, 'production', 'ssl-il.csv'), index=False)
-    #print(f"File downloaded to: {os.path.join(output_directory, 'production', 'ssl-il.csv')}")
+    df_ssl_il = pd.read_excel(os.path.join('objects', 'SSL_IL.xlsx'))
+    df_ssl_il.to_csv(os.path.join(output_directory, 'production', 'ssl-il.csv'), index=False)
+    print(f"File downloaded to: {os.path.join(output_directory, 'production', 'ssl-il.csv')}")
 
 
 def standardize_all_data(base_directory, output_directory):
