@@ -164,11 +164,9 @@ def download_data(base_directory, output_directory):
 
     print(f"File downloaded to: {os.path.join(output_directory, 'production', 'SSL_GEOCRADLE_1.csv')}")
 
-
-
-    #df_ssl_il = pd.read_excel(os.path.join('objects', 'SSL_IL.xlsx'))
-    #df_ssl_il.to_csv(os.path.join(output_directory, 'production', 'ssl-il.csv'), index=False)
-    #print(f"File downloaded to: {os.path.join(output_directory, 'production', 'ssl-il.csv')}")
+    df_ssl_il = pd.read_excel(os.path.join('objects', 'SSL_IL.xlsx'))
+    df_ssl_il.to_csv(os.path.join(output_directory, 'production', 'ssl-il.csv'), index=False)
+    print(f"File downloaded to: {os.path.join(output_directory, 'production', 'ssl-il.csv')}")
 
 
 def standardize_all_data(base_directory, output_directory):
@@ -325,7 +323,7 @@ def geofilter_data(base_directory, output_directory):
     # create output directory for geofilter
     create_directory(os.path.join(output_directory, 'geofilter'))
     tables = sorted(glob(os.path.join(output_directory, "all_data", '*.csv')))
-    shp = gp.read_file(os.path.join(base_directory, 'gis', 'emit_mask.shp')).to_crs(4326)  # EMIT dust mask
+    shp = gp.read_file(os.path.join('gis', 'emit_mask.geojson')).to_crs(4326)  # EMIT dust mask
     #second_check_tables = sorted(glob(os.path.join(base_directory, 'raw_data', 'second_checks', '*.csv')))
 
     for i in tables:
