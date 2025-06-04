@@ -621,7 +621,7 @@ def run_build_workflow(base_directory, sensor):
 
     else:
         lib = build_libraries(base_directory=base_directory, sensor=sensor)
-        lib.build_emit_transects()
+        #lib.build_emit_transects()
         if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
             lib.nearest_emit_site()
         lib.build_emit_endmembers()

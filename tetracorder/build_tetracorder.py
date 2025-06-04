@@ -80,10 +80,10 @@ class tetracorder:
         # this includes all values - we need two of these
         df_sim_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
                                                   'convex_hull__n_dims_4_simulation_library'))
-
+        print(df_sim_array.shape)
         # load spectral abundance of simulation library
         spectral_abundance_array = envi_to_array(os.path.join(self.tetra_output_directory, 'spectral_abundance',
-                                                  'convex_hull__n_dims_4_simulation_library_augmented_min'))[:, 0, :]
+                                                              'convex_hull__n_dims_4_simulation_library_augmented_min'))[:, 0, :]
 
         # these are the corresponding indices
         valid_rows_g1 = []
@@ -96,14 +96,13 @@ class tetracorder:
         for df_index, df_row in df_soil.iterrows():
 
             g1_index = spectral_abundance_array[df_index, 1]
-
-            if g1_index not in [0, 1, 13, 15, 20, 21, 22, 25, 28, 29, 37, 38, 40, 41, 49, 56, 57, 60, 82, 83, 94]:
+            if g1_index not in [0, 1]:
                 valid_rows_g1.append(df_row)
                 indices_used_g1.append(g1_index)
 
             g2_index = spectral_abundance_array[df_index, 3]
 
-            if g2_index not in [0, 96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 194, 196, 228, 234, 238, 270, 271]:
+            if g2_index not in [0, 96, 97, 98, 99, 100, 105, 106, 182, 228]:
                 valid_rows_g2.append(df_row)
                 indices_used_g2.append(g2_index)
 
