@@ -45,7 +45,7 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
         # download SLPIT data
         elif user_input == 'B':
             run_dowloand_slpit()
-            sync_gdrive(base_directory)
+            sync_gdrive(base_directory, project='emit')
 
         # build and convolve the libraries to specified instruments
         elif user_input == 'C':

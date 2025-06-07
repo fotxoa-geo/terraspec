@@ -119,22 +119,17 @@ class build_libraries:
             for asd_file in all_asd_files:
                 file_num = int(os.path.basename(asd_file).split(".")[0].split("_")[-1])
 
-                # check if file is in white ref or em
-                if file_num in df_transect_em.asd_file_num.values:
-                    pass
-                else:
+                # keep only the good white ref files
+                if file_num in df_white_ref.filenumber.values:
+                    good_white_ref = df_white_ref[df_white_ref['my_element_2'] == 'good'].copy()
 
-                    # keep only the good white ref files
-                    if file_num in df_white_ref.filenumber.values:
-                        good_white_ref = df_white_ref[df_white_ref['my_element_2'] == 'good'].copy()
-
-                        # ignore bad white ref files
-                        if file_num in good_white_ref.filenumber.values:
-                            transect_spectra.append(asd_file)
-                        else:
-                            pass
-                    else:
+                    # ignore bad white ref files
+                    if file_num in good_white_ref.filenumber.values:
                         transect_spectra.append(asd_file)
+                    else:
+                        pass
+                else:
+                    transect_spectra.append(asd_file)
 
             results_refl = p_map(partial(spectra.get_reflectance_transect, plot_directory=plot_directory,
                                          team_name_key=self.team_keys[i['team_names']]), transect_spectra,
@@ -621,7 +616,7 @@ def run_build_workflow(base_directory, sensor):
 
     else:
         lib = build_libraries(base_directory=base_directory, sensor=sensor)
-        #lib.build_emit_transects()
+        lib.build_emit_transects()
         if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
             lib.nearest_emit_site()
         lib.build_emit_endmembers()
