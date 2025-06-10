@@ -27,7 +27,7 @@ def tetracorder_build_menu():
     print("B... Hypertrace workflow")
     print("C... Unmix simulated reflectance")
     print("D... Reconstruct soil simulation and band depths")
-    print("E... Augment pixels ")
+    print("E... Process field data")
     print("F... Reconstruct SLPIT spectra")
     print("G... Exit")
 
@@ -66,6 +66,23 @@ class tetracorder:
         #create_directory(os.path.join(self.output_directory, 'outlogs'))
         #create_directory(os.path.join(self.output_directory, 'scratch'))
 
+    def run_tc(self, augmented_file):
+        exclude = ['.hdr', '.xml', '.aux']
+        
+        if os.path.splitext(augmented_file)[1] in exclude:
+            pass
+        else:
+            basename = os.path.basename(augmented_file)
+            output = os.path.join(self.spectral_abun_dir, f'{basename}_abun_min')
+            print(output)
+            if os.path.isfile(output):
+                pass
+            else:
+                basecall = f'./tetracorder/tetracorder.sh {augmented_file} {self.spectral_abun_dir + "/"}'
+                sbatch_cmd = f'sbatch -N 1 -c 1 --output {os.path.join(self.outlogs_dir, basename + ".out")} --mem=40G {basecall}'
+                subprocess.run(sbatch_cmd, shell=True, capture_output=True, text=True)
+    
+    
     def generate_tetracorder_reflectance(self):
         cursor_print('generating reflectance')
 
@@ -85,7 +102,7 @@ class tetracorder:
                                                   'convex_hull__n_dims_4_simulation_library'))
         # load spectral abundance of simulation library
         spectral_abundance_array = envi_to_array(os.path.join(self.tetra_output_directory, 'spectral_abundance',
-                                                              'convex_hull__n_dims_4_simulation_library_augmented_min'))[:, 0, :]
+                                                              'convex_hull__n_dims_4_simulation_library_min'))[:, 0, :]
 
         # these are the corresponding indices
         valid_rows_g1 = []
@@ -246,47 +263,64 @@ class tetracorder:
 
         print("\t- done")
 
-    def augment_slpit_pixels(self):
-        cursor_print('augmenting slpit pixels...')
+    def augment_field_data(self):
+        cursor_print('augmenting field data...')
         transect_files = glob(os.path.join(self.slpit_output_directory, 'spectral_transects', 'transect', '*[!.csv][!.hdr][!.aux][!.xml]'))
         em_files = glob(os.path.join(self.slpit_output_directory, 'spectral_transects', 'endmembers-raw', '*[!.csv][!.hdr][!.aux][!.xml]'))
 
         # load shapefile
-        df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
+        df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.json")))
         df = df.sort_values('Name')
-        print(df)
 
         for index, row in df.iterrows():
             plot = row['Name']
             plot_num = int(plot.split('-')[1])
-
-            if plot_num > 60:
+            if int(plot_num) > 60:
                 continue
             emit_filetime = row['EMIT DATE']
-            reflectance_img_emit = glob(os.path.join(self.slpit_gis_directory, 'emit-data-clip',
-                                                     f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
+            reflectance_img_emit = glob(os.path.join(self.slpit_gis_directory, 'emit-data-clip', f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
 
             basename = os.path.basename(reflectance_img_emit[0])
-            output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_pixels_augmented.hdr")
+            output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_pixels_augmented.hdr')
             augment_envi(file=reflectance_img_emit[0],  vertical_average=True, wvls=self.wvls, out_raster=output_raster)
-
+            self.run_tc(output_raster[:-4])
+            
+            # run each spectrum 
+            output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_pixels_augmented_all.hdr')
+            augment_envi(file=reflectance_img_emit[0],  vertical_average=False, wvls=self.wvls, out_raster=output_raster)
+            self.run_tc(output_raster[:-4])
+            
         for i in transect_files:
             basename = os.path.basename(i)
             plot_num = int(basename.split('-')[1])
-            if plot_num > 60:
-                continue
-            output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_transect_augmented.hdr")
+            output_raster = os.path.join(self.tetra_output_directory, 'augmented', f"{basename}_transect_augmented.hdr")
             augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True)
+            self.run_tc(output_raster[:-4])
+           
+            # run each spectrum
+            output_raster = os.path.join(self.tetra_output_directory, 'augmented', f"{basename}_transect_augmented_all.hdr")
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=False)
+            self.run_tc(output_raster[:-4])
 
         for i in em_files:
             basename = os.path.basename(i)
             plot_num = int(basename.split('-')[1])
+            df_em = pd.read_csv(f'{i}.csv')
+
             if plot_num > 60:
                 continue
-            df_em = pd.read_csv(i + '.csv')
+
             soil_index = min(df_em.index[df_em['level_1'] == 'Soil'].tolist())
-            output_raster = os.path.join(self.tetra_output_directory, 'augmented', basename + "_ems_augmented.hdr")
+            output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_ems_augmented.hdr')
             augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True, em_index=soil_index)
+            self.run_tc(output_raster[:-4])
+            
+            # run each spectrum file
+            output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_ems_augmented_all.hdr')
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=False)
+            self.run_tc(output_raster[:-4])
+            
+
 
         cursor_print("\t- done")
 
@@ -296,18 +330,16 @@ class tetracorder:
         cursor_print('\t loading simulation data...')
 
         # load simulation library - 4 dimension; convex hull
-        simulation_lib = os.path.join(self.simulation_output_directory, 'simulation_libraries',
-                                      'convex_hull__n_dims_4_simulation_library')
+        simulation_lib = os.path.join(self.simulation_output_directory, 'simulation_libraries', 'convex_hull__n_dims_4_simulation_library')
 
         # load unmix library - 4 dimensions; convex hull
-        unmix_lib = os.path.join(self.simulation_output_directory, 'endmember_libraries',
-                                 'convex_hull__n_dims_4_unmix_library')
+        unmix_lib = os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library')
 
         # simulation spectra
         sim_spectra_files = glob(os.path.join(self.sim_spectra_dir, '*'))
         exclude = ['.hdr', '.xml', '.aux']
 
-        files_to_augment = [simulation_lib, unmix_lib] + sim_spectra_files
+        files_to_augment = sim_spectra_files
 
         output_rasters = []
         output_files = []
@@ -431,7 +463,6 @@ class tetracorder:
                     pass
                 else:
                     basecall = f'./tetracorder/tetracorder.sh {i} {self.spectral_abun_dir + "/"}'
-                    print(basecall)
                     sbatch_cmd = f'sbatch -N 1 -c 1 --output {os.path.join(self.outlogs_dir, basename + ".out")} --mem=40G {basecall}'
                     subprocess.run(sbatch_cmd, shell=True, capture_output=True, text=True)
         
@@ -461,7 +492,7 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
             tc.reconstruct_em_sma(user_em='soil')
             tc.mineral_lib_refl_cont()
         elif user_input == 'E':
-            tc.augment_slpit_pixels()
+            tc.augment_field_data()
         elif user_input == 'F':
             tc.unmix_slpit_fractions(dry_run=dry_run)
 

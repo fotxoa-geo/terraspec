@@ -171,7 +171,7 @@ def load_band_names(file):
     return list(bands.keys())
 
 
-def  augment_envi(file, out_raster, wvls, vertical_average=False, em_index=None):
+def augment_envi(file, out_raster, wvls, vertical_average=False, em_index=None):
     ds = gdal.Open(file, gdal.GA_ReadOnly)
     ds_array = envi_to_array(file)
     ds_array[ds_array == -9999.] = np.nan
