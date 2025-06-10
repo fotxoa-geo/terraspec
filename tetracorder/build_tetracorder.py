@@ -15,7 +15,7 @@ import geopandas as gp
 from datetime import datetime
 from utils.unmix_utils import call_unmix, call_hypertrace_unmix, hypertrace_meta, create_uncertainty
 from simulation.run_hypertrace import hypertrace_workflow
-
+import subprocess
 
 def tetracorder_build_menu():
     msg = f"You have entered Tetracorder build mode! " \
@@ -54,11 +54,14 @@ class tetracorder:
         create_directory(os.path.join(self.tetra_output_directory, 'simulated_spectra'))
         create_directory(os.path.join(self.tetra_output_directory, 'hypertrace'))
         create_directory(os.path.join(self.tetra_output_directory, 'veg-correction'))
+        create_directory(os.path.join(self.tetra_output_directory, 'outlogs'))
 
         self.augmented_dir = os.path.join(os.path.join(self.tetra_output_directory, 'augmented'))
         self.fractions_dir = os.path.join(os.path.join(self.tetra_output_directory, 'fractions'))
         self.sim_spectra_dir = os.path.join(os.path.join(self.tetra_output_directory, 'simulated_spectra'))
         self.veg_correction_dir = os.path.join(self.tetra_output_directory, 'veg-correction')
+        self.spectral_abun_dir = os.path.join(self.tetra_output_directory, 'spectral_abundance')
+        self.outlogs_dir = os.path.join(self.tetra_output_directory, 'outlogs')
 
         #create_directory(os.path.join(self.output_directory, 'outlogs'))
         #create_directory(os.path.join(self.output_directory, 'scratch'))
@@ -80,7 +83,6 @@ class tetracorder:
         # this includes all values - we need two of these
         df_sim_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
                                                   'convex_hull__n_dims_4_simulation_library'))
-        print(df_sim_array.shape)
         # load spectral abundance of simulation library
         spectral_abundance_array = envi_to_array(os.path.join(self.tetra_output_directory, 'spectral_abundance',
                                                               'convex_hull__n_dims_4_simulation_library_augmented_min'))[:, 0, :]
@@ -381,6 +383,62 @@ class tetracorder:
             call_unmix(mode='sma', dry_run=dry_run, reflectance_file=i, em_file=em_file,
                        parameters=optimal_parameters, output_dest=self.fractions_dir, scale='1',
                        spectra_starting_column='8')
+    
+
+    def run_tc_on_lib(self):
+        cursor_print('augmenting data for tetracorder...')
+        print()
+        cursor_print('\t loading simulation data...')
+
+        # load simulation library - 4 dimension; convex hull
+        simulation_lib = os.path.join(self.simulation_output_directory, 'simulation_libraries',
+                                      'convex_hull__n_dims_4_simulation_library')
+
+        # load unmix library - 4 dimensions; convex hull
+        unmix_lib = os.path.join(self.simulation_output_directory, 'endmember_libraries',
+                                 'convex_hull__n_dims_4_unmix_library')
+
+        exclude = ['.hdr', '.xml', '.aux']
+
+        files_to_augment = [simulation_lib, unmix_lib]
+
+        output_rasters = []
+        output_files = []
+        for i in files_to_augment:
+            basename = os.path.basename(i)
+            file_type = os.path.basename(i).split('_')[-1]
+
+            if os.path.splitext(i)[1] not in exclude:
+                if file_type in ['index', 'fractions']:
+                    continue
+                else:
+                    output_raster = os.path.join(self.tetra_output_directory, 'augmented', f"{basename}_augmented.hdr")
+                    output_rasters.append(output_raster)
+                    output_files.append(i)
+
+        p_map(partial(augment_envi, wvls=self.wvls), output_files, output_rasters,
+              **{"desc": "\t\t augmenting envi files...", "ncols": 150})
+
+        # run tc on augmented filed
+        for i in files_to_augment:
+            if os.path.splitext(i)[1] in exclude:
+                pass
+            else:
+                basename = os.path.basename(i)
+                output = os.path.join(self.spectral_abun_dir, f'{basename}_abun_mineral')
+
+                if os.path.isfile(output):
+                    pass
+                else:
+                    basecall = f'./tetracorder/tetracorder.sh {i} {self.spectral_abun_dir + "/"}'
+                    print(basecall)
+                    sbatch_cmd = f'sbatch -N 1 -c 1 --output {os.path.join(self.outlogs_dir, basename + ".out")} --mem=40G {basecall}'
+                    subprocess.run(sbatch_cmd, shell=True, capture_output=True, text=True)
+        
+        
+        cursor_print("\t- done")
+
+   
 
 def run_tetracorder_build(base_directory, sensor, dry_run):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
@@ -390,6 +448,7 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
         user_input = input('\nPlease indicate the desired mode: ').upper()
 
         if user_input == 'A':
+            tc.run_tc_on_lib()
             tc.generate_tetracorder_reflectance()
             tc.augment_simulation()
         elif user_input == 'B':
