@@ -324,7 +324,7 @@ def geofilter_data(base_directory, output_directory):
     # create output directory for geofilter
     create_directory(os.path.join(output_directory, 'geofilter'))
     tables = sorted(glob(os.path.join(output_directory, "all_data", '*.csv')))
-    shp = gp.read_file(os.path.join(base_directory, 'gis', 'emit_mask.geojson')).to_crs(4326)  # EMIT dust mask
+    shp = gp.read_file(os.path.join('gis', 'emit_mask.geojson')).to_crs(4326)  # EMIT dust mask
     #second_check_tables = sorted(glob(os.path.join(base_directory, 'raw_data', 'second_checks', '*.csv')))
 
     for i in tables:
