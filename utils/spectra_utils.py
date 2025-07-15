@@ -479,75 +479,75 @@ class spectra:
             bd_max_fsps = bd_fsps.argmax()
             bd_prime_prime_array[_cont_feat] = bd_fsps[bd_max_fsps]
 
-            slopes = [m, m_prime, m_prime_prime]
-            intercepts = [b, b_prime, b_prime_prime]
-            rfls = [reflectance, psoil, fsps]
-            rcs = [rc, rc_prime, rc_prime_prime]
-            labels = ["Bd", "Bd'", "Bd''"]
-            spectrum_labels = ["R", "ρ$_s$", "f$_s$ρ$_s$"]
-            rc_labels = ["R$_c$", "R$_c'$", "R$_c''$"]
-
-            for _i, i in enumerate(slopes):
-                plt.title(labels[_i])
-                plt.ylim(0, 0.30)
-                plt.plot(wavelengths[feature_inds], rfls[_i][feature_inds], label=spectrum_labels[_i])
-                plt.plot(wavelengths[feature_inds], rcs[_i][feature_inds], label=f'Continnum: R$_c$ = {slopes[_i]:.2f}λ$_o$ + {intercepts[_i]:.2f}')
-                bd_plot = 1 - np.array(reflectance[feature_inds]/rc[feature_inds])
-                bd_max = bd_plot.argmax()
-
-                # plot max depth
-                plt.vlines(x=wavelengths[feature_inds][bd_max], ymin=rfls[_i][feature_inds][bd_max], ymax=rcs[_i][feature_inds][bd_max],
-                           color='purple', linestyle='--', linewidth=2, label=f"Wvl: {wavelengths[feature_inds][bd_max]:.3f}")
-
-                # arrows for lambda start and end
-                plt.annotate(f"λ$_i$ = {wavelengths[feature_inds][0]:.2f}",
-                            xy=(x1, rfls[_i][feature_inds][0]),  # Arrow points *to* this location
-                            xytext=(x1, 0.16),  # Text is placed *at* this location
-                            arrowprops=dict(arrowstyle="->", color='blue'),
-                            fontsize=12,
-                            color='black')
-
-                plt.annotate(f"λ$_j$ = {wavelengths[feature_inds][-1]:.2f}",
-                             xy=(x2, rfls[_i][feature_inds][-1]),  # Arrow points *to* this location
-                             xytext=(x2, 0.16),  # Text is placed *at* this location
-                             arrowprops=dict(arrowstyle="->", color='blue'),
-                             fontsize=12,
-                             color='black')
-
-                # arrow for observered spectra
-                plt.annotate(f"{rc_labels[_i]} = {rcs[_i][feature_inds][bd_max]:.2f}",
-                             xy=(wavelengths[feature_inds][bd_max], rcs[_i][feature_inds][bd_max]),  # Arrow points *to* this location
-                             xytext=(wavelengths[feature_inds][bd_max], 0.18),  # Text is placed *at* this location
-                             arrowprops=dict(arrowstyle="->", color='blue'),
-                             fontsize=12,
-                             color='black')
-
-                # arrow for observered spectra
-                plt.annotate(f"{spectrum_labels[_i]} = {rfls[_i][feature_inds][bd_max]:.2f}",
-                             xy=(wavelengths[feature_inds][bd_max], rfls[_i][feature_inds][bd_max]),
-                             # Arrow points *to* this location
-                             xytext=(wavelengths[feature_inds][bd_max], 0.11),  # Text is placed *at* this location
-                             arrowprops=dict(arrowstyle="->", color='blue'),
-                             fontsize=12,
-                             color='black')
-
-                plt.legend()
-                plt.ylabel('Reflectance')
-                plt.xlabel('Wvls')
-                plt.savefig(r'G:\My Drive\terraspec\test\\' + f'cont_feat{_cont_feat}-{labels[_i]}.png')
-                plt.clf()
-                plt.close()
-
-            # plot continuums
-            plt.plot(wavelengths[feature_inds], np.ones(len(wavelengths))[feature_inds], label="Continuum")
-            plt.plot(wavelengths[feature_inds], np.array(fsps[feature_inds]/rc_prime_prime[feature_inds]), label="f$_s$ρ$_s$")
-            plt.plot(wavelengths[feature_inds], np.array(psoil[feature_inds]/rc_prime[feature_inds]), label="ρ$_s$")
-            plt.legend()
-            plt.ylabel('Reflectance')
-            plt.xlabel('Wvls')
-            plt.savefig(r'G:\My Drive\terraspec\test\\' + f'cont_feat{_cont_feat}-continnum.png')
-            plt.clf()
-            plt.close()
+            # slopes = [m, m_prime, m_prime_prime]
+            # intercepts = [b, b_prime, b_prime_prime]
+            # rfls = [reflectance, psoil, fsps]
+            # rcs = [rc, rc_prime, rc_prime_prime]
+            # labels = ["Bd", "Bd'", "Bd''"]
+            # spectrum_labels = ["R", "ρ$_s$", "f$_s$ρ$_s$"]
+            # rc_labels = ["R$_c$", "R$_c'$", "R$_c''$"]
+            #
+            # for _i, i in enumerate(slopes):
+            #     plt.title(labels[_i])
+            #     plt.ylim(0, 0.30)
+            #     plt.plot(wavelengths[feature_inds], rfls[_i][feature_inds], label=spectrum_labels[_i])
+            #     plt.plot(wavelengths[feature_inds], rcs[_i][feature_inds], label=f'Continnum: R$_c$ = {slopes[_i]:.2f}λ$_o$ + {intercepts[_i]:.2f}')
+            #     bd_plot = 1 - np.array(reflectance[feature_inds]/rc[feature_inds])
+            #     bd_max = bd_plot.argmax()
+            #
+            #     # plot max depth
+            #     plt.vlines(x=wavelengths[feature_inds][bd_max], ymin=rfls[_i][feature_inds][bd_max], ymax=rcs[_i][feature_inds][bd_max],
+            #                color='purple', linestyle='--', linewidth=2, label=f"Wvl: {wavelengths[feature_inds][bd_max]:.3f}")
+            #
+            #     # arrows for lambda start and end
+            #     plt.annotate(f"λ$_i$ = {wavelengths[feature_inds][0]:.2f}",
+            #                 xy=(x1, rfls[_i][feature_inds][0]),  # Arrow points *to* this location
+            #                 xytext=(x1, 0.16),  # Text is placed *at* this location
+            #                 arrowprops=dict(arrowstyle="->", color='blue'),
+            #                 fontsize=12,
+            #                 color='black')
+            #
+            #     plt.annotate(f"λ$_j$ = {wavelengths[feature_inds][-1]:.2f}",
+            #                  xy=(x2, rfls[_i][feature_inds][-1]),  # Arrow points *to* this location
+            #                  xytext=(x2, 0.16),  # Text is placed *at* this location
+            #                  arrowprops=dict(arrowstyle="->", color='blue'),
+            #                  fontsize=12,
+            #                  color='black')
+            #
+            #     # arrow for observered spectra
+            #     plt.annotate(f"{rc_labels[_i]} = {rcs[_i][feature_inds][bd_max]:.2f}",
+            #                  xy=(wavelengths[feature_inds][bd_max], rcs[_i][feature_inds][bd_max]),  # Arrow points *to* this location
+            #                  xytext=(wavelengths[feature_inds][bd_max], 0.18),  # Text is placed *at* this location
+            #                  arrowprops=dict(arrowstyle="->", color='blue'),
+            #                  fontsize=12,
+            #                  color='black')
+            #
+            #     # arrow for observered spectra
+            #     plt.annotate(f"{spectrum_labels[_i]} = {rfls[_i][feature_inds][bd_max]:.2f}",
+            #                  xy=(wavelengths[feature_inds][bd_max], rfls[_i][feature_inds][bd_max]),
+            #                  # Arrow points *to* this location
+            #                  xytext=(wavelengths[feature_inds][bd_max], 0.11),  # Text is placed *at* this location
+            #                  arrowprops=dict(arrowstyle="->", color='blue'),
+            #                  fontsize=12,
+            #                  color='black')
+            #
+            #     plt.legend()
+            #     plt.ylabel('Reflectance')
+            #     plt.xlabel('Wvls')
+            #     plt.savefig(r'G:\My Drive\terraspec\test\\' + f'cont_feat{_cont_feat}-{labels[_i]}.png')
+            #     plt.clf()
+            #     plt.close()
+            #
+            # # plot continuums
+            # plt.plot(wavelengths[feature_inds], np.ones(len(wavelengths))[feature_inds], label="Continuum")
+            # plt.plot(wavelengths[feature_inds], np.array(fsps[feature_inds]/rc_prime_prime[feature_inds]), label="f$_s$ρ$_s$")
+            # plt.plot(wavelengths[feature_inds], np.array(psoil[feature_inds]/rc_prime[feature_inds]), label="ρ$_s$")
+            # plt.legend()
+            # plt.ylabel('Reflectance')
+            # plt.xlabel('Wvls')
+            # plt.savefig(r'G:\My Drive\terraspec\test\\' + f'cont_feat{_cont_feat}-continnum.png')
+            # plt.clf()
+            # plt.close()
 
         # correct data for -9999.
         integrals_array[integrals_array == -9999] = np.nan
@@ -560,7 +560,11 @@ class spectra:
             i[i == -9999] = np.nan
             relative_area = integrals_array/np.nansum(integrals_array)
             band_depth_w = np.nansum(relative_area * i)
-            bd_return_array[_i] = band_depth_w
+
+            if band_depth_w <= 1:
+                bd_return_array[_i] = band_depth_w
+            else:
+                pass
 
         return bd_return_array
         
@@ -675,9 +679,9 @@ class spectra:
         return_array = np.ones((6)) * -9999.
 
         # mineral matrix
-        if mineral_index not in [0, 1, 13, 15, 22, 25, 28, 29, 37, 38, 40, 41, 49, 56, 57, 60, 82, 83, 94,
-                                 96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 196, 228, 234,
-                                 238, 270, 271]: # this excludes minerals not used for simulation!
+        if mineral_index not in [0, 1, 13, 15, 22, 25, 28, 29, 37, 38, 40, 41, 49, 51, 56, 57, 60, 64, 82, 83, 94,
+                                 96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 184, 194, 196, 217, 221, 226, 228, 234,
+                                 238, 270, 271, 292]: # this excludes minerals not used for simulation!
 
             df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
             df_mineral_matrix = df_mineral_matrix.fillna(-9999)
