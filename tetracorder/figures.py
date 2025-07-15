@@ -450,8 +450,9 @@ class tetracorder_figures:
 
 
     def mineral_validation(self, x_axis:str):
+
         # load shapefile
-        df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
+        df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.json")))
         df['Team'] = df['Name'].str.split('-').str[0].str.strip()
         df = df[df['Team'] != 'THERM']
         df = df.sort_values('Name')
@@ -1897,43 +1898,27 @@ class tetracorder_figures:
 
 
     def slpit_bd(self):
+        def signal_reconstruct(complete_fractions_array, user_em, df_unmix, spectra_start):
+            unmix_library_array = df_unmix.iloc[:, spectra_start:].to_numpy()
 
-        def signal_reconstruct(complete_fractions_array, user_em):
-            unmix_library_array = envi_to_array(os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library'))
-
+            df_unmix['level_1'] = df_unmix['level_1'].str.lower()
             min_em_index = np.min(df_unmix[df_unmix['level_1'] == user_em].index)
             max_em_index = np.max(df_unmix[df_unmix['level_1'] == user_em].index)
 
-            unmix_library_array = unmix_library_array[min_em_index:max_em_index + 1, 0, :]
-            complete_fractions_array = complete_fractions_array[:, :, min_em_index:max_em_index + 1]
+            unmix_library_array = unmix_library_array[min_em_index:max_em_index + 1, :]
+            complete_fractions_array = complete_fractions_array[0, 0, min_em_index:max_em_index + 1]
+            spectra_grid = np.zeros((len(self.wvls)))
 
-            spectra_grid = np.zeros((complete_fractions_array.shape[0], complete_fractions_array.shape[1], len(self.wvls)))
+            if np.sum(complete_fractions_array) == 0:
+                return spectra_grid
+            else:
+                spectra_grid = np.average(unmix_library_array, weights=complete_fractions_array, axis=0)
+                return spectra_grid
 
-            for _row, row in enumerate(complete_fractions_array):
-                for _col, col in enumerate(row):
-
-                    em_col = np.zeros((unmix_library_array.shape[0], len(self.wvls)))
-                    frac_weights = np.zeros((unmix_library_array.shape[0]))
-
-                    for _em, em in enumerate(unmix_library_array):
-                        fraction = complete_fractions_array[_row, _col, _em]
-                        em_col[_em, :] = unmix_library_array[_em, :]
-                        frac_weights[_em] = fraction
-
-                    if np.sum(frac_weights) == 0:
-                        continue
-                    else:
-                        spectra_grid[_row, _col, :] = np.average(em_col, weights=frac_weights, axis=0)
-
-            return spectra_grid
-
-        df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.shp")))
+        df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.json")))
         df = df.sort_values('Name')
 
         df_rows = []
-
-        df_unmix = pd.read_csv(os.path.join(self.simulation_output_directory, 'endmember_libraries',
-                                            'convex_hull__n_dims_4_unmix_library.csv'))
 
         for index, row in df.iterrows():
             plot = row['Name']
@@ -1949,169 +1934,178 @@ class tetracorder_figures:
 
             emit_filetime = row['EMIT DATE']
 
-            # load reflectances
-            emit_rfl = envi_to_array(os.path.join(self.aug_directory, f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented'))[0,0, :]
-            slpit_rfl = envi_to_array(os.path.join(self.aug_directory, f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented'))[0,0, :]
-            contact_rfl = envi_to_array(os.path.join(self.aug_directory, f'{plot.replace(" ", "").replace("SPEC", "Spectral")}-emit_ems_augmented'))[0,0, :]
+            for em_lib_type in ['local', 'global']:
+                if em_lib_type in ['local']:
+                    df_unmix = pd.read_csv(os.path.join(self.slpit_output_directory, 'spectral_transects', 'endmembers', f'{plot.replace("SPEC", "Spectral").replace(" ", "")}-emit.csv'))
+                    spectra_start = 10
+                else:
+                    # construct rho of ems
+                    df_unmix = pd.read_csv(os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library.csv'))
+                    spectra_start = 7
 
-            # rebuild vegetation signals
-            emit_fractions_complete = envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
-                                                                  f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_complete_fractions'))
-            slpit_fractions_complete = envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
-                                                                  f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented_complete_fractions'))
+                # load reflectances
+                emit_rfl = envi_to_array(os.path.join(self.aug_directory, f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented'))[0,0, :]
+                slpit_rfl = envi_to_array(os.path.join(self.aug_directory, f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented'))[0,0, :]
+                contact_rfl = envi_to_array(os.path.join(self.aug_directory, f'{plot.replace(" ", "").replace("SPEC", "Spectral")}-emit_ems_augmented'))[0,0, :]
 
-            # construct rho of ems
-            emit_pgv = signal_reconstruct(emit_fractions_complete, user_em='pv')
-            slipt_pgv = signal_reconstruct(slpit_fractions_complete, user_em='pv')
-            emit_pnpv = signal_reconstruct(emit_fractions_complete, user_em='npv')
-            slipt_pnpv = signal_reconstruct(slpit_fractions_complete, user_em='npv')
+                # rebuild vegetation signals
+                emit_fractions_complete = envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
+                                                                      f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_{em_lib_type}_complete_fractions'))
+                slpit_fractions_complete = envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
+                                                                      f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented_{em_lib_type}_complete_fractions'))
 
-            # load transect fractions
-            emit_fractions = np.sum(envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
-                                                                 f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_fractional_cover'))[0,0,:])
-            slpit_fractions = np.sum(envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
-                                                                  f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented_fractional_cover'))[0,0,:])
+                emit_pgv = signal_reconstruct(emit_fractions_complete, user_em='pv', df_unmix=df_unmix, spectra_start=spectra_start)
+                slipt_pgv = signal_reconstruct(slpit_fractions_complete, user_em='pv', df_unmix=df_unmix, spectra_start=spectra_start)
+                emit_pnpv = signal_reconstruct(emit_fractions_complete, user_em='npv', df_unmix=df_unmix, spectra_start=spectra_start)
+                slipt_pnpv = signal_reconstruct(slpit_fractions_complete, user_em='npv', df_unmix=df_unmix, spectra_start=spectra_start)
 
-            # load the mineral indices
-            emit_mineral_indexs = envi_to_array(os.path.join(self.output_directory, 'spectral_abundance',
-                                                                  f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_min'))[0,0,:]
+                # load transect fractions
+                emit_fractions = envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
+                                                                     f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_{em_lib_type}_fractional_cover'))[0,0,:]
+                slpit_fractions = envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
+                                                                      f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented_{em_lib_type}_fractional_cover'))[0,0,:]
+                # load the mineral indices
+                emit_mineral_indexs = envi_to_array(os.path.join(self.output_directory, 'spectral_abundance',
+                                                                      f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_min'))[0,0,:]
+                slpit_mineral_indexs = envi_to_array(os.path.join(self.output_directory, 'spectral_abundance',
+                                                                      f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented_min'))[0,0,:]
+                contact_probe_indices = envi_to_array(os.path.join(self.output_directory, 'spectral_abundance',
+                                                                      f'{plot.replace(" ", "").replace("SPEC", "Spectral")}-emit_ems_augmented_min'))[0,0,:]
 
-            slpit_mineral_indexs = envi_to_array(os.path.join(self.output_directory, 'spectral_abundance',
-                                                                  f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented_min'))[0,0,:]
+                for _group, group in enumerate(['g1', 'g2']):
+                    index_dict = {0: 1, 1: 3}
+                    slpit_mineral_index = slpit_mineral_indexs[index_dict[_group]]
+                    emit_mineral_index = emit_mineral_indexs[index_dict[_group]]
+                    contact_probe_index = contact_probe_indices[index_dict[_group]]
 
-            contact_probe_indices = envi_to_array(os.path.join(self.output_directory, 'spectral_abundance',
-                                                                  f'{plot.replace(" ", "").replace("SPEC", "Spectral")}-emit_ems_augmented_min'))[0,0,:]
+                    index_src = ['Contact', 'EMIT', 'SLPIT']
+                    for _index, index in enumerate([contact_probe_index, emit_mineral_index, slpit_mineral_index]):
+                        # contact probe
+                        contact_probe_bd = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=contact_rfl,
+                                                                          npv_fraction=slpit_fractions[0], gv_fraction=slpit_fractions[1],
+                                                                          pnpv=slipt_pnpv, pgv=slipt_pgv, soil_fraction=slpit_fractions[2], psoil=None)
 
-            for _group, group in enumerate(['g1', 'g2']):
-                index_dict = {0: 1, 1: 3}
-                slpit_mineral_index = slpit_mineral_indexs[index_dict[_group]]
-                emit_mineral_index = emit_mineral_indexs[index_dict[_group]]
-                contact_probe_index = contact_probe_indices[index_dict[_group]]
-
-                label = {0: 'Contact', 1: "EMIT", 2: "SLPIT"}
-                row_labels = []
-                for _index, index in [contact_probe_index, emit_mineral_index, slpit_mineral_index]:
-                    # contact probe
-                    contact_probe_bd = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=contact_rfl,
+                        # emit data
+                        emit_band_bd = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=emit_rfl,
                                                                       npv_fraction=slpit_fractions[0], gv_fraction=slpit_fractions[1],
-                                                                      pnpv=slipt_pnpv, pgv=slipt_pgv, soil_fraction=slpit_fractions[2], psoil=None)
-                    contact_probe_bd[2:] = -9999 #make Bd prime null since no correction is needed here
+                                                                      pnpv=emit_pnpv, pgv=emit_pgv, soil_fraction=slpit_fractions[2], psoil=None)
 
-                    # emit data
-                    emit_band_bd = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=emit_rfl,
-                                                                  npv_fraction=slpit_fractions[0], gv_fraction=slpit_fractions[1],
-                                                                  pnpv=emit_pnpv, pgv=emit_pgv, soil_fraction=slpit_fractions, psoil=None)
+                        # slpit data
+                        slpit_bd = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=slpit_rfl,
+                                                                  npv_fraction=slpit_fractions[0], gv_fraction=slpit_fractions[1], pnpv=slipt_pnpv,
+                                                                  pgv=slipt_pgv, soil_fraction=slpit_fractions[2], psoil=None)
 
-                    # slpit data
-                    slpit_bd = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=slpit_rfl,
-                                                              npv_fraction=slpit_fractions, gv_fraction=slpit_fractions, pnpv=slipt_pnpv,
-                                                              pgv=slipt_pgv, soil_fraction=slpit_fractions, psoil=None)
+                        # append results
+                        df_row = [plot, group, em_lib_type, index_src[_index],  np.int64(index)] + list(contact_probe_bd[2:]) + list(emit_band_bd[2:]) + list(slpit_bd[2:]) + list(emit_fractions) + list(slpit_fractions)
+                        df_rows.append(df_row)
 
-                    # append resutls
-                    row = [plot, group, emit_mineral_index, slpit_mineral_index, contact_probe_bd, emit_band_bd, slpit_bd, emit_fractions, slpit_fractions]
-                    df_rows.append(row)
+        # these are labels for the csv
+        data_src_label = ['Contact', "EMIT", "SLPIT"]
+        bd_labels = ['Lc', 'Bd', "Bd'", "Bd''"]
+        combined_labels = [f"{src}_{bd}" for src in data_src_label for bd in bd_labels]
+        ems = ['npv', 'pv', 'soil', 'shade']
+        frac_src = ["EMIT", "SLPIT"]
+        combined_frac_labels = [f"{em}_{src}" for src in frac_src for em in ems]
 
         df_results = pd.DataFrame(df_rows)
-        df_results.columns = ['plot', 'group', 'emit_mineral_index','slpit_mineral_index','emit_no_correction',
-                              'slpit_no_correction', 'emit_correction', 'slpit_correction', 'contact_probe',
-                              'emit_fraction', 'slpit_fraction']
-
+        df_results.columns = ['plot', 'group', 'em_library', 'index_src', 'index'] + combined_labels + combined_frac_labels
         df_results.to_csv(os.path.join(self.fig_directory, 'slpit_band_depths.csv'), index=False)
-
 
     def slpit_figure(self):
         df_results = pd.read_csv(os.path.join(self.fig_directory, 'slpit_band_depths.csv'))
         df_results = df_results.replace(-9999, np.nan).dropna()
-        df_results['soil_fraction'] = 1 - df_results['slpit_fraction']
-        #df_results = df_results[(df_results['soil_fraction'] >= .65) & (df_results['soil_fraction'] <= .85)]
-        print(df_results)
-
-        # # create figure
-        fig = plt.figure(figsize=(self.fig_width, self.fig_height))
-        ncols = 2
-        nrows = 2
-        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.25, width_ratios=[1] * ncols,
-                               height_ratios=[1] * nrows)
 
         col_map = {
             0: 'Iron Oxides',
             1: 'Clays/Carbonates'}
 
-    # loop through figure columns
-        for row in range(nrows):
-            for col in range(ncols):
-                ax = fig.add_subplot(gs[row, col])
-                ax.set_ylim(0, 0.2)
-                ax.set_xlim(0, 0.2)
-                ax.set_aspect('auto')
+        for em_lib in ['local', 'global']:
+            for data_type in ['SLPIT', 'EMIT']:
 
-                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
-                ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+                # # create figure
+                fig = plt.figure(figsize=(self.fig_width, self.fig_height))
+                ncols = 2
+                nrows = 2
+                gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.25, width_ratios=[1] * ncols,
+                                       height_ratios=[1] * nrows)
 
-                if col == 0:
-                    df_select = df_results[(df_results['group'] == 'g1')].copy()
-                    if row == 0:
-                        ax.set_title(col_map[col], fontsize=self.title_fontsize)
+                # loop through figure columns
+                for row in range(nrows):
+                    for col in range(ncols):
+                        ax = fig.add_subplot(gs[row, col])
+                        ax.set_ylim(0, 0.3)
+                        ax.set_xlim(0, 0.3)
+                        ax.set_aspect('auto')
 
-                if col == 1:
-                    df_select = df_results[(df_results['group'] == 'g2')].copy()
-                    if row == 0:
-                        ax.set_title(col_map[col], fontsize=self.title_fontsize)
+                        ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+                        ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
 
-                if row == 0:
-                    x = df_select['slpit_no_correction']
-                    y = df_select['emit_no_correction']
-                    ax.set_ylabel("EMIT Band Depths", fontsize=self.axis_label_fontsize)
-                else:
-                    x = df_select['slpit_correction']
-                    y = df_select['emit_correction']
-                    ax.set_xlabel("SLPIT Band Depths", fontsize=self.axis_label_fontsize)
-                    ax.set_ylabel("EMIT Band Depths", fontsize=self.axis_label_fontsize)
+                        if col == 0:
+                            df_select = df_results[(df_results['group'] == 'g1') & (df_results['index_src'] == 'Contact')].copy()
+                            if row == 0:
+                                ax.set_title(col_map[col], fontsize=self.title_fontsize)
 
-                if col != 0:
-                    ax.set_yticklabels([])
+                        if col == 1:
+                            df_select = df_results[(df_results['group'] == 'g2') & (df_results['index_src'] == 'Contact')].copy()
+                            if row == 0:
+                                ax.set_title(col_map[col], fontsize=self.title_fontsize)
 
-                if row == 0:
-                    ax.set_xticklabels([])
+                        # filter out low plots of soil fraction
+                        df_select_val = df_select[(df_select['em_library'] == em_lib) & (df_select['soil_SLPIT'] >= 0.60)].copy()
 
-                # plot fractional cover values
-                m, b = np.polyfit(x.values, y.values, 1)
-                one_line = np.linspace(0, 1, 101)
+                        if row == 0:
+                            x = df_select_val["Contact_Bd"]
+                            y = df_select_val[f"{data_type}_Bd"]
+                            ax.set_ylabel(f"{data_type}_Bd", fontsize=self.axis_label_fontsize)
+                            ax.set_xlabel("Contact_Bd", fontsize=self.axis_label_fontsize)
 
-                # plot 1 to 1 line
-                ax.plot(one_line, one_line, color='black')
-                ax.plot(one_line, m * one_line + b, color='red')
-                scatter = ax.scatter(x, y, marker='^', edgecolor='black', label='SLPIT point', zorder=10, s=150,
-                           c=df_select['soil_fraction'].values, cmap='viridis', vmin=min(df_select['soil_fraction'].values),
-                                     vmax=max(df_select['soil_fraction'].values))
-                ax.tick_params(axis='both', labelsize=self.legend_text)
+                        else:
+                            x = df_select_val["Contact_Bd"]
+                            y = df_select_val[f"{data_type}_Bd'"]
+                            ax.set_ylabel(f"{data_type}_Bd'", fontsize=self.axis_label_fontsize)
+                            ax.set_xlabel("Contact_Bd", fontsize=self.axis_label_fontsize)
 
-                # for i, label in enumerate(df_x['plot'].values):
-                #     ax.text(x[i], y[i], label, fontsize=12, ha='center', va='bottom')
+                        if col != 0:
+                            ax.set_yticklabels([])
 
-                # Add error metrics
-                rmse = mean_squared_error(x, y)
-                mae = mean_absolute_error(x, y)
+                        if row == 0:
+                            ax.set_xticklabels([])
 
-                r2 = r2_calculations(x, y)
+                        # plot fractional cover values
+                        m, b = np.polyfit(x.values, y.values, 1)
+                        one_line = np.linspace(0, 1, 101)
 
-                txtstr = '\n'.join((
-                    r'MAE(RMSE): %.2f(%.2f)' % (mae, rmse),
-                    r'R$^2$: %.2f' % (r2[0],),
-                    r'n = ' + str(len(x)),
-                ))
+                        # plot 1 to 1 line
+                        ax.plot(one_line, one_line, color='black')
+                        ax.plot(one_line, m * one_line + b, color='red')
+                        scatter = ax.scatter(x, y, marker='^', edgecolor='black', label='SLPIT point', zorder=10, s=150,
+                                   c=df_select_val['soil_SLPIT'].values, cmap='viridis', vmin=min(df_select_val['soil_SLPIT'].values),
+                                             vmax=max(df_select_val['soil_SLPIT'].values))
+                        ax.tick_params(axis='both', labelsize=self.legend_text)
 
-                props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
-                ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=self.legend_text,
-                        verticalalignment='top', bbox=props)
-                cbar = fig.colorbar(scatter, ax=ax, orientation='vertical')
-                cbar.set_label('Soil Fraction (%)', fontsize=self.axis_label_fontsize)
-                cbar.ax.tick_params(labelsize=self.legend_text)
+                        # Add error metrics
+                        rmse = mean_squared_error(x, y)
+                        mae = mean_absolute_error(x, y)
 
-        plt.savefig(os.path.join(self.fig_directory, f'field_data_regressions.png'), format="png", dpi=400,
-                    bbox_inches="tight")
-        plt.clf()
-        plt.close()
+                        r2 = r2_calculations(x, y)
+
+                        txtstr = '\n'.join((
+                            r'MAE(RMSE): %.2f(%.2f)' % (mae, rmse),
+                            r'R$^2$: %.2f' % (r2[0],),
+                            r'n = ' + str(len(x)),
+                        ))
+
+                        props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
+                        ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=self.legend_text,
+                                verticalalignment='top', bbox=props)
+                        cbar = fig.colorbar(scatter, ax=ax, orientation='vertical')
+                        cbar.set_label('Soil Fraction (%)', fontsize=self.axis_label_fontsize)
+                        cbar.ax.tick_params(labelsize=self.legend_text)
+
+                plt.savefig(os.path.join(self.fig_directory, f'field_data_regressions_{em_lib}_{data_type}.png'), format="png", dpi=400,
+                        bbox_inches="tight")
+                plt.clf()
+                plt.close()
 
     def fraction_soil_vs_bd(self):
         bd_band = {'g1': 0, 'g2': 2}
@@ -2156,6 +2150,127 @@ class tetracorder_figures:
                         plt.close()
 
 
+    def fraction_threshold(self):
+        df_results = pd.read_csv(os.path.join(self.fig_directory, 'slpit_band_depths.csv'))
+        df_results = df_results.replace(-9999, np.nan).dropna()
+
+        # # create figure
+        fig = plt.figure(figsize=(self.fig_width, self.fig_height))
+        ncols = 2
+        nrows = 1
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.25, width_ratios=[1] * ncols,
+                               height_ratios=[1] * nrows)
+
+        col_map = {
+            0: 'Iron Oxides',
+            1: 'Clays/Carbonates'}
+
+        # loop through figure columns
+        for row in range(nrows):
+            for col in range(ncols):
+                ax = fig.add_subplot(gs[row, col])
+                ax.set_aspect('auto')
+
+                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+                ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+
+                if col == 0:
+                    df_select = df_results[
+                        (df_results['group'] == 'g1') & (df_results['index_src'] == 'Contact')].copy()
+
+                    ax.set_title(col_map[col], fontsize=self.title_fontsize)
+
+                if col == 1:
+                    df_select = df_results[
+                        (df_results['group'] == 'g2') & (df_results['index_src'] == 'Contact')].copy()
+
+                    ax.set_title(col_map[col], fontsize=self.title_fontsize)
+
+                # filter out low plots of soil fraction
+                for em_lib in ['global', 'local']:
+                    values = np.arange(0, 1.00, 0.05)
+                    mae_slpit_bd, mae_slpit_bd_prime, mae_emit_bd, mae_emit_bd_prime = [], [], [], []
+                    r2_slpit_bd, r2_slpit_bd_prime, r2_emit_bd, r2_emit_bd_prime = [], [], [], []
+
+                    for val in values:
+                        df_select_val = df_select[(df_select['em_library'] == em_lib) & (df_select['soil_SLPIT'] >= val)].copy()
+
+                        if df_select_val.empty:
+                            mae_slpit_bd.append(np.nan)
+                            r2_slpit_bd.append(np.nan)
+
+                            mae_slpit_bd_prime.append(np.nan)
+                            r2_slpit_bd_prime.append(np.nan)
+
+                            mae_emit_bd.append(np.nan)
+                            r2_emit_bd.append(np.nan)
+
+                            mae_emit_bd_prime.append(np.nan)
+                            r2_emit_bd_prime.append(np.nan)
+                            continue
+
+
+                        x = df_select_val["Contact_Bd"]
+
+                        mae_slpit_bd.append(mean_absolute_error(x, df_select_val["SLPIT_Bd"]))
+                        r2_slpit_bd.append(r2_calculations(x, df_select_val["SLPIT_Bd"])[0])
+
+                        mae_slpit_bd_prime.append(mean_absolute_error(x, df_select_val["SLPIT_Bd'"]))
+                        r2_slpit_bd_prime.append(r2_calculations(x, df_select_val["SLPIT_Bd'"])[0])
+
+                        mae_emit_bd.append(mean_absolute_error(x, df_select_val["EMIT_Bd"]))
+                        r2_emit_bd.append(r2_calculations(x, df_select_val["EMIT_Bd"])[0])
+
+                        mae_emit_bd_prime.append(mean_absolute_error(x, df_select_val["EMIT_Bd'"]))
+                        r2_emit_bd_prime.append(r2_calculations(x, df_select_val["EMIT_Bd'"])[0])
+
+                    # plot error
+                    # ax.plot(values, mae_slpit_bd, label="SLPIT_Bd", color='red')
+                    # ax.plot(values, mae_slpit_bd_prime, label="SLPIT_Bd'", color='green')
+                    # ax.plot(values, mae_emit_bd, label="EMIT_Bd", color='blue')
+                    # ax.plot(values, mae_emit_bd_prime, label="EMIT_Bd'", color='orange')
+
+                    # plot r2
+                    if em_lib == 'local':
+                        linestyle = 'solid'
+                        lw = 2
+                    else:
+                        linestyle = '--'
+                        lw=1
+
+                    #ax.plot(values, r2_slpit_bd, label=f"SLPIT_Bd (R²) - {em_lib}", color='red', linestyle=linestyle, linewidth=lw)
+                    #ax.plot(values, r2_slpit_bd_prime, label=f"SLPIT_Bd' (R²) - {em_lib}", color='green',linestyle=linestyle, linewidth=lw)
+                    #ax.plot(values, r2_emit_bd, label=f"EMIT_Bd (R²) - {em_lib}", color='blue', linestyle=linestyle, linewidth=lw)
+                    #ax.plot(values, r2_emit_bd_prime, label=f"EMIT_Bd' (R²) - {em_lib}", color='orange', linestyle=linestyle, linewidth=lw)
+
+                    ax.plot(values, mae_slpit_bd, label=f"SLPIT_Bd (R²) - {em_lib}", color='red', linestyle=linestyle,
+                            linewidth=lw)
+                    ax.plot(values, mae_slpit_bd_prime, label=f"SLPIT_Bd' (R²) - {em_lib}", color='green',
+                            linestyle=linestyle, linewidth=lw)
+                    ax.plot(values, mae_emit_bd, label=f"EMIT_Bd (R²) - {em_lib}", color='blue', linestyle=linestyle,
+                            linewidth=lw)
+                    ax.plot(values, mae_emit_bd_prime, label=f"EMIT_Bd' (R²) - {em_lib}", color='orange',
+                            linestyle=linestyle, linewidth=lw)
+
+                # Combine and deduplicate legend labels
+                handles_1, labels_1 = ax.get_legend_handles_labels()
+
+                # Use dict to remove duplicates
+                unique = dict(zip(labels_1, handles_1))
+
+                if col == 1:
+                   ax.legend(unique.values(), unique.keys(),loc='upper left', bbox_to_anchor=(1.05, 1), borderaxespad=0., frameon=False)
+
+                ax.set_ylabel("MAE")
+                #ax.set_ylabel("R²")
+                ax.set_xlabel('Fraction of soil')
+
+        plt.savefig(os.path.join(self.fig_directory, f'field_thresholds.png'), format="png", dpi=400, bbox_inches="tight")
+        plt.clf()
+        plt.close()
+
+
+
 def run_figure_workflow(base_directory):
     ems = ['soil']
     major_axis_fontsize = 22
@@ -2173,7 +2288,7 @@ def run_figure_workflow(base_directory):
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs, legend_text=legend_text)
 
-    tc.mineral_ref_figure()
+    #tc.mineral_ref_figure()
     #tc.fraction_soil_vs_bd()
 
     #tc.mineral_sim_library_reference()
@@ -2181,10 +2296,10 @@ def run_figure_workflow(base_directory):
     #tc.confusion_matrices()
     #tc.confusion_matrix_detailed()
 
-    tc.slpit_bd()
-
-    #tc.slpit_figure()
-    tc.veg_correction_fig()
+    #tc.slpit_bd()
+    tc.slpit_figure()
+    tc.fraction_threshold()
+    #tc.veg_correction_fig()
     #tc.veg_correction_by_mineral()
 
     #tc.tetracorder_libraries()

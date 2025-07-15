@@ -28,7 +28,7 @@ def tetracorder_build_menu():
     print("C... Unmix simulated reflectance")
     print("D... Reconstruct vegetation signals from EMC² and band depths")
     print("E... Augment pixels ")
-    print("F... Reconstruct SLPIT spectra")
+    print("F... Unmix augmented SLPIT data")
     print("G... Exit")
 
 
@@ -78,10 +78,13 @@ class tetracorder:
             if os.path.isfile(output):
                 pass
             else:
-                basecall = f'./tetracorder/tetracorder.sh {augmented_file} {self.spectral_abun_dir + "/"}'
-                sbatch_cmd = f'sbatch -N 1 -c 1 --output {os.path.join(self.outlogs_dir, basename + ".out")} --mem=40G {basecall}'
-                subprocess.run(sbatch_cmd, shell=True, capture_output=True, text=True)
 
+                if os.name in ['posix']:
+                    basecall = f'./tetracorder/tetracorder.sh {augmented_file} {self.spectral_abun_dir + "/"}'
+                    sbatch_cmd = f'sbatch -N 1 -c 1 --output {os.path.join(self.outlogs_dir, basename + ".out")} --mem=40G {basecall}'
+                    subprocess.run(sbatch_cmd, shell=True, capture_output=True, text=True)
+                else:
+                    print("Tetracorder not installed!")
 
     def generate_tetracorder_reflectance(self):
         cursor_print('generating reflectance')
