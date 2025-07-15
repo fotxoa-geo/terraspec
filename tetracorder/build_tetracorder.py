@@ -74,7 +74,7 @@ class tetracorder:
         else:
             basename = os.path.basename(augmented_file)
             output = os.path.join(self.spectral_abun_dir, f'{basename}_abun_min')
-            print(output)
+            
             if os.path.isfile(output):
                 pass
             else:
@@ -100,6 +100,7 @@ class tetracorder:
         # this includes all values - we need two of these
         df_sim_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
                                                   'convex_hull__n_dims_4_simulation_library'))
+        
         # load spectral abundance of simulation library
         spectral_abundance_array = envi_to_array(os.path.join(self.tetra_output_directory, 'spectral_abundance',
                                                               'convex_hull__n_dims_4_simulation_library_min'))[:, 0, :]
@@ -115,23 +116,31 @@ class tetracorder:
         for df_index, df_row in df_soil.iterrows():
 
             g1_index = spectral_abundance_array[df_index, 1]
-            if g1_index not in [0, 1]:
+             
+            if int(g1_index) not in [0, 1, 13, 15, 20, 21, 22, 25, 36, 37, 38, 40, 41, 49, 56, 57, 60, 66, 80, 82, 83, 84]:
                 valid_rows_g1.append(df_row)
                 indices_used_g1.append(g1_index)
 
             g2_index = spectral_abundance_array[df_index, 3]
 
-            if g2_index not in [0, 96, 97, 98, 99, 100, 105, 106, 182, 228]:
+            if int(g2_index) not in [0, 96, 97, 98, 99, 100, 105, 106, 128, 136, 144, 148, 152, 182, 194, 196, 214, 221, 228, 234, 238, 256, 257, 270, 271]:
                 valid_rows_g2.append(df_row)
                 indices_used_g2.append(g2_index)
-
+        
+        print(sorted(list(set(indices_used_g1))))
         df_soil_g1 = pd.DataFrame(valid_rows_g1)
         df_sim_g1 = pd.concat([df_veg, df_soil_g1], axis=0, ignore_index=True)
         df_sim_g1 = df_sim_g1.sort_values('level_1')
+        
 
+        df_sim_g1.to_csv(os.path.join(self.sim_spectra_dir, 'df_sim_1.csv'))
+
+        print(sorted(list(set(indices_used_g2))))
         df_soil_g2 = pd.DataFrame(valid_rows_g2)
         df_sim_g2 = pd.concat([df_veg, df_soil_g2], axis=0, ignore_index=True)
         df_sim_g2 = df_sim_g2.sort_values('level_1')
+        df_sim_g2.to_csv(os.path.join(self.sim_spectra_dir, 'df_sim_2.csv'))
+
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim_g1,
                                       level='level_1', spectral_bundles=10000, increment_size=0.05,
@@ -161,6 +170,7 @@ class tetracorder:
         optimal_parameters = ['--num_endmembers 30', '--n_mc 25', '--normalization brightness']
 
         reflectance_files = glob(os.path.join(self.sim_spectra_dir, 'tetracorder_*_spectra*'))
+        
         for i in reflectance_files:
             call_unmix(mode='sma', dry_run=dry_run, reflectance_file=i, em_file=em_file,
                        parameters=optimal_parameters, output_dest=self.fractions_dir, scale='1',
@@ -275,8 +285,10 @@ class tetracorder:
         for index, row in df.iterrows():
             plot = row['Name']
             plot_num = int(plot.split('-')[1])
+            
             if int(plot_num) > 60:
                 continue
+            
             emit_filetime = row['EMIT DATE']
             reflectance_img_emit = glob(os.path.join(self.slpit_gis_directory, 'emit-data-clip', f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
 
@@ -306,7 +318,12 @@ class tetracorder:
             basename = os.path.basename(i)
             plot_num = int(basename.split('-')[1])
             df_em = pd.read_csv(f'{i}.csv')
-
+            
+            # run each spectrum file
+            output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_ems_augmented_all.hdr')
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=False)
+            self.run_tc(output_raster[:-4])
+            
             if plot_num > 60:
                 continue
 
@@ -315,12 +332,7 @@ class tetracorder:
             augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True, em_index=soil_index)
             self.run_tc(output_raster[:-4])
             
-            # run each spectrum file
-            output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_ems_augmented_all.hdr')
-            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=False)
-            self.run_tc(output_raster[:-4])
             
-
 
         cursor_print("\t- done")
 
@@ -329,15 +341,9 @@ class tetracorder:
         print()
         cursor_print('\t loading simulation data...')
 
-        # load simulation library - 4 dimension; convex hull
-        simulation_lib = os.path.join(self.simulation_output_directory, 'simulation_libraries', 'convex_hull__n_dims_4_simulation_library')
-
-        # load unmix library - 4 dimensions; convex hull
-        unmix_lib = os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library')
-
         # simulation spectra
         sim_spectra_files = glob(os.path.join(self.sim_spectra_dir, '*'))
-        exclude = ['.hdr', '.xml', '.aux']
+        exclude = ['.hdr', '.xml', '.aux', '.csv']
 
         files_to_augment = sim_spectra_files
 
@@ -357,6 +363,9 @@ class tetracorder:
 
         p_map(partial(augment_envi, wvls=self.wvls), output_files, output_rasters,
               **{"desc": "\t\t augmenting envi files...", "ncols": 150})
+        
+        for i in output_rasters:
+            self.run_tc(i[:-4])
 
         cursor_print("\t- done")
 
@@ -479,9 +488,9 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
         user_input = input('\nPlease indicate the desired mode: ').upper()
 
         if user_input == 'A':
-            tc.run_tc_on_lib()
+            #tc.run_tc_on_lib()
             tc.generate_tetracorder_reflectance()
-            tc.augment_simulation()
+            #tc.augment_simulation()
         elif user_input == 'B':
             tc.hypertrace_tetracorder()
         elif user_input == 'C':
