@@ -244,8 +244,7 @@ class spectra:
         return row_spectra, row_fractions, row_index
 
     @classmethod
-    def create_spectral_bundles(cls, df, level, spectral_bundles, spectral_bundle_project):
-        ts = time.time()
+    def create_spectral_bundles(cls, df, level, spectral_bundles, spectral_bundle_project, new_simulation_bundles):
         # define seed for random sampling of spectral bundles
         np.random.seed(13)
 
@@ -261,11 +260,15 @@ class spectra:
             class_lists.append(df_select)
 
         output_pickle = f'spectral_bundles_{spectral_bundle_project}'
-        if os.path.isfile(os.path.join('objects', f"output_pickle_{spectral_bundle_project}.pickle")):
-            all_combinations = load_pickle(output_pickle)
-        else:
+        pickle_path = os.path.join('objects', f"output_pickle_{spectral_bundle_project}.pickle")
+
+        if new_simulation_bundles or not os.path.isfile(pickle_path):
             all_combinations = list(itertools.product(*class_lists))
             save_pickle(all_combinations, output_pickle)
+        else:
+            all_combinations = load_pickle(output_pickle)
+
+        print(f'total spectral bundles available for simulation: {len(all_combinations)}')
 
         if len(all_combinations) < spectral_bundles:
             index = np.random.choice(len(all_combinations), replace=False, size=len(all_combinations))
@@ -309,21 +312,18 @@ class spectra:
         mixed_spectra = np.zeros((1, columns, len(wavelengths)))
         index = np.zeros((1, columns, 3))
         fractions = np.zeros((1, columns, 3))
-        vegetation_spectra = np.zeros((1, columns, len(wavelengths)))
         soil_spectra = np.zeros((1, columns, len(wavelengths)))
         gv_spectra = np.zeros((1, columns, len(wavelengths)))
         npv_spectra = np.zeros((1, columns, len(wavelengths)))
 
         for _col, col in enumerate(range(0, columns)):
             increment_frac = np.round(col * col_size, 2)
-            npv_frac, pv_frac, soil_frac = spectra.generate_em_fractions(em=em, em_fraction=increment_frac, seed= row_index + _col)
+            npv_frac, pv_frac, soil_frac = spectra.generate_em_fractions(em=em, em_fraction=increment_frac,
+                                                                         seed=row_index+_col)
 
             mixed_spectra[0, _col, :] = (spectral_bundle[0][spectra_start:].astype(dtype=float) * npv_frac) + \
                                         (spectral_bundle[1][spectra_start:].astype(dtype=float) * pv_frac) + \
                                         (spectral_bundle[2][spectra_start:].astype(dtype=float) * soil_frac)
-
-            vegetation_spectra[0, _col, :] = (spectral_bundle[0][spectra_start:].astype(dtype=float) * npv_frac) + \
-                                             (spectral_bundle[1][spectra_start:].astype(dtype=float) * pv_frac)
 
             soil_spectra[0, _col, :] = spectral_bundle[2][spectra_start:].astype(dtype=float) * soil_frac
 
@@ -333,27 +333,29 @@ class spectra:
             gv_spectra[0, _col, :] = spectral_bundle[1][spectra_start:].astype(dtype=float)
             npv_spectra[0, _col, :] = spectral_bundle[0][spectra_start:].astype(dtype=float)
 
-        return mixed_spectra, fractions, index, vegetation_spectra, soil_spectra, gv_spectra, npv_spectra
+        return mixed_spectra, fractions, index, soil_spectra, gv_spectra, npv_spectra
 
     @classmethod
     def increment_reflectance(cls, class_names: list, simulation_table, level: str, spectral_bundles:int,
                               increment_size:float, output_directory: str, wvls, name: str, spectra_starting_col:int,
-                              endmember:str, simulation_library_array, spectral_bundle_project):
+                              endmember:str, spectral_bundle_project, new_simulation_bundles):
 
         spec_array = spectra.create_spectral_bundles(df=simulation_table, level=level,
                                                      spectral_bundles=spectral_bundles,
-                                                     spectral_bundle_project=spectral_bundle_project)
+                                                     spectral_bundle_project=spectral_bundle_project,
+                                                     new_simulation_bundles=new_simulation_bundles)
 
         cols = int(1 / increment_size) + 1
         fraction_grid = np.zeros((len(spec_array), cols, len(class_names)))
         spectra_grid = np.zeros((len(spec_array), cols, len(wvls)))
         index_grid = np.zeros((len(spec_array), cols, len(class_names)))
-        veg_grid = np.zeros((len(spec_array), cols, len(wvls)))
         soil_grid = np.zeros((len(spec_array), cols, len(wvls)))
         npv_grid = np.zeros((len(spec_array), cols, len(wvls)))
         gv_grid = np.zeros((len(spec_array), cols, len(wvls)))
+        np.random.seed(13)
+        random_grid = np.random.rand(len(spec_array), cols)
 
-        results = p_map(partial(spectra.row_reflectance, increment_size, cols, wvls,spectra_starting_col, endmember),
+        results = p_map(partial(spectra.row_reflectance, increment_size, cols, wvls, spectra_starting_col, endmember),
                         [bundle for bundle in spec_array], [_index for _index,index in enumerate(spectra_grid)],
                         **{"desc": "\t\t processing reflectance...", "ncols": 150})
 
@@ -362,7 +364,6 @@ class spectra:
             spectra_grid[_row, :, :] = row[0]
             fraction_grid[_row, :, :] = row[1]
             index_grid[_row, :, :] = row[2]
-            veg_grid[_row, :, :] = row[3]
             soil_grid[_row, :, :] = row[4]
             gv_grid[_row, :, :] = row[5]
             npv_grid[_row, :, :] = row[6]
@@ -371,7 +372,6 @@ class spectra:
         refl_meta = get_meta(lines=spectra_grid.shape[0], samples=cols, bands=wvls, wvls=True)
         index_meta = get_meta(lines=index_grid.shape[0], samples=cols, bands=class_names, wvls=False)
         fraction_meta = get_meta(lines=fraction_grid.shape[0], samples=cols, bands=class_names, wvls=False)
-        veg_meta = get_meta(lines=veg_grid.shape[0], samples=cols, bands=wvls, wvls=True)
         soil_meta = get_meta(lines=soil_grid.shape[0], samples=cols, bands=wvls, wvls=True)
         gv_meta = get_meta(lines=gv_grid.shape[0], samples=cols, bands=wvls, wvls=True)
         npv_meta = get_meta(lines=npv_grid.shape[0], samples=cols, bands=wvls, wvls=True)
@@ -380,13 +380,12 @@ class spectra:
         output_files = [os.path.join(output_directory, f'{name}_index.hdr'),
                         os.path.join(output_directory, f'{name}_spectra.hdr'),
                         os.path.join(output_directory, f'{name}_fractions.hdr'),
-                        os.path.join(output_directory, f'{name}_vegetation.hdr'),
                         os.path.join(output_directory, f'{name}_soils.hdr'),
                         os.path.join(output_directory, f'{name}_gv.hdr'),
                         os.path.join(output_directory, f'{name}_npv.hdr')]
 
-        meta_docs = [index_meta, refl_meta, fraction_meta, veg_meta, soil_meta, gv_meta, npv_meta]
-        grids = [index_grid, spectra_grid, fraction_grid, veg_grid, soil_grid, gv_grid, npv_grid]
+        meta_docs = [index_meta, refl_meta, fraction_meta, soil_meta, gv_meta, npv_meta]
+        grids = [index_grid, spectra_grid, fraction_grid, soil_grid, gv_grid, npv_grid]
 
         p_map(save_envi, output_files, meta_docs, grids, **{"desc": "\t\t saving envi files...", "ncols": 150})
         del index_grid, spectra_grid, fraction_grid
