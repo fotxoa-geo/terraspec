@@ -16,14 +16,14 @@ def display_tetracorder_menu():
     print("D... Exit")
 
 
-def run_tetracorder_workflow(base_directory:str, sensor:str, dry_run:bool):
+def run_tetracorder_workflow(base_directory:str, sensor:str, dry_run:bool, new_simulation_bundles:bool):
     while True:
         display_tetracorder_menu()
         user_input = input('\nPlease indicate the desired mode: ').upper()
 
         # run build workflow
         if user_input == 'A':
-            run_tetracorder_build(base_directory, sensor=sensor, dry_run=dry_run)
+            run_tetracorder_build(base_directory, sensor=sensor, dry_run=dry_run, new_simulation_bundles=new_simulation_bundles)
 
         # run Tetracorder workflow
         elif user_input == 'B':

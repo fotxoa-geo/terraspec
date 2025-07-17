@@ -329,7 +329,10 @@ class tetracorder_figures:
                     231: "Carbonates",
                     232: "Carbonates",
                     0: "No Detection",
-                   -9999: "No Data"}
+                   -9999: "No Data",
+                    96: "Vegetation",
+                    97: "Vegetation",
+                    98: "Vegetation"}
 
         if group == 'g1':
             return group_1
@@ -342,9 +345,7 @@ class tetracorder_figures:
                                   'Dolomite': 1,
                                   'Gypsum-Fine': 2,
                                   'Gypsum-Coarse': 3,
-
                                   'Chlorite': 0,
-
                                   'Goethite-Nano': 0,
                                   'Goethite-Fine': 1,
                                   'Goethite-Med': 2,
@@ -353,12 +354,10 @@ class tetracorder_figures:
                                   'Hematite-Fine': 5,
                                   'Hematite-Med': 6,
                                   'Hematite-Large': 7,
-
                                   'Illite+Muscovite': 0,
                                   'Kaolinite': 1,
                                   'Montmorillonite': 2,
                                   'Vermiculite': 3,
-
                                   'Quartz+Feldspar': 0}
 
         # mineral group grid
@@ -1181,8 +1180,6 @@ class tetracorder_figures:
         group_dict = {'g1': 1, 'g2': 3}
         bd_group_dict = {'g1': 0, 'g2': 2}
 
-        df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
-
         for group in ['g1', 'g2']:
             fractions = envi_to_array(os.path.join(self.sim_spectra_directory, f'tetracorder_{group}_simulation_fractions'))[:,:, 2]
 
@@ -1196,11 +1193,13 @@ class tetracorder_figures:
 
             truth_array = np.zeros((fractions.shape[0], fractions.shape[1]))
             truth_array[:] = bd_tetra[:, np.newaxis]
-            truth_array[:, 0] = 0
+            truth_array[:, 0] = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, 0, group_dict[group]]
+
+            #truth_array[:, 0] = 0
 
             truth_bd_array = np.zeros((fractions.shape[0], fractions.shape[1]))
             truth_bd_array[:] = bd_tetra_bd[:, np.newaxis]
-            truth_bd_array[:, 0] = 0
+            #truth_bd_array[:, 0] = 0
 
             error = np.absolute(truth_bd_array - bd_tetra_sim_bd)
 
@@ -1228,23 +1227,12 @@ class tetracorder_figures:
             # Precompute maximum y value across all bins
             bins = np.arange(0, 1.05, 0.05)  # Bins: 0, 0.05, ..., 1.0
             bin_centers = (bins[:-1] + bins[1:]) / 2
-            max_y = 0
-            hist_counts = {}
-
-            for truth_label in labels:
-                for predicted_label in labels:
-                    mask = (a_flat == truth_label) & (b_flat == predicted_label)
-                    data = fractions_flat[mask]
-                    counts, _ = np.histogram(data, bins=bins, density=True)
-                    max_count = counts.max() if counts.size > 0 else 0
-                    max_y = max(max_y, max_count)
-                    hist_counts[(truth_label, predicted_label)] = counts
 
             # create figure
             fig = plt.figure(constrained_layout=True, figsize=(12, 12))
             ncols = len(labels)
             nrows = len(labels)
-            gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.20, hspace=0.05, figure=fig)
+            gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.05, figure=fig)
 
             # create figures
             for _row, truth_label in enumerate(labels):
@@ -1253,14 +1241,15 @@ class tetracorder_figures:
 
                     # Tick formatting
                     if _row == nrows - 1:
-                        ax.set_xlabel(f"X-Axis: % Soil Cover\nPred: {predicted_label}", fontsize=8)
+                        ax.set_xlabel(f"X-Axis: Soil Fraction\nPred: {predicted_label}", fontsize=8)
                     else:
                         ax.set_xticklabels([])
 
                     if _col == 0:
                         ax.set_ylabel(f"Truth: {truth_label}", fontsize=8)
                     else:
-                        ax.set_yticklabels([])
+                        pass
+                        #ax.set_yticklabels([])
 
                     truth_mask = a_flat == truth_label
                     predicted_mask = b_flat == predicted_label
@@ -1273,14 +1262,13 @@ class tetracorder_figures:
 
                     ax.text(0.15, 0.95,  f'n = {n}', ha='center', va='top', fontsize=8)
                     ax.set_xlim(0, 1)
-                    ax.set_ylim(0, 1)
+                    #ax.set_ylim(0, 1)
 
                     if n > 0:
-                        counts, edges = np.histogram(data, bins=bins)
-                        scaled_counts = counts / counts.max() if counts.max() > 0 else counts
-
-                        #ax.hist(data, bins=bins, color='black', alpha=0.7, edgecolor='white', density=True)
-                        ax.plot(bin_centers, scaled_counts, color='black', linewidth=1.5, marker='o',markersize=3)
+                        #counts, edges = np.histogram(data, bins=bins)
+                        #scaled_counts = counts / counts.max() if counts.max() > 0 else counts
+                        ax.hist(data, bins=bins, color='black', alpha=0.7, edgecolor='white')
+                        #ax.plot(bin_centers, scaled_counts, color='black', linewidth=1.5, marker='o',markersize=3)
 
             plt.tight_layout()
             plt.savefig(os.path.join(self.fig_directory, f"{group}_confusion_matrix_aggregated_detailed.png"), bbox_inches='tight')
@@ -2294,11 +2282,11 @@ def run_figure_workflow(base_directory):
     #tc.mineral_sim_library_reference()
     #tc.mineral_sim_spectra_reference()
     #tc.confusion_matrices()
-    #tc.confusion_matrix_detailed()
+    tc.confusion_matrix_detailed()
 
     #tc.slpit_bd()
-    tc.slpit_figure()
-    tc.fraction_threshold()
+    #tc.slpit_figure()
+    #tc.fraction_threshold()
     #tc.veg_correction_fig()
     #tc.veg_correction_by_mineral()
 

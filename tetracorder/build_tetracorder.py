@@ -86,23 +86,20 @@ class tetracorder:
                 else:
                     print("Tetracorder not installed!")
 
-    def generate_tetracorder_reflectance(self):
+    def generate_tetracorder_reflectance(self, new_simulation_bundles):
         cursor_print('generating reflectance')
 
         df_sim = pd.read_csv(os.path.join(self.simulation_output_directory, 'simulation_libraries',
                                           'convex_hull__n_dims_4_simulation_library.csv'))
 
         df_pv = df_sim.loc[df_sim['level_1'] == 'pv'].copy()
-        df_pv = df_pv.sample(n=1, random_state=13).reset_index(drop=True)
+        df_pv = df_pv.sample(n=8, random_state=13).reset_index(drop=True)
 
         df_npv = df_sim.loc[df_sim['level_1'] == 'npv'].copy()
-        df_npv = df_npv.sample(n=1, random_state=13).reset_index(drop=True)
+        df_npv = df_npv.sample(n=8, random_state=13).reset_index(drop=True)
 
         df_veg = pd.concat([df_npv, df_pv], axis=0, ignore_index=True)
 
-        # this includes all values - we need two of these
-        df_sim_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
-                                                  'convex_hull__n_dims_4_simulation_library'))
         # load spectral abundance of simulation library
         spectral_abundance_array = envi_to_array(os.path.join(self.tetra_output_directory, 'spectral_abundance',
                                                               'convex_hull__n_dims_4_simulation_library_min'))[:, 0, :]
@@ -116,15 +113,14 @@ class tetracorder:
         df_soil = df_sim.loc[df_sim['level_1'] == 'soil'].copy()
 
         for df_index, df_row in df_soil.iterrows():
-
             g1_index = spectral_abundance_array[df_index, 1]
-            if g1_index not in [0, 1, 13, 15, 20, 21, 22, 25, 36, 37, 38, 40, 41, 49, 56, 57, 60, 66, 80, 82, 83, 84]:
+            if g1_index not in [1, 13, 15, 20, 21, 22, 25, 36, 37, 38, 40, 41, 49, 56, 57, 60, 66, 80, 82, 83, 84]:
                 valid_rows_g1.append(df_row)
                 indices_used_g1.append(g1_index)
 
             g2_index = spectral_abundance_array[df_index, 3]
 
-            if g2_index not in [0, 96, 97, 98, 99, 100, 105, 106, 128, 136, 144, 148, 152,182, 194, 196, 214, 221, 228, 234, 238, 256, 257, 270, 271]:
+            if g2_index not in [96, 97, 98, 99, 100, 105, 106, 128, 136, 144, 148, 152,182, 194, 196, 214, 221, 228, 234, 238, 256, 257, 270, 271]:
                 valid_rows_g2.append(df_row)
                 indices_used_g2.append(g2_index)
 
@@ -137,16 +133,16 @@ class tetracorder:
         df_sim_g2 = df_sim_g2.sort_values('level_1')
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim_g1,
-                                      level='level_1', spectral_bundles=10000, increment_size=0.05,
+                                      level='level_1', spectral_bundles=100000, increment_size=0.05,
                                       output_directory=self.sim_spectra_dir, wvls=self.wvls,
                                       name='tetracorder_g1_simulation', spectra_starting_col=8, endmember='soil',
-                                      simulation_library_array=df_sim_array, spectral_bundle_project='tetracorder_g1')
+                                    spectral_bundle_project='tetracorder_g1', new_simulation_bundles=new_simulation_bundles)
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim_g2,
-                                      level='level_1', spectral_bundles=10000, increment_size=0.05,
+                                      level='level_1', spectral_bundles=100000, increment_size=0.05,
                                       output_directory=self.sim_spectra_dir, wvls=self.wvls,
                                       name='tetracorder_g2_simulation', spectra_starting_col=8, endmember='soil',
-                                      simulation_library_array=df_sim_array, spectral_bundle_project='tetracorder_g2')
+                                      spectral_bundle_project='tetracorder_g2', new_simulation_bundles=new_simulation_bundles)
 
     def hypertrace_tetracorder(self):
         cursor_print('hypertrace: tetracorder')
@@ -286,8 +282,6 @@ class tetracorder:
             augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=False)
             self.run_tc(output_raster[:-4])
 
-
-
         cursor_print("\t- done")
 
     def augment_simulation(self):
@@ -420,7 +414,7 @@ class tetracorder:
 
 
 
-def run_tetracorder_build(base_directory, sensor, dry_run):
+def run_tetracorder_build(base_directory, sensor, dry_run, new_simulation_bundles):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
     while True:
         tetracorder_build_menu()
@@ -429,7 +423,7 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
 
         if user_input == 'A':
             tc.run_tc_on_lib()
-            tc.generate_tetracorder_reflectance()
+            tc.generate_tetracorder_reflectance(new_simulation_bundles=new_simulation_bundles)
             tc.augment_simulation()
         elif user_input == 'B':
             tc.hypertrace_tetracorder()
