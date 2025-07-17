@@ -32,6 +32,27 @@ def tetracorder_build_menu():
     print("G... Exit")
 
 
+def process_complete_fractions_row(row, unmix_library_array, wvls):
+
+    spectra_grid = np.ones((row.shape[0], len(wvls))) * -9999.
+
+    for _col, col in enumerate(row):
+        em_col = np.zeros((unmix_library_array.shape[0], len(wvls)))
+        frac_weights = np.zeros((unmix_library_array.shape[0]))
+
+        for _em, em in enumerate(unmix_library_array):
+            fraction = row[_col, _em]
+            em_col[_em, :] = unmix_library_array[_em, :]
+            frac_weights[_em] = fraction
+
+        if np.sum(frac_weights) == 0:
+            continue
+        else:
+            spectra_grid[_col, :] = np.average(em_col, weights=frac_weights, axis=0)
+
+    return spectra_grid
+
+
 class tetracorder:
 
     def __init__(self, base_directory: str, sensor:str):
@@ -203,21 +224,29 @@ class tetracorder:
             complete_fractions_array = complete_fractions_array[:, :, min_em_index:max_em_index + 1]
             spectra_grid = np.zeros((complete_fractions_array.shape[0], complete_fractions_array.shape[1], len(self.wvls)))
 
-            for _row, row in enumerate(complete_fractions_array):
-                for _col, col in enumerate(row):
+            func = partial(process_complete_fractions_row, unmix_library_array=unmix_library_array, wvls=self.wvls)
+            results = p_map(func,
+                        [complete_fractions_array[_row, :, :] for _row in range(complete_fractions_array.shape[0])],
+                        **{"desc": f"\t\t rebuilding spectra ...", "ncols": 150})
 
-                    em_col = np.zeros((unmix_library_array.shape[0], len(self.wvls)))
-                    frac_weights = np.zeros((unmix_library_array.shape[0]))
+            for _row, row in enumerate(results):
+                spectra_grid[_row, :, :] = row
 
-                    for _em, em in enumerate(unmix_library_array):
-                        fraction = complete_fractions_array[_row, _col, _em]
-                        em_col[_em, :] = unmix_library_array[_em, :]
-                        frac_weights[_em] = fraction
-
-                    if np.sum(frac_weights) == 0:
-                        continue
-                    else:
-                        spectra_grid[_row, _col, :] = np.average(em_col, weights=frac_weights, axis=0)
+            # for _row, row in enumerate(complete_fractions_array):
+            #     for _col, col in enumerate(row):
+            #
+            #         em_col = np.zeros((unmix_library_array.shape[0], len(self.wvls)))
+            #         frac_weights = np.zeros((unmix_library_array.shape[0]))
+            #
+            #         for _em, em in enumerate(unmix_library_array):
+            #             fraction = complete_fractions_array[_row, _col, _em]
+            #             em_col[_em, :] = unmix_library_array[_em, :]
+            #             frac_weights[_em] = fraction
+            #
+            #         if np.sum(frac_weights) == 0:
+            #             continue
+            #         else:
+            #             spectra_grid[_row, _col, :] = np.average(em_col, weights=frac_weights, axis=0)
 
             meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls, wvls=True)
             output_raster = os.path.join(self.sim_spectra_dir, f"unmixing_{group}_{user_em}_emc2.hdr")
