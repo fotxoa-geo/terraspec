@@ -52,7 +52,7 @@ def main():
 
         elif choice == 'C':
             run_tetracorder_workflow(base_directory, sensor=args.sensor, dry_run=args.dry_run,
-                                     new_simulation_bundles=args.new_simulation_bundles)
+                                     new_simulation_bundles=args.new_simulation_bundles, spectral_bundles=int(args.number_of_bundles))
 
         elif choice == 'D':
             run_shift_workflow(os.path.join(base_directory, 'shift'), sensor='aviris_ng', dry_run=args.dry_run)

@@ -664,7 +664,7 @@ class spectra:
 
     @classmethod
     def mineral_group_retrival(cls, mineral_index, spectra_observed, npv_fraction=None, gv_fraction=None, pnpv=None,
-                               pgv=None, soil_fraction=None, psoil=None):
+                               pgv=None, soil_fraction=None, psoil=None, exclude_minerals=True):
 
         # expert system
         decoded_expert = tc.decode_expert_system(os.path.join('utils', 'tetracorder', 'cmd.lib.setup.t5.27c1'),
@@ -677,10 +677,15 @@ class spectra:
         # array to be returned with following positions: group number, mineral index, bdw
         return_array = np.ones((6)) * -9999.
 
+        if exclude_minerals:
+            minerals_to_exclude = [0, 1, 13, 15, 22, 25, 28, 29, 37, 38, 40, 41, 49, 51, 56, 57, 60, 64, 82, 83, 94,
+                                 96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 194, 196, 217, 221, 226, 228, 234,
+                                 238, 270, 271, 292] # this excludes minerals not used for simulation!
+        else:
+            minerals_to_exclude = [0, 60, 96, 97, 98, 99, 100, 228] # no detection and vegetation
+
         # mineral matrix
-        if mineral_index not in [0, 1, 13, 15, 22, 25, 28, 29, 37, 38, 40, 41, 49, 51, 56, 57, 60, 64, 82, 83, 94,
-                                 96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 184, 194, 196, 217, 221, 226, 228, 234,
-                                 238, 270, 271, 292]: # this excludes minerals not used for simulation!
+        if mineral_index not in minerals_to_exclude:
 
             df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
             df_mineral_matrix = df_mineral_matrix.fillna(-9999)
