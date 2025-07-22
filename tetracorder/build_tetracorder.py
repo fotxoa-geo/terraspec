@@ -27,9 +27,30 @@ def tetracorder_build_menu():
     print("B... Hypertrace workflow")
     print("C... Unmix simulated reflectance")
     print("D... Reconstruct vegetation signals from EMC² and band depths")
-    print("E... Augment pixels ")
+    print("E... Augment pixels and field data")
     print("F... Unmix augmented SLPIT data")
     print("G... Exit")
+
+
+def process_complete_fractions_row(row, unmix_library_array, wvls):
+
+    spectra_grid = np.ones((row.shape[0], len(wvls))) * -9999.
+
+    for _col, col in enumerate(row):
+        em_col = np.zeros((unmix_library_array.shape[0], len(wvls)))
+        frac_weights = np.zeros((unmix_library_array.shape[0]))
+
+        for _em, em in enumerate(unmix_library_array):
+            fraction = row[_col, _em]
+            em_col[_em, :] = unmix_library_array[_em, :]
+            frac_weights[_em] = fraction
+
+        if np.sum(frac_weights) == 0:
+            continue
+        else:
+            spectra_grid[_col, :] = np.average(em_col, weights=frac_weights, axis=0)
+
+    return spectra_grid
 
 
 class tetracorder:
@@ -74,7 +95,7 @@ class tetracorder:
         else:
             basename = os.path.basename(augmented_file)
             output = os.path.join(self.spectral_abun_dir, f'{basename}_abun_min')
-            
+
             if os.path.isfile(output):
                 pass
             else:
@@ -86,7 +107,7 @@ class tetracorder:
                 else:
                     print("Tetracorder not installed!")
 
-    def generate_tetracorder_reflectance(self):
+    def generate_tetracorder_reflectance(self, new_simulation_bundles, spectral_bundles):
         cursor_print('generating reflectance')
 
         df_sim = pd.read_csv(os.path.join(self.simulation_output_directory, 'simulation_libraries',
@@ -100,10 +121,13 @@ class tetracorder:
 
         df_veg = pd.concat([df_npv, df_pv], axis=0, ignore_index=True)
 
+<<<<<<< HEAD
         # this includes all values - we need two of these
         df_sim_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
                                                   'convex_hull__n_dims_4_simulation_library'))
         
+=======
+>>>>>>> 0a95f464f6bad53bcc9b289265639d55e1a0cc3d
         # load spectral abundance of simulation library
         spectral_abundance_array = envi_to_array(os.path.join(self.tetra_output_directory, 'spectral_abundance',
                                                               'convex_hull__n_dims_4_simulation_library_min'))[:, 0, :]
@@ -117,7 +141,6 @@ class tetracorder:
         df_soil = df_sim.loc[df_sim['level_1'] == 'soil'].copy()
 
         for df_index, df_row in df_soil.iterrows():
-
             g1_index = spectral_abundance_array[df_index, 1]
             if g1_index not in [1, 13, 15, 20, 21, 22, 25, 36, 37, 38, 40, 41, 49, 56, 57, 60, 66, 80, 82, 83, 84]:
                 valid_rows_g1.append(df_row)
@@ -125,7 +148,7 @@ class tetracorder:
 
             g2_index = spectral_abundance_array[df_index, 3]
 
-            if g2_index not in [96, 97, 98, 99, 100, 105, 106, 128, 136, 144, 148, 152,182, 194, 196, 214, 221, 228, 234, 238, 256, 257, 270, 271]:
+            if g2_index not in [96, 97, 98, 99, 100, 105, 106, 128, 136, 144, 148, 152, 182, 194, 196, 214, 221, 228, 234, 238, 256, 257, 270, 271]:
                 valid_rows_g2.append(df_row)
                 indices_used_g2.append(g2_index)
         
@@ -145,16 +168,16 @@ class tetracorder:
 
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim_g1,
-                                      level='level_1', spectral_bundles=100000, increment_size=0.05,
+                                      level='level_1', spectral_bundles=spectral_bundles, increment_size=0.05,
                                       output_directory=self.sim_spectra_dir, wvls=self.wvls,
                                       name='tetracorder_g1_simulation', spectra_starting_col=8, endmember='soil',
-                                      simulation_library_array=df_sim_array, spectral_bundle_project='tetracorder_g1')
+                                    spectral_bundle_project='tetracorder_g1', new_simulation_bundles=new_simulation_bundles)
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim_g2,
-                                      level='level_1', spectral_bundles=100000, increment_size=0.05,
+                                      level='level_1', spectral_bundles=spectral_bundles, increment_size=0.05,
                                       output_directory=self.sim_spectra_dir, wvls=self.wvls,
                                       name='tetracorder_g2_simulation', spectra_starting_col=8, endmember='soil',
-                                      simulation_library_array=df_sim_array, spectral_bundle_project='tetracorder_g2')
+                                      spectral_bundle_project='tetracorder_g2', new_simulation_bundles=new_simulation_bundles)
 
     def hypertrace_tetracorder(self):
         cursor_print('hypertrace: tetracorder')
@@ -216,21 +239,29 @@ class tetracorder:
             complete_fractions_array = complete_fractions_array[:, :, min_em_index:max_em_index + 1]
             spectra_grid = np.zeros((complete_fractions_array.shape[0], complete_fractions_array.shape[1], len(self.wvls)))
 
-            for _row, row in enumerate(complete_fractions_array):
-                for _col, col in enumerate(row):
+            func = partial(process_complete_fractions_row, unmix_library_array=unmix_library_array, wvls=self.wvls)
+            results = p_map(func,
+                        [complete_fractions_array[_row, :, :] for _row in range(complete_fractions_array.shape[0])],
+                        **{"desc": f"\t\t rebuilding spectra ...", "ncols": 150})
 
-                    em_col = np.zeros((unmix_library_array.shape[0], len(self.wvls)))
-                    frac_weights = np.zeros((unmix_library_array.shape[0]))
+            for _row, row in enumerate(results):
+                spectra_grid[_row, :, :] = row
 
-                    for _em, em in enumerate(unmix_library_array):
-                        fraction = complete_fractions_array[_row, _col, _em]
-                        em_col[_em, :] = unmix_library_array[_em, :]
-                        frac_weights[_em] = fraction
-
-                    if np.sum(frac_weights) == 0:
-                        continue
-                    else:
-                        spectra_grid[_row, _col, :] = np.average(em_col, weights=frac_weights, axis=0)
+            # for _row, row in enumerate(complete_fractions_array):
+            #     for _col, col in enumerate(row):
+            #
+            #         em_col = np.zeros((unmix_library_array.shape[0], len(self.wvls)))
+            #         frac_weights = np.zeros((unmix_library_array.shape[0]))
+            #
+            #         for _em, em in enumerate(unmix_library_array):
+            #             fraction = complete_fractions_array[_row, _col, _em]
+            #             em_col[_em, :] = unmix_library_array[_em, :]
+            #             frac_weights[_em] = fraction
+            #
+            #         if np.sum(frac_weights) == 0:
+            #             continue
+            #         else:
+            #             spectra_grid[_row, _col, :] = np.average(em_col, weights=frac_weights, axis=0)
 
             meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls, wvls=True)
             output_raster = os.path.join(self.sim_spectra_dir, f"unmixing_{group}_{user_em}_emc2.hdr")
@@ -250,36 +281,41 @@ class tetracorder:
         for index, row in df.iterrows():
             plot = row['Name']
             plot_num = int(plot.split('-')[1])
-            
+
             if int(plot_num) > 60:
                 continue
-            
+
+            print(f"{plot}... augmenting")
             emit_filetime = row['EMIT DATE']
+
             reflectance_img_emit = glob(os.path.join(self.slpit_gis_directory, 'emit-data-clip', f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
+            reflectance_array = envi_to_array(reflectance_img_emit[0])[0,0,:]
+            bad_band_indices = np.where(reflectance_array == -9999.)[0] # these are used for various
 
             basename = os.path.basename(reflectance_img_emit[0])
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_pixels_augmented.hdr')
-            augment_envi(file=reflectance_img_emit[0],  vertical_average=True, wvls=self.wvls, out_raster=output_raster)
+            augment_envi(file=reflectance_img_emit[0],  vertical_average=True, wvls=self.wvls, out_raster=output_raster, bad_bands=bad_band_indices)
             self.run_tc(output_raster[:-4])
 
-            # run each spectrum
+            # run each spectrum -
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_pixels_augmented_all.hdr')
-            augment_envi(file=reflectance_img_emit[0],  vertical_average=False, wvls=self.wvls, out_raster=output_raster)
+            augment_envi(file=reflectance_img_emit[0],  vertical_average=False, wvls=self.wvls, out_raster=output_raster, bad_bands=bad_band_indices)
             self.run_tc(output_raster[:-4])
 
-        for i in transect_files:
+        for i in sorted(transect_files):
             basename = os.path.basename(i)
+            print(f"{basename}... augmenting")
             plot_num = int(basename.split('-')[1])
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f"{basename}_transect_augmented.hdr")
-            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True)
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True, bad_bands=bad_band_indices)
             self.run_tc(output_raster[:-4])
 
             # run each spectrum
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f"{basename}_transect_augmented_all.hdr")
-            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=False)
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=False, bad_bands=bad_band_indices)
             self.run_tc(output_raster[:-4])
 
-        for i in em_files:
+        for i in sorted(em_files):
             basename = os.path.basename(i)
             plot_num = int(basename.split('-')[1])
             df_em = pd.read_csv(f'{i}.csv')
@@ -292,16 +328,16 @@ class tetracorder:
             if plot_num > 60:
                 continue
 
+            print(f"{basename}... augmenting")
             soil_index = min(df_em.index[df_em['level_1'] == 'Soil'].tolist())
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_ems_augmented.hdr')
-            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True, em_index=soil_index)
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True, em_index=soil_index, bad_bands=bad_band_indices)
             self.run_tc(output_raster[:-4])
 
-            # run each spectrum file
+            # run each spectrum file - do not filter for bad bands, these are all endmembers
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_ems_augmented_all.hdr')
             augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=False)
             self.run_tc(output_raster[:-4])
-
 
         cursor_print("\t- done")
 
@@ -429,10 +465,7 @@ class tetracorder:
 
         cursor_print("\t- done")
 
-
-
-
-def run_tetracorder_build(base_directory, sensor, dry_run):
+def run_tetracorder_build(base_directory, sensor, dry_run, new_simulation_bundles, spectral_bundles):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
     while True:
         tetracorder_build_menu()
@@ -440,8 +473,8 @@ def run_tetracorder_build(base_directory, sensor, dry_run):
         user_input = input('\nPlease indicate the desired mode: ').upper()
 
         if user_input == 'A':
-            #tc.run_tc_on_lib()
-            tc.generate_tetracorder_reflectance()
+            tc.run_tc_on_lib()
+            tc.generate_tetracorder_reflectance(new_simulation_bundles=new_simulation_bundles, spectral_bundles=spectral_bundles)
             tc.augment_simulation()
         elif user_input == 'B':
             tc.hypertrace_tetracorder()

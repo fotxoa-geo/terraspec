@@ -329,7 +329,10 @@ class tetracorder_figures:
                     231: "Carbonates",
                     232: "Carbonates",
                     0: "No Detection",
-                   -9999: "No Data"}
+                   -9999: "No Data",
+                    96: "Vegetation",
+                    97: "Vegetation",
+                    98: "Vegetation"}
 
         if group == 'g1':
             return group_1
@@ -342,9 +345,7 @@ class tetracorder_figures:
                                   'Dolomite': 1,
                                   'Gypsum-Fine': 2,
                                   'Gypsum-Coarse': 3,
-
                                   'Chlorite': 0,
-
                                   'Goethite-Nano': 0,
                                   'Goethite-Fine': 1,
                                   'Goethite-Med': 2,
@@ -353,12 +354,10 @@ class tetracorder_figures:
                                   'Hematite-Fine': 5,
                                   'Hematite-Med': 6,
                                   'Hematite-Large': 7,
-
                                   'Illite+Muscovite': 0,
                                   'Kaolinite': 1,
                                   'Montmorillonite': 2,
                                   'Vermiculite': 3,
-
                                   'Quartz+Feldspar': 0}
 
         # mineral group grid
@@ -1181,8 +1180,6 @@ class tetracorder_figures:
         group_dict = {'g1': 1, 'g2': 3}
         bd_group_dict = {'g1': 0, 'g2': 2}
 
-        df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
-
         for group in ['g1', 'g2']:
             fractions = envi_to_array(os.path.join(self.sim_spectra_directory, f'tetracorder_{group}_simulation_fractions'))[:,:, 2]
 
@@ -1196,11 +1193,13 @@ class tetracorder_figures:
 
             truth_array = np.zeros((fractions.shape[0], fractions.shape[1]))
             truth_array[:] = bd_tetra[:, np.newaxis]
-            truth_array[:, 0] = 0
+            truth_array[:, 0] = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, 0, group_dict[group]]
+
+            #truth_array[:, 0] = 0
 
             truth_bd_array = np.zeros((fractions.shape[0], fractions.shape[1]))
             truth_bd_array[:] = bd_tetra_bd[:, np.newaxis]
-            truth_bd_array[:, 0] = 0
+            #truth_bd_array[:, 0] = 0
 
             error = np.absolute(truth_bd_array - bd_tetra_sim_bd)
 
@@ -1228,23 +1227,12 @@ class tetracorder_figures:
             # Precompute maximum y value across all bins
             bins = np.arange(0, 1.05, 0.05)  # Bins: 0, 0.05, ..., 1.0
             bin_centers = (bins[:-1] + bins[1:]) / 2
-            max_y = 0
-            hist_counts = {}
-
-            for truth_label in labels:
-                for predicted_label in labels:
-                    mask = (a_flat == truth_label) & (b_flat == predicted_label)
-                    data = fractions_flat[mask]
-                    counts, _ = np.histogram(data, bins=bins, density=True)
-                    max_count = counts.max() if counts.size > 0 else 0
-                    max_y = max(max_y, max_count)
-                    hist_counts[(truth_label, predicted_label)] = counts
 
             # create figure
             fig = plt.figure(constrained_layout=True, figsize=(12, 12))
             ncols = len(labels)
             nrows = len(labels)
-            gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.20, hspace=0.05, figure=fig)
+            gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.05, figure=fig)
 
             # create figures
             for _row, truth_label in enumerate(labels):
@@ -1253,14 +1241,15 @@ class tetracorder_figures:
 
                     # Tick formatting
                     if _row == nrows - 1:
-                        ax.set_xlabel(f"X-Axis: % Soil Cover\nPred: {predicted_label}", fontsize=8)
+                        ax.set_xlabel(f"X-Axis: Soil Fraction\nPred: {predicted_label}", fontsize=8)
                     else:
                         ax.set_xticklabels([])
 
                     if _col == 0:
                         ax.set_ylabel(f"Truth: {truth_label}", fontsize=8)
                     else:
-                        ax.set_yticklabels([])
+                        pass
+                        #ax.set_yticklabels([])
 
                     truth_mask = a_flat == truth_label
                     predicted_mask = b_flat == predicted_label
@@ -1273,16 +1262,15 @@ class tetracorder_figures:
 
                     ax.text(0.15, 0.95,  f'n = {n}', ha='center', va='top', fontsize=8)
                     ax.set_xlim(0, 1)
-                    ax.set_ylim(0, 1)
+                    #ax.set_ylim(0, 1)
 
                     if n > 0:
-                        counts, edges = np.histogram(data, bins=bins)
-                        scaled_counts = counts / counts.max() if counts.max() > 0 else counts
+                        #counts, edges = np.histogram(data, bins=bins)
+                        #scaled_counts = counts / counts.max() if counts.max() > 0 else counts
+                        ax.hist(data, bins=bins, color='black', alpha=0.7, edgecolor='white')
+                        #ax.plot(bin_centers, scaled_counts, color='black', linewidth=1.5, marker='o',markersize=3)
 
-                        #ax.hist(data, bins=bins, color='black', alpha=0.7, edgecolor='white', density=True)
-                        ax.plot(bin_centers, scaled_counts, color='black', linewidth=1.5, marker='o',markersize=3)
-
-            plt.tight_layout()
+            #plt.tight_layout()
             plt.savefig(os.path.join(self.fig_directory, f"{group}_confusion_matrix_aggregated_detailed.png"), bbox_inches='tight')
             plt.clf()
             plt.close()
@@ -1341,7 +1329,7 @@ class tetracorder_figures:
                 ax.set_xticks(unique_fractions)
                 ax.set_xticklabels([f'{x:.2f}' for x in unique_fractions], rotation=90)
 
-            plt.tight_layout()
+            #plt.tight_layout()
             plt.savefig(os.path.join(self.fig_directory, f"{group}_confusion_matrix_aggregated_diagonal.png"), bbox_inches='tight')
             plt.clf()
             plt.close()
@@ -1637,7 +1625,6 @@ class tetracorder_figures:
             # plt.clf()
             # plt.close()
 
-
     def mineral_ref_figure(self):
 
         try:
@@ -1929,7 +1916,7 @@ class tetracorder_figures:
             if team.strip() in ['THERM']:
                 continue
 
-            if plot_num > 60:
+            if plot_num >= 60:
                 continue
 
             emit_filetime = row['EMIT DATE']
@@ -1972,6 +1959,15 @@ class tetracorder_figures:
                 contact_probe_indices = envi_to_array(os.path.join(self.output_directory, 'spectral_abundance',
                                                                       f'{plot.replace(" ", "").replace("SPEC", "Spectral")}-emit_ems_augmented_min'))[0,0,:]
 
+                # load uncertainties
+                emit_fractions_uncertainties = envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
+                                                            f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_{em_lib_type}_fractional_cover_uncertainty'))[
+                                 0, 0, :]
+                slpit_fractions_uncertainties = envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
+                                                             f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented_{em_lib_type}_fractional_cover_uncertainty'))[
+                                  0, 0, :]
+
+
                 for _group, group in enumerate(['g1', 'g2']):
                     index_dict = {0: 1, 1: 3}
                     slpit_mineral_index = slpit_mineral_indexs[index_dict[_group]]
@@ -1983,27 +1979,65 @@ class tetracorder_figures:
                         # contact probe
                         contact_probe_bd = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=contact_rfl,
                                                                           npv_fraction=slpit_fractions[0], gv_fraction=slpit_fractions[1],
-                                                                          pnpv=slipt_pnpv, pgv=slipt_pgv, soil_fraction=slpit_fractions[2], psoil=None)
+                                                                          pnpv=slipt_pnpv, pgv=slipt_pgv, soil_fraction=slpit_fractions[2], psoil=None,
+                                                                          exclude_minerals=False)
 
                         # emit data
                         emit_band_bd = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=emit_rfl,
-                                                                      npv_fraction=slpit_fractions[0], gv_fraction=slpit_fractions[1],
-                                                                      pnpv=emit_pnpv, pgv=emit_pgv, soil_fraction=slpit_fractions[2], psoil=None)
+                                                                      npv_fraction=emit_fractions[0], gv_fraction=emit_fractions[1],
+                                                                      pnpv=emit_pnpv, pgv=emit_pgv, soil_fraction=emit_fractions[2], psoil=None, exclude_minerals=False)
 
                         # slpit data
                         slpit_bd = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=slpit_rfl,
                                                                   npv_fraction=slpit_fractions[0], gv_fraction=slpit_fractions[1], pnpv=slipt_pnpv,
-                                                                  pgv=slipt_pgv, soil_fraction=slpit_fractions[2], psoil=None)
+                                                                  pgv=slipt_pgv, soil_fraction=slpit_fractions[2], psoil=None, exclude_minerals=False)
+
+                        # # emit data + uncertainty
+                        # emit_band_bd_plus_unc = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=emit_rfl,
+                        #                                               npv_fraction=emit_fractions[0] + emit_fractions_uncertainties[0],
+                        #                                               gv_fraction=emit_fractions[1] + emit_fractions_uncertainties[1],
+                        #                                               pnpv=emit_pnpv, pgv=emit_pgv,
+                        #                                               soil_fraction=emit_fractions[2] + emit_fractions_uncertainties[2],  psoil=None)
+                        #
+                        # # slpit data + uncertainty
+                        # slpit_bd_plus_unc = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=slpit_rfl,
+                        #                                           npv_fraction=slpit_fractions[0] + slpit_fractions_uncertainties[0],
+                        #                                           gv_fraction=slpit_fractions[1] + slpit_fractions_uncertainties[1], pnpv=slipt_pnpv,
+                        #                                           pgv=slipt_pgv, soil_fraction=slpit_fractions[2] + slpit_fractions_uncertainties[2],
+                        #                                           psoil=None)
+                        #
+                        # # emit data + uncertainty
+                        # emit_band_bd_minus_unc = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=emit_rfl,
+                        #                                                        npv_fraction=emit_fractions[0] - emit_fractions_uncertainties[0],
+                        #                                                        gv_fraction=emit_fractions[1] - emit_fractions_uncertainties[1],
+                        #                                                        pnpv=emit_pnpv, pgv=emit_pgv, soil_fraction=emit_fractions[2] - emit_fractions_uncertainties[2], psoil=None)
+                        #
+                        # # slpit data + uncertainty
+                        # slpit_bd_minus_unc = spectra.mineral_group_retrival(mineral_index=index,
+                        #                                                    spectra_observed=slpit_rfl,
+                        #                                                    npv_fraction=slpit_fractions[0] - slpit_fractions_uncertainties[0],
+                        #                                                    gv_fraction=slpit_fractions[1] - slpit_fractions_uncertainties[1],
+                        #                                                    pnpv=slipt_pnpv, pgv=slipt_pgv,
+                        #                                                    soil_fraction=slpit_fractions[2] - slpit_fractions_uncertainties[2],
+                        #                                                    psoil=None)
 
                         # append results
-                        df_row = [plot, group, em_lib_type, index_src[_index],  np.int64(index)] + list(contact_probe_bd[2:]) + list(emit_band_bd[2:]) + list(slpit_bd[2:]) + list(emit_fractions) + list(slpit_fractions)
+                        df_row = ([plot, group, em_lib_type, index_src[_index],  np.int64(index)]
+                                  + list(contact_probe_bd[2:]) + list(emit_band_bd[2:]) + list(slpit_bd[2:])
+                                  #+ list(contact_probe_bd[2:]) + list(emit_band_bd_minus_unc[2:]) + list(slpit_bd_minus_unc[2:])
+                                  #+ list(contact_probe_bd[2:]) + list(emit_band_bd_plus_unc[2:]) + list(slpit_bd_plus_unc[2:])
+                                  + list(emit_fractions) + list(emit_fractions_uncertainties)
+                                  + list(slpit_fractions) + list(slpit_fractions_uncertainties))
+
+
+
                         df_rows.append(df_row)
 
         # these are labels for the csv
         data_src_label = ['Contact', "EMIT", "SLPIT"]
-        bd_labels = ['Lc', 'Bd', "Bd'", "Bd''"]
+        bd_labels = ['Lc', 'Bd', "Bd'", "Bd''",] #'Lc_minus_unc', 'Bd_minus_unc', "Bd'_minus_unc", "Bd''_minus_unc", 'Lc_plus_unc', 'Bd_plus_unc', "Bd'_plus_unc", "Bd''_plus_unc"]
         combined_labels = [f"{src}_{bd}" for src in data_src_label for bd in bd_labels]
-        ems = ['npv', 'pv', 'soil', 'shade']
+        ems = ['npv', 'pv', 'soil', 'shade', 'npv_unc', 'pv_unc', 'soil_unc', 'shade_unc']
         frac_src = ["EMIT", "SLPIT"]
         combined_frac_labels = [f"{em}_{src}" for src in frac_src for em in ems]
 
@@ -2051,7 +2085,8 @@ class tetracorder_figures:
                                 ax.set_title(col_map[col], fontsize=self.title_fontsize)
 
                         # filter out low plots of soil fraction
-                        df_select_val = df_select[(df_select['em_library'] == em_lib) & (df_select['soil_SLPIT'] >= 0.60)].copy()
+                        df_select_val = df_select[(df_select['em_library'] == em_lib)].copy()
+                        #  & (df_select['soil_SLPIT'] >= 0.60)
 
                         if row == 0:
                             x = df_select_val["Contact_Bd"]
@@ -2296,7 +2331,7 @@ def run_figure_workflow(base_directory):
     #tc.confusion_matrices()
     #tc.confusion_matrix_detailed()
 
-    #tc.slpit_bd()
+    tc.slpit_bd()
     tc.slpit_figure()
     tc.fraction_threshold()
     #tc.veg_correction_fig()

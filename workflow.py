@@ -26,7 +26,8 @@ def main():
     parser.add_argument('-sns', '--sensor', type=str, help='specify sensor to use', default='emit',
                         choices=['emit', 'aviris-ng', 'modis', 'hlss30', 'neon', 'aviris-classic', 'mavic3m'])
     parser.add_argument('-io', '--io_bug', action='store_false', help='IO Bug found in simulation', default=True)
-    
+    parser.add_argument('-new_sim_bundles', '--new_simulation_bundles', type=bool, help='Run entire new simulation bundles calculation', default=False)
+    parser.add_argument('-num_of_bund', '--number_of_bundles', type=str, help='number of spectal bundles to use', default='100000')
     args = parser.parse_args()
     
     base_directory = os.path.join(args.base_root_directory, 'terraspec')
@@ -50,7 +51,8 @@ def main():
             run_slpit_workflow(os.path.join(base_directory, 'slpit'), dry_run=args.dry_run, sensor=args.sensor)
 
         elif choice == 'C':
-            run_tetracorder_workflow(base_directory, sensor=args.sensor, dry_run=args.dry_run)
+            run_tetracorder_workflow(base_directory, sensor=args.sensor, dry_run=args.dry_run,
+                                     new_simulation_bundles=args.new_simulation_bundles, spectral_bundles=int(args.number_of_bundles))
 
         elif choice == 'D':
             run_shift_workflow(os.path.join(base_directory, 'shift'), sensor='aviris_ng', dry_run=args.dry_run)
