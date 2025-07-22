@@ -311,6 +311,8 @@ class spectra:
         fractions = np.zeros((1, columns, 3))
         vegetation_spectra = np.zeros((1, columns, len(wavelengths)))
         soil_spectra = np.zeros((1, columns, len(wavelengths)))
+        gv_spectra = np.zeros((1, columns, len(wavelengths)))
+        npv_spectra = np.zeros((1, columns, len(wavelengths)))
 
         for _col, col in enumerate(range(0, columns)):
             increment_frac = np.round(col * col_size, 2)
@@ -328,7 +330,10 @@ class spectra:
             fractions[0, _col, :] = [npv_frac, pv_frac, soil_frac]
             index[0, _col, :] = list(map(int, [spectral_bundle[0][0], spectral_bundle[1][0], spectral_bundle[2][0]]))
 
-        return mixed_spectra, fractions, index, vegetation_spectra, soil_spectra
+            gv_spectra[0, _col, :] = spectral_bundle[1][spectra_start:].astype(dtype=float)
+            npv_spectra[0, _col, :] = spectral_bundle[0][spectra_start:].astype(dtype=float)
+
+        return mixed_spectra, fractions, index, vegetation_spectra, soil_spectra, gv_spectra, npv_spectra
 
     @classmethod
     def increment_reflectance(cls, class_names: list, simulation_table, level: str, spectral_bundles:int,
@@ -345,6 +350,8 @@ class spectra:
         index_grid = np.zeros((len(spec_array), cols, len(class_names)))
         veg_grid = np.zeros((len(spec_array), cols, len(wvls)))
         soil_grid = np.zeros((len(spec_array), cols, len(wvls)))
+        npv_grid = np.zeros((len(spec_array), cols, len(wvls)))
+        gv_grid = np.zeros((len(spec_array), cols, len(wvls)))
 
         results = p_map(partial(spectra.row_reflectance, increment_size, cols, wvls,spectra_starting_col, endmember),
                         [bundle for bundle in spec_array], [_index for _index,index in enumerate(spectra_grid)],
@@ -357,6 +364,8 @@ class spectra:
             index_grid[_row, :, :] = row[2]
             veg_grid[_row, :, :] = row[3]
             soil_grid[_row, :, :] = row[4]
+            gv_grid[_row, :, :] = row[5]
+            npv_grid[_row, :, :] = row[6]
 
         # save the datasets
         refl_meta = get_meta(lines=spectra_grid.shape[0], samples=cols, bands=wvls, wvls=True)
@@ -364,277 +373,379 @@ class spectra:
         fraction_meta = get_meta(lines=fraction_grid.shape[0], samples=cols, bands=class_names, wvls=False)
         veg_meta = get_meta(lines=veg_grid.shape[0], samples=cols, bands=wvls, wvls=True)
         soil_meta = get_meta(lines=soil_grid.shape[0], samples=cols, bands=wvls, wvls=True)
+        gv_meta = get_meta(lines=gv_grid.shape[0], samples=cols, bands=wvls, wvls=True)
+        npv_meta = get_meta(lines=npv_grid.shape[0], samples=cols, bands=wvls, wvls=True)
 
         # save index, spectra, fraction grid
         output_files = [os.path.join(output_directory, f'{name}_index.hdr'),
                         os.path.join(output_directory, f'{name}_spectra.hdr'),
                         os.path.join(output_directory, f'{name}_fractions.hdr'),
                         os.path.join(output_directory, f'{name}_vegetation.hdr'),
-                        os.path.join(output_directory, f'{name}_soils.hdr')]
+                        os.path.join(output_directory, f'{name}_soils.hdr'),
+                        os.path.join(output_directory, f'{name}_gv.hdr'),
+                        os.path.join(output_directory, f'{name}_npv.hdr')]
 
-        meta_docs = [index_meta, refl_meta, fraction_meta, veg_meta, soil_meta]
-        grids = [index_grid, spectra_grid, fraction_grid, veg_grid, soil_grid]
+        meta_docs = [index_meta, refl_meta, fraction_meta, veg_meta, soil_meta, gv_meta, npv_meta]
+        grids = [index_grid, spectra_grid, fraction_grid, veg_grid, soil_grid, gv_grid, npv_grid]
 
         p_map(save_envi, output_files, meta_docs, grids, **{"desc": "\t\t saving envi files...", "ncols": 150})
         del index_grid, spectra_grid, fraction_grid
 
 
+
     @classmethod
-    def cont_removal(cls, wavelengths, reflectance, library_reflectance, expert_file_selection, veg_rfl=None, veg_correction=False,
-                     constraints=None):
+    def cont_removal(cls, wavelengths, reflectance, library_reflectance, expert_file_selection,
+                     constraints=None, npv_fraction=None, gv_fraction=None, pnpv=None,
+                     pgv=None, soil_fraction=None, psoil=None):
 
         #thresholds from expert file system
         ct_thresholds = {'CTHRESH1': 0.01, 'CTHRESH2': 0.02, 'CTHRESH4': 0.04, 'CTHRESH5': 0.05}
 
         # this holds the multiple values of bd if multiple features are passed by the expert file
-        features_array = np.ones((len(expert_file_selection))) * -9999
-        wavelength_array = np.ones((len(expert_file_selection))) * -9999
         integrals_array = np.ones((len(expert_file_selection))) * -9999
-        fit_array = np.ones((len(expert_file_selection))) * -9999
+        bd_array = np.ones((len(expert_file_selection))) * -9999
+        bd_prime_array = np.ones((len(expert_file_selection))) * -9999
+        bd_prime_prime_array = np.ones((len(expert_file_selection))) * -9999
+        bd_library_array = np.ones((len(expert_file_selection))) * -9999
 
-        rc_array = np.ones((len(expert_file_selection))) * -9999
-        rb_array = np.ones((len(expert_file_selection))) * -9999
-
-        # subtract vegetation from spectra leaving only soil spectra
-        if veg_correction:
-            # extract vegetation spectra from reflectance; leaves only the soil component
-            reflectance = reflectance - veg_rfl
-        else:
-            reflectance = reflectance
-
-        print(len(expert_file_selection))
         # loop through features
         for _cont_feat, cont_feat in enumerate(expert_file_selection):
             feature = cont_feat['continuum']
-
-
-            # calculate left indices
-            left_inds = np.where(np.logical_and(wavelengths >= feature[0], wavelengths <= feature[1]))[0]
-            left_x = wavelengths[int(left_inds.mean())]
-            left_y_obs = reflectance[left_inds].mean()
-            left_y_lib = library_reflectance[left_inds].mean()
-
-            # calculate right indices
-            right_inds = np.where(np.logical_and(wavelengths >= feature[2], wavelengths <= feature[3]))[0]
-            if right_inds.size == 0:
-                right_inds = spectra.nearest_index_to_wavelength(wavelengths=wavelengths,
-                                                                 target_wavelength=(feature[2] + feature[3])/2) # this takes the mean of right bounds
-            else:
-                pass
-
-            right_x = wavelengths[int(right_inds.mean())]
-            right_y_obs = reflectance[right_inds].mean()
-            right_y_lib = library_reflectance[right_inds].mean()
-
-            print(np.round(left_x, 3), np.round(right_x, 3))
-
             # calculate features
             feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
 
-            # calculate continuum
-            continuum_obs = interp1d([left_x, right_x], [left_y_obs, right_y_obs], bounds_error=False,
-                                 fill_value='extrapolate')(wavelengths)
+            # x boundaries - used for all calculations
+            x1, x2 = wavelengths[feature_inds][0], wavelengths[feature_inds][-1] #Ri, Rj
 
-            continuum_lib = interp1d([left_x, right_x], [left_y_lib, right_y_lib], bounds_error=False,
-                                     fill_value='extrapolate')(wavelengths)
+            # calculate continuum for tetracorder library
+            m_l = (library_reflectance[feature_inds][-1] - library_reflectance[feature_inds][0]) / (x2 - x1)
+            b_l = library_reflectance[feature_inds][0] - m_l * x1
+            lc = m_l * wavelengths + b_l
+            bd_l = 1 - np.array(library_reflectance[feature_inds] / lc[feature_inds])
+            bd_max_l = bd_l.argmax()
+            bd_library_array[_cont_feat] = bd_l[bd_max_l]
 
-            # calculate fit
-            oc = reflectance/continuum_obs
-            lc = library_reflectance/continuum_lib
-            f = np.corrcoef(oc[feature_inds], lc[feature_inds])[0, 1]
-
-            # implement fit constraint
-            #if None != constraints:
-            #    depth_fit_constraint = float(constraints['DEPTH-FIT'][0])
-            #
-            #    if f < depth_fit_constraint:
-            #        continue
-            #else:
-            #    pass
-
-            fit_array[_cont_feat] = f
-
-            # implement threshold from tetracorder detections is found!
-            try:
-                feature_threshold = ct_thresholds[cont_feat['ct'][0][1:-1]]
-                if np.any(reflectance[feature_inds] < feature_threshold):
-                    continue
-            except:
-                pass
-
-            # implement rct/lct threshold ratio
-            try:
-                right_cont_ratio = cont_feat['rct/lct>'][0]
-                rct = continuum_obs[feature_inds][-1]
-                lct = continuum_obs[feature_inds][0]
-
-                if not rct/lct > right_cont_ratio:
-                    continue
-            except:
-                pass
-
-            # implement lct/rct threshold ratio
-            try:
-                left_cont_ratio = cont_feat['lct/rct>'][0]
-                rct = continuum_obs[feature_inds][-1]
-                lct = continuum_obs[feature_inds][0]
-
-                if not lct / rct > left_cont_ratio:
-                    continue
-            except:
-                pass
-
-            # calculate band depth; get max index of band depth ignore calculations with negative reflectance!
-            if np.any(reflectance[feature_inds] < 0):
-                continue
-
-            depth = 1 - np.array(reflectance[feature_inds]/continuum_obs[feature_inds])
-            depth_max_index = depth.argmax()
-
-            # calculate integral of library reference
-            h_x = lc[feature_inds]/lc[feature_inds] - lc[feature_inds]
+            # calculate integral of tetracorder library reference
+            h_x = lc[feature_inds] / lc[feature_inds] - lc[feature_inds]
             integral = np.trapz(h_x, wavelengths[feature_inds])
-
-            # append max band bepth
-            bd = depth[depth_max_index]
-            features_array[_cont_feat] = bd
-
-            # append wvl center
-            bd_wl_max_center = wavelengths[feature_inds][depth_max_index]
-            wavelength_array[_cont_feat] = bd_wl_max_center
-
-            # append rb and rc
-            rc_array[_cont_feat] = continuum_obs[feature_inds][depth_max_index]
-            rb_array[_cont_feat] = reflectance[feature_inds][depth_max_index]
-
-            # append integral area
             integrals_array[_cont_feat] = integral
+
+            # calculate vegetation correction
+            Ci = x1/(x2-x1)
+            Ri = reflectance[feature_inds][0]
+            Rj = reflectance[feature_inds][-1]
+            fnpv = npv_fraction
+            fgv = gv_fraction
+            pnpv_j = pnpv[feature_inds][-1]
+            pnpv_i = pnpv[feature_inds][0]
+            pgv_j = pgv[feature_inds][-1]
+            pgv_i = pgv[feature_inds][0]
+
+            # this is our soil spectrum
+            psoil = (1/soil_fraction) * (reflectance - (fnpv*pnpv + fgv*pgv))
+            fsps = reflectance - (fnpv*pnpv + fgv*pgv)
+            fsps_i = fsps[feature_inds][0]
+            fsps_j = fsps[feature_inds][-1]
+            ps_i = psoil[feature_inds][0]
+            ps_j = psoil[feature_inds][-1]
+
+            # these are the continuum for Bd
+            m = (Rj - Ri)/(x2-x1)
+            b = Ri - m*x1
+            rc = m * wavelengths + b
+            bd = 1 - np.array(reflectance[feature_inds]/rc[feature_inds])
+            bd_max = bd.argmax()
+            bd_array[_cont_feat] = bd[bd_max]
+
+            # these are the continuum for Bd'
+            b_prime = (1 / soil_fraction) * ((1 + Ci) * (Ri - fnpv * pnpv_i - fgv * pgv_i) - Ci * (Rj - fnpv * pnpv_j - fgv * pgv_j))
+            m_prime = (Ri - fnpv * pnpv_i - fgv * pgv_i) / (x1 * soil_fraction) - (b_prime / x1)
+            rc_prime = m_prime * wavelengths + b_prime
+            bd_ρsoil = 1 - np.array(psoil[feature_inds]/rc_prime[feature_inds])
+            bd_max_ρsoil = bd_ρsoil.argmax()
+            bd_prime_array[_cont_feat] = bd_ρsoil[bd_max_ρsoil]
+
+            # these are the continum for Bd''
+            #b_prime_prime = fsps_i - Ci*(fsps_j - fsps_i) # this works
+            b_prime_prime = Ri*(1+Ci) - Ci*Rj + fnpv * (-1 * pnpv_i*(1+Ci) + Ci*pnpv_j) + fgv * (-1*pgv_i * (1+Ci) + Ci*pgv_j) # This works!
+            #b_prime_prime = Ri * (1 + Ci) - Ci * Rj - (fnpv*pnpv_i + fgv*pgv_i) * (1+Ci) + Ci*(fnpv*pnpv_j + fgv*pgv_j)  # this is chat's solution
+
+            #m_prime_prime = (fsps_j - fsps_i) / (x2 - x1)  # This works
+            #b_prime_prime = Ri - (fnpv*pnpv_i) - (fgv*pgv_i) - m_prime_prime * x1 # This works
+            m_prime_prime = (Ri - (fnpv*pnpv_i) - (fgv*pgv_i) - b_prime_prime)/x1  # this works with top bd'' line 469
+
+            rc_prime_prime = m_prime_prime * wavelengths + b_prime_prime
+            bd_fsps = 1 - np.array(fsps[feature_inds]/rc_prime_prime[feature_inds])
+            bd_max_fsps = bd_fsps.argmax()
+            bd_prime_prime_array[_cont_feat] = bd_fsps[bd_max_fsps]
+
+            # slopes = [m, m_prime, m_prime_prime]
+            # intercepts = [b, b_prime, b_prime_prime]
+            # rfls = [reflectance, psoil, fsps]
+            # rcs = [rc, rc_prime, rc_prime_prime]
+            # labels = ["Bd", "Bd'", "Bd''"]
+            # spectrum_labels = ["R", "ρ$_s$", "f$_s$ρ$_s$"]
+            # rc_labels = ["R$_c$", "R$_c'$", "R$_c''$"]
+            #
+            # for _i, i in enumerate(slopes):
+            #     plt.title(labels[_i])
+            #     plt.ylim(0, 0.30)
+            #     plt.plot(wavelengths[feature_inds], rfls[_i][feature_inds], label=spectrum_labels[_i])
+            #     plt.plot(wavelengths[feature_inds], rcs[_i][feature_inds], label=f'Continnum: R$_c$ = {slopes[_i]:.2f}λ$_o$ + {intercepts[_i]:.2f}')
+            #     bd_plot = 1 - np.array(reflectance[feature_inds]/rc[feature_inds])
+            #     bd_max = bd_plot.argmax()
+            #
+            #     # plot max depth
+            #     plt.vlines(x=wavelengths[feature_inds][bd_max], ymin=rfls[_i][feature_inds][bd_max], ymax=rcs[_i][feature_inds][bd_max],
+            #                color='purple', linestyle='--', linewidth=2, label=f"Wvl: {wavelengths[feature_inds][bd_max]:.3f}")
+            #
+            #     # arrows for lambda start and end
+            #     plt.annotate(f"λ$_i$ = {wavelengths[feature_inds][0]:.2f}",
+            #                 xy=(x1, rfls[_i][feature_inds][0]),  # Arrow points *to* this location
+            #                 xytext=(x1, 0.16),  # Text is placed *at* this location
+            #                 arrowprops=dict(arrowstyle="->", color='blue'),
+            #                 fontsize=12,
+            #                 color='black')
+            #
+            #     plt.annotate(f"λ$_j$ = {wavelengths[feature_inds][-1]:.2f}",
+            #                  xy=(x2, rfls[_i][feature_inds][-1]),  # Arrow points *to* this location
+            #                  xytext=(x2, 0.16),  # Text is placed *at* this location
+            #                  arrowprops=dict(arrowstyle="->", color='blue'),
+            #                  fontsize=12,
+            #                  color='black')
+            #
+            #     # arrow for observered spectra
+            #     plt.annotate(f"{rc_labels[_i]} = {rcs[_i][feature_inds][bd_max]:.2f}",
+            #                  xy=(wavelengths[feature_inds][bd_max], rcs[_i][feature_inds][bd_max]),  # Arrow points *to* this location
+            #                  xytext=(wavelengths[feature_inds][bd_max], 0.18),  # Text is placed *at* this location
+            #                  arrowprops=dict(arrowstyle="->", color='blue'),
+            #                  fontsize=12,
+            #                  color='black')
+            #
+            #     # arrow for observered spectra
+            #     plt.annotate(f"{spectrum_labels[_i]} = {rfls[_i][feature_inds][bd_max]:.2f}",
+            #                  xy=(wavelengths[feature_inds][bd_max], rfls[_i][feature_inds][bd_max]),
+            #                  # Arrow points *to* this location
+            #                  xytext=(wavelengths[feature_inds][bd_max], 0.11),  # Text is placed *at* this location
+            #                  arrowprops=dict(arrowstyle="->", color='blue'),
+            #                  fontsize=12,
+            #                  color='black')
+            #
+            #     plt.legend()
+            #     plt.ylabel('Reflectance')
+            #     plt.xlabel('Wvls')
+            #     plt.savefig(r'G:\My Drive\terraspec\test\\' + f'cont_feat{_cont_feat}-{labels[_i]}.png')
+            #     plt.clf()
+            #     plt.close()
+            #
+            # # plot continuums
+            # plt.plot(wavelengths[feature_inds], np.ones(len(wavelengths))[feature_inds], label="Continuum")
+            # plt.plot(wavelengths[feature_inds], np.array(fsps[feature_inds]/rc_prime_prime[feature_inds]), label="f$_s$ρ$_s$")
+            # plt.plot(wavelengths[feature_inds], np.array(psoil[feature_inds]/rc_prime[feature_inds]), label="ρ$_s$")
+            # plt.legend()
+            # plt.ylabel('Reflectance')
+            # plt.xlabel('Wvls')
+            # plt.savefig(r'G:\My Drive\terraspec\test\\' + f'cont_feat{_cont_feat}-continnum.png')
+            # plt.clf()
+            # plt.close()
 
         # correct data for -9999.
         integrals_array[integrals_array == -9999] = np.nan
-        features_array[features_array == -9999] = np.nan
-        fit_array[fit_array == -9999] = np.nan
 
-        # this will return depths that are weighted
-        relative_area = integrals_array/np.nansum(integrals_array)
-        bd_w = np.nansum(relative_area * features_array * fit_array)
+        # array to return all band depths
+        bd_return_array = np.ones(4) * -9999
 
-        rb_return = -9999
-        rc_return = -9999
-        wvl_return = -9999
+        # calculate weighted band depths
+        for _i, i in enumerate([bd_library_array, bd_array, bd_prime_array, bd_prime_prime_array]):
+            i[i == -9999] = np.nan
+            relative_area = integrals_array/np.nansum(integrals_array)
+            band_depth_w = np.nansum(relative_area * i)
 
-        return bd_w, rb_return, rc_return, wvl_return
+            if band_depth_w <= 1:
+                bd_return_array[_i] = band_depth_w
+            else:
+                pass
+
+        return bd_return_array
         
-        
+
+    @classmethod
+    def tetracorder_id(cls, spectral_libraries, spectrum,  decoded_expert_system):
+
+        def cont_removal_for_id(wvls, spectra, ref_spectra, features):
+            # this holds the multiple values of bd if multiple features are passed by the expert file
+            integrals_array = np.ones((len(features))) * -9999
+            bd_array = np.ones((len(features))) * -9999
+            fit_array = np.ones((len(features))) * 9999
+
+            # loop through features
+            for _cont_feat, cont_feat in enumerate(features):
+                feature = cont_feat['continuum']
+
+                # calculate left indices
+                left_inds = np.where(np.logical_and(wavelengths >= feature[0], wavelengths <= feature[1]))[0]
+                left_x = wavelengths[int(left_inds.mean())]
+                left_y_lib = library_reflectance[left_inds].mean()
+                left_y_obs = spectrum[left_inds].mean()
+
+                # calculate right indices
+                right_inds = np.where(np.logical_and(wavelengths >= feature[2], wavelengths <= feature[3]))[0]
+                if right_inds.size == 0:
+                    right_inds = spectra.nearest_index_to_wavelength(wavelengths=wavelengths,
+                                                                     target_wavelength=(feature[2] + feature[
+                                                                         3]) / 2)  # this takes the mean of right bounds
+                else:
+                    pass
+
+                right_x = wavelengths[int(right_inds.mean())]
+                right_y_lib = library_reflectance[right_inds].mean()
+                right_y_obs = spectrum[right_inds].mean()
+
+                # get features
+                feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
+
+                # calculate continuum for library
+                continuum_lib = interp1d([left_x, right_x], [left_y_lib, right_y_lib], bounds_error=False,
+                                         fill_value='extrapolate')(wavelengths)
+
+                continuum_obs = interp1d([left_x, right_x], [left_y_obs, right_y_obs], bounds_error=False,
+                                         fill_value='extrapolate')(wavelengths)
+
+                # calculate mineral continuum from tetracorder library
+                lc = library_reflectance / continuum_lib
+                oc = spectra / continuum_obs
+
+                # calculate fit of observed and mineral reference from Clark et al 2003
+                b_top = np.sum(oc*lc) - (np.sum(oc) * np.sum(lc))/len(wavelengths[feature_inds])
+                b_bottom = np.sum(lc**2) - (np.sum(lc)**2)/len(wavelengths[feature_inds])
+                b = b_top/b_bottom
+                a = (np.sum(oc) - b * np.sum(lc))/len(wavelengths[feature_inds])
+
+                b_prime_bottom = np.sum(oc**2) - (np.sum(oc)**2)/len(wavelengths[feature_inds])
+                b_prime = b_top/b_prime_bottom
+
+                F = (b*b_prime)**(1/2)
+
+                fit_array[_cont_feat] = F
+
+                # calculate integral of tetracorder library reference
+                #h_x = lc[feature_inds] / lc[feature_inds] - lc[feature_inds]
+                #integral = np.trapz(h_x, wavelengths[feature_inds])
+                #integrals_array[_cont_feat] = integral
+
+                # x boundaries - used for all calculations
+                x1, x2 = left_x, right_x
+
+            return fit_array
+
+        for i in decoded_expert_system:
+            select_expert_system = decoded_expert_system[i]
+            select_library = spectral_libraries[select_expert_system['spectral_library']]
+            select_record = select_expert_system['record']
+            longname = select_expert_system['longname']
+            features = select_expert_system['features']
+
+            library = envi.open(envi_header(select_library), select_library)
+            library_reflectance = library.spectra.copy()
+            library_records = [int(q) for q in library.metadata['record']]
+
+            hdr = envi.read_envi_header(envi_header(select_library))
+            wavelengths = np.array([float(q) for q in hdr['wavelength']])
+
+            mineral_reflectance = library_reflectance[library_records.index(select_record), :]
+            fit_array = cont_removal_for_id(wvls=wavelengths, spectra=spectrum, ref_spectra=mineral_reflectance, features=features)
+
+
     @classmethod
     def nearest_index_to_wavelength(cls, wavelengths, target_wavelength):
         wvl_nearest_index = (np.abs(wavelengths - target_wavelength)).argmin()
 
         return wvl_nearest_index
 
-    @classmethod
-    def group_wvl_center(cls):
-        group_wvl_center = {
-            'group.2um': 2.24,
-            'group.1um': 0.79}
-
-        return group_wvl_center
 
     @classmethod
-    def mineral_group_retrival(cls, mineral_index, spectra_observed, veg_rfl=None, plot=False, veg_correction=False,
-                               veg_fraction=None):
+    def mineral_group_retrival(cls, mineral_index, spectra_observed, npv_fraction=None, gv_fraction=None, pnpv=None,
+                               pgv=None, soil_fraction=None, psoil=None):
+
+        # expert system
         decoded_expert = tc.decode_expert_system(os.path.join('utils', 'tetracorder', 'cmd.lib.setup.t5.27c1'),
                                                           log_file=None, log_level='INFO')
 
+        # libraries from tetracorder
         SPECTRAL_REFERENCE_LIBRARY = {'splib06': os.path.join('utils', 'tetracorder', 's06emitd_envi'),
                                       'sprlb06': os.path.join('utils', 'tetracorder', 'r06emitd_envi')}
 
-        # array to be returned with following positions: group number, rb, rc, rbo, rco, aggregated group num
-        return_array = np.ones((10)) * -9999.
-        soil_fraction = 1 - veg_fraction
+        # array to be returned with following positions: group number, mineral index, bdw
+        return_array = np.ones((6)) * -9999.
 
-        if soil_fraction < .15: # vegetation fraction check; ignoring very low values; no sense in wasting computing resources here
-            pass
-        else:
+        # mineral matrix
+        if mineral_index not in [0, 1, 13, 15, 22, 25, 28, 29, 37, 38, 40, 41, 49, 51, 56, 57, 60, 64, 82, 83, 94,
+                                 96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 184, 194, 196, 217, 221, 226, 228, 234,
+                                 238, 270, 271, 292]: # this excludes minerals not used for simulation!
 
-            # mineral matrix
-            if mineral_index not in [0, 1, 13, 15, 22, 25, 28, 29, 37, 38, 40, 41, 49, 56, 57, 60, 82, 83, 94,
-                                     96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 196, 228, 234,
-                                     238, 270, 271]: # this excludes minerals not used for simulation!
+            df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
+            df_mineral_matrix = df_mineral_matrix.fillna(-9999)
+            record = df_mineral_matrix.loc[df_mineral_matrix['Index'] == int(mineral_index), 'Record'].iloc[0]
+            filename = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Filename'].iloc[0]
+            group_num = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Group'].iloc[0]
+            group = f'group.{group_num}um'
+            ref_library = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Library'].iloc[0]
 
-                df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
-                df_mineral_matrix = df_mineral_matrix.fillna(-9999)
-                record = df_mineral_matrix.loc[df_mineral_matrix['Index'] == int(mineral_index), 'Record'].iloc[0]
-                filename = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Filename'].iloc[0]
-                group_num = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Group'].iloc[0]
-                group = f'group.{group_num}um'
-                ref_library = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Library'].iloc[0]
+            # row index pertains specifically to df; not value from Tetracorder!
+            row_index = df_mineral_matrix[df_mineral_matrix['Record'] == record].index[0]
+            mineral_row = df_mineral_matrix.iloc[row_index, 7:]
+            mineral_row = mineral_row.apply(pd.to_numeric, errors='coerce')
 
-                # row index pertains specifically to df; not value from Tetracorder!
-                row_index = df_mineral_matrix[df_mineral_matrix['Record'] == record].index[0]
-                mineral_row = df_mineral_matrix.iloc[row_index, 7:]
-                mineral_row = mineral_row.apply(pd.to_numeric, errors='coerce')
+            # load library
+            item = SPECTRAL_REFERENCE_LIBRARY[ref_library]
+            library = envi.open(envi_header(item), item)
+            library_reflectance = library.spectra.copy()
+            library_records = [int(q) for q in library.metadata['record']]
 
-                # load library
-                item = SPECTRAL_REFERENCE_LIBRARY[ref_library]
-                library = envi.open(envi_header(item), item)
-                library_reflectance = library.spectra.copy()
-                library_records = [int(q) for q in library.metadata['record']]
+            hdr = envi.read_envi_header(envi_header(item))
+            wavelengths = np.array([float(q) for q in hdr['wavelength']])
+            normalized_group_name = os.path.normpath(filename.split('.depth.gz')[0]) # need this to be compatible for windows; not sure if needed for linux.
 
-                hdr = envi.read_envi_header(envi_header(item))
-                wavelengths = np.array([float(q) for q in hdr['wavelength']])
-                normalized_group_name = os.path.normpath(filename.split('.depth.gz')[0]) # need this to be compatible for windows; not sure if needed for linux.
+            try:
+                constraints = decoded_expert[normalized_group_name]['constituent_constraints']
+            except:
+                constraints = None
+                #print(decoded_expert[normalized_group_name]['longname'], 'has no constraints!')
 
-                try:
-                    constraints = decoded_expert[normalized_group_name]['constituent_constraints']
-                except:
-                    constraints = None
-                    print(decoded_expert[normalized_group_name]['longname'], 'has no constraints!')
+            # This is the vegetation correction
+            bdw = spectra.cont_removal(wavelengths, spectra_observed, library_reflectance[library_records.index(record), :],
+                                                       decoded_expert[normalized_group_name]['features'],
+                                                       constraints=constraints, soil_fraction=soil_fraction,
+                                                       npv_fraction=npv_fraction, gv_fraction=gv_fraction,
+                                                       pnpv=pnpv, pgv=pgv, psoil=psoil)
 
-                if veg_correction:
-                    # get rco and rbo - observed spectra
-                    bdo, rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed, library_reflectance[library_records.index(record), :],
-                                                               decoded_expert[normalized_group_name]['features'],
-                                                               veg_correction=veg_correction, veg_rfl=veg_rfl,
-                                                               constraints=constraints)
+            # recalculate tetracorder for new fit
+            #psoil_observed = (1/soil_fraction) * (spectra_observed - (npv_fraction*pnpv + gv_fraction*pgv))
+            #spectra.tetracorder_id(spectral_libraries=SPECTRAL_REFERENCE_LIBRARY, spectrum=psoil_observed,
+            #                       decoded_expert_system=decoded_expert)
 
-                else:
-                    # get rco and rbo - observed spectra
-                    bdo, rbo, rco, wl_o = spectra.cont_removal(wavelengths, spectra_observed, library_reflectance[library_records.index(record), :],
-                                                               decoded_expert[normalized_group_name]['features'],
-                                                               veg_correction=veg_correction, constraints=constraints)
-
-                return_array[:] = [group_num, mineral_index, -9999, -9999, -9999, -9999, bdo, rbo, rco, wl_o]
-
-            else:
-                pass
+            return_array[:] = np.concatenate(([group_num, mineral_index], bdw))
 
         return return_array
 
     @classmethod
-    def mineral_group_row(cls, mineral_index_row, spectra_row, fraction_row=None, vegetation_row=None,
-                          veg_correction=False, group=None):
+    def mineral_group_row(cls, mineral_index_row=None, spectra_row=None, fraction_row=None, gv_row=None, npv_row=None, group=None):
 
         group_band_index = {'g1': 1, 'g2': 3}
-        row_return_array = np.ones((mineral_index_row.shape[0], 10)) * -9999.
+        row_return_array = np.ones((mineral_index_row.shape[0], 6)) * -9999.
 
         for _col, col in enumerate(mineral_index_row):
             mineral_index = mineral_index_row[_col, group_band_index[group]]
-            veg_fraction = fraction_row[_col, 0] + fraction_row[_col, 1]
+            npv_fraction = fraction_row[_col, 0]
+            gv_fraction = fraction_row[_col, 1]
+            soil_fraction = fraction_row[_col, 2]
             col_spectra = spectra_row[_col, :]
+            pnpv = npv_row[_col, :]
+            pgv = gv_row[_col, :]
 
-            if veg_correction:
-                veg_rfl = vegetation_row[_col, :]
-                mineral_retrival = spectra.mineral_group_retrival(mineral_index=mineral_index,
-                                                                  spectra_observed=col_spectra,
-                                                                  veg_correction=veg_correction,
-                                                                  veg_rfl=veg_rfl, veg_fraction=veg_fraction)
-
-            else:
-                mineral_retrival = spectra.mineral_group_retrival(mineral_index=mineral_index,
-                                                                  spectra_observed=col_spectra,
-                                                                  veg_correction=veg_correction,
-                                                                  veg_fraction=veg_fraction)
+            mineral_retrival = spectra.mineral_group_retrival(mineral_index=mineral_index, spectra_observed=col_spectra,
+                                                              npv_fraction=npv_fraction, gv_fraction=gv_fraction, soil_fraction=soil_fraction,
+                                                              pnpv=pnpv, pgv=pgv, psoil=None)
 
             row_return_array[_col, :] = mineral_retrival
 
@@ -642,33 +753,24 @@ class spectra:
 
     @classmethod
     def mineral_components(cls, index_array, spectra_array, output_file, group, fractions_array=None,
-                           vegetation_array=None, veg_correction=False):
+                           npv_array=None, gv_array=None):
 
-        # cont grid - corresponds to Rc and Rc-observed
-        output_grid = np.zeros((index_array.shape[0], index_array.shape[1], 10))
-
-        if veg_correction:
-            results = p_map(partial(spectra.mineral_group_row, veg_correction=veg_correction, group=group),
-                            [index_array[_row, :, :] for _row, row in enumerate(index_array)],
-                            [spectra_array[_row, :, :] for _row, row in enumerate(spectra_array)],
-                            [fractions_array[_row, :, :] for _row, row in enumerate(fractions_array)],
-                            [vegetation_array[_row, :, :] for _row, row in enumerate(vegetation_array)],
-
-                            **{"desc": "\t\t processing continuum reflectance (veg correction enabled) ...",
-                                "ncols": 150})
-
-        else:
-            results = p_map(partial(spectra.mineral_group_row, veg_correction=veg_correction,  group=group),
-                            [index_array[_row, :, :] for _row, row in enumerate(index_array)],
-                            [spectra_array[_row, :, :] for _row, row in enumerate(spectra_array)],
-                            [fractions_array[_row, :, :] for _row, row in enumerate(fractions_array)],
-                            **{"desc": "\t\t processing continuum reflectance...", "ncols": 150})
+        # continnum grid
+        output_grid = np.zeros((index_array.shape[0], index_array.shape[1], 6))
+        func = partial(spectra.mineral_group_row, group=group)
+        results = p_map(func,
+                        [index_array[_row, :, :] for _row in range(index_array.shape[0])],
+                        [spectra_array[_row, :, :] for _row in range(spectra_array.shape[0])],
+                        [fractions_array[_row, :, :] for _row in range(fractions_array.shape[0])],
+                        [gv_array[_row, :, :] for _row in range(gv_array.shape[0])],
+                        [npv_array[_row, :, :] for _row in range(npv_array.shape[0])],
+                        **{"desc": "\t\t processing continuum reflectance calculations ...", "ncols": 150})
 
         for _row, row in enumerate(results):
             output_grid[_row, :, :] = row
 
         # save spectra
-        meta = get_meta(lines=index_array.shape[0], samples=index_array.shape[1], bands=[i for i in range(10)], wvls=False)
+        meta = get_meta(lines=index_array.shape[0], samples=index_array.shape[1], bands=[i for i in range(6)], wvls=False)
         meta['data ignore value'] = -9999
         save_envi(output_file=output_file, meta=meta, grid=output_grid)
 
@@ -848,9 +950,11 @@ class spectra:
 
         file_extension = os.path.splitext(file)[1]
 
+
         if file_extension == '.asd':
-            asd = asdreader.reader(file)
+
             try:
+                asd = asdreader.reader(file)
                 asd_refl = asd.reflectance
                 asd_gps = asd.get_gps()
                 latitude_ddmm, longitude_ddmm, elevation, utc_time = asd_gps[0], asd_gps[1], asd_gps[2], asd_gps[3]
@@ -975,7 +1079,7 @@ class spectra:
                 plt.legend()
                 plt.ylabel("Reflectance (%)")
                 plt.xlabel("Wavelenghts (nm)")
-                plt.ylim([0, 1.1])
+                plt.ylim([0, 1])
 
                 plt.savefig(outfname, bbox_inches='tight')
                 plt.clf()
