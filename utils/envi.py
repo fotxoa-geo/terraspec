@@ -171,10 +171,13 @@ def load_band_names(file):
     return list(bands.keys())
 
 
-def augment_envi(file, out_raster, wvls, vertical_average=False, em_index=None):
+def augment_envi(file, out_raster, wvls, vertical_average=False, em_index=None, bad_bands=None):
     ds = gdal.Open(file, gdal.GA_ReadOnly)
     ds_array = envi_to_array(file)
-    ds_array[ds_array == -9999.] = np.nan
+    ds_array[ds_array == -9999.] = np.nan # this sets -9999 to no data
+
+    if bad_bands is not None:
+        ds_array[:, :, bad_bands] = np.nan
 
     if ds.RasterYSize == 3: # this is for the EMIT 3x3 windows
         spectra_grid = np.ones((100, 100, len(wvls))) * -9999
@@ -195,6 +198,7 @@ def augment_envi(file, out_raster, wvls, vertical_average=False, em_index=None):
 
     meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=wvls,
                             wvls=True)
+    meta_spectra['data ignore value'] = -9999
     save_envi(out_raster, meta_spectra, spectra_grid)
 
 def read_metadata(hdr_file):

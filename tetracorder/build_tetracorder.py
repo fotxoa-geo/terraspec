@@ -27,7 +27,7 @@ def tetracorder_build_menu():
     print("B... Hypertrace workflow")
     print("C... Unmix simulated reflectance")
     print("D... Reconstruct vegetation signals from EMC² and band depths")
-    print("E... Augment pixels ")
+    print("E... Augment pixels and field data")
     print("F... Unmix augmented SLPIT data")
     print("G... Exit")
 
@@ -95,7 +95,7 @@ class tetracorder:
         else:
             basename = os.path.basename(augmented_file)
             output = os.path.join(self.spectral_abun_dir, f'{basename}_abun_min')
-            print(output)
+
             if os.path.isfile(output):
                 pass
             else:
@@ -266,34 +266,41 @@ class tetracorder:
         for index, row in df.iterrows():
             plot = row['Name']
             plot_num = int(plot.split('-')[1])
+
             if int(plot_num) > 60:
                 continue
+
+            print(f"{plot}... augmenting")
             emit_filetime = row['EMIT DATE']
+
             reflectance_img_emit = glob(os.path.join(self.slpit_gis_directory, 'emit-data-clip', f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
+            reflectance_array = envi_to_array(reflectance_img_emit[0])[0,0,:]
+            bad_band_indices = np.where(reflectance_array == -9999.)[0] # these are used for various
 
             basename = os.path.basename(reflectance_img_emit[0])
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_pixels_augmented.hdr')
-            augment_envi(file=reflectance_img_emit[0],  vertical_average=True, wvls=self.wvls, out_raster=output_raster)
+            augment_envi(file=reflectance_img_emit[0],  vertical_average=True, wvls=self.wvls, out_raster=output_raster, bad_bands=bad_band_indices)
             self.run_tc(output_raster[:-4])
 
-            # run each spectrum
+            # run each spectrum -
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_pixels_augmented_all.hdr')
-            augment_envi(file=reflectance_img_emit[0],  vertical_average=False, wvls=self.wvls, out_raster=output_raster)
+            augment_envi(file=reflectance_img_emit[0],  vertical_average=False, wvls=self.wvls, out_raster=output_raster, bad_bands=bad_band_indices)
             self.run_tc(output_raster[:-4])
 
-        for i in transect_files:
+        for i in sorted(transect_files):
             basename = os.path.basename(i)
+            print(f"{basename}... augmenting")
             plot_num = int(basename.split('-')[1])
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f"{basename}_transect_augmented.hdr")
-            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True)
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True, bad_bands=bad_band_indices)
             self.run_tc(output_raster[:-4])
 
             # run each spectrum
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f"{basename}_transect_augmented_all.hdr")
-            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=False)
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=False, bad_bands=bad_band_indices)
             self.run_tc(output_raster[:-4])
 
-        for i in em_files:
+        for i in sorted(em_files):
             basename = os.path.basename(i)
             plot_num = int(basename.split('-')[1])
             df_em = pd.read_csv(f'{i}.csv')
@@ -301,12 +308,13 @@ class tetracorder:
             if plot_num > 60:
                 continue
 
+            print(f"{basename}... augmenting")
             soil_index = min(df_em.index[df_em['level_1'] == 'Soil'].tolist())
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_ems_augmented.hdr')
-            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True, em_index=soil_index)
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True, em_index=soil_index, bad_bands=bad_band_indices)
             self.run_tc(output_raster[:-4])
 
-            # run each spectrum file
+            # run each spectrum file - do not filter for bad bands, these are all endmembers
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_ems_augmented_all.hdr')
             augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=False)
             self.run_tc(output_raster[:-4])
