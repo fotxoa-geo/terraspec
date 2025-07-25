@@ -395,7 +395,7 @@ class spectra:
     @classmethod
     def cont_removal(cls, wavelengths, reflectance, library_reflectance, expert_file_selection,
                      constraints=None, npv_fraction=None, gv_fraction=None, pnpv=None,
-                     pgv=None, soil_fraction=None, psoil=None):
+                     pgv=None, soil_fraction=None, psoil=None, plot=None, output_directory=None, plot_info=None):
 
         #thresholds from expert file system
         ct_thresholds = {'CTHRESH1': 0.01, 'CTHRESH2': 0.02, 'CTHRESH4': 0.04, 'CTHRESH5': 0.05}
@@ -404,17 +404,26 @@ class spectra:
         integrals_array = np.ones((len(expert_file_selection))) * -9999
         bd_array = np.ones((len(expert_file_selection))) * -9999
         bd_prime_array = np.ones((len(expert_file_selection))) * -9999
-        bd_prime_prime_array = np.ones((len(expert_file_selection))) * -9999
         bd_library_array = np.ones((len(expert_file_selection))) * -9999
+
+        valid_wavelengths = ~np.isnan(reflectance)
 
         # loop through features
         for _cont_feat, cont_feat in enumerate(expert_file_selection):
+
             feature = cont_feat['continuum']
-            # calculate features
-            feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
+
+            if soil_fraction == 0:
+                continue
+
+            left_inds = np.where(np.logical_and.reduce((wavelengths >= feature[0], wavelengths <= feature[1], valid_wavelengths)))[0]
+            right_inds = np.where(np.logical_and.reduce((wavelengths >= feature[2], wavelengths <= feature[3], valid_wavelengths)))[0]
+
+            # calculate features start/stop
+            feature_inds = np.logical_and(wavelengths >= wavelengths[left_inds][0], wavelengths <= wavelengths[right_inds][-1])
 
             # x boundaries - used for all calculations
-            x1, x2 = wavelengths[feature_inds][0], wavelengths[feature_inds][-1] #Ri, Rj
+            x1, x2 = wavelengths[feature_inds][0], wavelengths[feature_inds][-1] #λi, λj
 
             # calculate continuum for tetracorder library
             m_l = (library_reflectance[feature_inds][-1] - library_reflectance[feature_inds][0]) / (x2 - x1)
@@ -433,6 +442,7 @@ class spectra:
             Ci = x1/(x2-x1)
             Ri = reflectance[feature_inds][0]
             Rj = reflectance[feature_inds][-1]
+
             fnpv = npv_fraction
             fgv = gv_fraction
             pnpv_j = pnpv[feature_inds][-1]
@@ -442,18 +452,13 @@ class spectra:
 
             # this is our soil spectrum
             psoil = (1/soil_fraction) * (reflectance - (fnpv*pnpv + fgv*pgv))
-            fsps = reflectance - (fnpv*pnpv + fgv*pgv)
-            fsps_i = fsps[feature_inds][0]
-            fsps_j = fsps[feature_inds][-1]
-            ps_i = psoil[feature_inds][0]
-            ps_j = psoil[feature_inds][-1]
 
             # these are the continuum for Bd
             m = (Rj - Ri)/(x2-x1)
             b = Ri - m*x1
             rc = m * wavelengths + b
             bd = 1 - np.array(reflectance[feature_inds]/rc[feature_inds])
-            bd_max = bd.argmax()
+            bd_max = np.nanargmax(bd)
             bd_array[_cont_feat] = bd[bd_max]
 
             # these are the continuum for Bd'
@@ -461,92 +466,84 @@ class spectra:
             m_prime = (Ri - fnpv * pnpv_i - fgv * pgv_i) / (x1 * soil_fraction) - (b_prime / x1)
             rc_prime = m_prime * wavelengths + b_prime
             bd_ρsoil = 1 - np.array(psoil[feature_inds]/rc_prime[feature_inds])
-            bd_max_ρsoil = bd_ρsoil.argmax()
+            bd_max_ρsoil = np.nanargmax(bd_ρsoil)
             bd_prime_array[_cont_feat] = bd_ρsoil[bd_max_ρsoil]
 
-            # these are the continum for Bd''
-            #b_prime_prime = fsps_i - Ci*(fsps_j - fsps_i) # this works
-            b_prime_prime = Ri*(1+Ci) - Ci*Rj + fnpv * (-1 * pnpv_i*(1+Ci) + Ci*pnpv_j) + fgv * (-1*pgv_i * (1+Ci) + Ci*pgv_j) # This works!
-            #b_prime_prime = Ri * (1 + Ci) - Ci * Rj - (fnpv*pnpv_i + fgv*pgv_i) * (1+Ci) + Ci*(fnpv*pnpv_j + fgv*pgv_j)  # this is chat's solution
+            if plot:
+                slopes = [m, m_prime]
+                intercepts = [b, b_prime]
+                rfls = [reflectance, psoil]
+                rcs = [rc, rc_prime,]
+                labels = ["Bd", "Bd'",]
+                spectrum_labels = ["R", "ρ$_s$"]
+                rc_labels = ["R$_c$", "R$_c'$"]
 
-            #m_prime_prime = (fsps_j - fsps_i) / (x2 - x1)  # This works
-            #b_prime_prime = Ri - (fnpv*pnpv_i) - (fgv*pgv_i) - m_prime_prime * x1 # This works
-            m_prime_prime = (Ri - (fnpv*pnpv_i) - (fgv*pgv_i) - b_prime_prime)/x1  # this works with top bd'' line 469
+                for _i, i in enumerate(slopes):
+                    plt.title(labels[_i])
+                    plt.xlim(wavelengths[feature_inds][0] - 0.05, wavelengths[feature_inds][-1] + 0.05)
+                    plt.plot(wavelengths[feature_inds], rfls[_i][feature_inds], label=spectrum_labels[_i])
+                    plt.plot(wavelengths[feature_inds], rcs[_i][feature_inds], label=f'Continnum: R$_c$ = {slopes[_i]:.2f}λ$_o$ + {intercepts[_i]:.2f}')
+                    bd_plot = 1 - np.array(reflectance[feature_inds]/rc[feature_inds])
+                    bd_max = np.nanargmax(bd_plot)
 
-            rc_prime_prime = m_prime_prime * wavelengths + b_prime_prime
-            bd_fsps = 1 - np.array(fsps[feature_inds]/rc_prime_prime[feature_inds])
-            bd_max_fsps = bd_fsps.argmax()
-            bd_prime_prime_array[_cont_feat] = bd_fsps[bd_max_fsps]
+                    # plot max depth
+                    plt.vlines(x=wavelengths[feature_inds][bd_max], ymin=rfls[_i][feature_inds][bd_max], ymax=rcs[_i][feature_inds][bd_max],
+                               color='purple', linestyle='--', linewidth=2, label=f"Wvl: {wavelengths[feature_inds][bd_max]:.3f}")
 
-            # slopes = [m, m_prime, m_prime_prime]
-            # intercepts = [b, b_prime, b_prime_prime]
-            # rfls = [reflectance, psoil, fsps]
-            # rcs = [rc, rc_prime, rc_prime_prime]
-            # labels = ["Bd", "Bd'", "Bd''"]
-            # spectrum_labels = ["R", "ρ$_s$", "f$_s$ρ$_s$"]
-            # rc_labels = ["R$_c$", "R$_c'$", "R$_c''$"]
-            #
-            # for _i, i in enumerate(slopes):
-            #     plt.title(labels[_i])
-            #     plt.ylim(0, 0.30)
-            #     plt.plot(wavelengths[feature_inds], rfls[_i][feature_inds], label=spectrum_labels[_i])
-            #     plt.plot(wavelengths[feature_inds], rcs[_i][feature_inds], label=f'Continnum: R$_c$ = {slopes[_i]:.2f}λ$_o$ + {intercepts[_i]:.2f}')
-            #     bd_plot = 1 - np.array(reflectance[feature_inds]/rc[feature_inds])
-            #     bd_max = bd_plot.argmax()
-            #
-            #     # plot max depth
-            #     plt.vlines(x=wavelengths[feature_inds][bd_max], ymin=rfls[_i][feature_inds][bd_max], ymax=rcs[_i][feature_inds][bd_max],
-            #                color='purple', linestyle='--', linewidth=2, label=f"Wvl: {wavelengths[feature_inds][bd_max]:.3f}")
-            #
-            #     # arrows for lambda start and end
-            #     plt.annotate(f"λ$_i$ = {wavelengths[feature_inds][0]:.2f}",
-            #                 xy=(x1, rfls[_i][feature_inds][0]),  # Arrow points *to* this location
-            #                 xytext=(x1, 0.16),  # Text is placed *at* this location
-            #                 arrowprops=dict(arrowstyle="->", color='blue'),
-            #                 fontsize=12,
-            #                 color='black')
-            #
-            #     plt.annotate(f"λ$_j$ = {wavelengths[feature_inds][-1]:.2f}",
-            #                  xy=(x2, rfls[_i][feature_inds][-1]),  # Arrow points *to* this location
-            #                  xytext=(x2, 0.16),  # Text is placed *at* this location
-            #                  arrowprops=dict(arrowstyle="->", color='blue'),
-            #                  fontsize=12,
-            #                  color='black')
-            #
-            #     # arrow for observered spectra
-            #     plt.annotate(f"{rc_labels[_i]} = {rcs[_i][feature_inds][bd_max]:.2f}",
-            #                  xy=(wavelengths[feature_inds][bd_max], rcs[_i][feature_inds][bd_max]),  # Arrow points *to* this location
-            #                  xytext=(wavelengths[feature_inds][bd_max], 0.18),  # Text is placed *at* this location
-            #                  arrowprops=dict(arrowstyle="->", color='blue'),
-            #                  fontsize=12,
-            #                  color='black')
-            #
-            #     # arrow for observered spectra
-            #     plt.annotate(f"{spectrum_labels[_i]} = {rfls[_i][feature_inds][bd_max]:.2f}",
-            #                  xy=(wavelengths[feature_inds][bd_max], rfls[_i][feature_inds][bd_max]),
-            #                  # Arrow points *to* this location
-            #                  xytext=(wavelengths[feature_inds][bd_max], 0.11),  # Text is placed *at* this location
-            #                  arrowprops=dict(arrowstyle="->", color='blue'),
-            #                  fontsize=12,
-            #                  color='black')
-            #
-            #     plt.legend()
-            #     plt.ylabel('Reflectance')
-            #     plt.xlabel('Wvls')
-            #     plt.savefig(r'G:\My Drive\terraspec\test\\' + f'cont_feat{_cont_feat}-{labels[_i]}.png')
-            #     plt.clf()
-            #     plt.close()
-            #
-            # # plot continuums
-            # plt.plot(wavelengths[feature_inds], np.ones(len(wavelengths))[feature_inds], label="Continuum")
-            # plt.plot(wavelengths[feature_inds], np.array(fsps[feature_inds]/rc_prime_prime[feature_inds]), label="f$_s$ρ$_s$")
-            # plt.plot(wavelengths[feature_inds], np.array(psoil[feature_inds]/rc_prime[feature_inds]), label="ρ$_s$")
-            # plt.legend()
-            # plt.ylabel('Reflectance')
-            # plt.xlabel('Wvls')
-            # plt.savefig(r'G:\My Drive\terraspec\test\\' + f'cont_feat{_cont_feat}-continnum.png')
-            # plt.clf()
-            # plt.close()
+                    # arrows for lambda start and end
+                    plt.annotate(f"λ$_i$ = {wavelengths[feature_inds][0]:.2f}",
+                                xy=(x1, rfls[_i][feature_inds][0]),  # Arrow points *to* this location
+                                xytext=(x1, 0.36),  # Text is placed *at* this location
+                                arrowprops=dict(arrowstyle="->", color='blue'),
+                                fontsize=12,
+                                color='black')
+
+                    plt.annotate(f"λ$_j$ = {wavelengths[feature_inds][-1]:.2f}",
+                                 xy=(x2, rfls[_i][feature_inds][-1]),  # Arrow points *to* this location
+                                 xytext=(x2, 0.36),  # Text is placed *at* this location
+                                 arrowprops=dict(arrowstyle="->", color='blue'),
+                                 fontsize=12,
+                                 color='black')
+
+                    # arrow for observered spectra
+                    plt.annotate(f"{rc_labels[_i]} = {rcs[_i][feature_inds][bd_max]:.2f}",
+                                 xy=(wavelengths[feature_inds][bd_max], rcs[_i][feature_inds][bd_max]),  # Arrow points *to* this location
+                                 xytext=(wavelengths[feature_inds][bd_max], 0.38),  # Text is placed *at* this location
+                                 arrowprops=dict(arrowstyle="->", color='blue'),
+                                 fontsize=12,
+                                 color='black')
+
+                    # arrow for observered spectra
+                    plt.annotate(f"{spectrum_labels[_i]} = {rfls[_i][feature_inds][bd_max]:.2f}",
+                                 xy=(wavelengths[feature_inds][bd_max], rfls[_i][feature_inds][bd_max]),
+                                 # Arrow points *to* this location
+                                 xytext=(wavelengths[feature_inds][bd_max], 0.34),  # Text is placed *at* this location
+                                 arrowprops=dict(arrowstyle="->", color='blue'),
+                                 fontsize=12,
+                                 color='black')
+
+                    plt.legend()
+                    plt.ylabel('Reflectance')
+                    plt.xlabel('Wvls')
+                    plt.savefig(os.path.join(output_directory, f'{plot_info}-cont_feat{_cont_feat}-{labels[_i]}.png'))
+                    plt.clf()
+                    plt.close()
+
+                # plot continuums
+                plt.plot(wavelengths[feature_inds], np.ones(len(wavelengths))[feature_inds], label="Continuum")
+                plt.plot(wavelengths[feature_inds], np.array(psoil[feature_inds]/rc_prime[feature_inds]), label="ρ$_s$")
+                plt.plot(wavelengths[feature_inds], np.array(library_reflectance[feature_inds] / lc[feature_inds]), label="Mineral Ref")
+
+                plt.vlines(x=wavelengths[feature_inds][bd_max], ymin=np.array(psoil[feature_inds]/rc_prime[feature_inds])[bd_max],
+                           ymax=np.ones(len(wavelengths))[feature_inds][bd_max],
+                           color='purple', linestyle='--', linewidth=2,
+                           label=f"Wvl: {wavelengths[feature_inds][bd_max]:.3f}")
+                plt.legend()
+                plt.ylabel('Reflectance')
+                plt.xlabel('Wvls')
+                plt.savefig(os.path.join(output_directory, f'{plot_info}-cont_feat{_cont_feat}-continnum.png'))
+                plt.clf()
+                plt.close()
 
         # correct data for -9999.
         integrals_array[integrals_array == -9999] = np.nan
@@ -555,12 +552,13 @@ class spectra:
         bd_return_array = np.ones(4) * -9999
 
         # calculate weighted band depths
-        for _i, i in enumerate([bd_library_array, bd_array, bd_prime_array, bd_prime_prime_array]):
+        for _i, i in enumerate([bd_library_array, bd_array, bd_prime_array]):
             i[i == -9999] = np.nan
             relative_area = integrals_array/np.nansum(integrals_array)
             band_depth_w = np.nansum(relative_area * i)
 
-            if band_depth_w <= 1:
+            if band_depth_w <= 1.:
+
                 bd_return_array[_i] = band_depth_w
             else:
                 pass
@@ -664,7 +662,7 @@ class spectra:
 
     @classmethod
     def mineral_group_retrival(cls, mineral_index, spectra_observed, npv_fraction=None, gv_fraction=None, pnpv=None,
-                               pgv=None, soil_fraction=None, psoil=None, exclude_minerals=True):
+                               pgv=None, soil_fraction=None, psoil=None, exclude_minerals=True, plot=None, output_directory=None, plot_info=None):
 
         # expert system
         decoded_expert = tc.decode_expert_system(os.path.join('utils', 'tetracorder', 'cmd.lib.setup.t5.27c1'),
@@ -679,10 +677,10 @@ class spectra:
 
         if exclude_minerals:
             minerals_to_exclude = [0, 1, 13, 15, 22, 25, 28, 29, 37, 38, 40, 41, 49, 51, 56, 57, 60, 64, 82, 83, 94,
-                                 96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 194, 196, 217, 221, 226, 228, 234,
-                                 238, 270, 271, 292] # this excludes minerals not used for simulation!
+                                    96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 194, 196, 217, 221, 226,
+                                    228, 234, 238, 270, 271, 292] # this excludes minerals not used for simulation!
         else:
-            minerals_to_exclude = [0, 60, 96, 97, 98, 99, 100, 228] # no detection and vegetation
+            minerals_to_exclude = [0, 60, 96, 97, 98, 99, 100] # no detection and vegetation
 
         # mineral matrix
         if mineral_index not in minerals_to_exclude:
@@ -721,7 +719,7 @@ class spectra:
                                                        decoded_expert[normalized_group_name]['features'],
                                                        constraints=constraints, soil_fraction=soil_fraction,
                                                        npv_fraction=npv_fraction, gv_fraction=gv_fraction,
-                                                       pnpv=pnpv, pgv=pgv, psoil=psoil)
+                                                       pnpv=pnpv, pgv=pgv, psoil=psoil, plot=plot, output_directory=output_directory, plot_info=plot_info)
 
             # recalculate tetracorder for new fit
             #psoil_observed = (1/soil_fraction) * (spectra_observed - (npv_fraction*pnpv + gv_fraction*pgv))
@@ -1128,6 +1126,59 @@ class spectra:
             return array
         
         return array / norm
+
+    @classmethod
+    def tetracorder_aggregation(cls, txt_files_tetracorder):
+        reference_ids = []
+
+        for i in sorted(txt_files_tetracorder):
+            emit_group = os.path.basename(i).split('.')[0]
+
+            # skip read me file
+            if emit_group in ['AAA']:
+                continue
+
+            emit_group = emit_group.split('-')[0]
+
+            with open(i) as f:
+                lines = f.readlines()
+
+            # filter lines
+            data_lines = [line for line in lines if line.strip() and not line.strip().startswith("#")]
+
+            if data_lines:
+                for line in data_lines:
+                    no_comment_line = line.split('#')[0].strip().rstrip()
+                    name = no_comment_line.split(" ")[0]
+                    cleaned_line = no_comment_line.rstrip()
+                    mineral_ref = int(cleaned_line[-4:])
+                    library_used = cleaned_line[-17:-10].rstrip()
+                    reference_ids.append([name, mineral_ref, emit_group, library_used, os.path.basename(i)])
+            else:
+                continue
+
+        df_mineral = pd.DataFrame(reference_ids)
+        df_mineral.columns = ['Filename', 'Record', 'emit_group', 'Library', 'Base_group']
+        df_mineral['Group'] = df_mineral['Filename'].str.split('/').str[0].str.split('.').str[1].str.split('um').str[0].astype(int)
+
+        return df_mineral
+
+    @classmethod
+    def get_mineral_reclassification(cls, path_to_tetracorder_minerals):
+        df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
+
+        txt_files_tetracorder_sim = glob(os.path.join(path_to_tetracorder_minerals, '*.txt'))
+        df_minerals_sim = spectra.tetracorder_aggregation(txt_files_tetracorder=txt_files_tetracorder_sim)
+
+        df_minerals_sim = df_minerals_sim.merge(df_mineral_matrix[['Record', 'Index', 'Library']], on=['Record', 'Library'], how='left')
+        df_minerals_sim = df_minerals_sim.dropna()
+        df_minerals_sim['Index'] = df_minerals_sim['Index'].astype(int)
+
+        sim_dictionary = df_minerals_sim.set_index('Index')['emit_group'].to_dict()
+        sim_dictionary.update({0: "No Detection", -9999: "No Data", 96: "Vegetation", 97: "Vegetation", 98: "Vegetation"})
+
+        return sim_dictionary, df_minerals_sim
+
 
 
 
