@@ -125,6 +125,8 @@ class tetracorder:
         spectral_abundance_array = envi_to_array(os.path.join(self.tetra_output_directory, 'spectral_abundance',
                                                               'convex_hull__n_dims_4_simulation_library_min'))[:, 0, :]
 
+        df_minerals_indentified_dict, df_minerals_indentified = spectra.get_mineral_reclassification(os.path.join(self.spectral_abun_dir, 'convex_hull__n_dims_4_simulation_library_minerals'))
+
         # these are the corresponding indices
         valid_rows_g1 = []
         indices_used_g1 = []
@@ -133,15 +135,27 @@ class tetracorder:
 
         df_soil = df_sim.loc[df_sim['level_1'] == 'soil'].copy()
 
+        df_minerals_indentified_g1 = df_minerals_indentified.loc[df_minerals_indentified['Group'] == 1].copy()
+        df_minerals_indentified_g2 = df_minerals_indentified.loc[df_minerals_indentified['Group'] == 2].copy()
+
+        valid_g1_indices = df_minerals_indentified_g1['Index'].values
+        valid_g2_indices = df_minerals_indentified_g2['Index'].values
+        valid_g2_indices = valid_g2_indices[valid_g2_indices != 228] # this removes organic dry grass
+
+        valid_g1_indices = sorted(list(valid_g1_indices))
+        valid_g2_indices = sorted(list(valid_g2_indices))
+
+        valid_g1_indices.append(0)
+        valid_g2_indices.append(0)
+
         for df_index, df_row in df_soil.iterrows():
             g1_index = spectral_abundance_array[df_index, 1]
-            if g1_index not in [1, 13, 15, 20, 21, 22, 25, 36, 37, 38, 40, 41, 49, 56, 57, 60, 66, 80, 82, 83, 84]:
+            if g1_index in valid_g1_indices:
                 valid_rows_g1.append(df_row)
                 indices_used_g1.append(g1_index)
 
             g2_index = spectral_abundance_array[df_index, 3]
-
-            if g2_index not in [96, 97, 98, 99, 100, 105, 106, 128, 136, 144, 148, 152, 182, 194, 196, 214, 221, 228, 234, 238, 256, 257, 270, 271]:
+            if g2_index in valid_g2_indices:
                 valid_rows_g2.append(df_row)
                 indices_used_g2.append(g2_index)
 
@@ -232,22 +246,6 @@ class tetracorder:
             for _row, row in enumerate(results):
                 spectra_grid[_row, :, :] = row
 
-            # for _row, row in enumerate(complete_fractions_array):
-            #     for _col, col in enumerate(row):
-            #
-            #         em_col = np.zeros((unmix_library_array.shape[0], len(self.wvls)))
-            #         frac_weights = np.zeros((unmix_library_array.shape[0]))
-            #
-            #         for _em, em in enumerate(unmix_library_array):
-            #             fraction = complete_fractions_array[_row, _col, _em]
-            #             em_col[_em, :] = unmix_library_array[_em, :]
-            #             frac_weights[_em] = fraction
-            #
-            #         if np.sum(frac_weights) == 0:
-            #             continue
-            #         else:
-            #             spectra_grid[_row, _col, :] = np.average(em_col, weights=frac_weights, axis=0)
-
             meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls, wvls=True)
             output_raster = os.path.join(self.sim_spectra_dir, f"unmixing_{group}_{user_em}_emc2.hdr")
             save_envi(output_raster, meta_spectra, spectra_grid)
@@ -270,7 +268,7 @@ class tetracorder:
             if int(plot_num) > 60:
                 continue
 
-            print(f"{plot}... augmenting")
+            print(f"{plot}... augmenting pixels")
             emit_filetime = row['EMIT DATE']
 
             reflectance_img_emit = glob(os.path.join(self.slpit_gis_directory, 'emit-data-clip', f'*{plot.replace(" ", "")}_RFL_{emit_filetime}'))
@@ -289,7 +287,7 @@ class tetracorder:
 
         for i in sorted(transect_files):
             basename = os.path.basename(i)
-            print(f"{basename}... augmenting")
+            print(f"{basename}... augmenting transects")
             plot_num = int(basename.split('-')[1])
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f"{basename}_transect_augmented.hdr")
             augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True, bad_bands=bad_band_indices)
@@ -308,10 +306,12 @@ class tetracorder:
             if plot_num > 60:
                 continue
 
-            print(f"{basename}... augmenting")
-            soil_index = min(df_em.index[df_em['level_1'] == 'Soil'].tolist())
+            print(f"{basename}... augmenting endmembers")
+            soil_index_min = min(df_em.index[df_em['level_1'] == 'Soil'].tolist())
+            soil_index_max = max(df_em.index[df_em['level_1'] == 'Soil'].tolist())
             output_raster = os.path.join(self.tetra_output_directory, 'augmented', f'{basename}_ems_augmented.hdr')
-            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True, em_index=soil_index, bad_bands=bad_band_indices)
+            augment_envi(file=i, wvls=self.wvls, out_raster=output_raster, vertical_average=True, em_index_min=soil_index_min,
+                         em_index_max=soil_index_max,bad_bands=bad_band_indices)
             self.run_tc(output_raster[:-4])
 
             # run each spectrum file - do not filter for bad bands, these are all endmembers
@@ -334,7 +334,7 @@ class tetracorder:
 
         # simulation spectra
         sim_spectra_files = glob(os.path.join(self.sim_spectra_dir, '*'))
-        exclude = ['.hdr', '.xml', '.aux']
+        exclude = ['.hdr', '.xml', '.aux', '.csv']
 
         files_to_augment = sim_spectra_files
 
@@ -345,7 +345,7 @@ class tetracorder:
             file_type = os.path.basename(i).split('_')[-1]
 
             if os.path.splitext(i)[1] not in exclude:
-                if file_type in ['index', 'fractions']:
+                if file_type in ['index', 'fractions', 'gv', 'npv']:
                     continue
                 else:
                     output_raster = os.path.join(self.tetra_output_directory, 'augmented', f"{basename}_augmented.hdr")
@@ -456,7 +456,7 @@ def run_tetracorder_build(base_directory, sensor, dry_run, new_simulation_bundle
         user_input = input('\nPlease indicate the desired mode: ').upper()
 
         if user_input == 'A':
-            tc.run_tc_on_lib()
+            #tc.run_tc_on_lib()
             tc.generate_tetracorder_reflectance(new_simulation_bundles=new_simulation_bundles, spectral_bundles=spectral_bundles)
             tc.augment_simulation()
         elif user_input == 'B':
