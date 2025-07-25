@@ -364,9 +364,9 @@ class spectra:
             spectra_grid[_row, :, :] = row[0]
             fraction_grid[_row, :, :] = row[1]
             index_grid[_row, :, :] = row[2]
-            soil_grid[_row, :, :] = row[4]
-            gv_grid[_row, :, :] = row[5]
-            npv_grid[_row, :, :] = row[6]
+            soil_grid[_row, :, :] = row[3]
+            gv_grid[_row, :, :] = row[4]
+            npv_grid[_row, :, :] = row[5]
 
         # save the datasets
         refl_meta = get_meta(lines=spectra_grid.shape[0], samples=cols, bands=wvls, wvls=True)

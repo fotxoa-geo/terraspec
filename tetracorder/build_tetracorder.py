@@ -121,13 +121,6 @@ class tetracorder:
 
         df_veg = pd.concat([df_npv, df_pv], axis=0, ignore_index=True)
 
-<<<<<<< HEAD
-        # this includes all values - we need two of these
-        df_sim_array = envi_to_array(os.path.join(self.simulation_output_directory, 'simulation_libraries',
-                                                  'convex_hull__n_dims_4_simulation_library'))
-        
-=======
->>>>>>> 0a95f464f6bad53bcc9b289265639d55e1a0cc3d
         # load spectral abundance of simulation library
         spectral_abundance_array = envi_to_array(os.path.join(self.tetra_output_directory, 'spectral_abundance',
                                                               'convex_hull__n_dims_4_simulation_library_min'))[:, 0, :]
@@ -247,22 +240,6 @@ class tetracorder:
             for _row, row in enumerate(results):
                 spectra_grid[_row, :, :] = row
 
-            # for _row, row in enumerate(complete_fractions_array):
-            #     for _col, col in enumerate(row):
-            #
-            #         em_col = np.zeros((unmix_library_array.shape[0], len(self.wvls)))
-            #         frac_weights = np.zeros((unmix_library_array.shape[0]))
-            #
-            #         for _em, em in enumerate(unmix_library_array):
-            #             fraction = complete_fractions_array[_row, _col, _em]
-            #             em_col[_em, :] = unmix_library_array[_em, :]
-            #             frac_weights[_em] = fraction
-            #
-            #         if np.sum(frac_weights) == 0:
-            #             continue
-            #         else:
-            #             spectra_grid[_row, _col, :] = np.average(em_col, weights=frac_weights, axis=0)
-
             meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls, wvls=True)
             output_raster = os.path.join(self.sim_spectra_dir, f"unmixing_{group}_{user_em}_emc2.hdr")
             save_envi(output_raster, meta_spectra, spectra_grid)
@@ -351,7 +328,7 @@ class tetracorder:
         exclude = ['.hdr', '.xml', '.aux', '.csv']
 
         files_to_augment = sim_spectra_files
-
+        
         output_rasters = []
         output_files = []
         for i in files_to_augment:
@@ -359,7 +336,7 @@ class tetracorder:
             file_type = os.path.basename(i).split('_')[-1]
 
             if os.path.splitext(i)[1] not in exclude:
-                if file_type in ['index', 'fractions']:
+                if file_type in ['index', 'fractions', 'gv', 'npv']:
                     continue
                 else:
                     output_raster = os.path.join(self.tetra_output_directory, 'augmented', f"{basename}_augmented.hdr")
@@ -426,7 +403,7 @@ class tetracorder:
         unmix_lib = os.path.join(self.simulation_output_directory, 'endmember_libraries',
                                  'convex_hull__n_dims_4_unmix_library')
 
-        exclude = ['.hdr', '.xml', '.aux']
+        exclude = ['.hdr', '.xml', '.aux', '.csv']
 
         files_to_augment = [simulation_lib, unmix_lib]
 

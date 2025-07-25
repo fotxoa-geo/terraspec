@@ -23,8 +23,9 @@ export SP_BIN=${SP_LOCAL}/bin
 export TETRA=/store/shared/spectroscopy-tetracorder/tetracorder5.27 # ops_sds_config.json:tetracorder_path
 export TETRA_CMDS=/store/shared/tetracorder5.27c.cmds/ #tetracorder_cmds_path
 export PYTHONPATH=/store/brodrick/repos/emit-utils/
+export /usr/bin/rclone
 
-#export PATH="${PATH}:${SP_LOCAL}/bin:${TETRA}/bin:/usr/bin"
+export PATH="${PATH}:${SP_LOCAL}/bin:${TETRA}/bin:/usr/bin"
 
 cpwd=$PWD
 $TETRA_CMDS/cmd-setup-tetrun $tmp_tetra_path emit_e cube $tmp_rfl_path 1 -T -20 80 C -P .5 1.5 bar
@@ -39,6 +40,14 @@ python /store/brodrick/repos/emit-sds-l2b/group_aggregator.py $out_tetra_path /s
 #python /beegfs/scratch/brodrick/emit/emit-sds-l2b/abundance_from_min.py $out_abun_path $out_min_path --mineral_groupings_matrix /beegfs/scratch/brodrick/emit/emit-sds-l2b/data/mineral_grouping_matrix_20230503.csv
 rm $tmp_rfl_path
 rm ${tmp_rfl_path}.hdr
-rm -rf $tmp_tetra_path
 
-#rm -rf $out_tetra_path
+
+rm -rf $tmp_tetra_path
+cpwd=$PWD
+
+cd $out_tetra_path/cmds.abundances/lists.of.files.by.mineral/
+mkdir ${out_base}${filebase}_minerals/ -p 
+cp . ${out_base}${filebase}_minerals/ -r
+cd $cpwd
+
+rm -rf $out_tetra_path
