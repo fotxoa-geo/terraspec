@@ -245,13 +245,15 @@ class build_libraries:
 
         print("loading... Spectral Transects Endmembers")
 
-
         for i in records:
+
+            print(i['plot_survey_type'])
             if i['site_list'] == 'JORN' or i['site_list'] == 'SRER':
                 pass
 
-            elif i['plot_survey_type'] == 'slpit':
+            elif i['plot_survey_type'] == 'slpit' or i['plot_survey_type'] == 'endmembers':
                 plot_name = f"{i['site_list'].upper() + i['team_name'].upper()}-{i['site_num']:03d}"
+
                 season = i['season'].upper()
                 date = i['date_taken']
                 plot_directory = os.path.join(self.base_directory, 'data', 'SHIFT_' + season, plot_name)
@@ -262,8 +264,9 @@ class build_libraries:
                 # em table
                 df_transect_em = pd.json_normalize(i['em'])
                 df_transect_em = df_transect_em.iloc[:, 14:]
-                df_transect_em = df_transect_em.loc[df_transect_em['em_condition'] != 'bad'].copy()
-                df_transect_em = df_transect_em.loc[df_transect_em['em_classification'] != 'flower'].copy()
+                #df_transect_em = df_transect_em.loc[df_transect_em['em_condition'] != 'bad'].copy()
+                #print(df_transect_em)
+                #df_transect_em = df_transect_em.loc[df_transect_em['em_classification'] != 'flower'].copy()
 
                 # get all endmembers
                 all_asd_files = sorted(glob(os.path.join(plot_directory, '**', '*[!.txt][!.log][!.ini]'), recursive=True))
@@ -281,7 +284,7 @@ class build_libraries:
                     else:
                         # make sure no bad files go into the master list
                         df_transect_em_select = df_transect_em.loc[df_transect_em['line_num'] == line_num.lower()].copy()
-                        df_transect_em_select = df_transect_em_select.loc[df_transect_em_select['em_condition'] != 'bad'].copy()
+                        #df_transect_em_select = df_transect_em_select.loc[df_transect_em_select['em_condition'] != 'bad'].copy()
 
                         try:
                             file_num = int(os.path.basename(asd_file).split(".")[0].split("_")[-1])
@@ -306,6 +309,8 @@ class build_libraries:
                 df_results.insert(0, "date", date)
                 df_results.insert(4, "level_1", '')
                 df_results.insert(5, "species", '')
+                df_results.insert(6, "notes", '')
+                df_results.insert(7, "em_photo", '')
 
                 # filter by line
                 for line_num in sorted(df_results.line_num.unique()):
@@ -314,8 +319,10 @@ class build_libraries:
                     for file_num in df_line.file_num.values:
                         em_clas = df_transect_em.loc[(df_transect_em['asd_file_num'] == file_num) & (df_transect_em['line_num'] == line_num.lower()), 'em_classification'].iloc[0]
                         species = df_transect_em.loc[(df_transect_em['asd_file_num'] == file_num) & (df_transect_em['line_num'] == line_num.lower()), 'species_name'].iloc[0]
+                        notes = df_transect_em.loc[(df_transect_em['asd_file_num'] == file_num) & (df_transect_em['line_num'] == line_num.lower()), 'notes'].iloc[0]
+                        em_photo = df_transect_em.loc[(df_transect_em['asd_file_num'] == file_num) & (df_transect_em['line_num'] == line_num.lower()), 'em_photo'].iloc[0]
 
-                        df_results.loc[(df_results['file_num'] == file_num) & (df_results['line_num'] == line_num.upper()), ['level_1', 'species']] = em_clas, species
+                        df_results.loc[(df_results['file_num'] == file_num) & (df_results['line_num'] == line_num.upper()), ['level_1', 'species', 'notes', 'em_photo']] = em_clas, species, notes, em_photo
 
                 df_results = df_results.sort_values("level_1")
                 df_results.to_csv(os.path.join(self.output_transect_em_directory_raw, f'{plot_name}_{season}_asd.csv'),
@@ -323,12 +330,12 @@ class build_libraries:
 
                 # convolve wavelengths to user specified instrument
                 results_convolve = p_map(partial(spectra.convolve, wvl=self.wvls, fwhm=self.fwhm, asd_wvl=self.asd_wvls,
-                                                 spectra_starting_col=11), df_results.iterrows(),
+                                                 spectra_starting_col=13), df_results.iterrows(),
                                          **{"desc": "\t\t\tconvulsing plot: " + plot_name + " ...", "ncols": 150})
 
                 df_convolve = pd.DataFrame(results_convolve)
                 df_convolve.columns = list(self.wvls)
-                df_convolve = pd.concat([df_results.iloc[:, :10].reset_index(drop=True), df_convolve], axis=1)
+                df_convolve = pd.concat([df_results.iloc[:, :12].reset_index(drop=True), df_convolve], axis=1)
                 df_convolve = df_convolve.reset_index(drop=True)
 
                 # save original csv endmembers
@@ -341,7 +348,7 @@ class build_libraries:
         # merge all endmembers - instrument based wavelengths
         instrument_ems = spectra.get_all_ems(output_directory=self.output_directory, instrument=self.instrument)
         asd_ems = spectra.get_all_ems(output_directory=self.output_directory, instrument='asd')
-        emit_convolved_ems =  glob(os.path.join(self.output_directory, 'spectral_transects', 'emit_convolved_endmembers', "*.csv"))
+        emit_convolved_ems = glob(os.path.join(self.output_directory, 'spectral_transects', 'emit_convolved_endmembers', "*.csv"))
 
         # dataframes of instrument
         df = pd.concat((pd.read_csv(f) for f in instrument_ems), ignore_index=True)
@@ -654,11 +661,11 @@ class build_libraries:
 def run_build_workflow(base_directory, sensor):
 
     lib = build_libraries(base_directory=base_directory, sensor=sensor)
-    lib.build_transects()
+    #lib.build_transects()
     if not os.path.isfile(os.path.join('gis', 'shift_min_dist_to_all_plots.csv')):
         lib.nearest_site()
-    lib.convolve_emit_sites()
-    lib.convolve_global_lib()
+    #lib.convolve_emit_sites()
+    #lib.convolve_global_lib()
     lib.build_endmember_lib()
     lib.build_em_collection()
     lib.build_gis_data()
