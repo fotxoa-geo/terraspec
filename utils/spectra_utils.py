@@ -475,49 +475,76 @@ class spectra:
                 rfls = [reflectance, psoil]
                 rcs = [rc, rc_prime,]
                 labels = ["Bd", "Bd'",]
-                spectrum_labels = ["R", "ρ$_s$"]
-                rc_labels = ["R$_c$", "R$_c'$"]
+                spectrum_labels = ["ρ", "ρ$_s$"]
+                rc_labels = ["ρ$_c$", "ρ$_c'$"]
+                colors = ['red', 'blue']
+                bd_plot = 1 - np.array(reflectance[feature_inds] / rc[feature_inds])
+                bd_prime_plot = 1 - np.array(psoil[feature_inds] / rc_prime[feature_inds])
+                bd_max = np.nanargmax(bd_plot)
+                bd_max_prime = np.nanargmax(bd_prime_plot)
+
+                bd_maxes = [bd_max, bd_max_prime]
+
+
+                plt.plot(wavelengths, reflectance, label="ρ", color='red')
+                #plt.plot(wavelengths, psoil, label="ρ$_{soil}$", color='blue')
+                plt.legend()
+                plt.ylabel('Reflectance')
+                plt.xlabel('Wvls')
+                plt.savefig(os.path.join(output_directory, f'spectra_complete-cont_feat{_cont_feat}.png'))
+                plt.clf()
+                plt.close()
+
+                plt.plot(wavelengths, reflectance, label="ρ", color='red')
+                plt.plot(wavelengths, psoil, label="ρ$_{soil}$", color='blue')
+                plt.legend()
+                plt.ylabel('Reflectance')
+                plt.xlabel('Wvls')
+                plt.axvspan(x1, x2, color='blue', alpha=0.1)
+                plt.savefig(os.path.join(output_directory, f'spectra_complete_shaded-cont_feat{_cont_feat}.png'))
+                plt.clf()
+                plt.close()
 
                 for _i, i in enumerate(slopes):
-                    plt.title(labels[_i])
+                    #plt.title(labels[_i])
                     plt.xlim(wavelengths[feature_inds][0] - 0.05, wavelengths[feature_inds][-1] + 0.05)
-                    plt.plot(wavelengths[feature_inds], rfls[_i][feature_inds], label=spectrum_labels[_i])
-                    plt.plot(wavelengths[feature_inds], rcs[_i][feature_inds], label=f'Continnum: R$_c$ = {slopes[_i]:.2f}λ$_o$ + {intercepts[_i]:.2f}')
-                    bd_plot = 1 - np.array(reflectance[feature_inds]/rc[feature_inds])
-                    bd_max = np.nanargmax(bd_plot)
+                    plt.ylim(0, 0.20)
+                    plt.plot(wavelengths[feature_inds], rfls[_i][feature_inds], label=spectrum_labels[_i], color=colors[_i])
+                    plt.plot(wavelengths[feature_inds], rcs[_i][feature_inds], label=f'Continnum: R$_c$ = {slopes[_i]:.2f}λ$_o$ + {intercepts[_i]:.2f}', color='green')
+
 
                     # plot max depth
-                    plt.vlines(x=wavelengths[feature_inds][bd_max], ymin=rfls[_i][feature_inds][bd_max], ymax=rcs[_i][feature_inds][bd_max],
-                               color='purple', linestyle='--', linewidth=2, label=f"Wvl: {wavelengths[feature_inds][bd_max]:.3f}")
+                    plt.vlines(x=wavelengths[feature_inds][bd_maxes[_i]], ymin=rfls[_i][feature_inds][bd_maxes[_i]], ymax=rcs[_i][feature_inds][bd_maxes[_i]],
+                               color='purple', linestyle='--', linewidth=2, label=f"Wvl: {wavelengths[feature_inds][bd_maxes[_i]]:.3f}")
 
                     # arrows for lambda start and end
                     plt.annotate(f"λ$_i$ = {wavelengths[feature_inds][0]:.2f}",
                                 xy=(x1, rfls[_i][feature_inds][0]),  # Arrow points *to* this location
-                                xytext=(x1, 0.36),  # Text is placed *at* this location
+                                xytext=(x1, 0.12),  # Text is placed *at* this location
                                 arrowprops=dict(arrowstyle="->", color='blue'),
                                 fontsize=12,
                                 color='black')
 
                     plt.annotate(f"λ$_j$ = {wavelengths[feature_inds][-1]:.2f}",
                                  xy=(x2, rfls[_i][feature_inds][-1]),  # Arrow points *to* this location
-                                 xytext=(x2, 0.36),  # Text is placed *at* this location
+                                 xytext=(x2, 0.12),  # Text is placed *at* this location
                                  arrowprops=dict(arrowstyle="->", color='blue'),
                                  fontsize=12,
                                  color='black')
 
                     # arrow for observered spectra
-                    plt.annotate(f"{rc_labels[_i]} = {rcs[_i][feature_inds][bd_max]:.2f}",
-                                 xy=(wavelengths[feature_inds][bd_max], rcs[_i][feature_inds][bd_max]),  # Arrow points *to* this location
-                                 xytext=(wavelengths[feature_inds][bd_max], 0.38),  # Text is placed *at* this location
+                    plt.annotate(f"{rc_labels[_i]} = {rcs[_i][feature_inds][bd_maxes[_i]]:.2f}",
+                                 xy=(wavelengths[feature_inds][bd_maxes[_i]], rcs[_i][feature_inds][bd_maxes[_i]]),  # Arrow points *to* this location
+                                 xytext=(wavelengths[feature_inds][bd_maxes[_i]], 0.14),  # Text is placed *at* this location
                                  arrowprops=dict(arrowstyle="->", color='blue'),
                                  fontsize=12,
                                  color='black')
 
                     # arrow for observered spectra
-                    plt.annotate(f"{spectrum_labels[_i]} = {rfls[_i][feature_inds][bd_max]:.2f}",
-                                 xy=(wavelengths[feature_inds][bd_max], rfls[_i][feature_inds][bd_max]),
+                    plt.annotate(f"{spectrum_labels[_i]} = {rfls[_i][feature_inds][bd_maxes[_i]]:.2f}",
+                                 xy=(wavelengths[feature_inds][bd_maxes[_i]], rfls[_i][feature_inds][bd_maxes[_i]]),
                                  # Arrow points *to* this location
-                                 xytext=(wavelengths[feature_inds][bd_max], 0.34),  # Text is placed *at* this location
+                                 xytext=(wavelengths[feature_inds][bd_maxes[_i]], 0.05),  # Text is placed *at* this location
                                  arrowprops=dict(arrowstyle="->", color='blue'),
                                  fontsize=12,
                                  color='black')
@@ -530,17 +557,32 @@ class spectra:
                     plt.close()
 
                 # plot continuums
-                plt.plot(wavelengths[feature_inds], np.ones(len(wavelengths))[feature_inds], label="Continuum")
-                plt.plot(wavelengths[feature_inds], np.array(psoil[feature_inds]/rc_prime[feature_inds]), label="ρ$_s$")
-                plt.plot(wavelengths[feature_inds], np.array(library_reflectance[feature_inds] / lc[feature_inds]), label="Mineral Ref")
+                plt.figure(figsize=(8, 5))
+                plt.plot(wavelengths[feature_inds], np.ones(len(wavelengths))[feature_inds], label="Continuum", color='blue')
+                plt.plot(wavelengths[feature_inds], np.array(reflectance[feature_inds] / rc[feature_inds]),label="Unknown Compound", color='red')
+                #plt.plot(wavelengths[feature_inds], np.array(psoil[feature_inds]/rc_prime[feature_inds]), label="Unknown Mineral Spectra", color='red')
+                plt.plot(wavelengths[feature_inds], np.array(library_reflectance[feature_inds] / lc[feature_inds]), label="Reference Compound", color='green')
 
-                plt.vlines(x=wavelengths[feature_inds][bd_max], ymin=np.array(psoil[feature_inds]/rc_prime[feature_inds])[bd_max],
+                plt.vlines(x=wavelengths[feature_inds][bd_max], ymin=np.array(reflectance[feature_inds]/rc[feature_inds])[bd_max],
                            ymax=np.ones(len(wavelengths))[feature_inds][bd_max],
-                           color='purple', linestyle='--', linewidth=2,
-                           label=f"Wvl: {wavelengths[feature_inds][bd_max]:.3f}")
-                plt.legend()
+                           color='red', linestyle='--', linewidth=2,
+                           label=f"Band Depth\n(e.g., Absorption Stength)")
+
+                # plt.vlines(x=wavelengths[feature_inds][bd_max_prime],
+                #            ymin=np.array(psoil[feature_inds] / rc_prime[feature_inds])[bd_max_prime],
+                #            ymax=np.ones(len(wavelengths))[feature_inds][bd_max_prime],
+                #            color='blue', linestyle='--', linewidth=2,
+                #            label=f"Band Depth (e.g., Absorption Stength)")
+
+                plt.legend(loc="lower right", fontsize=8)
+
+                ticks_um = plt.xticks()[0]
+
+                # Set labels in nm
+                plt.xticks(ticks=ticks_um, labels=[f"{int(t * 1000)}" for t in ticks_um])
+
                 plt.ylabel('Reflectance')
-                plt.xlabel('Wvls')
+                plt.xlabel('Wavelength (nm)')
                 plt.savefig(os.path.join(output_directory, f'{plot_info}-cont_feat{_cont_feat}-continnum.png'))
                 plt.clf()
                 plt.close()
@@ -1109,7 +1151,7 @@ class spectra:
                 plt.legend()
                 plt.ylabel("Reflectance (%)")
                 plt.xlabel("Wavelenghts (nm)")
-                plt.ylim([0, 1.1])
+                plt.ylim([0, 110])
 
                 plt.savefig(outfname, bbox_inches='tight')
                 plt.clf()
@@ -1175,7 +1217,7 @@ class spectra:
         df_minerals_sim['Index'] = df_minerals_sim['Index'].astype(int)
 
         sim_dictionary = df_minerals_sim.set_index('Index')['emit_group'].to_dict()
-        sim_dictionary.update({0: "No Detection", -9999: "No Data", 96: "Vegetation", 97: "Vegetation", 98: "Vegetation"})
+        sim_dictionary.update({0: "no detection", -9999: "No Data", 96: "vegetation", 97: "vegetation", 98: "vegetation"})
 
         return sim_dictionary, df_minerals_sim
 

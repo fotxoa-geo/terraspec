@@ -24,7 +24,6 @@ import logging
 from utils.spectra_utils import spectra
 from pypdf import PdfMerger
 import matplotlib.image as mpimg
-from sklearn import metrics
 from sklearn.preprocessing import LabelEncoder
 import seaborn as sns
 from mpl_toolkits.basemap import Basemap
@@ -35,6 +34,7 @@ from sklearn.metrics import confusion_matrix
 import matplotlib.patches as patches
 import tetracorder.tetracorder as tcs
 from functools import partial
+from matplotlib.ticker import MaxNLocator
 
 
 mineral_groups = {'Calcite': 'Carbonates',
@@ -703,14 +703,14 @@ class tetracorder_figures:
             truth_array[:, 0] = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, 0, group_dict[group]]
 
             # aggregated confusion matrix
-            mineral_class = spectra.get_mineral_reclassification(path_to_tetracorder_minerals=os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_minerals'))
-            truth_category_array = np.full(truth_array.shape, 'Other', dtype=object)
+            mineral_class, df_minerals_sim = spectra.get_mineral_reclassification(path_to_tetracorder_minerals=os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_minerals'))
+            truth_category_array = np.full(truth_array.shape, 'other', dtype=object)
 
             # this is our aggregated ararys
             for value, category in mineral_class.items():
                 truth_category_array[truth_array == value] = category
 
-            simulated_category_array = np.full(bd_tetra_sim.shape, 'Other', dtype=object)
+            simulated_category_array = np.full(bd_tetra_sim.shape, 'other', dtype=object)
             for value, category in mineral_class.items():
                 simulated_category_array[bd_tetra_sim == value] = category
 
@@ -719,31 +719,70 @@ class tetracorder_figures:
             b_flat = simulated_category_array.flatten()
             fractions_flat = fractions.flatten()
             print(a_flat.shape, b_flat.shape, fractions_flat.shape)
+            from sklearn.metrics import precision_score, recall_score, f1_score
+
+            f1_w = f1_score(a_flat, b_flat, average='weighted')
+            print(f"F1 Score Weighted Global: {f1_w:.4f}, ")
 
             # Generate confusion matrix
-            labels = sorted(set(a_flat) | set(b_flat))  # Ensures all labels appear
+            labels = sorted(set(a_flat) | set(b_flat)) # Ensures all labels appear
 
             # bins
             bins = np.round(np.arange(0.00, 1.1, 0.05),2)
+            f1 = f1_score(a_flat, b_flat, labels=labels, average=None)
+            precision = precision_score(a_flat, b_flat, labels=labels, average=None, zero_division=0)
+            recall = recall_score(a_flat, b_flat, labels=labels, average=None, zero_division=0)
+
+            # Combine and sort by F1 descending
+            results = sorted(zip(labels, precision, recall, f1), key=lambda x: x[3], reverse=True)
+
+            print(f"{'Label':<20}{'F1':>10}{'Precision':>10}{'Recall':>10}")
+            for label, p, r, f in results:
+                print(f"{label:<20}{f:10.2f}{p:10.2f}{r:10.2f}")
+
+            if group == 'g1':
+                truth_label_size = 16
+                fig_size = 14
+                ncols = len(labels)
+                nrows = len(labels)
+                #nrows = len(labels) - 2
+                major_tick_label_size = 14
+                places = 1
+            else:
+                truth_label_size = 35
+                fig_size = 40
+                ncols = len(labels)
+                #nrows = len(labels) - 4
+                nrows = len(labels)
+                major_tick_label_size = 34
+                places = 0
 
             # create figure
-            fig = plt.figure(constrained_layout=True, figsize=(20, 20))
-            ncols = len(labels)
-            nrows = len(labels)
-            gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.20, hspace=0.05, figure=fig)
+            fig = plt.figure(constrained_layout=True, figsize=(fig_size, fig_size))
+            gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.05, hspace=0.05, figure=fig)
 
-            for _row, truth_label in enumerate(labels):
+            _row = 0
+            for truth_label in labels:
+
+                # if group == 'g1':
+                #     if truth_label in ['montmorillonite', 'other']: # this is stuff that was not simulated, therefore removed from the truth rows
+                #         continue
+                #
+                # if group == 'g2':
+                #     if truth_label in ['vermiculite', 'gypsum', 'other', 'vegetation']: # this is stuff that was not simulated, therefore removed from the truth rows
+                #         continue
+
                 for _col, predicted_label in enumerate(labels):
                     ax = fig.add_subplot(gs[_row, _col])
 
                     # Tick formatting
                     if _row == nrows - 1:
-                        ax.set_xlabel(f"X-Axis: Soil Fraction\nPred: {predicted_label}", fontsize=8)
+                        ax.set_xlabel(f"{predicted_label.capitalize()}", fontsize=truth_label_size)
                     else:
-                        ax.set_xticklabels([])
+                            ax.set_xticklabels([])
 
                     if _col == 0:
-                        ax.set_ylabel(f"Truth: {truth_label}", fontsize=8)
+                        ax.set_ylabel(f"{truth_label.capitalize()}", fontsize=truth_label_size)
                     else:
                         pass
 
@@ -766,14 +805,27 @@ class tetracorder_figures:
                             counts.append(len(subset))
                             left_bin.append(left)
 
-                        ax.bar(left_bin, counts, color='skyblue', edgecolor='black', width=0.025,)
-                        ax.text(0.15, 0.95, f'n = {n}', ha='right', transform=ax.transAxes)
+                        ax.bar(left_bin, counts, color='skyblue', edgecolor='black', width=0.025)
 
-            print('done!')
+                    ax.text(0.25, 0.95, f'n = {n/(a_flat.shape[0]):.2f} \n n={n}', ha='right', transform=ax.transAxes)
+                    ax.xaxis.set_minor_locator(MultipleLocator(0.1))
+                    ax.tick_params(axis='x', which='major', labelsize=major_tick_label_size)
+                    ax.tick_params(axis='y', which='major', labelsize=major_tick_label_size)
 
-            plt.savefig(os.path.join(self.fig_directory, f"{group}_confusion_matrix_aggregated_detailed.png"), bbox_inches='tight')
+                    y_max = ax.get_ylim()[1]
+
+                    if y_max >= 1000:
+                        from matplotlib.ticker import EngFormatter
+                        ax.yaxis.set_major_formatter(EngFormatter(places=places))
+                    else:
+                        ax.yaxis.set_major_locator(MaxNLocator(integer=True))  # keep as clean integers
+
+                _row += 1
+
+            plt.savefig(os.path.join(self.fig_directory, f"{group}_confusion_matrix_aggregated_detailed.png"), bbox_inches='tight', dpi=400)
             plt.clf()
             plt.close()
+            print('done!')
 
     def veg_correction_fig(self):
         group_dict = {'g1': 0, 'g2': 2}
@@ -817,13 +869,14 @@ class tetracorder_figures:
             truth_array[:, 0] = 0
 
             # aggregated ids
-            mineral_class = self.get_mineral_reclassification(group=group)
+            mineral_class, df_minerals = spectra.get_mineral_reclassification(path_to_tetracorder_minerals=os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_minerals'))
             truth_category_array = np.full(fractions.shape, 'Other', dtype=object)
 
             for value, category in mineral_class.items():
                 truth_category_array[true_mineral_ids == value] = category
 
             simulated_category_array = np.full(fractions.shape, 'Other', dtype=object)
+
             for value, category in mineral_class.items():
                 simulated_category_array[sim_mineral_detections == value] = category
 
@@ -843,10 +896,10 @@ class tetracorder_figures:
             labels = sorted(set(a_flat) | set(b_flat))  # Ensures all labels appear
 
             # create figure
-            fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(2 * len(labels), 4), constrained_layout=True)
+            fig, axes = plt.subplots(nrows=1, ncols=len(labels), figsize=(2 * len(labels), 4), constrained_layout=True)
 
             for ax, label in zip(axes, labels):
-                if label in ['Other', 'No Detection']:
+                if label in ['Other', 'No Detection', 'Vegetation']:
                     continue
 
                 mask = (a_flat == label) & (b_flat == label)
@@ -939,130 +992,6 @@ class tetracorder_figures:
             plt.clf()
             plt.close()
 
-            # # create lists to store the means
-            # mean_y_tetra = []
-            # mean_y_tetra_sim = []
-            # mean_y_hat = []
-            # mean_y_sma = []
-            #
-            # # create lists to store standard deviations
-            # std_y_tetra = []
-            # std_y_tetra_sim = []
-            # std_y_hat = []
-            # std_y_sma = []
-            #
-            # for _col in range(y.shape[1]):
-            #     mean_y_tetra.append(np.nanmean(bd_tetra[:, _col] - bd_tetra[:, _col]))
-            #     std_y_tetra.append(np.nanstd(bd_tetra[:, _col] - bd_tetra[:, _col]))
-            #
-            #     mean_y_tetra_sim.append(np.nanmean(bd_tetra_sim[:, _col] - bd_tetra[:, _col]))
-            #     std_y_tetra_sim.append(np.nanstd(bd_tetra_sim[:, _col] - bd_tetra[:, _col]))
-            #
-            #     mean_y_hat.append(np.nanmean(bd_tetra[:, _col] - bd_hat[:, _col, 6]))
-            #     std_y_hat.append(np.nanstd(bd_tetra[:, _col] - bd_hat[:, _col, 6]))
-            #
-            #     mean_y_sma.append(np.nanmean(bd_tetra[:, _col] - y_sma[:, _col]))
-            #     std_y_sma.append(np.nanstd(bd_tetra[:, _col] - y_sma[:, _col]))
-            #
-            # #ax.plot(unique_x_val, np.absolute(mean_y_tetra),
-            # #        label='Tetracorder$_{Truth}$', linestyle='solid', color='red')
-            #
-            # ax.errorbar(unique_x_val, np.absolute(mean_y_tetra_sim), yerr=std_y_tetra_sim, fmt='o',
-            #             label='Mixed - No Correction', linestyle='solid', color='purple', capsize=8, ecolor='purple'
-            #             , linewidth=self.linewidth, markersize=20)
-            #
-            # ax.errorbar(unique_x_val, np.absolute(mean_y_hat), yerr=std_y_hat, fmt='o',
-            #             label='Mixed w/ known fraction', linestyle='solid', color='green', capsize=6, ecolor='green'
-            #             , linewidth=self.linewidth, markersize = 20)
-            #
-            # ax.errorbar(unique_x_val, np.absolute(mean_y_sma), yerr=std_y_sma, fmt='o',
-            #             label='Mixed w/ derived fraction', linestyle='solid', color='blue', capsize=4, ecolor='blue',
-            #             linewidth=self.linewidth, markersize = 20)
-            #
-            # ax.set_xlabel('% Soil Cover', fontsize=self.axis_label_fontsize)
-            # if group == 'g1':
-            #     title = 'Iron Oxides'
-            # else:
-            #     title = 'Clays/Carbonates'
-            # ax.set_title(title, fontsize=self.title_fontsize)
-            # ax.set_aspect('auto')
-            # ax.tick_params(axis='both', labelsize=self.legend_text)
-            #
-            # # major ticks every 10 units
-            # major_ticks = range(0, 101, 10)
-            # ax.set_xticks(major_ticks)
-            #
-            # # Minor ticks every 5 units
-            # minor_ticks = range(0, 101, 5)
-            # ax.set_xticks(minor_ticks, minor=True)
-            #
-            # # set tick labels for x-axis
-            # ax.set_xticklabels(major_ticks)
-            #
-            # # major ticks every 10 units - y-axis
-            # major_ticks = np.arange(-0.25, 0.25, 0.05)
-            # ax.set_yticks(major_ticks)
-            #
-            # # Minor ticks every 5 units
-            # minor_ticks = np.arange(-0.25, 0.25, 0.01)
-            # ax.set_yticks(minor_ticks, minor=True)
-            #
-            # ax.set_yticklabels(major_ticks)
-            # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-            #
-            # ax.legend(loc='upper right', fontsize=self.legend_text)
-            # ax.set_ylim(0, .25)
-            #
-            # ax.set_ylabel('Mean Absolute Error', fontsize=self.axis_label_fontsize)
-            #
-            # plt.savefig(os.path.join(self.fig_directory, f'tetracorder_{group}_band-depths.png'), format="png", dpi=300,
-            #                 bbox_inches="tight")
-            #
-            # plt.clf()
-            # plt.close()
-            # col_guide = {0: np.absolute(bd_tetra[:, :] - bd_tetra_sim[:, :]),
-            #              1: np.absolute(bd_tetra[:, :] - bd_hat[:, :, 6]),
-            #              2: np.absolute(bd_tetra[:, :] - y_sma[:, :])}
-            #
-            # col_y_label = {0: 'Tetracorder$_{mixed}$',
-            #                1: 'Tetracorder$_{vegetation corrected}$',
-            #                2: 'Tetracorder$_{sma vegetation corrected}$'}
-            #
-            # fig = plt.figure(figsize=(12,12))
-            # ncols = 3
-            # nrows = 1
-            # gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.05, hspace=0.05, width_ratios=[1] * ncols,
-            #                        height_ratios=[1] * nrows)
-            #
-            # for row in range(nrows):
-            #     for col in range(ncols):
-            #         ax = fig.add_subplot(gs[row, col])
-            #         scatter = ax.scatter(bd_tetra[:, :], col_guide[col], c=fractions[:,:,2], cmap='viridis')
-            #         ax.set_ylim(0, 1)
-            #         ax.set_xlim(0, 1)
-            #
-            #         ax.set_aspect(1. / ax.get_data_ratio())
-            #
-            #         ax.set_title(col_y_label[col])
-            #         if col == 0:
-            #             ax.set_ylabel(f'Absolute Error')
-            #
-            #         if col != 0:
-            #             ax.set_yticklabels([])
-            #
-            #         ax.set_xlabel('Band Depth')
-            #
-            #         # add color bar to 3rd plot
-            #         if col == 2:
-            #             cax = fig.add_subplot(gs[2])  # Independent axis for the color bar
-            #             cbar = fig.colorbar(scatter, cax=cax)
-            #             cbar.set_label('% Soil Cover')  # Optional label for the colorbar
-            #
-            # plt.savefig(os.path.join(self.fig_directory, f'tetracorder_{group}_band-depths_scatterplot.png'), format="png", dpi=300,
-            #             bbox_inches="tight")
-            #
-            # plt.clf()
-            # plt.close()
 
     def mineral_ref_figure(self):
 
@@ -1072,23 +1001,28 @@ class tetracorder_figures:
             spectrum = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_g1_simulation_spectra'))[0, 17, :]
             save_pickle(spectrum, 'soil_test_tc')
 
-        vegetation_spectra = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_g1_simulation_vegetation'))[0, 17, :]
         fractions = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_g1_simulation_fractions'))[0, 17, :]
         gv_spectra = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_g1_simulation_gv'))[0, 17, :]
         npv_spectra = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_g1_simulation_npv'))[0, 17, :]
         psoil = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_g1_simulation_soils'))[0, 20, :]
 
-        data = spectra.mineral_group_retrival(mineral_index=47, spectra_observed=spectrum, npv_fraction=fractions[0], gv_fraction=fractions[1],
-                                              pnpv=npv_spectra, pgv=gv_spectra, soil_fraction=fractions[2], psoil=psoil)
+        print('helloooooo')
+        data = spectra.mineral_group_retrival(mineral_index=47, spectra_observed=spectrum, npv_fraction=fractions[0],
+                                              gv_fraction=fractions[1], pnpv=npv_spectra, pgv=gv_spectra,
+                                              soil_fraction=fractions[2], psoil=psoil, plot=True, output_directory = r'G:\My Drive\terraspec\tetracorder\figures\g1_veg_correction_mineral\\',
+                                              plot_info='test_')
 
         print(data)
     def mineral_sim_library_reference(self):
-        sim_library = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_augmented_min'))[:, 0, :]
         group_dict = {'g1': 1, 'g2': 3}
         df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
+        df_sim = pd.read_csv(os.path.join(self.simulation_output_directory, 'simulation_libraries',
+                                          'convex_hull__n_dims_4_simulation_library.csv'))
+        min_em_index = np.min(df_sim[df_sim['level_1'] == 'soil'].index)
+        max_em_index = np.max(df_sim[df_sim['level_1'] == 'soil'].index)
 
+        sim_library = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_augmented_min'))[min_em_index:max_em_index + 1, 0, :]
         for group in ['g1', 'g2']:
-
             create_directory(os.path.join(self.fig_directory, f'{group}_tetracorder_library'))
             fig_directory_tetracorder = os.path.join(self.fig_directory, f'{group}_tetracorder_library')
 
@@ -1517,12 +1451,6 @@ class tetracorder_figures:
                             ax.set_ylabel(f"{data_type}_Bd'", fontsize=self.axis_label_fontsize)
                             ax.set_xlabel("Contact_Bd", fontsize=self.axis_label_fontsize)
 
-                        # if col != 0:
-                        #     ax.set_yticklabels([])
-                        #
-                        # if row == 0:
-                        #     ax.set_xticklabels([])
-
                         # Create a mask to filter out rows where either x or y is NaN
                         mask = ~np.isnan(x) & ~np.isnan(y)
 
@@ -1546,8 +1474,8 @@ class tetracorder_figures:
                                              vmax=1)
 
                         # Plot the values as text labels
-                        for xi, yi, val, plot in zip(x[mask], y[mask], soil_values, plot_names):
-                            ax.text(xi, yi + 0.01, f'{plot}-{val:.2f}', ha='center', va='center', fontsize=8, color='black')
+                        # for xi, yi, val, plot in zip(x[mask], y[mask], soil_values, plot_names):
+                        #     ax.text(xi, yi + 0.01, f'{plot}-{val:.2f}', ha='center', va='center', fontsize=8, color='black')
 
                         ax.tick_params(axis='both', labelsize=self.legend_text)
 
@@ -1616,10 +1544,10 @@ class tetracorder_figures:
                         ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
 
                         df_select = df_results[(df_results['index_src'] == 'Contact')].copy()
-                        if col == 0:
+                        #if col == 0:
 
-                            if row == 0:
-                                ax.set_title(col_map[col], fontsize=self.title_fontsize)
+                            #if row == 0:
+                            #   ax.set_title(col_map[col], fontsize=self.title_fontsize)
 
                         if col == 1:
                             if row == 0:
@@ -1631,16 +1559,14 @@ class tetracorder_figures:
                         if row == 0:
                             x = df_select_val["Contact_Bd"]
                             y = df_select_val[f"{data_type}_Bd"]
-                            ax.set_ylabel(f"{data_type}_Bd", fontsize=self.axis_label_fontsize)
-                            ax.set_xlabel("Contact_Bd", fontsize=self.axis_label_fontsize)
+                            ax.set_ylabel(f"{data_type} Bd$_w$", fontsize=self.axis_label_fontsize)
+                            #ax.set_xlabel("Contact Probe Bd$_w$", fontsize=self.axis_label_fontsize)
 
                         else:
-                            # if soil fractions are more than 0.9; do not use correction
-
                             x = df_select_val["Contact_Bd"]
                             y = df_select_val[f"{data_type}_Bd'"]
-                            ax.set_ylabel(f"{data_type}_Bd'", fontsize=self.axis_label_fontsize)
-                            ax.set_xlabel("Contact_Bd", fontsize=self.axis_label_fontsize)
+                            ax.set_ylabel(f"{data_type} Bd$_w$'", fontsize=self.axis_label_fontsize)
+                            ax.set_xlabel("Contact Probe Bd$_w$", fontsize=self.axis_label_fontsize)
 
                         # if col != 0:
                         #     ax.set_yticklabels([])
@@ -1666,24 +1592,35 @@ class tetracorder_figures:
                         # Normalize to range [0, 1]
                         soil_norm = (soil_values[mask] - global_min) / (global_max - global_min)
 
-                        scatter = ax.scatter(x[mask], y[mask], marker='^', edgecolor='black', label='SLPIT point', zorder=10, s=150,
+                        groups = df_select_val['group'].values[mask]
+                        g1_mask = groups == 'g1'
+                        g2_mask = groups == 'g2'
+
+                        scatter = ax.scatter(x[mask], y[mask], marker='^', edgecolor='black', zorder=10, s=150,
                                    c=soil_norm, cmap='viridis', vmin=0,
                                              vmax=1)
 
+                        ax.scatter(x[mask][g1_mask], y[mask][g1_mask], marker='^', edgecolor='black', zorder=10,
+                                   s=150, c=soil_norm[g1_mask], cmap='viridis', vmin=0, vmax=1)
+
+                        ax.scatter(x[mask][g2_mask], y[mask][g2_mask], marker='o', edgecolor='black', zorder=10,
+                                   s=150, c=soil_norm[g2_mask], cmap='viridis', vmin=0, vmax=1)
+
+
                         # Plot the values as text labels
-                        for xi, yi, val, plot in zip(x[mask], y[mask], soil_values[mask], plot_names[mask]):
-                            ax.text(xi, yi + 0.01, f'{plot}-{val:.2f}', ha='center', va='center', fontsize=8, color='black')
+                        # for xi, yi, val, plot in zip(x[mask], y[mask], soil_values[mask], plot_names[mask]):
+                        #     ax.text(xi, yi + 0.01, f'{plot}-{val:.2f}', ha='center', va='center', fontsize=8, color='black')
 
                         ax.tick_params(axis='both', labelsize=self.legend_text)
 
                         # Add error metrics
-                        rmse = mean_squared_error(x[mask], y[mask])
+                        rmse = np.sqrt(np.mean((x[mask] - y[mask]) ** 2))
                         mae = mean_absolute_error(x[mask], y[mask])
-
                         r2 = r2_calculations(x[mask], y[mask])
 
+
                         txtstr = '\n'.join((
-                            r'MAE(RMSE): %.2f(%.2f)' % (mae, rmse),
+                            r'MAE(RMSE): %.3f(%.3f)' % (mae, rmse),
                             r'R$^2$: %.2f' % (r2[0],),
                             r'n = ' + str(len(x[mask])),
                         ))
@@ -1694,6 +1631,28 @@ class tetracorder_figures:
                         cbar = fig.colorbar(scatter, ax=ax, orientation='vertical')
                         cbar.set_label('SLPIT Soil Fraction (%)', fontsize=self.axis_label_fontsize)
                         cbar.ax.tick_params(labelsize=self.legend_text)
+
+                        from matplotlib.lines import Line2D
+
+                        legend_element = Line2D(
+                            [0], [0],
+                            marker='o',
+                            color='w',  # no line
+                            label='Group 2 Minerals',
+                            markerfacecolor='black',
+                            markersize=6
+                        )
+
+                        legend_element_1 = Line2D(
+                            [0], [0],
+                            marker='^',
+                            color='w',  # no line
+                            label='Group 1 Minerals',
+                            markerfacecolor='black',
+                            markersize=6
+                        )
+
+                        ax.legend(handles=[legend_element_1,legend_element], loc='lower right')
 
                 plt.savefig(os.path.join(self.fig_directory, f'field_data_regressions_{em_lib}_{data_type}_combined.png'), format="png", dpi=400,
                         bbox_inches="tight")
@@ -1864,6 +1823,219 @@ class tetracorder_figures:
     def mineral_test(self):
         df=self.get_mineral_reclassification(group='g1')
 
+    def bd_prime_map(self):
+        bd_map = {0: 3, 1:4}
+
+        fig = plt.figure(figsize=(self.fig_width, self.fig_height))
+        ncols = 3
+        nrows = 2
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.20, hspace=0.20, width_ratios=[1] * ncols,
+                               height_ratios=[1] * nrows)
+
+        # loop through figure columns
+        for row, i in zip(range(nrows), ['g1', 'g2']):
+            veg_correction = envi_to_array(
+                os.path.join(self.veg_correction_dir, f'EMIT_L2A_RFL_001_20230831T152735_veg_correction_{i}'))
+
+            bd_mask = veg_correction[:, :, 3] != -9999.
+            bd_prime_mask = veg_correction[:, :, 4] != -9999.
+            combined_mask = bd_mask & bd_prime_mask
+            veg_correction[veg_correction == -9999] = np.nan
+
+            global_min = min(np.nanmin(veg_correction[:, :, 3]), np.nanmin(veg_correction[:, :, 4]))
+            global_max = max(np.nanmax(veg_correction[:, :, 3]), np.nanmax(veg_correction[:, :, 4]))
+
+            for col in range(ncols):
+                if col == 2:
+                    import mpl_scatter_density
+                    from matplotlib.colors import LinearSegmentedColormap
+
+                    # "Viridis-like" colormap with white background
+                    white_viridis = LinearSegmentedColormap.from_list('white_viridis', [
+                        (0, '#ffffff'),
+                        (1e-20, '#440053'),
+                        (0.2, '#404388'),
+                        (0.4, '#2a788e'),
+                        (0.6, '#21a784'),
+                        (0.8, '#78d151'),
+                        (1, '#fde624'),
+                    ], N=256)
+
+                    ax = fig.add_subplot(gs[row, col], projection='scatter_density')
+
+                    x = veg_correction[:, :, 3].flatten()
+                    y = veg_correction[:, :, 4].flatten()
+                    flat_mask = combined_mask.flatten()
+
+                    x_valid = x[flat_mask]
+                    y_valid = y[flat_mask]
+                    density = ax.scatter_density(x_valid, y_valid, cmap=white_viridis)
+                    ax.set_ylabel("Bd$_w$'")
+                    ax.set_xlabel("Bd$_w$")
+                    ax.set_ylim(0, 0.4)
+                    ax.set_xlim(0, 0.4)
+                    #fig.colorbar(density, label='Number of points per pixel')
+
+
+                else:
+                    ax = fig.add_subplot(gs[row, col])
+                    array = veg_correction[:, :, bd_map[col]].copy()
+                    array[~combined_mask] = np.nan
+                    array_norm = (array - global_min) / (global_max - global_min)
+                    cmap = plt.get_cmap('viridis', 10)
+                    im = ax.imshow(array_norm, cmap=cmap, vmin=global_min, vmax=global_max)
+
+                    if col == 0:
+                        ax.set_title(f'{i.capitalize()} - Bd: 20230831T152735')
+                    else:
+                        ax.set_title(f"{i.capitalize()} - Bd': 20230831T152735")
+
+                    cbar = fig.colorbar(im, ax=ax, orientation='vertical', extend='both')
+                    cbar.set_label('Band Depth')
+
+                    if col == 0:
+                        ax.set_ylabel("Latitude")
+
+                    if row == 1:
+                        ax.set_xlabel('Longitude')
+
+        plt.savefig(os.path.join(self.fig_directory, f'bd_map.png'), format="png", dpi=400,
+                    bbox_inches="tight")
+        plt.clf()
+        plt.close()
+
+    def f1_score_matrix_detailed(self):
+        from sklearn.metrics import f1_score
+        group_dict = {
+            'g1': 1,
+            'g2': 3}
+        bd_group_dict = {
+            'g1': 0,
+            'g2': 2}
+
+        # create figure
+        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(12, 12), constrained_layout=True)
+        axes_flat = axes.flatten()
+        counter = 0
+
+        for group in ['g1', 'g2']:
+            fractions = envi_to_array(
+                os.path.join(self.sim_spectra_directory, f'tetracorder_{group}_simulation_fractions'))[:, :, 2]
+            fractions = np.round(fractions, 2)
+
+            # this is soil from tetracorder output - this is the absolute truth
+            bd_tetra = envi_to_array(
+                os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, 20,
+                       group_dict[group]].astype(int)
+
+            # this is sim spectra from tetracorder output w/out corrections
+            bd_tetra_sim = envi_to_array(
+                os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, :21,
+                           group_dict[group]].astype(int)
+
+            truth_array = np.zeros((fractions.shape[0], fractions.shape[1])).astype(int)
+            truth_array[:] = bd_tetra[:, np.newaxis]
+            truth_array[:, 0] = envi_to_array(
+                os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, 0,
+                                group_dict[group]]
+
+            # aggregated confusion matrix
+            mineral_class, df_minerals_sim = spectra.get_mineral_reclassification(
+                path_to_tetracorder_minerals=os.path.join(self.sa_outputs,
+                                                          f'tetracorder_{group}_simulation_spectra_augmented_minerals'))
+            truth_category_array = np.full(truth_array.shape, 'other', dtype=object)
+
+            # this is our aggregated ararys
+            for value, category in mineral_class.items():
+                truth_category_array[truth_array == value] = category
+
+            simulated_category_array = np.full(bd_tetra_sim.shape, 'other', dtype=object)
+            for value, category in mineral_class.items():
+                simulated_category_array[bd_tetra_sim == value] = category
+
+            # Flatten arrays to use in confusion_matrix
+            a_flat = truth_category_array.flatten()
+            b_flat = simulated_category_array.flatten()
+            fractions_flat = fractions.flatten()
+
+            # Generate confusion matrix
+            labels = sorted(set(a_flat) | set(b_flat))  # Ensures all labels appear
+            labels_to_remove = ['other', 'no detection', "vegetation", 'gypsum', 'vermiculite']
+            labels = [x for x in labels if x not in labels_to_remove]
+
+            # bins
+            bins = np.round(np.arange(0.00, 1.1, 0.05), 2)
+
+            if group == 'g1':
+                labels.remove('montmorillonite')
+
+            # Loop through each class and create a subplot
+            for idx, class_label in enumerate(labels):
+
+                f1_scores_cumulative = []
+                bin_left = []
+                f1_scores = []
+
+                for left, right in zip(bins[:-1], bins[1:]):
+                    if left == 0:
+                        continue
+
+                    cummulative_in_bin = (fractions_flat >= left) & (fractions_flat <= 1)
+                    y_true_bin = (a_flat[cummulative_in_bin] == class_label).astype(int)
+                    y_pred_bin = (b_flat[cummulative_in_bin] == class_label).astype(int)
+
+                    if len(y_true_bin) > 0 and (np.any(y_true_bin) or np.any(y_pred_bin)):
+                        score = f1_score(y_true_bin, y_pred_bin)
+                    else:
+                        score = np.nan  # or 0
+
+                    f1_scores_cumulative.append(score)
+
+                    in_bin = (fractions_flat >= left) & (fractions_flat < right)
+                    y_true_bin = (a_flat[in_bin] == class_label).astype(int)
+                    y_pred_bin = (b_flat[in_bin] == class_label).astype(int)
+
+                    if len(y_true_bin) > 0 and (np.any(y_true_bin) or np.any(y_pred_bin)):
+                        score = f1_score(y_true_bin, y_pred_bin)
+                    else:
+                        score = np.nan  # or 0
+
+                    f1_scores.append(score)
+                    bin_left.append(left)
+
+                ax = axes_flat[counter]
+                #ax.plot(bin_left, f1_scores, linestyle='-', color='red', label='Binned F1 Score')
+                ax.plot(bin_left, f1_scores_cumulative, linestyle='-', color='blue', label='Cumulative F1 Score')
+                ax.set_ylim(0, 1.05)
+                ax.set_xlim(-0.05, 1.05)
+                ax.set_title(f"{class_label.capitalize()}", fontsize=16)
+                ax.xaxis.set_minor_locator(MultipleLocator(0.1))
+                ax.yaxis.set_minor_locator(MultipleLocator(0.1))
+                ax.axhline(y=0.70, color='green', linestyle='--', linewidth=1)
+                ax.grid(True)
+                ax.tick_params(axis='x', which='major', labelsize=12)
+                ax.tick_params(axis='y', which='major', labelsize=12)
+
+                if counter == 5:
+                    ax.legend(loc='upper left', fontsize=14)
+
+                if counter in [0, 3, 6]:
+                    ax.set_ylabel('F1 score', fontsize=12)
+                else:
+                    ax.set_yticklabels([])
+
+                if counter >= 6:
+                    ax.set_xlabel('Soil Fraction', fontsize=12)
+                else:
+                    ax.set_xticklabels([])
+
+                counter += 1
+
+        plt.savefig(os.path.join(self.fig_directory, f"confusion_matrix_aggregated_f1scores.png"),
+                    bbox_inches='tight', dpi=400)
+        plt.clf()
+        plt.close()
+        print('done!')
 
 def run_figure_workflow(base_directory):
     ems = ['soil']
@@ -1882,13 +2054,15 @@ def run_figure_workflow(base_directory):
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs, legend_text=legend_text)
 
-    #tc.mineral_ref_figure()
+    tc.mineral_ref_figure()
     #tc.fraction_soil_vs_bd()
 
     #tc.mineral_sim_library_reference()
     #tc.mineral_sim_spectra_reference()
     #tc.confusion_matrices()
-    tc.confusion_matrix_detailed()
+    #tc.confusion_matrix_detailed()
+    #tc.f1_score_matrix_detailed()
+
     #tc.veg_correction_fig()
 
     #tc.slpit_bd()
@@ -1903,3 +2077,4 @@ def run_figure_workflow(base_directory):
     #tc.mineral_validation(x_axis='contact')
     #tc.mineral_validation(x_axis='transect')
     #tc.mineral_threshold()
+    #tc.bd_prime_map()

@@ -38,6 +38,7 @@ def parse_metadata(sed_lines):
                 longitude = longitude * -1
 
         latitude_match = re.search(r"Latitude: (\d+° \d+\.\d+)\'([NS])", line_select.rstrip())  # the Â° is a weird read
+
         if latitude_match:
             latitude = latitude_match.group(1)
             latitude = sed_gps(latitude)
@@ -76,7 +77,7 @@ def load_spectral_info(sed_lines):
 class reader:
     def __init__(self, filename):
         # read file to memory
-        with open(filename) as file:
+        with open(filename, "r", encoding="utf-8") as file:
             lines = [line.rstrip() for line in file]
         self.sed = lines
         file.close()
