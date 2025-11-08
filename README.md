@@ -42,6 +42,7 @@ For Windows:
 $env:PYTHONPATH= "$env:PYTHONPATH;$pwd"
 cd ..
 ```
+Note, you might have to add the path to emit-utils to .bashrc or Windows Environment Variables for permanent use.
 
 Note, the pinned version of tensorflow used here may not install on all systems - you can likely either use a more recent version of tensorflow, and/or ignore its installation if you do not intend to run simulations up and down through the atmosphere with isofit.
 
