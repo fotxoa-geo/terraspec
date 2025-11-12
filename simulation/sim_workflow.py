@@ -19,7 +19,7 @@ def display_menu():
     print("G... Exit")
 
 
-def run_sim_workflow(base_directory, dry_run, sensor, level, io_bug):
+def run_sim_workflow(base_directory, dry_run, sensor, level, io_bug, geo_filter):
     msg = f"You have entered simulation mode! " \
           f"\nThere are various options to chose from: "
 
@@ -34,7 +34,7 @@ def run_sim_workflow(base_directory, dry_run, sensor, level, io_bug):
         # run clean libraries workflow
         if choice == 'A':
             run_clean_workflow(base_directory=base_directory, output_directory=output_directory,
-                               geo_filter=True, sensor=sensor)
+                               geo_filter=geo_filter, sensor=sensor)
 
         # build and convolve the libraries
         elif choice == 'B':

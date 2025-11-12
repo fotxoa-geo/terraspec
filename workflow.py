@@ -28,6 +28,8 @@ def main():
     parser.add_argument('-io', '--io_bug', action='store_false', help='IO Bug found in simulation', default=True)
     parser.add_argument('-new_sim_bundles', '--new_simulation_bundles', type=bool, help='Run entire new simulation bundles calculation', default=False)
     parser.add_argument('-num_of_bund', '--number_of_bundles', type=str, help='number of spectal bundles to use', default='100000')
+    parser.add_argument('-geo', '--geo_emit_filter', type=bool, help='set emit mask filter')
+
     args = parser.parse_args()
     
     base_directory = os.path.join(args.base_root_directory, 'terraspec')
@@ -45,7 +47,7 @@ def main():
 
         if choice == "A":
             run_sim_workflow(os.path.join(base_directory, 'simulation'), dry_run=args.dry_run, io_bug=args.io_bug,
-                             sensor=args.sensor, level=args.level)
+                             sensor=args.sensor, level=args.level, geo_filter=args.geo_emit_filter)
 
         elif choice == 'B':
             run_slpit_workflow(os.path.join(base_directory, 'slpit'), dry_run=args.dry_run, sensor=args.sensor)

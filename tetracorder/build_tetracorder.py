@@ -457,6 +457,9 @@ class tetracorder:
 
 
         cursor_print("\t- done")
+    
+    def run_on_scenes(self):
+        self.run_tc('/store/fochoa/terraspec_output/terraspec/slpit/gis/emit-data/envi/EMIT_L2A_RFL_001_20230831T152735_2324310_009_reflectance')
 
 def run_tetracorder_build(base_directory, sensor, dry_run, new_simulation_bundles, spectral_bundles):
     tc = tetracorder(base_directory=base_directory, sensor=sensor)
@@ -467,8 +470,9 @@ def run_tetracorder_build(base_directory, sensor, dry_run, new_simulation_bundle
 
         if user_input == 'A':
             #tc.run_tc_on_lib()
-            tc.generate_tetracorder_reflectance(new_simulation_bundles=new_simulation_bundles, spectral_bundles=spectral_bundles)
-            tc.augment_simulation()
+            #tc.generate_tetracorder_reflectance(new_simulation_bundles=new_simulation_bundles, spectral_bundles=spectral_bundles)
+            #tc.augment_simulation()
+            tc.run_on_scenes()
         elif user_input == 'B':
             tc.hypertrace_tetracorder()
         elif user_input == 'C':
