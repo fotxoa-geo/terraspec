@@ -24,10 +24,11 @@ def main():
     parser.add_argument('-dry', '--dry_run', type=bool, help=' Set the dry run parameter to True to print unmix call', default=False)
     parser.add_argument('-lvl', '--level', type=str, help='level of classification to use', default='level_1')
     parser.add_argument('-sns', '--sensor', type=str, help='specify sensor to use', default='emit',
-                        choices=['emit', 'aviris-ng', 'modis', 'hlss30', 'neon', 'aviris-classic', 'mavic3m'])
+                        choices=['emit', 'aviris_ng', 'modis', 'hlss30', 'neon', 'aviris-classic', 'mavic3m', 'av3'])
     parser.add_argument('-io', '--io_bug', action='store_false', help='IO Bug found in simulation', default=True)
     parser.add_argument('-new_sim_bundles', '--new_simulation_bundles', type=bool, help='Run entire new simulation bundles calculation', default=False)
     parser.add_argument('-num_of_bund', '--number_of_bundles', type=str, help='number of spectal bundles to use', default='100000')
+    parser.add_argument('-dis_geo', '--disable_geo_filter', action='store_false', help='Apply EMIT mask and selection from Ochoa et al 2025', default=True)
     args = parser.parse_args()
     
     base_directory = os.path.join(args.base_root_directory, 'terraspec')
@@ -45,7 +46,7 @@ def main():
 
         if choice == "A":
             run_sim_workflow(os.path.join(base_directory, 'simulation'), dry_run=args.dry_run, io_bug=args.io_bug,
-                             sensor=args.sensor, level=args.level)
+                             sensor=args.sensor, level=args.level, geo_filter=args.disable_geo_filter)
 
         elif choice == 'B':
             run_slpit_workflow(os.path.join(base_directory, 'slpit'), dry_run=args.dry_run, sensor=args.sensor)

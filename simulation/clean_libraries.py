@@ -170,7 +170,7 @@ def download_data(base_directory, output_directory):
     print(f"File downloaded to: {os.path.join(output_directory, 'production', 'ssl-il.csv')}")
 
 
-def standardize_all_data(base_directory, output_directory):
+def standardize_all_data(base_directory, output_directory, geo_filter):
     "This function merges all raw data into one csv file"
     # check if directory for all data exists:
     create_directory(os.path.join(output_directory, "all_data"))
@@ -214,7 +214,9 @@ def standardize_all_data(base_directory, output_directory):
             df_global_p2 = df_global.loc[df_global['dataset'] == 'pilot-2'].copy()
             df_global_p2['level_3'] = df_global_p2['level_3'].astype(str)
             df['level_3'] = df['level_3'].astype(str)
-            df = df[df['level_3'].isin(df_global['level_3'])]
+
+            if geo_filter:
+                df = df[df['level_3'].isin(df_global['level_3'])]
 
         elif ds_name == 'OSSL':
             col_wls = ["scan_visnir." + str(x) + '_pcnt' for x in range(350, 2501, 2)]
@@ -233,7 +235,8 @@ def standardize_all_data(base_directory, output_directory):
             df_global_ossl['level_3'] = df_global_ossl['level_3'].astype(str)
             df['level_3'] = df['level_3'].astype(str)
 
-            df = df[df['level_3'].isin(df_global['level_3'])]
+            if geo_filter:
+                df = df[df['level_3'].isin(df_global['level_3'])]
 
             # convert % to decimal
             for wvl in ossl_wvls:
@@ -265,7 +268,8 @@ def standardize_all_data(base_directory, output_directory):
             df_global_ngsa['level_3'] = df_global_ngsa['level_3'].astype(str)
             df['level_3'] = df['level_3'].astype(str)
 
-            df = df[df['level_3'].isin(df_global_ngsa['level_3'])]
+            if geo_filter:
+                df = df[df['level_3'].isin(df_global_ngsa['level_3'])]
             df = df.drop_duplicates(subset=['fname'], keep='first').sort_values("level_1")
 
         elif ds_name == 'OCHOA':
@@ -296,11 +300,12 @@ def standardize_all_data(base_directory, output_directory):
             df_global_ssl_ir['level_3'] = df_global_ssl_ir['level_3'].astype(str)
             df['level_3'] = df['level_3'].astype(str)
 
-            df = df[df['level_3'].isin(df_global_ssl_ir['level_3'])]
+            if geo_filter:
+                df = df[df['level_3'].isin(df_global_ssl_ir['level_3'])]
 
          # save data
         if ds_name == 'OCHOA':
-            pass
+           pass
         else:
             df.to_csv(os.path.join(output_directory, "all_data", f"all_data_{i}.csv"), index=False)
 
@@ -367,7 +372,7 @@ def geofilter_data(base_directory, output_directory):
     print("done")
 
 
-def convolve_library(base_directory, output_directory, sensor:str,geo_filter: bool):
+def convolve_library(base_directory, output_directory, sensor:str, geo_filter: bool):
     wavelengths_asd = spectra.load_asd_wavelenghts()
 
     emit_wvls, emit_fwhm = spectra.load_wavelengths(sensor=sensor)
@@ -392,17 +397,17 @@ def convolve_library(base_directory, output_directory, sensor:str,geo_filter: bo
     all_results = []
     for i in tables:
         df = pd.read_csv(i, low_memory=False)
-        ds_name = os.path.basename(i).split(".")[0].split("_")[1]
+        ds_name = os.path.basename(i)
 
-        if ds_name == 'OSSL':
+        if ds_name.split('.')[0].split('_')[-1] == 'OSSL':
            ossl_wvls = [x for x in range(350, 2501, 2)]
            results = p_map(partial(spectra.convolve, asd_wvl=ossl_wvls, wvl=emit_wvls, fwhm=emit_fwhm,
                                    spectra_starting_col=7), [row for row in df.iterrows()],
-                           **{"desc": "\t loading convolution... " + ds_name, "ncols": 150})
+                           **{"desc": f"\t {ds_name} loading convolution... ", "ncols": 150})
         else:
             results = p_map(partial(spectra.convolve, asd_wvl=wavelengths_asd, wvl=emit_wvls, fwhm=emit_fwhm,
                                     spectra_starting_col=7), [row for row in df.iterrows()],
-                            **{"desc": "\t loading convolution... " + ds_name, "ncols": 150})
+                            **{"desc": f"\t {ds_name} loading convolution... ", "ncols": 150})
 
         df_data_merge = pd.concat([df.iloc[:, :7], pd.DataFrame(results)], axis=1)
         all_results.append(df_data_merge)
@@ -436,11 +441,13 @@ def convolve_library(base_directory, output_directory, sensor:str,geo_filter: bo
     else:
         df_merge.to_csv(os.path.join(output_directory, "convolved", "all_data_convolved.csv"),
                         index=False)
+        spectra.df_to_envi(df=df_merge, spectral_starting_column=8, wvls=emit_wvls,
+                           output_raster=os.path.join(output_directory, "convolved", "all_data_convolved.hdr"))
     print('done')
 
 
 def run_clean_workflow(base_directory, output_directory, sensor, geo_filter: bool):
     download_data(base_directory=base_directory, output_directory=output_directory)
-    standardize_all_data(base_directory=base_directory, output_directory=output_directory)
+    standardize_all_data(base_directory=base_directory, output_directory=output_directory, geo_filter=geo_filter)
     geofilter_data(base_directory=base_directory, output_directory=output_directory)
     convolve_library(geo_filter=geo_filter, output_directory=output_directory, base_directory=base_directory, sensor=sensor)
