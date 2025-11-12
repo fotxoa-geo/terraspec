@@ -299,10 +299,11 @@ class build_libraries:
         all_ems = ['NPV', 'PV', 'Soil']
 
         for i in records:
+
             plot_name = f"{i['team_names'].capitalize()} - {i['plot_num']:03d}"
             plot_directory = os.path.join(self.spectral_transect_directory, plot_name)
             date = i['sample_date']
-
+            print(plot_name)
             plot_measurements = i['plot_measurements'].split(",")
 
             if 'endmembers' not in plot_measurements:
@@ -324,7 +325,10 @@ class build_libraries:
 
             endmember_spectra = []
             for asd_file in all_asd_files:
-                file_num = int(os.path.basename(asd_file).split(".")[0].split("_")[-1])
+                try:
+                    file_num = int(os.path.basename(asd_file).split(".")[0].split("_")[-1])
+                except:
+                    file_num = int(os.path.basename(asd_file).split(".")[0][-5:])
 
                 # check if file is in white ref or em
                 if file_num in df_transect_em.asd_file_num.values:

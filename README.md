@@ -14,22 +14,35 @@ A Python library for processing and analyzing spectral data, with a focus on min
 
 ## Installation
 
-1. Clone and set up the emit-utils repository:
-```
-git clone git@github.com:emit-sds/emit-utils.git
-pip install --editable .\emit-utils
-cd emit-utils
-export PYTHONPATH=$PYTHONPATH:$(pwd)
-cd ..
-```
-2. Create and activate a conda environment using the provided `terraspec.yml`:
-
+1. Clone repository, and then create and activate a conda environment using the provided `terraspec.yml`:
 ```
 git clone git@github.com:fotxoa-geo/terraspec.git
 cd terraspec
 conda env create -f terraspec.yml
 conda activate terraspec
 ```
+
+2. Clone and set up the emit-utils repository:
+```
+git clone git@github.com:emit-sds/emit-utils.git
+pip install --editable .\emit-utils
+cd emit-utils
+```
+
+3. Add emit-utils to System Environment Variables:
+
+For Linux:
+```
+export PYTHONPATH=$PYTHONPATH:$(pwd)
+cd ..
+```
+
+For Windows:
+```
+$env:PYTHONPATH= "$env:PYTHONPATH;$pwd"
+cd ..
+```
+Note, you might have to add the path to emit-utils to .bashrc or Windows Environment Variables for permanent use.
 
 Note, the pinned version of tensorflow used here may not install on all systems - you can likely either use a more recent version of tensorflow, and/or ignore its installation if you do not intend to run simulations up and down through the atmosphere with isofit.
 

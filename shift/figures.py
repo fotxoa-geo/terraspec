@@ -785,7 +785,6 @@ class figures:
         plt.savefig(os.path.join(self.figure_directory, f'mesma_vs_emc2_{norm_option}.png'), format="png",
                     dpi=400, bbox_inches="tight")  # load all fraction files
 
-
     def  error_vs_time(self, norm_option):
 
         # days table
