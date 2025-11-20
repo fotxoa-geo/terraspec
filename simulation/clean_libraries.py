@@ -11,7 +11,8 @@ import time
 from utils.create_tree import create_directory
 from utils.spectra_utils import spectra
 from utils.text_guide import cursor_print
-
+from utils.envi import augment_envi
+import subprocess
 
 # taken from CSRIO page 
 def encodeIdentifier(identifier, **kwargs):
@@ -443,6 +444,23 @@ def convolve_library(base_directory, output_directory, sensor:str, geo_filter: b
                         index=False)
         spectra.df_to_envi(df=df_merge, spectral_starting_column=8, wvls=emit_wvls,
                            output_raster=os.path.join(output_directory, "convolved", "all_data_convolved.hdr"))
+        
+        # augment file
+        augment_envi(file=os.path.join(output_directory, "convolved", "all_data_convolved"), wvls=emit_wvls, 
+                    out_raster=os.path.join(output_directory, "convolved", "all_data_convolved_augmented.hdr"))
+        
+        # run tetracorder
+        augmented_file = os.path.join(output_directory, "convolved", "all_data_convolved_augmented")
+        spectral_abun_dir = os.path.join(output_directory, "convolved")
+        
+        if os.name in ['posix']:
+            basecall = f'./tetracorder/tetracorder.sh {augmented_file} {spectral_abun_dir + "/"}'
+            sbatch_cmd = f'sbatch -N 1 -c 1 --output {os.path.join(spectral_abun_dir, "all_data_augmented.out")} --mem=40G {basecall}'
+            subprocess.run(sbatch_cmd, shell=True, capture_output=True, text=True)
+        else:
+            print("Tetracorder not installed!")
+
+
     print('done')
 
 

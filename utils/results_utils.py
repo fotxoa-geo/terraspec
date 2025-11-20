@@ -4,7 +4,7 @@ import os
 
 import pandas as pd
 from osgeo import gdal
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import root_mean_squared_error, mean_absolute_error, r2_score
 from scipy.stats import sem
 import numpy as np
 import re
@@ -52,7 +52,7 @@ def error_metrics(truth_array, estimated_array, mc_unc_array, mc_runs):
             mc_unc.append(-9999)
             mc_avg.append(-9999)
 
-        rmse.append(mean_squared_error(x, y, squared=False))
+        rmse.append(root_mean_squared_error(x, y))
         r2.append(r2_calculations(x, y))
         mae.append(mean_absolute_error(x, y))
         std_error.append(sem(a=np.abs(x-y), ddof=1, nan_policy='omit'))

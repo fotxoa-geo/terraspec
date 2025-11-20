@@ -9,6 +9,7 @@ from tetracorder.tetracorder_workflow import run_tetracorder_workflow
 from shift.shift_workflow import run_shift_workflow
 from utils.ecosis_format import run_ecosis
 import time
+
 def display_menu():
     print("Welcome to the Interactive Menu")
     print("A... Simulation")

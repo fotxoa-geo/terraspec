@@ -68,7 +68,7 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
         df_report = df_report.replace('"', '', regex=True)
 
         if scrtch_rfl in df_report['reflectance_file'].values:
-            base_call = f'julia ~/EMIT/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
+            base_call = f'julia ~/store/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
                         f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
                         f'{" ".join(parameters)} '
 
@@ -80,16 +80,16 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
  
     else:
         if scenes:
-            base_call = f'julia ~/EMIT/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
+            base_call = f'julia ~/store/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
                         f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
                         f'{" ".join(parameters)} '
 
         else:
-            base_call = f'julia ~/EMIT/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
+            base_call = f'julia -p 40 ~/store/SpectralUnmixing/unmix.jl {scrtch_rfl} {scrtch_csv} ' \
                         f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
                         f'{" ".join(parameters)} '
 
-        execute_call(['sbatch', '-N', '1', '--tasks-per-node', '1', '--mem', "50G", '--output', outlog_name, '--job-name', 'emit.unmix', '--wrap',
+        execute_call(['sbatch', '-N', '1', '-c', '40', '--mem', "50G", '--output', outlog_name, '--job-name', 'emit.unmix', '--wrap',
                       f'{base_call}'], dry_run)
 
 

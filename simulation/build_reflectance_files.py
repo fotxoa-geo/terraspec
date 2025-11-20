@@ -237,7 +237,7 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int,
     df_unmix = pd.concat([unmix_npv_pv, df_ch], axis=0).sort_values("level_1")
 
     # save the dataframes to a csv - unmixing library
-    df_unmix.to_csv(os.path.join(em_libraries_output, 'convex_hull__n_dims_' + str(dimensions) + '_unmix_library.csv'), index=False)
+    df_unmix.to_csv(os.path.join(em_libraries_output, f'convex_hull__n_dims_{dimensions}_sensor_{sensor}_unmix_library.csv'), index=False)
 
     df_sim = pd.concat([df, df_unmix]).drop_duplicates(keep=False).sort_values("level_1")
 
@@ -246,11 +246,11 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int,
 
     # save unmix library as envi
     spectra.df_to_envi(df=df_unmix, spectral_starting_column=spectra_starting_col, wvls=wvls,
-                       output_raster=os.path.join(em_libraries_output, 'convex_hull__n_dims_' + str(dimensions) + '_unmix_library.hdr'))
+                       output_raster=os.path.join(em_libraries_output, f'convex_hull__n_dims_{dimensions}_sensor_{sensor}_unmix_library.hdr'))
 
     # save simulation library as envi
     spectra.df_to_envi(df=df_sim, spectral_starting_column=spectra_starting_col, wvls=wvls,
-                       output_raster=os.path.join(sim_libraries_output, 'convex_hull__n_dims_' + str(dimensions) + '_simulation_library.hdr'))
+                       output_raster=os.path.join(sim_libraries_output, 'convex_hull__n_dims_{dimensions}_sensor_{sensor}_simulation_library.hdr'))
 
     # # simulate the reflectance
     spectra.simulate_reflectance(df_sim=df_sim, df_unmix=df_unmix, dimensions=dimensions,
