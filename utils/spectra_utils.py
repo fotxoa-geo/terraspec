@@ -74,6 +74,9 @@ mineral_groupings = mineral_groups = {'Calcite': 1,
                   'Montmorillonite': 2,
                   'Vermiculite': 2}
 
+
+
+
 class spectra:
     "spectra class allows for different calls for instrument and asd wavelengths"
     def __init__(self):
@@ -81,7 +84,7 @@ class spectra:
 
     @classmethod
     def load_wavelengths(cls, sensor: str):
-        wavelength_file = os.path.join('utils', 'wavelengths', sensor + '_wavelengths.txt')
+        wavelength_file = os.path.join('utils', 'wavelengths', f'{sensor}_wavelengths.txt')
         wl = np.loadtxt(wavelength_file, usecols=1)
         fwhm = np.loadtxt(wavelength_file, usecols=2)
         if np.all(wl < 100):
@@ -143,8 +146,18 @@ class spectra:
         return wavelengths_asd
 
     @classmethod
-    def load_global_library(cls, output_directory):
-        df = pd.read_csv(os.path.join(output_directory, 'convolved', 'geofilter_convolved.csv'))
+    def load_global_library(cls, output_directory, sensor, spectra_starting_col=None, geo_filter=True):
+
+        if geo_filter:
+            df = pd.read_csv(os.path.join(output_directory, 'convolved', f'geofilter_sensor_{sensor}_convolved.csv'))
+
+        else:
+            df = pd.read_csv(os.path.join(output_directory, 'convolved', f'all_data_sensor_{sensor}_convolved.csv'))
+
+            # drop spectra with nan rows
+            spectra_cols = df.columns[spectra_starting_col:]
+            df = df.dropna(subset=spectra_cols)
+
         return df
 
     @classmethod
@@ -412,6 +425,7 @@ class spectra:
         for _cont_feat, cont_feat in enumerate(expert_file_selection):
 
             feature = cont_feat['continuum']
+            print(feature)
 
             if soil_fraction == 0:
                 continue
@@ -701,6 +715,61 @@ class spectra:
 
         return wvl_nearest_index
 
+    @classmethod
+    def get_mineral_information(cls, mineral_index):
+        # expert system
+        decoded_expert = tc.decode_expert_system(os.path.join('utils', 'tetracorder', 'cmd.lib.setup.t5.27c1'),
+                                                 log_file=None, log_level='INFO')
+
+        # libraries from tetracorder
+        SPECTRAL_REFERENCE_LIBRARY = {'splib06': os.path.join('utils', 'tetracorder', 's06emitd_envi'),
+                                      'sprlb06': os.path.join('utils', 'tetracorder', 'r06emitd_envi')}
+
+        df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
+        df_mineral_matrix = df_mineral_matrix.fillna(-9999)
+        record = df_mineral_matrix.loc[df_mineral_matrix['Index'] == int(mineral_index), 'Record'].iloc[0]
+        filename = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Filename'].iloc[0]
+        group_num = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Group'].iloc[0]
+        group = f'group.{group_num}um'
+        ref_library = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Library'].iloc[0]
+
+        # row index pertains specifically to df; not value from Tetracorder!
+        row_index = df_mineral_matrix[df_mineral_matrix['Record'] == record].index[0]
+        mineral_row = df_mineral_matrix.iloc[row_index, 7:]
+        mineral_row = mineral_row.apply(pd.to_numeric, errors='coerce')
+
+        # load library
+        item = SPECTRAL_REFERENCE_LIBRARY[ref_library]
+        print(item)
+        library = envi.open(envi_header(item), item)
+        print(library)
+        library_reflectance = library.spectra.copy()
+        library_records = [int(q) for q in library.metadata['record']]
+
+        hdr = envi.read_envi_header(envi_header(item))
+        wavelengths = np.array([float(q) for q in hdr['wavelength']])
+        normalized_group_name = os.path.normpath(
+            filename.split('.depth.gz')[0])  # need this to be compatible for windows; not sure if needed for linux.
+
+        # This is the vegetation correction
+        expert_file_selection = decoded_expert[normalized_group_name]['features']
+        print(expert_file_selection)
+        valid_wavelenghts = ~np.isnan(library_reflectance[library_records.index(record), :] )
+
+        for _cont_feat, cont_feat in enumerate(expert_file_selection):
+            feature = cont_feat['continuum']
+            left_inds = np.where(np.logical_and.reduce((wavelengths >= feature[0], wavelengths <= feature[1], valid_wavelenghts)))[0]
+            right_inds = np.where(np.logical_and.reduce((wavelengths >= feature[2], wavelengths <= feature[3], valid_wavelenghts)))[0]
+
+            # calculate features start/stop
+            feature_inds = np.logical_and(wavelengths >= wavelengths[left_inds][0],
+                                          wavelengths <= wavelengths[right_inds][-1])
+
+            # x boundaries - used for all calculations
+            x1, x2 = wavelengths[feature_inds][0], wavelengths[feature_inds][-1]  # λi, λj
+
+
+            print(x1, x2)
 
     @classmethod
     def mineral_group_retrival(cls, mineral_index, spectra_observed, npv_fraction=None, gv_fraction=None, pnpv=None,
@@ -843,6 +912,8 @@ class spectra:
         else:
             index = np.random.choice(len(all_combinations), replace=False, size=spectral_bundles)
 
+        print()
+
         spectra_all = [all_combinations[i] for i in index]
         fraction_grid = np.zeros((len(index), cols, len(class_names)))
         spectra_grid = np.zeros((len(index), cols, len(wvls)))
@@ -858,8 +929,9 @@ class spectra:
 
         # parallel spectra processes ; # we are using +1 since we added an index identifier
         process_spectra = p_map(spectra.synthetic_reflectance,
-                                [(spec_array[_row, :, spectra_starting_col + 1:], seeds_array[_row, :], spec_array[_row, :, :4]) for _row, row
-                                 in enumerate(spectra_grid)], **{"desc": "\t\t generating fractions...", "ncols": 150})
+                                [(spec_array[_row, :, spectra_starting_col + 1:], seeds_array[_row, :],
+                                  spec_array[_row, :, :4]) for _row, row in enumerate(spectra_grid)],
+                                **{"desc": "\t\t generating fractions...", "ncols": 150})
 
         # Populate results row by row
         for _row, row in enumerate(process_spectra):
@@ -874,18 +946,19 @@ class spectra:
         fraction_meta = get_meta(lines=len(index), samples=cols, bands=class_names, wvls=False)
 
         # save index, spectra, fraction grid
-        output_files = [os.path.join(output_directory, name + '_index.hdr'),
-                        os.path.join(output_directory, name + '_spectra.hdr'),
-                        os.path.join(output_directory, name + '_fractions.hdr')]
+        output_files = [os.path.join(output_directory, f'{name}_index.hdr'),
+                        os.path.join(output_directory, f'{name}_spectra.hdr'),
+                        os.path.join(output_directory, f'{name}_fractions.hdr')]
 
         meta_docs = [index_meta, refl_meta, fraction_meta]
         grids = [index_grid, spectra_grid, fraction_grid]
 
         p_map(save_envi, output_files, meta_docs, grids, **{"desc": "\t\t saving envi files...", "ncols": 150})
+
         del index_grid, spectra_grid, fraction_grid
 
     @classmethod
-    def simulate_reflectance(cls, df_sim, df_unmix, dimensions, sim_libraries_output, mode, level, spectral_bundles, cols,
+    def simulate_reflectance(cls, df_sim, df_unmix, dimensions, sim_libraries_output, name, level, spectral_bundles, cols,
                              output_directory, wvls, spectra_starting_col:int):
         """
         @param df_sim: Simulation csv format
@@ -912,15 +985,14 @@ class spectra:
             raise Exception(
                 "The simulation found duplicates in both the simulation and unmixing library at: " + str(dimensions))
 
-        df_sim.to_csv(
-            os.path.join(sim_libraries_output, mode + '__n_dims_' + str(dimensions) + '_simulation_library.csv'),
-            index=False)
+        # is this secondary check needed?
+        df_sim.to_csv(os.path.join(sim_libraries_output, f'{name}_simulation_library.csv'), index=False)
 
-        print('__n_dims_' + str(dimensions))
+        print(name)
         # # create the reflectance file
         spectra.generate_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim, level=level,
                          spectral_bundles=spectral_bundles, cols=cols, output_directory=output_directory,
-                         wvls=wvls, name=mode + '__n_dims_' + str(dimensions), spectra_starting_col=spectra_starting_col)
+                         wvls=wvls, name=name, spectra_starting_col=spectra_starting_col)
 
     @classmethod
     def get_reflectance_endmember(cls, df_row, plot_directory:str, team_name_key:str):
@@ -1174,6 +1246,7 @@ class spectra:
         reference_ids = []
 
         for i in sorted(txt_files_tetracorder):
+
             emit_group = os.path.basename(i).split('.')[0]
 
             # skip read me file

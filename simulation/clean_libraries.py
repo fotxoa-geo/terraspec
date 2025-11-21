@@ -62,18 +62,11 @@ data = json.load(f)
 spectra_files = data['spectra_file']  # spectral files
 datasets = data['datasets_to_standardize']  # spectral datasets
 
-# load asd wavelegnths
-
-
-
-
 def download_data(base_directory, output_directory):
     create_directory(os.path.join(output_directory, "production"))
 
     import requests
     from io import BytesIO
-    import gzip
-    import io
 
    # this is for ossl
     col_wls = ["scan_visnir." + str(x) + '_pcnt' for x in range(350, 2501, 2)]
@@ -171,7 +164,7 @@ def download_data(base_directory, output_directory):
     print(f"File downloaded to: {os.path.join(output_directory, 'production', 'ssl-il.csv')}")
 
 
-def standardize_all_data(base_directory, output_directory, geo_filter):
+def standardize_all_data(base_directory, output_directory, geo_filter, spectral_starting_column):
     "This function merges all raw data into one csv file"
     # check if directory for all data exists:
     create_directory(os.path.join(output_directory, "all_data"))
@@ -304,7 +297,7 @@ def standardize_all_data(base_directory, output_directory, geo_filter):
             if geo_filter:
                 df = df[df['level_3'].isin(df_global_ssl_ir['level_3'])]
 
-         # save data
+         # save data and convole data
         if ds_name == 'OCHOA':
            pass
         else:
@@ -331,30 +324,12 @@ def geofilter_data(base_directory, output_directory):
     create_directory(os.path.join(output_directory, 'geofilter'))
     tables = sorted(glob(os.path.join(output_directory, "all_data", '*.csv')))
     shp = gp.read_file(os.path.join('gis', 'emit_mask.geojson')).to_crs(4326)  # EMIT dust mask
-    #second_check_tables = sorted(glob(os.path.join(base_directory, 'raw_data', 'second_checks', '*.csv')))
 
     for i in tables:
         ds_name = os.path.basename(i).split(".")[0].split("_")[2]
         df = pd.read_csv(i, low_memory=False)
         df = df.drop_duplicates()
         df = df.drop(df[df.latitude == 'unk'].index)
-
-        # implement secondary check
-        #selected_check = [x for x in second_check_tables if ds_name in x]
-        #df_check = pd.read_csv(selected_check[0], usecols=['fname', 'class', 'check(use y or n)'])
-
-        # for NGSA, file names changed
-        # if ds_name == 'NGSA':
-        #     df_check['fname'] = df_check['fname'].str.replace('.', '_')
-        #     df_check['fname'] = df_check['fname'].str.replace(':', '_')
-        #     df_check['fname'] = df_check['fname'].str.split('_').str[1]
-        #     df_check['fname'] = df_check['fname'].str.replace('B', 'S')
-
-        #df_check = df_check.loc[df_check['check(use y or n)'] == 'y'].copy()
-        #df = pd.merge(df, df_check, how='left', indicator='Exist')
-        #df['Exist'] = np.where(df.Exist == 'both', True, False)
-        #df = df[df['Exist'] == True].drop(['Exist'], axis=1)
-        #df.drop(columns=df.columns[-2:], axis=1, inplace=True)
 
         if ds_name == 'SR' or ds_name == 'DP' or ds_name == 'SSL-IR': # these are the SHIFT domain box
             df.to_csv(os.path.join(output_directory, 'geofilter', f'geofilter_{ds_name}.csv'), index=False)
@@ -373,7 +348,7 @@ def geofilter_data(base_directory, output_directory):
     print("done")
 
 
-def convolve_library(base_directory, output_directory, sensor:str, geo_filter: bool):
+def convolve_library(base_directory, output_directory, spectra_starting_column,sensor:str, geo_filter: bool):
     wavelengths_asd = spectra.load_asd_wavelenghts()
 
     emit_wvls, emit_fwhm = spectra.load_wavelengths(sensor=sensor)
@@ -403,14 +378,14 @@ def convolve_library(base_directory, output_directory, sensor:str, geo_filter: b
         if ds_name.split('.')[0].split('_')[-1] == 'OSSL':
            ossl_wvls = [x for x in range(350, 2501, 2)]
            results = p_map(partial(spectra.convolve, asd_wvl=ossl_wvls, wvl=emit_wvls, fwhm=emit_fwhm,
-                                   spectra_starting_col=7), [row for row in df.iterrows()],
+                                   spectra_starting_col=spectra_starting_column), [row for row in df.iterrows()],
                            **{"desc": f"\t {ds_name} loading convolution... ", "ncols": 150})
         else:
             results = p_map(partial(spectra.convolve, asd_wvl=wavelengths_asd, wvl=emit_wvls, fwhm=emit_fwhm,
-                                    spectra_starting_col=7), [row for row in df.iterrows()],
+                                    spectra_starting_col=spectra_starting_column), [row for row in df.iterrows()],
                             **{"desc": f"\t {ds_name} loading convolution... ", "ncols": 150})
 
-        df_data_merge = pd.concat([df.iloc[:, :7], pd.DataFrame(results)], axis=1)
+        df_data_merge = pd.concat([df.iloc[:, :spectra_starting_column], pd.DataFrame(results)], axis=1)
         all_results.append(df_data_merge)
 
     # create dataframe, remove duplicates, no data, and save
@@ -422,6 +397,10 @@ def convolve_library(base_directory, output_directory, sensor:str, geo_filter: b
     df_merge = df_merge.reset_index().sort_values(["level_1"])
     df_merge['fname'] = df_merge['fname'].str.lower()
 
+    # check for duplicates across spectra columns
+    spectra_cols = df_merge.columns[spectra_starting_column:]
+    df_merge = df_merge.drop_duplicates(subset=spectra_cols, keep='first')
+
     if geo_filter:
         df_global = spectra.load_global_library_metadata()
         df_global['fname'] = df_global['fname'].str.lower()
@@ -431,41 +410,44 @@ def convolve_library(base_directory, output_directory, sensor:str, geo_filter: b
         df_merge = df_merge.set_index('fname').reindex(sorting_order).reset_index()
         df_merge = df_merge.drop(columns=['index'])
         df_merge = df_merge[output_cols]
-        df_merge.to_csv(os.path.join(output_directory, "convolved", "geofilter_convolved.csv"), index=False)
+        df_merge.to_csv(os.path.join(output_directory, "convolved", f"geofilter_sensor_{sensor}_convolved.csv"), index=False)
 
-        df_geo_data = df_merge.iloc[:, :7]
-        df_shp = gp.GeoDataFrame(df_geo_data, geometry=gp.points_from_xy(df_geo_data.longitude, df_geo_data.latitude),
-                                 crs="EPSG:4326")
-        df_shp.to_file(os.path.join(base_directory, "gis", "emit_global_spectral_library.shp"),
-                       driver='ESRI Shapefile')
 
     else:
-        df_merge.to_csv(os.path.join(output_directory, "convolved", "all_data_convolved.csv"),
+        df_merge = df_merge.drop('index', axis=1)
+        df_merge.to_csv(os.path.join(output_directory, "convolved", f"all_data_sensor_{sensor}_convolved.csv"),
                         index=False)
-        spectra.df_to_envi(df=df_merge, spectral_starting_column=8, wvls=emit_wvls,
-                           output_raster=os.path.join(output_directory, "convolved", "all_data_convolved.hdr"))
+        spectra.df_to_envi(df=df_merge, spectral_starting_column=spectra_starting_column, wvls=emit_wvls,
+                           output_raster=os.path.join(output_directory, "convolved", f"all_data_sensor_{sensor}_convolved.hdr"))
         
         # augment file
-        augment_envi(file=os.path.join(output_directory, "convolved", "all_data_convolved"), wvls=emit_wvls, 
-                    out_raster=os.path.join(output_directory, "convolved", "all_data_convolved_augmented.hdr"))
-        
-        # run tetracorder
-        augmented_file = os.path.join(output_directory, "convolved", "all_data_convolved_augmented")
-        spectral_abun_dir = os.path.join(output_directory, "convolved")
-        
-        if os.name in ['posix']:
-            basecall = f'./tetracorder/tetracorder.sh {augmented_file} {spectral_abun_dir + "/"}'
-            sbatch_cmd = f'sbatch -N 1 -c 1 --output {os.path.join(spectral_abun_dir, "all_data_augmented.out")} --mem=40G {basecall}'
-            subprocess.run(sbatch_cmd, shell=True, capture_output=True, text=True)
-        else:
-            print("Tetracorder not installed!")
+        augment_envi(file=os.path.join(output_directory, "convolved", f"all_data_sensor_{sensor}_convolved"), wvls=emit_wvls,
+                    out_raster=os.path.join(output_directory, "convolved", f"all_data_sensor_{sensor}_convolved_augmented.hdr"))
+
+    df_geo_data = df_merge.iloc[:, :spectra_starting_column]
+    df_shp = gp.GeoDataFrame(df_geo_data, geometry=gp.points_from_xy(df_geo_data.longitude, df_geo_data.latitude),
+                             crs="EPSG:4326")
+    df_shp.to_file(os.path.join("gis", "emit_global_spectral_library.geojson"), driver='GeoJSON')
+
+    # run tetracorder
+    augmented_file = os.path.join(output_directory, "convolved", f"all_data_sensor_{sensor}_convolved_augmented")
+    spectral_abun_dir = os.path.join(output_directory, "convolved")
+
+    if os.name in ['posix']:
+        basecall = f'./tetracorder/tetracorder.sh {augmented_file} {spectral_abun_dir + "/"}'
+        sbatch_cmd = f'sbatch -N 1 -c 1 --output {os.path.join(spectral_abun_dir, f"all_data_sensor_{sensor}_augmented.out")} --mem=40G {basecall}'
+        subprocess.run(sbatch_cmd, shell=True, capture_output=True, text=True)
+    else:
+        print("Tetracorder not installed!")
 
 
     print('done')
 
 
-def run_clean_workflow(base_directory, output_directory, sensor, geo_filter: bool):
+def run_clean_workflow(base_directory, output_directory, sensor, spectra_starting_column,  geo_filter: bool):
     download_data(base_directory=base_directory, output_directory=output_directory)
-    standardize_all_data(base_directory=base_directory, output_directory=output_directory, geo_filter=geo_filter)
+    standardize_all_data(base_directory=base_directory, output_directory=output_directory, geo_filter=geo_filter,
+                         spectral_starting_column=spectra_starting_column)
     geofilter_data(base_directory=base_directory, output_directory=output_directory)
-    convolve_library(geo_filter=geo_filter, output_directory=output_directory, base_directory=base_directory, sensor=sensor)
+    convolve_library(geo_filter=geo_filter, output_directory=output_directory, base_directory=base_directory, sensor=sensor,
+                     spectra_starting_column=spectra_starting_column)

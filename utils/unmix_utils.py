@@ -4,9 +4,6 @@ from utils.text_guide import execute_call
 from osgeo import gdal
 from utils.envi import get_meta, save_envi
 
-n_cores = '40'
-level_arg = 'level_1'
-
 
 def hypertrace_meta(reflectance_file):
     # get metadata from hypertrace outputs
@@ -47,25 +44,28 @@ def create_uncertainty(uncertainty_file: str, wvls):
 
 
 def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list, output_dest: str,
-               scale: str, spectra_starting_column: str, uncertainty_file=None):
+               scale: str, spectra_starting_column: str, level:str, n_cores:str, uncertainty_file=None):
     
+    create_directory(output_dest)
     create_directory(os.path.join(output_dest, mode))
     create_directory(os.path.join(output_dest, mode, 'outlogs'))
-    outlog_name = os.path.join(output_dest, mode, 'outlogs', os.path.basename(reflectance_file) + '.out')
+    outlog_name = os.path.join(output_dest, mode, 'outlogs', f'{os.path.basename(reflectance_file)}.out')
     output_dest = os.path.join(output_dest, mode, os.path.basename(reflectance_file))
-    
+
+    print(os.path.isfile(os.path.abspath(os.path.join("..", "SpectralUnmixing", "unmix.jl"))))
+
     if uncertainty_file is  None:
-        base_call = f'julia -p {n_cores} ~/store/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
-                    f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
+        base_call = f'julia -p {n_cores} {os.path.abspath(os.path.join("..", "SpectralUnmixing", "unmix.jl"))} {reflectance_file} {em_file} ' \
+                    f'{level} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
                     f'{" ".join(parameters)} '
 
     else:
         # call the unmmix run
-        base_call = f'julia -p {n_cores} ~/store/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
-                    f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} --reflectance_uncertainty_file {uncertainty_file} ' \
+        base_call = f'julia -p {n_cores} {os.path.abspath(os.path.join("..", "SpectralUnmixing", "unmix.jl"))} {reflectance_file} {em_file} ' \
+                    f'{level} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} --reflectance_uncertainty_file {uncertainty_file} ' \
                     f'{" ".join(parameters)} '
 
-    execute_call(['sbatch', '-N', '1', '-c', n_cores, '--mem', "80G", '--output', outlog_name, '--wrap', f'{base_call}'],dry_run)
+    execute_call(['sbatch', '-N', '1', '-c', n_cores, '--mem', "40G", '--output', outlog_name, '--wrap', f'{base_call}'], dry_run)
 
 
 def call_hypertrace_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list, output_dest: str,
@@ -77,7 +77,7 @@ def call_hypertrace_unmix(mode: str, reflectance_file: str, em_file: str, dry_ru
     output_dest = os.path.join(output_dest, mode, os.path.basename(reflectance_file))
 
     base_call = f'julia -p {n_cores} ~/store/SpectralUnmixing/unmix.jl {reflectance_file} {em_file} ' \
-                f'{level_arg} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} --reflectance_uncertainty_file {uncertainty_file} ' \
+                f'{level} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} --reflectance_uncertainty_file {uncertainty_file} ' \
                 f'{" ".join(parameters)}'
 
     execute_call(['sbatch', '-N', "1", '-c', n_cores, '--mem', "180G", '--output', outlog_name,'--wrap', f'{base_call}'], dry_run)

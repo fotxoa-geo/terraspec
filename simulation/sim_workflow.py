@@ -1,4 +1,7 @@
 import os
+
+#from tensorflow.python.layers.normalization import normalization
+
 from utils.text_guide import query_sim_mode, cursor_print
 from simulation.clean_libraries import run_clean_workflow
 from simulation.build_reflectance_files import run_build_reflectance
@@ -19,12 +22,12 @@ def display_menu():
     print("G... Exit")
 
 
-def run_sim_workflow(base_directory, dry_run, sensor, level, io_bug, geo_filter):
+def run_sim_workflow(base_directory, dry_run, sensor, level, geo_filter, new_simulation_bundles, spectral_bundles,
+                     normalization, spectra_starting_column, n_cores):
     msg = f"You have entered simulation mode! " \
           f"\nThere are various options to chose from: "
 
     cursor_print(msg)
-
     output_directory = os.path.join(base_directory, 'output')
 
     while True:
@@ -34,11 +37,14 @@ def run_sim_workflow(base_directory, dry_run, sensor, level, io_bug, geo_filter)
         # run clean libraries workflow
         if choice == 'A':
             run_clean_workflow(base_directory=base_directory, output_directory=output_directory,
-                               geo_filter=geo_filter, sensor=sensor)
+                               geo_filter=geo_filter, sensor=sensor, spectra_starting_column=spectra_starting_column)
 
         # build and convolve the libraries
         elif choice == 'B':
-            run_build_reflectance(output_directory=output_directory, sensor=sensor, level=level)
+            run_build_reflectance(output_directory=output_directory, sensor=sensor, level=level,
+                                  new_simulation_bundles=new_simulation_bundles, spectral_bundles=spectral_bundles,
+                                  normalization=normalization, spectra_starting_column=spectra_starting_column,
+                                  geo_filter=geo_filter)
 
         # run hypertrace
         elif choice == 'C':
@@ -46,7 +52,7 @@ def run_sim_workflow(base_directory, dry_run, sensor, level, io_bug, geo_filter)
 
         # run unmixing code
         elif choice == 'D':
-            run_unmix_workflow(base_directory=base_directory, dry_run=dry_run, io_bug=io_bug)
+            run_unmix_workflow(base_directory=base_directory, dry_run=dry_run, level=level, n_cores=n_cores)
 
         # build csv report tables and latex tables
         elif choice == 'E':
