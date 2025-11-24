@@ -268,9 +268,7 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int,
 
 def run_build_reflectance(output_directory, sensor, level, new_simulation_bundles, spectral_bundles, normalization,
                           spectra_starting_column, geo_filter):
-    #num_dimensions = [2, 3, 4, 5, 6]  # dimensions to use for convex hull and latin hypercubes
-    num_dimensions = [4]  # dimensions to use for convex hull and latin hypercubes
-    max_dimension = max(num_dimensions)
+    num_dimensions = [2, 3, 4, 5, 6]  # dimensions to use for convex hull and latin hypercubes
 
     # build convex hulls and latin hypercubes across different dimensional space
     for i in num_dimensions:
