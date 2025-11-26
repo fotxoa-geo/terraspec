@@ -7,7 +7,7 @@ from p_tqdm import p_umap
 from functools import partial
 from isofit.core.sunposition import sunpos
 from datetime import datetime, timezone, timedelta
-from utils.results_utils import load_fraction_files, error_processing, uncertainty_processing, load_data, performance_log, atmosphere_file
+from utils.results_utils import load_fraction_files, simulation_error_processing, exclude_files, uncertainty_processing, load_data, performance_log, atmosphere_file
 from utils.create_tree import create_directory
 from utils.results_utils import param_search
 from osgeo import gdal
@@ -39,18 +39,31 @@ class tables:
         self.ems = ['non-photosynthetic\nvegetation', 'photosynthetic\nvegetation', 'soil']
         self.ems_short = ['npv', 'pv', 'soil']
 
-    def unmix_error_table(self, mode:str):
-        fraction_files = load_fraction_files(self.base_directory, mode, '*_fractional_cover')
-        fraction_files = [i for i in fraction_files if not ('withold' in i)]
-        results = p_umap(partial(error_processing, output_directory=self.output_directory), fraction_files,
-                         **{"desc": f"\t\t processing {mode} error tables...", "ncols": 150})
+    def unmix_error_table(self):
+        modes = ['mesma', 'sma', 'sma-best', 'mesma-best']
 
-        cols_df = ['scenario', 'normalization', 'num_em', 'cmbs', 'dims', 'mc_runs', 'npv_mae', 'pv_mae', 'soil_mae',
-                   'npv_rmse', 'pv_rmse', 'soil_rmse', 'npv_r2', 'pv_r2', 'soil_r2', 'npv_mc_unc', 'pv_mc_unc', 'soil_mc_unc',
-                   'npv_stde', 'pv_stde', 'soil_stde', 'npv_mean_unc', 'pv_mean_unc', 'soil_mean_unc']
+        all_fraction_files = []
+
+        for i in modes:
+            fraction_files = load_fraction_files(self.base_directory, i, '**_fractional_cover**')
+            fraction_files = [i for i in fraction_files if not ('withold' in i)]
+            fraction_files = [i for i in fraction_files if not ('uncertainty' in i)]
+            all_fraction_files.extend(fraction_files)
+
+        all_fraction_files = exclude_files(all_fraction_files)
+
+        results = p_umap(partial(simulation_error_processing, output_directory=self.output_directory),
+                         all_fraction_files[:2],
+                         **{"desc": f"\t\t processing {len(all_fraction_files)} rows...", "ncols": 150})
+
+        cols_df = ['sensor', 'geofilter', 'em_reduction', 'dimensions', 'mode', 'level', 'optimizer', 'normalization',
+                   'num_endmembers', 'max_combinations', 'n_mc', 'npv_mae', 'pv_mae', 'soil_mae', 'npv_rmse', 'pv_rmse',
+                   'soil_rmse', 'npv_r2', 'pv_r2', 'soil_r2', 'npv_mc_unc', 'pv_mc_unc', 'soil_mc_unc', 'npv_stde',
+                   'pv_stde', 'soil_stde', 'npv_mean_unc', 'pv_mean_unc', 'soil_mean_unc', 'spectra_per_s',
+                   'total_time_s', 'error', 'worker_count', 'node']
 
         df = pd.DataFrame(results, columns=cols_df)
-        df.to_csv(os.path.join(self.fig_directory, f'{mode}_unmix_error_report.csv'), index=False)
+        df.to_csv(os.path.join(self.fig_directory, f'unmix_error_report.csv'), index=False)
 
     def geographic_table(self, mode:str):
 
@@ -101,11 +114,9 @@ def run_build_tables(base_directory):
         if user_input == 'A':
             run_tables.performance_table()
         elif user_input == 'B':
-            modes = ['mesma', 'sma', 'sma-best']
-            for i in modes:
-                run_tables.unmix_error_table(mode=i)
+            run_tables.unmix_error_table()
             
-            run_tables.atmosphere_table()
+            #run_tables.atmosphere_table()
         elif user_input == 'C':
             run_latex_tables(base_directory=base_directory)
         elif user_input == 'D':

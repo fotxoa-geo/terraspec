@@ -16,8 +16,24 @@ from p_tqdm import p_map
 from utils.spectra_utils import spectra
 from functools import partial
 
+
+def exclude_files(input_files):
+    output_files = []
+    exclude = ['.hdr', '.xml', '.aux', '.csv']
+
+    for i in input_files:
+        if os.path.splitext(i)[1] in exclude:
+            pass
+        else:
+            output_files.append(i)
+
+    return output_files
+
+
+
 def load_fraction_files(base_directory: str, mode: str, search_kw: str):
-    files = glob(os.path.join(base_directory, "output", mode, search_kw), recursive=True)
+    print(os.path.join(base_directory, "output", mode, '**',search_kw))
+    files = glob(os.path.join(base_directory, "output", mode, '**', search_kw), recursive=True)
     return files
 
 
@@ -53,7 +69,7 @@ def error_metrics(truth_array, estimated_array, mc_unc_array, mc_runs):
             mc_avg.append(-9999)
 
         rmse.append(root_mean_squared_error(x, y))
-        r2.append(r2_calculations(x, y))
+        r2.append(r2_calculations(x, y)[0])
         mae.append(mean_absolute_error(x, y))
         std_error.append(sem(a=np.abs(x-y), ddof=1, nan_policy='omit'))
 
@@ -83,80 +99,55 @@ def param_search(vars, key):
     return params[start_idx], params[end_idx]
 
 
-def error_processing(file, output_directory):
-    basename = os.path.basename(file)
+def simulation_error_processing(file, output_directory):
+    # look for outlog
+    try:
+        outfile = glob(os.path.join(os.path.dirname(file), 'outlogs', '*.out'))[0]
+        performance_metrics, arguments = performance_log(out_file=outfile)
 
-    if any("geographic" in s for s in basename.split("_")):
-        truth_base = 'geographic'
-    else:
-        truth_base = basename.split("_")[0]
+        mode = arguments['mode']
+        optimizer = arguments['optimizer']
+        normalization = arguments['normalization']
+        level = arguments['endmember_class_header']
+        n_mc = int(arguments['n_mc'])
+        num_endmembers = list(arguments['num_endmembers'])[0]
+        max_combinations = int(arguments['max_combinations'])
 
-    dims = os.path.basename(file).split("_")[4]
+        refl_file = os.path.basename(arguments['reflectance_file'])
 
-    if truth_base == 'convex':
-        truth_file = os.path.join(output_directory, 'convex_hull__n_dims_' + dims + '_fractions')
+        # these use the naming convention of simulation
 
-    elif truth_base == 'latin':
-        truth_file = os.path.join(output_directory, 'latin_hypercube__n_dims_' + dims + '_fractions')
+        sensor = os.path.basename(refl_file).split("_")[7]
+        geofilter = os.path.basename(refl_file).split("_")[9]
+        em_reduction = os.path.basename(refl_file).split("__")[0]
+        dimensions = os.path.basename(refl_file).split("_")[5]
 
-    elif truth_base == 'geographic':
-        file_path = basename.split("_")
-        continent = file_path[3]
-        if continent == 'North':
-            continent = 'North America'
-            dims = file_path[7]
+        truth_file = os.path.join(output_directory, 'synthetic_images',
+                                  f'{em_reduction}__n_dims_{dimensions}_sensor_{sensor}_geofilter_{geofilter}_fractions')
+        truth_array, estimated_array = load_data(truth_file, file)
+
+        # calculate uncertainty
+        if n_mc > 1:
+            unc_file = f"{file}_uncertainty"
+            mc_unc_array = envi_to_array(unc_file)
         else:
-            dims = file_path[6]
+            mc_unc_array = False
 
-        truth_file = os.path.join(output_directory, f'geographic_convex_hull_{continent}__n_dims_{dims}_fractions')
-        combs = dims
-        dims = continent
-        truth_base = file_path[-11]
-    else:
-        raise FileNotFoundError(basename + "not found.")
+        # calculate error
+        error = error_metrics(truth_array, estimated_array, mc_unc_array, n_mc)
 
-    truth_array, estimated_array = load_data(truth_file, file)
-    
-    # get normalization parameters
-    if 'normalization' in basename:
-        norm_opts = param_search(basename, 'normalization')
-        normalization = norm_opts[1]
-    else:
-        normalization = np.nan
+        print([sensor, geofilter, em_reduction, dimensions, mode, level, optimizer, normalization, num_endmembers,
+                max_combinations, n_mc] + error + performance_metrics)
+        return [sensor, geofilter, em_reduction, dimensions, mode, level, optimizer, normalization, num_endmembers,
+                max_combinations, n_mc] + error + performance_metrics
 
-    # endmember parameters
-    if 'num_endmembers' in basename:
-        norm_opts = param_search(basename, 'endmembers')
-        num_em = norm_opts[1]
-    else:
-        num_em = np.nan
+        del truth_array, estimated_array
 
-    # endmember parameters
-    if 'n_mc' in basename:
-        norm_opts = param_search(basename, 'mc')
-        mc_runs = int(norm_opts[1])
-    else:
-        mc_runs = np.nan
+    except:
 
-    # endmember parameters
-    if 'combinations' in basename:
-        norm_opts = param_search(basename, 'combinations')
-        combs = norm_opts[1]
-    else:
-        if truth_base != 'geographic':
-            combs = np.nan
-    
-    if mc_runs > 1:
-        unc_file = f"{file}_uncertainty"
-        mc_unc_array = envi_to_array(unc_file)
-    else:
-        mc_unc_array = False
+        pass
 
-    error = error_metrics(truth_array, estimated_array, mc_unc_array, mc_runs)
-    
-    return [truth_base, normalization, num_em, combs, dims, mc_runs] + error
 
-    del truth_array, estimated_array
 
 
 def uncertainty_processing(file, output_directory):
@@ -202,7 +193,8 @@ def uncertainty_processing(file, output_directory):
 
 
 def performance_log(out_file:str):
-
+    
+    # try:
     with open(out_file) as f:
         lines = f.readlines()
 
@@ -210,48 +202,42 @@ def performance_log(out_file:str):
     error_flag = 0
     worker_counter = 0
     total_lines = 0
-    
-    try:
-        for line in lines:
-            # pattern for time
-            time_match = re.search(r"seconds:\s+([\d.]+)", line.strip())
-            if time_match:
-                pixel_s = float(time_match.group(1))
-                total_seconds.append(pixel_s)
-                worker_counter += 1
 
-            argument_match = re.search(r'Arguments:\s*\(([^)]+)\)', line.strip())
-        
-            if argument_match:
-                argument_string = argument_match.group(1)
-                arguments = dict(re.findall(r'(\w+)\s*=\s*([^,)]+)', argument_string))
-        
-            error_match = re.search(r'GDALError \(CE_Failure, code 10\):', line.strip())
-        
-            if error_match:
-                error_flag = 1
+    for line in lines:
+        # pattern for time
+        time_match = re.search(r"run in (\d+).(\d+) seconds", line.strip())
+        if time_match:
+            pixel_s = float(time_match.group(1))
+            total_seconds.append(pixel_s)
+            worker_counter += 1
 
-            host_name_match = re.search(r'Unmixing was processed on: (.+)' , line.strip())
-            if host_name_match:
-                cpu_host = str(host_name_match.group(1))
+        argument_match = re.search(r'Arguments: Dict{String, Any}\s*\(([^)]+)\)', line.strip())
 
-            total_line_match = re.search(r'Running from lines: (\d+) - (\d+)', line.strip())
-            if total_line_match:
-                total_lines = str(total_line_match.group(2))
-    
-        if worker_counter !=  int(total_lines) - 1:
-            error_flag = 1
-    
-        df = pd.DataFrame([arguments], columns=arguments.keys())
-        df['spectra_per_s'] = worker_counter/(np.sum(total_seconds))
-        df['total_time'] = np.sum(total_seconds)
-        df['error'] = error_flag
-        df['worker_count'] = worker_counter
-        df['node'] = cpu_host
-        
-        return df
-    except:
-        print(out_file, "failed!")
+        if argument_match:
+            argument_string = argument_match.group(1)
+            arguments = dict(re.findall(r'"(\w+)\s*" => \s*([^,)]+)', argument_string))
+
+        host_name_match = re.search(r'Unmixing was processed on: (.+)' , line.strip())
+        if host_name_match:
+            cpu_host = str(host_name_match.group(1))
+
+        total_line_match = re.search(r'Running from lines: (\d+) - (\d+)', line.strip())
+        if total_line_match:
+            total_lines = str(total_line_match.group(2))
+
+
+    if worker_counter !=  int(total_lines) - 1:
+        error_flag = 1
+
+    spectra_per_s = worker_counter/(np.sum(total_seconds))
+    total_time_s = np.sum(total_seconds)
+    error = error_flag
+    worker_count = worker_counter
+    node = cpu_host
+
+    return [spectra_per_s, total_time_s, error, worker_count, node], arguments
+    # except:
+    #     print(out_file, "failed!")
 
 def r2_calculations(x_vals, y_vals):
     X = np.array(x_vals)
