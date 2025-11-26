@@ -53,7 +53,7 @@ class tables:
         all_fraction_files = exclude_files(all_fraction_files)
 
         results = p_umap(partial(simulation_error_processing, output_directory=self.output_directory),
-                         all_fraction_files[:2],
+                         all_fraction_files,
                          **{"desc": f"\t\t processing {len(all_fraction_files)} rows...", "ncols": 150})
 
         cols_df = ['sensor', 'geofilter', 'em_reduction', 'dimensions', 'mode', 'level', 'optimizer', 'normalization',
