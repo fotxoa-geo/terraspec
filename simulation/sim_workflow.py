@@ -22,8 +22,8 @@ def display_menu():
     print("G... Exit")
 
 
-def run_sim_workflow(base_directory, dry_run, sensor, level, geo_filter, new_simulation_bundles, spectral_bundles,
-                     normalization, spectra_starting_column, n_cores):
+def run_sim_workflow(base_directory, dry_run, sensor, level, geo_filter, spectral_bundles, normalization,
+                     spectra_starting_column, n_cores):
     msg = f"You have entered simulation mode! " \
           f"\nThere are various options to chose from: "
 
@@ -42,9 +42,8 @@ def run_sim_workflow(base_directory, dry_run, sensor, level, geo_filter, new_sim
         # build and convolve the libraries
         elif choice == 'B':
             run_build_reflectance(output_directory=output_directory, sensor=sensor, level=level,
-                                  new_simulation_bundles=new_simulation_bundles, spectral_bundles=spectral_bundles,
-                                  normalization=normalization, spectra_starting_column=spectra_starting_column,
-                                  geo_filter=geo_filter)
+                                  spectral_bundles=spectral_bundles, normalization=normalization,
+                                  spectra_starting_column=spectra_starting_column, geo_filter=geo_filter)
 
         # run hypertrace
         elif choice == 'C':
@@ -60,7 +59,8 @@ def run_sim_workflow(base_directory, dry_run, sensor, level, geo_filter, new_sim
 
         # run the figure set
         elif choice == 'F':
-            run_figures(base_directory=base_directory, sensor='emit')
+            run_figures(base_directory=base_directory, sensor=sensor, geo_filter=geo_filter,
+                                          spectra_starting_column=spectra_starting_column)
 
         elif choice == "G":
             print("Returning to main menu.")

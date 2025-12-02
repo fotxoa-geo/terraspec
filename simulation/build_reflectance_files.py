@@ -126,21 +126,38 @@ def get_library_outputs(output_directory):
     return em_lib_output, sim_lib_output, synthetic_output
 
 
-def build_hypercubes(dimensions: int, max_dimension: int, spectra_starting_col:int, output_directory:str,
-                     sensor, level):
-    df = spectra.load_global_library(output_directory=output_directory)
+def build_hypercubes(dimensions: int, output_directory:str,  spectra_starting_col:int, spectral_bundles:int, geo_filter,
+               sensor, level, normalize=False):
+
+    df = spectra.load_global_library(output_directory=output_directory, spectra_starting_col=spectra_starting_col,
+                                     sensor=sensor)
+    df_soil = df.loc[(df[level] == 'soil')].copy().reset_index(drop=True)
+
+    if normalize:
+        df_only = df.iloc[:, spectra_starting_col:]
+        df_array = df_only.to_numpy()
+        norm = p_map(spectra.vector_normalize_spectrum, df_array,
+                                     **{"desc": f"\t\t\tnormalizing spectrum: d = {dimensions}...", "ncols": 150})
+        df_norm = pd.DataFrame(norm)
+        df_norm.columns = df_only.columns
+        df_norm = pd.concat([df.iloc[:, :spectra_starting_col].reset_index(drop=True), df_norm], axis=1)
+    else:
+        pass
+
+    # # pc analysis for em library
+    print()
+    cursor_print(f"loading latin hypercubes... d = {dimensions}")
+    print()
 
     # get output paths
     em_libraries_output, sim_libraries_output, synthetic_output = get_library_outputs(output_directory=output_directory)
 
     # pc analysis for soil library
-    print()
-    cursor_print("loading latin hypercube ... d = " + str(dimensions))
-    samples_from_cube = int((2 ** max_dimension) / (2 ** dimensions))
-    print()
+    samples_from_cube = int((2 ** dimensions) / (2 ** dimensions))
+
 
     # use test train split on pv and npv for unmmix library
-    unmix_npv_pv = test_train_split(df)
+    unmix_npv_pv, sim_npv_gv  = test_train_split(df)
 
     # run soil PCA and get hypercubes/quadrants
     pc_components = spectra.pca_analysis(df, spectra_starting_col=spectra_starting_col)
@@ -166,35 +183,37 @@ def build_hypercubes(dimensions: int, max_dimension: int, spectra_starting_col:i
         soil_dfs.append(soil_df)
 
     # merge the em dataframes
-    df_unmix = pd.concat([unmix_npv_pv, pd.concat(soil_dfs, axis=0)], axis=0).sort_values("level_1")
+    df_unmix = pd.concat([unmix_npv_pv, pd.concat(soil_dfs, axis=0)], axis=0).sort_values(level)
 
     # save the dataframes to a csv - unmixing library
-    df_unmix.to_csv(
-        os.path.join(em_libraries_output, 'latin_hypercube__n_dims_' + str(dimensions) + '_unmix_library.csv'),
-        index=False)
+    df_unmix.to_csv(os.path.join(em_libraries_output, f'latin_hypercube__n_dims_{dimensions}_sensor_{sensor}_geofilter_{str(geo_filter)}_unmix_library.csv'), index=False)
 
-    df_sim = pd.concat([df, df_unmix]).drop_duplicates(keep=False).sort_values("level_1")
+    df_sim = pd.concat([df, df_unmix]).drop_duplicates(keep=False).sort_values(level)
 
-    spectral_bundles, cols, level, wvls = get_sim_parameters(sensor, level=level)
+    wvls, fwhm = spectra.load_wavelengths(sensor=sensor)
+    cols = 1
 
     # save unmix library as envi
     spectra.df_to_envi(df=df_unmix, spectral_starting_column=spectra_starting_col, wvls=wvls,
                        output_raster=os.path.join(em_libraries_output,
-                                                  'latin_hypercube__n_dims_' + str(dimensions) + '_unmix_library.hdr'))
+                                                  f'latin_hypercube__n_dims_{dimensions}_sensor_{sensor}_geofilter_{str(geo_filter)}_unmix_library.hdr'))
 
     # save simulation library as envi
     spectra.df_to_envi(df=df_sim, spectral_starting_column=spectra_starting_col, wvls=wvls,
-                       output_raster=os.path.join(sim_libraries_output, 'latin_hypercube__n_dims_' + str(dimensions) + '_simulation_library.hdr'))
+                       output_raster=os.path.join(sim_libraries_output,
+                                                  f'latin_hypercube__n_dims_{dimensions}_sensor_{sensor}_geofilter_{str(geo_filter)}_simulation_library.hdr'))
 
     # simulate the reflectance
     spectra.simulate_reflectance(df_sim=df_sim, df_unmix=df_unmix, dimensions=dimensions,
-                                 sim_libraries_output=sim_libraries_output, mode='latin_hypercube', level=level,
-                                 spectral_bundles=spectral_bundles, cols=cols, output_directory=output_directory,
-                                 wvls=wvls, spectra_starting_col=spectra_starting_col)
+                                 sim_libraries_output=sim_libraries_output,
+                                 name=f'latin_hypercube__n_dims_{dimensions}_sensor_{sensor}_geofilter_{str(geo_filter)}',
+                                 level=level, spectral_bundles=spectral_bundles, cols=cols,
+                                 output_directory=synthetic_output, wvls=wvls,
+                                 spectra_starting_col=spectra_starting_col)
 
 
-def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int, new_simulation_bundles:bool,
-               spectral_bundles:int, geo_filter, sensor, level, normalize=False):
+def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int, spectral_bundles:int, geo_filter,
+               sensor, level, normalize=False):
 
     df = spectra.load_global_library(output_directory=output_directory, spectra_starting_col=spectra_starting_col,
                                      sensor=sensor)
@@ -204,7 +223,7 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int,
         df_only = df.iloc[:, spectra_starting_col:]
         df_array = df_only.to_numpy()
         norm = p_map(spectra.vector_normalize_spectrum, df_array,
-                                     **{"desc": f"\t\t\tnormalizing spectrum: CH d = {dimensions}...", "ncols": 150})
+                                     **{"desc": f"\t\t\tnormalizing spectrum: d = {dimensions}...", "ncols": 150})
         df_norm = pd.DataFrame(norm)
         df_norm.columns = df_only.columns
         df_norm = pd.concat([df.iloc[:, :spectra_starting_col].reset_index(drop=True), df_norm], axis=1)
@@ -266,15 +285,17 @@ def build_hull(dimensions: int, output_directory:str,  spectra_starting_col:int,
                                  spectra_starting_col=spectra_starting_col)
 
 
-def run_build_reflectance(output_directory, sensor, level, new_simulation_bundles, spectral_bundles, normalization,
-                          spectra_starting_column, geo_filter):
+def run_build_reflectance(output_directory, sensor, level, spectral_bundles, normalization, spectra_starting_column,
+                          geo_filter):
     num_dimensions = [2, 3, 4, 5, 6]  # dimensions to use for convex hull and latin hypercubes
 
     # build convex hulls and latin hypercubes across different dimensional space
     for i in num_dimensions:
-        #build_hypercubes(dimensions=i, max_dimension=max_dimension, spectra_starting_col=spectral_starting_col, output_directory=output_directory)
+        build_hypercubes(dimensions=i, spectra_starting_col=spectra_starting_column, output_directory=output_directory,
+                   normalize=normalization, sensor=sensor, level=level,spectral_bundles=spectral_bundles,
+                   geo_filter=geo_filter)
         build_hull(dimensions=i, spectra_starting_col=spectra_starting_column, output_directory=output_directory,
-                   normalize=normalization, sensor=sensor, level=level, new_simulation_bundles=new_simulation_bundles,
-                   spectral_bundles=spectral_bundles, geo_filter=geo_filter)
+                   normalize=normalization, sensor=sensor, level=level,spectral_bundles=spectral_bundles,
+                   geo_filter=geo_filter)
 
     #build_geographic(dimensions=4, output_directory=output_directory, spectra_starting_col=spectral_starting_col+1, normalize=True)

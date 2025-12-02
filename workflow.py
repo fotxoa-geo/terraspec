@@ -26,9 +26,7 @@ def main():
     parser.add_argument('-lvl', '--level', type=str, help='level of classification to use', default='level_1')
     parser.add_argument('-sns', '--sensor', type=str, help='specify sensor to use', default='emit',
                         choices=['emit', 'aviris_ng', 'modis', 'hlss30', 'neon', 'aviris-classic', 'mavic3m', 'av3'])
-    #parser.add_argument('-io', '--io_bug', action='store_false', help='IO Bug found in simulation', default=True)
-    parser.add_argument('-new_sim_bundles', '--new_simulation_bundles', type=bool, help='Run entire new simulation bundles calculation', default=False)
-    parser.add_argument('-num_of_bund', '--number_of_bundles', type=str, help='number of spectral bundles to use', default='100000')
+    parser.add_argument('-bundles', '--number_of_bundles', type=str, help='number of spectral bundles to use', default='100000')
     parser.add_argument('-dis_geo', '--disable_geo_filter', action='store_false', help='Apply EMIT mask and selection from Ochoa et al 2025', default=True)
     parser.add_argument('-norm', '--normalization', type=bool, help='Brightness normalization enabled for PC!', default=True)
     parser.add_argument('-spec_start_col', '--spectra_start_col', type=str, help='Spectra starting column', default='7')
@@ -50,11 +48,10 @@ def main():
         choice = input("Enter desired mode: ").upper()
 
         if choice == "A":
-            run_sim_workflow(os.path.join(base_directory, 'simulation'), dry_run=args.dry_run,
-                             sensor=args.sensor, level=args.level, geo_filter=args.disable_geo_filter,
-                             new_simulation_bundles=args.new_simulation_bundles, spectral_bundles=int(args.number_of_bundles),
-                             normalization=args.normalization, spectra_starting_column=int(args.spectra_start_col),
-                             n_cores=args.number_of_cores)
+            run_sim_workflow(os.path.join(base_directory, 'simulation'), dry_run=args.dry_run, sensor=args.sensor,
+                             level=args.level, geo_filter=args.disable_geo_filter,
+                             spectral_bundles=int(args.number_of_bundles), normalization=args.normalization,
+                             spectra_starting_column=int(args.spectra_start_col), n_cores=args.number_of_cores)
 
         elif choice == 'B':
             run_slpit_workflow(os.path.join(base_directory, 'slpit'), dry_run=args.dry_run, sensor=args.sensor)

@@ -13,6 +13,7 @@ from utils.create_tree import create_directory
 from utils.spectra_utils import spectra
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import ast
 
 if not "win32" in platform:
     plt.switch_backend('Agg')
@@ -46,20 +47,21 @@ class figures:
         self.sig_figs = sig_figs
         self.cmap_kw = 'copper'
         self.axes_limits = {'ymin': 0.0,
-                            'ymax': 0.20,
+                            'ymax': 0.2,
                             'xmin':1.8,
                             'xmax': 6.2}
 
 
-    def merge_sma_mesma(self):
-        df_sma_error = pd.read_csv(os.path.join(self.fig_directory, 'sma_unmix_error_report.csv'))
-        df_sma_error['mode'] = 'sma'
-        df_mesma_error = pd.read_csv(os.path.join(self.fig_directory, 'mesma_unmix_error_report.csv'))
-        df_mesma_error['mode'] = 'mesma'
-        df_error = pd.concat([df_sma_error, df_mesma_error], ignore_index=True)
+    def load_error_table(self):
+        df_error = pd.read_csv(os.path.join(self.fig_directory, 'unmix_error_report.csv'))
         df_error = df_error.replace('brightness', "Brightness")
         df_error = df_error.replace('1500', "1500 nm")
         df_error = df_error.replace('none', 'No Normalization')
+        df_error['mode'] = df_error['mode'].str.replace('"', '', regex=False)
+        df_error['level'] = df_error['level'].str.replace('"', '', regex=False)
+        df_error['normalization'] = df_error['normalization'].str.replace('"', '', regex=False)
+        df_error['num_endmembers'] = df_error['num_endmembers'].apply(ast.literal_eval)
+        df_error['num_endmembers'] = df_error['num_endmembers'].str.get(0).astype(int)
 
         return df_error
 
@@ -537,14 +539,16 @@ class figures:
         plt.clf()
         plt.close()
 
-    def normalization_figure(self, cmap_kw):
-        df_error = figures.merge_sma_mesma(self)
+    def normalization_figure(self, cmap_kw, sensor, geo_filter):
+        df_error = figures.load_error_table(self)
+        df_error = df_error.loc[(df_error['sensor'] == sensor)].copy()
 
         # create 3x2 figure
         fig = plt.figure(figsize=(self.fig_width, self.fig_height))
         ncols = 3
         nrows = 2
-        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows,  wspace=0.05, hspace=0.05, width_ratios=[1] * ncols, height_ratios=[1] * nrows)
+        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows,  wspace=0.05, hspace=0.05,
+                               width_ratios=[1] * ncols, height_ratios=[1] * nrows)
 
         for row in range(nrows):
             for col in range(ncols):
@@ -582,19 +586,26 @@ class figures:
         for _norm_option, norm_option in enumerate(sorted(list(df_error.normalization.unique()))):
 
             for mode in df_error['mode'].unique():
+                print(mode)
                 if mode == 'sma':
-                    df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['num_em'] == 30) & (df_error['mc_runs'] == 25)].copy()
+                    df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['num_endmembers'] == 30) & (df_error['n_mc'] == 25) & (df_error['mode'] == mode)].copy()
                     label = 'E(MC)$^2$'
                     linestyle = 'solid'
+                    print(df_select)
+                if mode == 'sma-best':
+                    df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['num_endmembers'] == 30) & (df_error['n_mc'] == 25) & (df_error['mode'] == mode)].copy()
+                    label = 'E(MC)$^2$ (Best)'
+                    linestyle = 'dashed'
+                    print(df_select)
                 if mode == 'mesma':
-                    df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['cmbs'] == 100) & (df_error['mc_runs'] == 25)].copy()
+                    df_select = df_error.loc[(df_error['normalization'] == norm_option) & (df_error['max_combinations'] == 100) & (df_error['n_mc'] == 25) & (df_error['mode'] == mode)].copy()
                     label = "MESMA"
                     linestyle = 'dotted'
 
                 # filter by scenario
-                for scenario in df_select.scenario.unique():
-                    df_select1 = df_select.loc[(df_select['scenario'] == scenario)].copy()
-                    df_select1 = df_select1.sort_values('dims') # sort by dimensions, lower to greater
+                for scenario in df_select.em_reduction.unique():
+                    df_select1 = df_select.loc[(df_select['em_reduction'] == scenario)].copy()
+                    df_select1 = df_select1.sort_values('dimensions') # sort by dimensions, lower to greater
 
                     error_options = ['npv_stde', 'pv_stde', 'soil_stde']
                     error_mae = ['npv_mae', 'pv_mae', 'soil_mae']
@@ -610,32 +621,42 @@ class figures:
                                 norm_label = norm_option
 
                             if scenario == 'latin' and row == 0:
-                                ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select1[error_options[col]],
+                                ax.errorbar(df_select1.dimensions, df_select1[error_mae[col]], yerr=df_select1[error_options[col]],
                                             label=f"{norm_label} ({label})", solid_capstyle='projecting', capsize=capsize[col], linestyle=linestyle, color=cmap(_norm_option))
 
                                 if col == 0:
                                     ax.set_ylabel('Latin Hypercube\n\nMAE', fontsize=self.axis_label_fontsize)
 
-                            if scenario == 'convex' and row == 1:
-                                ax.errorbar(df_select1.dims, df_select1[error_mae[col]], yerr=df_select1[error_options[col]],
+                            if scenario == 'convex_hull' and row == 1:
+                                ax.errorbar(df_select1.dimensions, df_select1[error_mae[col]], yerr=df_select1[error_options[col]],
                                             label=f"{norm_label} ({label})", solid_capstyle='projecting', capsize=capsize[col], linestyle=linestyle,  color=cmap(_norm_option))
                                 if col == 0:
                                     ax.set_ylabel('Convex Hull\n\nMAE', fontsize=self.axis_label_fontsize)
-                            if row == 0 and col == 2:
+                            if row == 1 and col == 2:
                                 ax.legend(loc="upper left", bbox_to_anchor=(1.05, 1), borderaxespad=0)
 
-        plt.savefig(os.path.join(self.fig_directory, 'normalization_figure.png'), bbox_inches="tight", dpi=400)
+        plt.savefig(os.path.join(self.fig_directory,
+                                 f'geofilter_{str(geo_filter)}_sensor_{sensor}_normalization_figure.png'),
+                    bbox_inches="tight", dpi=400)
         plt.clf()
         plt.close()
 
-    def em_reduction_visulatization(self):
+    def em_reduction_visulatization(self, sensor, geo_filter, spectra_starting_column):
         # load global library
-        df = pd.read_csv(os.path.join(self.output_directory, 'convolved', 'geofilter_convolved.csv'))
+        if geo_filter:
+            df = pd.read_csv(
+                os.path.join(self.output_directory, 'convolved', f'geofilter_sensor_{sensor}_convolved.csv'))
+            outfile = 'geofilter'
+        else:
+            df = pd.read_csv(
+                os.path.join(self.output_directory, 'convolved', f'all_data_sensor_{sensor}_convolved.csv'))
+            outfile = 'all_data'
+
         df = df.sort_values('level_1')
 
         # run soil PCA
-        pc_components = spectra.pca_analysis(df, spectra_starting_col=7)
-        pc_array = np.asarray(pc_components)[:, 7: 9]
+        pc_components = spectra.pca_analysis(df, spectra_starting_col=spectra_starting_column)
+        pc_array = np.asarray(pc_components)[:, 7:9]
 
         # create new figure
         ncols = 2  # for each em
@@ -687,8 +708,8 @@ class figures:
 
                     ax.scatter(pc_array[:, 0], pc_array[:, 1], s=4)
 
-        plt.savefig(os.path.join(self.fig_directory, 'em_reduction_visualization.png'), bbox_inches="tight",
-                    dpi=400)
+        plt.savefig(os.path.join(self.fig_directory, f'{outfile}_{sensor}_em_reduction_visualization.png'),
+                    bbox_inches="tight", dpi=400)
         plt.clf()
         plt.close()
 
@@ -780,7 +801,8 @@ class figures:
         plt.clf()
         plt.close()
 
-def run_figures(base_directory, sensor):
+def run_figures(base_directory, sensor, geo_filter, spectra_starting_column):
+
     base_directory = base_directory
     sensor = sensor
     major_axis_fontsize = 14
@@ -797,10 +819,11 @@ def run_figures(base_directory, sensor):
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs)
 
-    fig_class.em_reduction_visulatization()
-    fig_class.normalization_figure(cmap_kw='brg')
-    fig_class.size_endmembers_figure(cmap_kw='brg')
-    fig_class.combinations_figure(cmap_kw='brg')
-    fig_class.uncertainty_figure(cmap_kw='brg')
-    fig_class.atmosphere(cmap_kw='brg')
-    fig_class.endmember_figures()
+    fig_class.em_reduction_visulatization(sensor=sensor, geo_filter=geo_filter,
+                                          spectra_starting_column=spectra_starting_column)
+    fig_class.normalization_figure(cmap_kw='brg', sensor=sensor, geo_filter=geo_filter)
+    #fig_class.size_endmembers_figure(cmap_kw='brg')
+    #fig_class.combinations_figure(cmap_kw='brg')
+    #fig_class.uncertainty_figure(cmap_kw='brg')
+    #fig_class.atmosphere(cmap_kw='brg')
+    #fig_class.endmember_figures()
