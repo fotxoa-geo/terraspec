@@ -52,8 +52,6 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
     outlog_name = os.path.join(output_dest, mode, 'outlogs', f'{os.path.basename(reflectance_file)}.out')
     output_dest = os.path.join(output_dest, mode, os.path.basename(reflectance_file))
 
-    print(os.path.isfile(os.path.abspath(os.path.join("..", "SpectralUnmixing", "unmix.jl"))))
-
     if uncertainty_file is  None:
         base_call = f'julia -p {n_cores} {os.path.abspath(os.path.join("..", "SpectralUnmixing", "unmix.jl"))} {reflectance_file} {em_file} ' \
                     f'{level} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} ' \
@@ -65,7 +63,7 @@ def call_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, pa
                     f'{level} {output_dest} --mode {mode} --spectral_starting_column {spectra_starting_column} --refl_scale {scale} --reflectance_uncertainty_file {uncertainty_file} ' \
                     f'{" ".join(parameters)} '
 
-    execute_call(['sbatch', '-N', '1', '-c', n_cores, '--mem', "40G", '--output', outlog_name, '--wrap', f'{base_call}'], dry_run)
+    execute_call(['sbatch', '-N', '1', '-p', 'patient', '-c', n_cores, '--mem', "35G", '--output', outlog_name, '--wrap', f'{base_call}'], dry_run)
 
 
 def call_hypertrace_unmix(mode: str, reflectance_file: str, em_file: str, dry_run: bool, parameters: list, output_dest: str,

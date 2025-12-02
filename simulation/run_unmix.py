@@ -247,12 +247,12 @@ def run_unmix_workflow(base_directory, dry_run, level, n_cores):
         user_input = input('\nPlease indicate the desired unmix mode: ').upper()
 
         if user_input == 'A':
-            #all_runs.convex_hulls(mode='sma', level=level, n_cores=n_cores)
+            all_runs.convex_hulls(mode='sma', level=level, n_cores=n_cores)
             all_runs.convex_hulls(mode='mesma', level=level, n_cores=n_cores)
-            #all_runs.latin_hypercubes(mode='sma', level=level, n_cores=n_cores)
-            #all_runs.latin_hypercubes(mode='mesma', level=level, n_cores=n_cores)
-            #all_runs.convex_hulls(mode='sma-best', level=level, n_cores=n_cores)
-            #all_runs.latin_hypercubes(mode='sma-best', level=level, n_cores=n_cores)
+            all_runs.latin_hypercubes(mode='sma', level=level, n_cores=n_cores)
+            all_runs.latin_hypercubes(mode='mesma', level=level, n_cores=n_cores)
+            all_runs.convex_hulls(mode='sma-best', level=level, n_cores=n_cores)
+            all_runs.latin_hypercubes(mode='sma-best', level=level, n_cores=n_cores)
 
         elif user_input == 'B':
             all_runs.hypertrace_call(mode='mesma')
