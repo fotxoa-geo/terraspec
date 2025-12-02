@@ -379,11 +379,11 @@ def convolve_library(base_directory, output_directory, spectra_starting_column,s
            ossl_wvls = [x for x in range(350, 2501, 2)]
            results = p_map(partial(spectra.convolve, asd_wvl=ossl_wvls, wvl=emit_wvls, fwhm=emit_fwhm,
                                    spectra_starting_col=spectra_starting_column), [row for row in df.iterrows()],
-                           **{"desc": f"\t {ds_name} loading convolution... ", "ncols": 150})
+                           **{"desc": f"\t {ds_name} loading {sensor} convolution... ", "ncols": 150})
         else:
             results = p_map(partial(spectra.convolve, asd_wvl=wavelengths_asd, wvl=emit_wvls, fwhm=emit_fwhm,
                                     spectra_starting_col=spectra_starting_column), [row for row in df.iterrows()],
-                            **{"desc": f"\t {ds_name} loading convolution... ", "ncols": 150})
+                            **{"desc": f"\t {ds_name} loading for {sensor} convolution... ", "ncols": 150})
 
         df_data_merge = pd.concat([df.iloc[:, :spectra_starting_column], pd.DataFrame(results)], axis=1)
         all_results.append(df_data_merge)

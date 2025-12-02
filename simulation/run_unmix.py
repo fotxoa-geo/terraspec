@@ -160,8 +160,8 @@ class runs:
                 sensor = os.path.basename(df).split('_')[7]
                 geofilter = os.path.basename(df).split('_')[9]
                 reflectance_file = os.path.join(self.synthetic_images_output,
-                                                f'convex_hull__n_dims_{n_dimensions}_sensor_{sensor}_geofilter_{geofilter}_spectra')
-                output_name = f'convex_hull__n_dims_{n_dimensions}_sensor_{sensor}_geofilter_{geofilter}_spectra'
+                                                f'latin_hypercube__n_dims_{n_dimensions}_sensor_{sensor}_geofilter_{geofilter}_spectra')
+                output_name = f'latin_hypercube__n_dims_{n_dimensions}_sensor_{sensor}_geofilter_{geofilter}_spectra'
 
                 # output destination
                 output_dest = os.path.join(self.base_directory, "output", mode,
@@ -247,12 +247,12 @@ def run_unmix_workflow(base_directory, dry_run, level, n_cores):
         user_input = input('\nPlease indicate the desired unmix mode: ').upper()
 
         if user_input == 'A':
-            #all_runs.convex_hulls(mode='sma', level=level, n_cores=n_cores)
+            all_runs.convex_hulls(mode='sma', level=level, n_cores=n_cores)
             all_runs.convex_hulls(mode='mesma', level=level, n_cores=n_cores)
-            #all_runs.latin_hypercubes(mode='sma', level=level, n_cores=n_cores)
-            #all_runs.latin_hypercubes(mode='mesma', level=level, n_cores=n_cores)
-            #all_runs.convex_hulls(mode='sma-best', level=level, n_cores=n_cores)
-            #all_runs.latin_hypercubes(mode='sma-best', level=level, n_cores=n_cores)
+            all_runs.latin_hypercubes(mode='sma', level=level, n_cores=n_cores)
+            all_runs.latin_hypercubes(mode='mesma', level=level, n_cores=n_cores)
+            all_runs.convex_hulls(mode='sma-best', level=level, n_cores=n_cores)
+            all_runs.latin_hypercubes(mode='sma-best', level=level, n_cores=n_cores)
 
         elif user_input == 'B':
             all_runs.hypertrace_call(mode='mesma')
