@@ -160,8 +160,8 @@ class runs:
                 sensor = os.path.basename(df).split('_')[7]
                 geofilter = os.path.basename(df).split('_')[9]
                 reflectance_file = os.path.join(self.synthetic_images_output,
-                                                f'convex_hull__n_dims_{n_dimensions}_sensor_{sensor}_geofilter_{geofilter}_spectra')
-                output_name = f'convex_hull__n_dims_{n_dimensions}_sensor_{sensor}_geofilter_{geofilter}_spectra'
+                                                f'latin_hypercube__n_dims_{n_dimensions}_sensor_{sensor}_geofilter_{geofilter}_spectra')
+                output_name = f'latin_hypercube__n_dims_{n_dimensions}_sensor_{sensor}_geofilter_{geofilter}_spectra'
 
                 # output destination
                 output_dest = os.path.join(self.base_directory, "output", mode,
