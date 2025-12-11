@@ -110,7 +110,7 @@ def simulation_error_processing(file, output_directory):
         normalization = arguments['normalization']
         level = arguments['endmember_class_header']
         n_mc = int(arguments['n_mc'])
-        num_endmembers = list(arguments['num_endmembers'])[0]
+        num_endmembers = arguments['num_endmembers']
         max_combinations = int(arguments['max_combinations'])
 
         refl_file = os.path.basename(arguments['reflectance_file'])
@@ -136,8 +136,6 @@ def simulation_error_processing(file, output_directory):
         # calculate error
         error = error_metrics(truth_array, estimated_array, mc_unc_array, n_mc)
 
-        print([sensor, geofilter, em_reduction, dimensions, mode, level, optimizer, normalization, num_endmembers,
-                max_combinations, n_mc] + error + performance_metrics)
         return [sensor, geofilter, em_reduction, dimensions, mode, level, optimizer, normalization, num_endmembers,
                 max_combinations, n_mc] + error + performance_metrics
 
