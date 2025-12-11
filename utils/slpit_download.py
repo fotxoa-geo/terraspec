@@ -11,6 +11,8 @@ import geopandas as gp
 from utils.create_tree import create_directory
 from sys import platform
 import json
+#from utils.spectra_utils import spectra
+from glob import glob
 
 # create object folder to store the pickle objects
 create_directory('objects')
@@ -40,53 +42,78 @@ def load_pickle(filename):
         return b
 
 
-def download_emit(base_directory):
-    auth = earthaccess.login(strategy="interactive")
+data_product_key = {"emit": { 'reflectance': 'EMITL2ARFL',
+                              'radiance': 'EMITL1BRAD',
+                              'version': '001'}}
 
-    create_directory(os.path.join(base_directory, 'gis', 'emit-data'))
-    create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'nc_files'))
-    create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'nc_files', 'l1b'))
-    create_directory(os.path.join(base_directory, 'gis', 'emit-data', 'nc_files', 'l2a'))
+
+def download_emit(base_directory, sensor):
+    auth = earthaccess.login(strategy="netrc")
+
+    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data'))
+
+    if sensor == 'emit':
+        create_directory(os.path.join(base_directory, 'gis', f'emit-data', 'nc_files'))
+        create_directory(os.path.join(base_directory, 'gis', f'emit-data', 'nc_files', 'l1b'))
+        create_directory(os.path.join(base_directory, 'gis', f'emit-data', 'nc_files', 'l2a'))
 
     # get plot center points from ipad
-    shapefile = os.path.join('gis', "Observation.shp")
+    shapefile = os.path.join('gis', "Observation.json")
 
     df = pd.DataFrame(gp.read_file(shapefile))
     df = df.sort_values('Name')
 
     for index, row in df.iterrows():
         plot = row['Name']
-        lon = row['geometry'].x
-        lat = row['geometry'].y
-        emit_date = row['EMIT DATE']
+        plot_num = int(plot.split('-')[1])
+        if plot_num <= 1:
+            lon = row['geometry'].x
+            lat = row['geometry'].y
+            emit_date = row['EMIT DATE']
 
-        plot_date = datetime.datetime.strptime(emit_date, '%Y%m%dT%H%M%S')
+            plot_date = datetime.datetime.strptime(emit_date, '%Y%m%dT%H%M%S')
 
-        next_plot_months =  plot_date + relativedelta(months=3)
-        next_plot_months = next_plot_months.strftime('%Y-%m')
+            next_plot_months =  plot_date + relativedelta(months=3)
+            next_plot_months = next_plot_months.strftime('%Y-%m')
 
-        previous_plot_months = plot_date - relativedelta(months=3)
-        previous_plot_months = previous_plot_months.strftime('%Y-%m')
+            previous_plot_months = plot_date - relativedelta(months=3)
+            previous_plot_months = previous_plot_months.strftime('%Y-%m')
 
-        lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat = lon, lat, lon, lat
+            lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat = lon, lat, lon, lat
 
-        print(f"downloading... {plot}")
-        results = earthaccess.search_data(short_name="EMITL2ARFL", version="001", cloud_hosted=True,
+            print(f"downloading... {plot}")
+            results = earthaccess.search_data(short_name=data_product_key[sensor]['reflectance'],
+                                              version=data_product_key[sensor]['version'], cloud_hosted=True,
                                               bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
                                               temporal=(previous_plot_months, next_plot_months), count=-1)
-        files = earthaccess.download(results, os.path.join(base_directory, 'gis', 'emit-data', 'nc_files', 'l2a'))
-
-        results = earthaccess.search_data(short_name="EMITL1BRAD", version="001", cloud_hosted=True,
+            files = earthaccess.download(results, os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l2a'))
+            results = earthaccess.search_data(short_name=data_product_key[sensor]['radiance'],
+                                              version=data_product_key[sensor]['version'], cloud_hosted=True,
                                               bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
                                               temporal=(previous_plot_months, next_plot_months), count=-1)
-        files = earthaccess.download(results, os.path.join(base_directory, 'gis', 'emit-data', 'nc_files', 'l1b'))
+            files = earthaccess.download(results, os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l1b'))
+
+    # Create output directories
+    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'products'))
+    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'products', 'logs'))
+
+    nc_files = (glob(os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l1b', '*.nc'), recursive=True)
+                + glob(os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l2a', '*.nc'), recursive=True))
+
+    out_base = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products')
+    out_logs = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products', 'logs')
+
+    for nc_file in nc_files[0]:
+        basename = os.path.basename(nc_file)
+        base_call = f'{os.path.join("slpit", "emit_image_process.sh")} {nc_file} {nc_file} {out_base}'
+        outfile = os.path.join(out_logs, f"{nc_file}.out")
+        #sbatch_cmd = f"sbatch -N 1 -c 1 --mem 50G --output {outfile} --job-name slpit --wrap='{base_call}'"
+        subprocess.run(base_call, shell=True)
 
 
 
-
-
-def run_download_emit(base_directory):
-    download_emit(base_directory=base_directory)
+def run_download_emit(base_directory, sensor):
+    download_emit(base_directory=base_directory, sensor=sensor)
 
 
 def sync_gdrive(base_directory, project):

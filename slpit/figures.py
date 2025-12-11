@@ -11,9 +11,9 @@ import pytz
 from osgeo import gdal
 import matplotlib.gridspec as gridspec
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from mpl_toolkits.basemap import Basemap
+#from mpl_toolkits.basemap import Basemap
 import matplotlib.image as mpimg
-from pypdf import PdfMerger
+# pypdf import PdfMerger
 from utils.create_tree import create_directory
 from utils.spectra_utils import spectra
 from utils.envi import envi_to_array, load_band_names, read_metadata
