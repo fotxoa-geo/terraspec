@@ -11,7 +11,6 @@ import geopandas as gp
 from utils.create_tree import create_directory
 from sys import platform
 import json
-#from utils.spectra_utils import spectra
 from glob import glob
 
 # create object folder to store the pickle objects
@@ -103,14 +102,14 @@ def download_emit(base_directory, sensor):
     out_base = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products')
     out_logs = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products', 'logs')
 
-    for nc_file in nc_files[0]:
+    em_file = os.path.join('terraspec_output', 'simulation', 'output', 'endmember_libraries',
+                           f'convex_hull__n_dims_4_sensor_{sensor}_geofilter_True_unmix_library.csv')
+
+    for nc_file in nc_files:
         basename = os.path.basename(nc_file)
-        base_call = f'{os.path.join("slpit", "emit_image_process.sh")} {nc_file} {nc_file} {out_base}'
-        outfile = os.path.join(out_logs, f"{nc_file}.out")
-        #sbatch_cmd = f"sbatch -N 1 -c 1 --mem 50G --output {outfile} --job-name slpit --wrap='{base_call}'"
-        subprocess.run(base_call, shell=True)
-
-
+        base_call = f'sh {os.path.join("slpit", "emit_image_process.sh")} {nc_file} {em_file} {out_base}'
+        outfile = os.path.join(out_logs, f"{os.path.join(out_logs, basename)}.out")
+        sbatch_cmd = f"sbatch -N 1 -c 40 --mem 50G --output {outfile} --job-name slpit --wrap='{base_call}'"
 
 def run_download_emit(base_directory, sensor):
     download_emit(base_directory=base_directory, sensor=sensor)
