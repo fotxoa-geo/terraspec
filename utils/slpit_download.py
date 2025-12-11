@@ -103,12 +103,13 @@ def download_emit(base_directory, sensor):
     out_base = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products')
     out_logs = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products', 'logs')
 
-    for nc_file in nc_files[0]:
+    for nc_file in nc_files:
         basename = os.path.basename(nc_file)
-        base_call = f'{os.path.join("slpit", "emit_image_process.sh")} {nc_file} {nc_file} {out_base}'
+        base_call = f'sh {os.path.join("slpit", "emit_image_process.sh")} {nc_file} {nc_file} {out_base}'
         outfile = os.path.join(out_logs, f"{nc_file}.out")
-        #sbatch_cmd = f"sbatch -N 1 -c 1 --mem 50G --output {outfile} --job-name slpit --wrap='{base_call}'"
-        subprocess.run(base_call, shell=True)
+        sbatch_cmd = f"sbatch -N 1 -c 20 --mem 40G --output {outfile} --job-name slpit --wrap='{base_call}'"
+        #srun_cmd = f"srun -N 1 -c 1 --mem 10G --output {outfile} --job-name slpit {base_call}"
+        subprocess.call(sbatch_cmd, shell=True)
 
 
 
