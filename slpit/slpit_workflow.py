@@ -14,7 +14,7 @@ def display_slpit_menu():
     cursor_print(msg)
 
     print("Welcome to the SLPIT Mode....")
-    print("A... Download EMIT Imagery")
+    print("A... Download Imagery")
     print("B... Download Transect Data")
     print("C... Build Reflectance Files from ASD")
     print("D... Geoprocess Data")
@@ -40,12 +40,12 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
 
         # download EMIT NC images
         if user_input == 'A':
-            run_download_emit(base_directory)
+            run_download_emit(base_directory, sensor)
 
         # download SLPIT data
         elif user_input == 'B':
             run_dowloand_slpit()
-            sync_gdrive(base_directory, project='emit')
+            sync_gdrive(base_directory, project=sensor)
 
         # build and convolve the libraries to specified instruments
         elif user_input == 'C':
