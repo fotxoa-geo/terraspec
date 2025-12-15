@@ -2,18 +2,19 @@
 rfl_file=$1
 out_base=$2
 
+echo '################### Running Tetracorder ##################################################'
+echo ""
 filebase=`basename ${rfl_file}`
-
 tmp_rfl_path=/local/`basename ${rfl_file}`
 tmp_tetra_path=/local/${filebase}_tetra_output
 out_tetra_path=${out_base}${filebase}_tetra
 out_min_path=${out_base}${filebase}_min
 out_minunc_path=${out_base}${filebase}_minunc
 out_abun_path=${out_base}${filebase}_abun
-tc_out_path=/store/fochoa/terraspec_output/terraspec/tetracorder/output/outlogs/
+tc_out_path=$PWD/${out_base}
 
-echo $tmp_tetra_path
-echo $out_tetra_path
+echo "filebse: ${filebase}"
+echo "out_base: ${out_base}"
 
 cp ${rfl_file} $tmp_rfl_path
 cp ${rfl_file}.hdr ${tmp_rfl_path}.hdr
@@ -37,18 +38,15 @@ cp ${tmp_tetra_path} ${out_tetra_path} -r
 
 python /store/brodrick/repos/emit-sds-l2b/group_aggregator.py $out_tetra_path /store/fochoa/terraspec/utils/tetracorder/mineral_grouping_matrix_20230503.csv $out_min_path $out_minunc_path --reflectance_file $tmp_rfl_path --reflectance_uncertainty_file $tmp_rfl_path --reference_library /store/shared/tetracorder_libraries/s06emitd_envi --research_library /store/shared/tetracorder_libraries/r06emitd_envi --expert_system_file cmd.lib.setup.t5.27d1 --calculate_uncertainty 
 
-#python /beegfs/scratch/brodrick/emit/emit-sds-l2b/abundance_from_min.py $out_abun_path $out_min_path --mineral_groupings_matrix /beegfs/scratch/brodrick/emit/emit-sds-l2b/data/mineral_grouping_matrix_20230503.csv
+#python /store/brodrick/repos/emit-sds-l2b/abundance_from_min.py $out_abun_path $out_min_path --mineral_groupings_matrix /store/fochoa/terraspec/utils/tetracorder/mineral_grouping_matrix_20230503.csv
 
 rm $tmp_rfl_path
 rm ${tmp_rfl_path}.hdr
 
-
 rm -rf $tmp_tetra_path
-cpwd=$PWD
 
-cd $out_tetra_path/cmds.abundances/lists.of.files.by.mineral/
-mkdir ${out_base}${filebase}_minerals/ -p 
-cp . ${out_base}${filebase}_minerals/ -r
-cd $cpwd
+mkdir ${cpwd}/${out_base}${filebase}_minerals/ -p 
+cp $out_tetra_path/cmds.abundances/lists.of.files.by.mineral/* ${cpwd}/${out_base}${filebase}_minerals/ -r 
 
-rm -rf $out_tetra_path
+echo "Current UTC time is: ${date}"
+#rm -rf $out_tetra_path

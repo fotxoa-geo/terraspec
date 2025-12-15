@@ -108,7 +108,7 @@ def download_emit(base_directory, sensor):
     for nc_file in nc_files:
         basename = os.path.basename(nc_file)
         base_call = f'sh {os.path.join("slpit", "emit_image_process.sh")} {nc_file} {em_file} {out_base}'
-        outfile = os.path.join(out_logs, f"{basename}.out")
+        outfile = os.path.join(f"{os.path.join(out_logs, basename)}.out")
         sbatch_cmd = f"sbatch -N 1 -c 40 --mem 50G --output {outfile} --job-name slpit --wrap='{base_call}'"
         subprocess.call(sbatch_cmd, shell=True)
 
