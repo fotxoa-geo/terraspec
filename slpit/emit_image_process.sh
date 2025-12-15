@@ -1,11 +1,13 @@
 #!/bin/sh
+START_TIME=$SECONDS
+
 nc_file=$1
 global_unmixing_library=$2
 out_base=$3
 NORMALIZED_PATH_OUTBASE=$(echo "${out_base}" | tr '\\' '/')
 NORMALIZED_GLOBAL_LIB_PATH=$(echo "${global_unmixing_library}" | tr '\\' '/')
 
-filebase_name=`basename ${nc_file}`
+filebase_name=$(basename --suffix=".nc" "$nc_file")
 
 echo ${filebase_name}
 
@@ -40,12 +42,12 @@ echo "Geoprocess complete!"
 # Uncertainty runs will only be used with extracted SLPIT runs. Run Tetracorder as well.
 if [ "${data_type}" = "RFL" ]; then
 
-    rfl_img=${nc_out_directory}/${basename}_reflectance
-
+    rfl_img=${nc_out_directory}/${filebase_name}_reflectance
+    
     # unmixing code
     unmix_out_directory=${nc_fid_directory}/emc2/
     mkdir -p ${unmix_out_directory}
-    julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} ${nc_out_directory}/${basename} level_1 --mode sma --normalization brightness --num_endmember 30 --n_mc 25 --spectral_starting_col 8
+    julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 ${unmix_out_directory}/${filebase_name} --mode sma --normalization brightness --num_endmember 30 --n_mc 25 --spectral_starting_col 8
 
     # run Tetracorder
     tetracorder_out_directory=${nc_fid_directory}/tetracorder/
@@ -55,3 +57,6 @@ if [ "${data_type}" = "RFL" ]; then
 else
     echo "Reflectance data not detected. Skipping spectral processes!!"
 fi
+
+DURATION=$(( $SECONDS - $START_TIME ))
+echo "processing time: $DURATION seconds."
