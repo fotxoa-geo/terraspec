@@ -11,11 +11,14 @@ echo ${filebase_name}
 
 # This seperates the nc file by delimter
 IFS='_' read -r -a SPLIT_ARRAY <<< "$filebase_name"
+SPLICE='.' read -r -a EXTENSION_ARRAY <<< "$filebase_name"
 
+file_basename="${EXTENSION_ARRAY[0]}"
 product="${SPLIT_ARRAY[1]}"
 fid="${SPLIT_ARRAY[4]}"
 data_type="${SPLIT_ARRAY[2]}"
 
+echo ${filebase_name}
 echo ${product}
 echo ${fid}
 
