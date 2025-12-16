@@ -130,7 +130,7 @@ class emit:
         out_path = os.path.join(self.gis_directory, f'rgb-envi')
 
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        rgb_path = os.path.join(current_dir, 'rgb_envi.py')
+        rgb_path = os.path.join(current_dir, 'envi_to_rgb.py')
         
         for file in reflectance_files:
             acquisition_date = os.path.basename(file).split("_")[4]
