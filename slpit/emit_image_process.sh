@@ -48,15 +48,20 @@ if [ "${data_type}" = "RFL" ]; then
     unmix_out_directory=${nc_fid_directory}/emc2/
     mkdir -p ${unmix_out_directory}
     julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 ${unmix_out_directory}/${filebase_name} --mode sma --normalization brightness --num_endmember 30 --n_mc 25 --spectral_starting_col 8
+    
+    # ortho-rectify fractional cover
 
     # run Tetracorder
     tetracorder_out_directory=${nc_fid_directory}/tetracorder/
     mkdir -p ${teracorder_out_directory}
     ./tetracorder/tetracorder.sh ${rfl_img} ${tetracorder_out_directory}
-
+    
+    #ortho-rectify mineral outputs
 else
     echo "Reflectance data not detected. Skipping spectral processes!!"
 fi
+
+# Create RGB imgs for field ipad
 
 DURATION=$(( $SECONDS - $START_TIME ))
 echo "processing time: $DURATION seconds."
