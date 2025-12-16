@@ -47,14 +47,13 @@ class build_libraries:
         self.wvls, self.fwhm = spectra.load_wavelengths(sensor=sensor)
 
         # create output directories
-        create_directory(os.path.join(self.output_directory, 'spectral_endmembers'))
         create_directory(os.path.join(self.output_directory, 'spectral_transects'))
-        create_directory(os.path.join(self.output_directory, 'spectral_transects', 'transect'))
-        create_directory(os.path.join(self.output_directory, 'spectral_transects', 'endmembers'))
-        create_directory(os.path.join(self.output_directory, 'spectral_transects', 'endmembers-raw'))
-        create_directory(os.path.join(self.output_directory, 'plot_pictures'))
-        create_directory(os.path.join(self.output_directory, 'plot_pictures', 'spectral_transects'))
-        create_directory(os.path.join(self.output_directory, 'plot_pictures', 'spectral_endmembers'))
+        # create_directory(os.path.join(self.output_directory, 'spectral_transects', 'transect'))
+        # create_directory(os.path.join(self.output_directory, 'spectral_transects', 'endmembers'))
+        # create_directory(os.path.join(self.output_directory, 'spectral_transects', 'endmembers-raw'))
+        # create_directory(os.path.join(self.output_directory, 'plot_pictures'))
+        # create_directory(os.path.join(self.output_directory, 'plot_pictures', 'spectral_transects'))
+        # create_directory(os.path.join(self.output_directory, 'plot_pictures', 'spectral_endmembers'))
 
         # team names keys - corresponds to suffix in ASD files
         self.team_keys = {
@@ -68,9 +67,9 @@ class build_libraries:
         self.instrument = sensor
 
         # output data directories
-        self.output_transect_directory = os.path.join(self.output_directory, 'spectral_transects', 'transect')
-        self.output_transect_em_directory = os.path.join(self.output_directory, 'spectral_transects', 'endmembers')
-        self.output_transect_em_directory_raw = os.path.join(self.output_directory, 'spectral_transects', 'endmembers-raw')
+        self.output_transect_directory = os.path.join(self.output_directory, 'spectral_transects')
+        # self.output_transect_em_directory = os.path.join(self.output_directory, 'spectral_transects', 'endmembers')
+        # self.output_transect_em_directory_raw = os.path.join(self.output_directory, 'spectral_transects', 'endmembers-raw')
 
         # import the simulation outputs
         terraspec_base = os.path.join(base_directory, "..")
@@ -104,8 +103,10 @@ class build_libraries:
 
             print(f'\t loading... {plot_name}')
 
+            create_directory(os.path.join(self.output_transect_directory, f'{plot_name}'))
+            plot_base_directory = os.path.join(self.output_transect_directory, f'{plot_name}')
             img_data = requests.get(plot_pic_url).content
-            with open(os.path.join(self.output_directory, 'plot_pictures', 'spectral_transects', f'{plot_name}.jpg'),
+            with open(os.path.join(plot_base_directory, f'{plot_name}_landscape_picture.jpg'),
                       'wb') as handler:
                 handler.write(img_data)
 
@@ -232,7 +233,7 @@ class build_libraries:
                     print(f"\t\t no white ref correction available on: {plot_name} {line_num}")
 
             df_corrected_all = pd.concat(adjusted_dfs)
-            df_corrected_all.to_csv(os.path.join(self.output_transect_directory, f'{plot_name} - transect.csv'),
+            df_corrected_all.to_csv(os.path.join(plot_base_directory, f'{plot_name} - transect.csv'),
                                     index=False)
 
             # convolve wavelengths to user specified instrument
@@ -244,7 +245,7 @@ class build_libraries:
             df_convolve = pd.DataFrame(results_convolve)
             df_convolve.columns = list(self.wvls)
             df_convolve = pd.concat([df_corrected_all.iloc[:, :9].reset_index(drop=True), df_convolve], axis=1)
-            df_convolve.to_csv(os.path.join(self.output_transect_directory, f'{plot_name} - transect-{self.instrument}.csv'), index=False)
+            df_convolve.to_csv(os.path.join(plot_base_directory, f'{plot_name} - transect-{self.instrument}.csv'), index=False)
 
             # get the line counts
             max_line_files = []
@@ -269,7 +270,7 @@ class build_libraries:
             print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
             meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls,
                                     wvls=True)
-            output_raster = os.path.join(self.output_transect_directory, f'{plot_name.replace(" ", "")}.hdr')
+            output_raster = os.path.join(plot_base_directory, f'{plot_name.replace(" ", "")}.hdr')
             save_envi(output_raster, meta_spectra, spectra_grid)
             time.sleep(3)
 
@@ -586,9 +587,9 @@ def run_build_workflow(base_directory, sensor):
     else:
         lib = build_libraries(base_directory=base_directory, sensor=sensor)
         lib.build_emit_transects()
-        if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
-           lib.nearest_emit_site()
-        lib.build_emit_endmembers()
-        lib.build_em_collection()
-        lib.build_gis_data()
-        lib.em_qty_check()
+        #if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
+        #   lib.nearest_emit_site()
+        #lib.build_emit_endmembers()
+        #lib.build_em_collection()
+        #lib.build_gis_data()
+        #lib.em_qty_check()

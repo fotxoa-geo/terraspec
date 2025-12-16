@@ -8,11 +8,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.image as mpimg
 import matplotlib.gridspec as gridspec
-from mpl_toolkits.basemap import Basemap
+#from mpl_toolkits.basemap import Basemap
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from utils.spectra_utils import spectra
 from utils.create_tree import create_directory
-from pypdf import PdfMerger
+#from pypdf import PdfMerger
 from utils.envi import envi_to_array
 from datetime import datetime
 import geopandas as gpd
