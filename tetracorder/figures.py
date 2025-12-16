@@ -22,11 +22,11 @@ import spectral.io.envi as envi
 from emit_utils.file_checks import envi_header
 import logging
 from utils.spectra_utils import spectra
-from pypdf import PdfMerger
+#from pypdf import PdfMerger
 import matplotlib.image as mpimg
 from sklearn.preprocessing import LabelEncoder
 import seaborn as sns
-from mpl_toolkits.basemap import Basemap
+#from mpl_toolkits.basemap import Basemap
 from p_tqdm import p_map
 from matplotlib.ticker import MultipleLocator
 from utils.slpit_download import load_pickle, save_pickle
