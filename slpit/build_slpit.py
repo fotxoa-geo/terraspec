@@ -48,19 +48,12 @@ class build_libraries:
 
         # create output directories
         create_directory(os.path.join(self.output_directory, 'spectral_transects'))
-        # create_directory(os.path.join(self.output_directory, 'spectral_transects', 'transect'))
-        # create_directory(os.path.join(self.output_directory, 'spectral_transects', 'endmembers'))
-        # create_directory(os.path.join(self.output_directory, 'spectral_transects', 'endmembers-raw'))
-        # create_directory(os.path.join(self.output_directory, 'plot_pictures'))
-        # create_directory(os.path.join(self.output_directory, 'plot_pictures', 'spectral_transects'))
-        # create_directory(os.path.join(self.output_directory, 'plot_pictures', 'spectral_endmembers'))
 
         # team names keys - corresponds to suffix in ASD files
         self.team_keys = {
             'spectral': 'SP', 'thermal': 'TM'}
 
         # input data directories
-        self.spectral_em_directory = os.path.join(self.base_directory, 'data', 'spectral_endmembers')
         self.spectral_transect_directory = os.path.join(self.base_directory, 'data', 'spectral_transects')
 
         # instrument to indicate wavelengths in output folder
@@ -68,14 +61,6 @@ class build_libraries:
 
         # output data directories
         self.output_transect_directory = os.path.join(self.output_directory, 'spectral_transects')
-        # self.output_transect_em_directory = os.path.join(self.output_directory, 'spectral_transects', 'endmembers')
-        # self.output_transect_em_directory_raw = os.path.join(self.output_directory, 'spectral_transects', 'endmembers-raw')
-
-        # import the simulation outputs
-        terraspec_base = os.path.join(base_directory, "..")
-        em_sim_directory = os.path.join(terraspec_base, 'simulation', 'output')
-        self.emit_global = os.path.join(em_sim_directory, 'convolved','geofilter_convolved.csv')
-        self.convex_global = os.path.join(em_sim_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library.csv')
 
     def build_emit_transects(self):
         # the transect spectra
@@ -85,6 +70,7 @@ class build_libraries:
         for i in records:
             plot_name = f"{i['team_names'].capitalize()} - {i['plot_num']:03d}"
             plot_directory = os.path.join(self.spectral_transect_directory, plot_name)
+            plot_name = f"{i['team_names'].capitalize()}-{i['plot_num']:03d}"
             plot_pic_url = i['landscape_pic']
             date = i['sample_date']
             plot_measurements = i['plot_measurements'].split(",")
@@ -98,7 +84,7 @@ class build_libraries:
             if int(i['plot_num']) in [114,113]:
                 continue
 
-            if os.path.isfile(os.path.join(self.output_transect_directory, f'{plot_name} - transect-{self.instrument}.csv')):
+            if os.path.isfile(os.path.join(self.output_transect_directory, f'{plot_name}-transect-{self.instrument}.csv')):
                 continue
 
             print(f'\t loading... {plot_name}')
@@ -113,16 +99,22 @@ class build_libraries:
             # white ref table
             df_white_ref = slpit.df_white_ref_table(record=i)
 
-            # # em table
-            df_transect_em = slpit.df_em_table(record=i)
-
             # get all asd files from folder
             all_spectrometer_files = sorted(glob(os.path.join(plot_directory, '*.asd')))
             if not all_spectrometer_files:
                 print(".asd files not found! Looking for .sed files...")
                 all_spectrometer_files = sorted(glob(os.path.join(plot_directory, '*.sed')))
-            # else:
-            #     continue
+
+            # plot all files from plot
+            create_directory(os.path.join(plot_base_directory, 'individual_spectra_plots'))
+
+            if all_spectrometer_files:
+                p_map(partial(spectra.plot_asd_file, out_directory=os.path.join(plot_base_directory, 'individual_spectra_plots')),
+                      all_spectrometer_files, **{"desc": "\t\t plotting asd files: " + plot_name + "...", "ncols": 150})
+
+            else:
+                p_map(partial(spectra.plot_sed_file, out_directory=os.path.join(plot_base_directory, 'individual_spectra_plots')),
+                      all_spectrometer_files, **{"desc": "\t\t plotting sed files: " + plot_name + "...", "ncols": 150})
 
             # white refs from transects
             good_white_ref_numbers = set(df_white_ref[df_white_ref['my_element_2'] == 'good']['filenumber'].values)
@@ -233,7 +225,7 @@ class build_libraries:
                     print(f"\t\t no white ref correction available on: {plot_name} {line_num}")
 
             df_corrected_all = pd.concat(adjusted_dfs)
-            df_corrected_all.to_csv(os.path.join(plot_base_directory, f'{plot_name} - transect.csv'),
+            df_corrected_all.to_csv(os.path.join(plot_base_directory, f'{plot_name}-transect.csv'),
                                     index=False)
 
             # convolve wavelengths to user specified instrument
@@ -245,7 +237,7 @@ class build_libraries:
             df_convolve = pd.DataFrame(results_convolve)
             df_convolve.columns = list(self.wvls)
             df_convolve = pd.concat([df_corrected_all.iloc[:, :9].reset_index(drop=True), df_convolve], axis=1)
-            df_convolve.to_csv(os.path.join(plot_base_directory, f'{plot_name} - transect-{self.instrument}.csv'), index=False)
+            df_convolve.to_csv(os.path.join(plot_base_directory, f'{plot_name}-transect-{self.instrument}.csv'), index=False)
 
             # get the line counts
             max_line_files = []
@@ -554,42 +546,11 @@ class build_libraries:
 
 
 def run_build_workflow(base_directory, sensor):
-    #msg = f"Please move all .asd Files from the ASD Computer " \
-    #      f"to the following location: {os.path.join(base_directory, 'data')}\n" \
-    #      f"Folder names should be based on the following naming convention:\n" \
-    #      f"\tTeam_Plot-Number (e.g., Spectral - 001; Team = Spectral; Plot-Number: 001"
-
-    #cursor_print(msg)
-    user_input = query_yes_no('\nWould you like plots for all .asd/.sed files?', default="yes")
-
-    if user_input:
-        transect_directories = sorted(glob(os.path.join(base_directory, 'data', 'spectral_transects', "*", ""), recursive=True))
-        create_directory(os.path.join(base_directory, 'figures', 'asd_file_plots'))
-
-        for directory in transect_directories:
-            plot_name = os.path.basename(os.path.dirname(directory))
-            if os.path.isdir(os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name)) and glob(os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name, '*.png')):
-                continue
-
-            create_directory(os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name))
-            asd_files = glob(os.path.join(directory, '*.asd'))
-
-            if asd_files:
-                p_map(partial(spectra.plot_asd_file, out_directory=os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name)),
-                      asd_files, **{"desc": "\t\t plotting asd files: " + plot_name + "...", "ncols": 150})
-
-            else:
-                sed_files = glob(os.path.join(directory, '*.sed'))
-                p_map(partial(spectra.plot_sed_file, out_directory=os.path.join(base_directory, 'figures', 'asd_file_plots', plot_name)),
-                      sed_files, **{"desc": "\t\t plotting sed files: " + plot_name + "...", "ncols": 150})
-
-
-    else:
-        lib = build_libraries(base_directory=base_directory, sensor=sensor)
-        lib.build_emit_transects()
-        #if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
-        #   lib.nearest_emit_site()
-        #lib.build_emit_endmembers()
-        #lib.build_em_collection()
-        #lib.build_gis_data()
-        #lib.em_qty_check()
+    lib = build_libraries(base_directory=base_directory, sensor=sensor)
+    lib.build_emit_transects()
+    #if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
+    #   lib.nearest_emit_site()
+    #lib.build_emit_endmembers()
+    #lib.build_em_collection()
+    #lib.build_gis_data()
+    #lib.em_qty_check()

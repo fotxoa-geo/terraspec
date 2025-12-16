@@ -46,6 +46,9 @@ echo "Geoprocess complete!"
 if [ "${data_type}" = "RFL" ]; then
 
     rfl_img=${nc_out_directory}/${filebase_name}_reflectance
+
+    #create rgbs if images
+    python slpit/envi_to_rgb.py -rfl_img $rfl_img -nc_file ${nc_file} -out ${nc_out_directory}
     
     # unmixing code
     unmix_out_directory=${nc_fid_directory}/emc2/
@@ -53,6 +56,7 @@ if [ "${data_type}" = "RFL" ]; then
     julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 ${unmix_out_directory}/${filebase_name} --mode sma --normalization brightness --num_endmember 30 --n_mc 25 --spectral_starting_col 8
     
     # ortho-rectify fractional cover
+    python slpit/ortho_frac_cover.py -frac_img ${unmix_out_directory}/${filebase_name}_fractional_cover -nc_file ${nc_file} -out ${unmix_out_directory}
 
     # run Tetracorder
     tetracorder_out_directory=${nc_fid_directory}/tetracorder/
