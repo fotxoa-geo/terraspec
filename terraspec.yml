@@ -19,6 +19,7 @@ dependencies:
   - matplotlib
   - spectral
   - asdfsda
+  - astropy
   - pip:
     - matplotlib_scalebar
     - p_tqdm
