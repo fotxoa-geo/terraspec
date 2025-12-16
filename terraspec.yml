@@ -18,6 +18,7 @@ dependencies:
   - openpyxl
   - matplotlib
   - spectral
+  - asdfsda
   - pip:
     - matplotlib_scalebar
     - p_tqdm
