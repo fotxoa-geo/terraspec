@@ -65,7 +65,7 @@ def download_emit(base_directory, sensor):
     for index, row in df.iterrows():
         plot = row['Name']
         plot_num = int(plot.split('-')[1])
-        if plot_num <= 1:
+        if plot_num <= 60:
             lon = row['geometry'].x
             lat = row['geometry'].y
             emit_date = row['EMIT DATE']
