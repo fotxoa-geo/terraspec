@@ -19,7 +19,8 @@ import tetracorder.tetracorder as tc
 import spectral.io.envi as envi
 from emit_utils.file_checks import envi_header
 from scipy.interpolate import interp1d
-import ast
+from matplotlib.ticker import MultipleLocator
+
 
 def get_dd_coords(coord):
     dd_mm = float(str(coord).split(".")[0][-2:] + "." + str(coord).split(".")[1])/60
@@ -1180,7 +1181,6 @@ class spectra:
     @classmethod
     def plot_asd_file(cls, asd_file, out_directory):
         # Load asd data
-        from matplotlib.ticker import MultipleLocator
         data = asdreader.reader(asd_file)
         asd_wl = data.wavelengths
 
