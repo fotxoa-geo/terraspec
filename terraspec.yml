@@ -2,8 +2,8 @@ name: terraspec
 channels:
   - conda-forge
 dependencies:
-  - gdal=3.5.2
-  - python=3.10.9
+  - gdal
+  - python
   - geopandas
   - tqdm
   - xlrd
@@ -14,7 +14,6 @@ dependencies:
   - earthaccess
   - pypdf
   - netCDF4
-  - pip
   - openpyxl
   - matplotlib
   - spectral
