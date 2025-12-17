@@ -2,14 +2,14 @@ name: terraspec
 channels:
   - conda-forge
 dependencies:
-  - gdal=3.5.2
-  - python=3.10.9
+  - gdal
+  - python
   - geopandas
   - tqdm
   - xlrd
   - pip
   - rasterio
-  - isofit
+  - isofit=3.6.1
   #- basemap
   - earthaccess
   - pypdf
