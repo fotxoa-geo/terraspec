@@ -511,7 +511,7 @@ class figures:
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=8,
                         verticalalignment='top', bbox=props)
 
-        fig.supylabel('Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
+        fig.supylabel(r'Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
         plt.savefig(os.path.join(self.figure_directory, f'regression_combined_{norm_option}.png'), format="png", dpi=400, bbox_inches="tight")# load all fraction files
 
     def plot_combined_npp(self, norm_option):
@@ -781,7 +781,7 @@ class figures:
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
                         verticalalignment='top', bbox=props)
 
-        fig.supylabel('Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
+        fig.supylabel(r'Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
         plt.savefig(os.path.join(self.figure_directory, f'mesma_vs_emc2_{norm_option}.png'), format="png",
                     dpi=400, bbox_inches="tight")  # load all fraction files
 
@@ -1043,7 +1043,7 @@ class figures:
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
                         verticalalignment='top', bbox=props)
 
-        fig.supylabel('Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
+        fig.supylabel(r'Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
         plt.savefig(os.path.join(self.figure_directory, f'cross_normalization_{mode}.png'), format="png",
                     dpi=400, bbox_inches="tight")  # load all fraction files
 
@@ -1157,7 +1157,7 @@ class figures:
                 if row == 0:
                     ax.set_title(self.ems[col], fontsize=self.title_fontsize)
                     if col == 0:
-                        ax.set_ylabel("Image U$_\sigma$", fontsize=self.axis_label_fontsize)
+                        ax.set_ylabel(r"Image U$_\sigma$", fontsize=self.axis_label_fontsize)
 
                     u_emit = df_img_emit[f'{col_map[col]}_sigma']
                     u_shift = df_img_shift[f'{col_map[col]}_sigma']
@@ -1165,7 +1165,7 @@ class figures:
                 if row == 1:
                     ax.set_xlabel("Absolute Error", fontsize=self.axis_label_fontsize)
                     if col == 0:
-                        ax.set_ylabel("SLPIT U$_\sigma$", fontsize=self.axis_label_fontsize)
+                        ax.set_ylabel(r"SLPIT U$_\sigma$", fontsize=self.axis_label_fontsize)
 
                     u_emit = df_asd_emit[f'{col_map[col]}_sigma']
                     u_shift = df_asd_shift[f'{col_map[col]}_sigma']
@@ -1335,7 +1335,7 @@ class figures:
                 ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=8,
                         verticalalignment='top', bbox=props)
 
-        fig.supylabel('Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
+        fig.supylabel(r'Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
         plt.savefig(os.path.join(self.figure_directory, f'regression_combined_{norm_option}_sma-best.png'), format="png", dpi=400, bbox_inches="tight")# load all fraction files
 
 def run_figures(base_directory):

@@ -14,10 +14,10 @@ dependencies:
   - earthaccess
   - pypdf
   - netCDF4
-  - pip
   - openpyxl
   - matplotlib
   - spectral
+  - seaborn
   - pip:
     - matplotlib_scalebar
     - p_tqdm

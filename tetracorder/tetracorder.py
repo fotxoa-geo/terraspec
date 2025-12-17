@@ -53,7 +53,7 @@ def decode_expert_system(tetra_expert_file, groups=DEFAULT_GROUPS, log_file=DEFA
 
     expert_file_text, orig_lineno = [], []
     for line_index, line in enumerate(expert_file_commented):
-        if (not line.strip().startswith('\#') or 'TITLE=' in line) and len(line.strip()) > 0:
+        if (not line.strip().startswith(r"\#") or 'TITLE=' in line) and len(line.strip()) > 0:
             orig_lineno.append(line_index)
             expert_file_text.append(line)
     del expert_file_commented
