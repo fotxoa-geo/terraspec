@@ -29,7 +29,7 @@ import geopandas as gpd
 import rasterio
 from rasterio.features import geometry_mask
 from shapely.geometry import mapping
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes, mark_inset, InsetPosition
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes, mark_inset
 from matplotlib_scalebar.scalebar import ScaleBar
 
 def duplicate_check_fractions(array):

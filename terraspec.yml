@@ -9,7 +9,7 @@ dependencies:
   - xlrd
   - pip
   - rasterio
-  - isofit
+  - isofit=3.6.1
   #- basemap
   - earthaccess
   - pypdf
@@ -17,6 +17,7 @@ dependencies:
   - openpyxl
   - matplotlib
   - spectral
+  - seaborn
   - pip:
     - matplotlib_scalebar
     - p_tqdm
