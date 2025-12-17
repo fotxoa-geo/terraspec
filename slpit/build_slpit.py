@@ -84,9 +84,6 @@ class build_libraries:
             if int(i['plot_num']) in [114,113]:
                 continue
 
-            if os.path.isfile(os.path.join(self.output_transect_directory, f'{plot_name}_SLPIT_{self.instrument}.csv')):
-                continue
-
             print(f'\t loading... {plot_name}')
 
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}'))
@@ -98,6 +95,8 @@ class build_libraries:
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}', 'RFL'))
             plot_base_directory = os.path.join(self.output_transect_directory, f'{plot_name}', 'RFL')
 
+            if os.path.isfile(os.path.join(plot_base_directory, f'{plot_name}_SLPIT_{self.instrument}.csv')):
+                continue
 
             # white ref table
             df_white_ref = slpit.df_white_ref_table(record=i)
@@ -387,14 +386,14 @@ class build_libraries:
         # will use the nearest site for geographic distance
         em_min_samples = {'PV': 30, 'NPV': 30, 'Soil': 75}
 
-        emit_ems = sorted(spectra.get_all_ems(output_directory=self.output_directory, instrument=self.instrument))
+        emit_ems = sorted(spectra.get_all_ems(output_directory=self.output_transect_directory, instrument=self.instrument))
         df_all_emit_ems = pd.read_csv(os.path.join(self.output_directory, f"all-endmembers-{self.instrument}.csv"),
                                       low_memory=False)
         df_distance = pd.read_csv(os.path.join('gis', 'min_dist_to_emit_plots.csv'))
         all_ems = sorted(list(df_all_emit_ems.level_1.unique()))
 
         for i in emit_ems:
-            plot_number = os.path.basename(i).split('-')[1]
+            plot_number = os.path.basename(i).split('-')[1].split('_')[0]
             if int(plot_number) > 60:
                 continue
             df_em_site = pd.read_csv(i, low_memory=False)
@@ -460,7 +459,7 @@ class build_libraries:
                         remaining_samples -= remaining_samples
 
             # if list is empty do nothing
-            out_csv = os.path.join(self.output_transect_em_directory, f"{os.path.basename(i)}")
+            out_csv = os.path.join(self.output_transect_directory, 'EMS', f'Spectral-{plot_number}', f"unmix_{os.path.basename(i)}")
 
             if not ems_to_append:
                 df_em_site.to_csv(out_csv, index=False)
@@ -472,8 +471,8 @@ class build_libraries:
 
     def build_em_collection(self):
         # merge all endmembers - instrument based wavelengths
-        emit_ems = spectra.get_all_ems(output_directory=self.output_directory, instrument=self.instrument)
-        asd_ems = spectra.get_all_ems(output_directory=self.output_directory, instrument='asd')
+        emit_ems = spectra.get_all_ems(output_directory=self.output_transect_directory, instrument=self.instrument)
+        asd_ems = spectra.get_all_ems(output_directory=self.output_transect_directory, instrument='asd')
 
         # dataframes of all endmembers
         df = pd.concat((pd.read_csv(f) for f in emit_ems), ignore_index=True)
@@ -486,11 +485,11 @@ class build_libraries:
         df.to_csv(os.path.join(self.output_directory, "all-endmembers-asd.csv"), index=False)
 
         # merge all transect spectra - emit
-        emit_transects = glob(os.path.join(self.output_transect_directory, "*transect-" + self.instrument + ".csv"))
+        emit_transects = glob(os.path.join(self.output_transect_directory, '**', f'*_SLPIT_{self.instrument}.csv'), recursive=True)
         df_transect = pd.concat((pd.read_csv(f) for f in emit_transects), ignore_index=True)
-        df_transect.to_csv(os.path.join(self.output_directory, "all-transect-emit.csv"), index=False)
+        df_transect.to_csv(os.path.join(self.output_directory, f"all-SLPIT-{self.instrument}.csv"), index=False)
         spectra.df_to_envi(df=df_transect, spectral_starting_column=9, wvls=self.wvls,
-                           output_raster=os.path.join(self.output_directory, f'all-transect-{self.instrument}.hdr'))
+                           output_raster=os.path.join(self.output_directory, f'all-SLPIT-{self.instrument}.hdr'))
 
     def build_gis_data(self):
         print("Building spectral endmember gis shapefile data...", sep=' ', end='', flush=True)
@@ -501,7 +500,7 @@ class build_libraries:
         df = df.interpolate(method='nearest')
         spectra.df_to_shapefile(df, out_name=f'{self.instrument}_endmembers_slpit')
 
-        df = pd.read_csv(os.path.join(self.output_directory, f'all-transect-{self.instrument}.csv'))
+        df = pd.read_csv(os.path.join(self.output_directory, f'all-SLPIT-{self.instrument}.csv'))
         df = df.iloc[:, :8]
         df = df.replace('unk', np.nan)
         df = df.interpolate(method='nearest')
@@ -557,9 +556,9 @@ class build_libraries:
 def run_build_workflow(base_directory, sensor):
     lib = build_libraries(base_directory=base_directory, sensor=sensor)
     #lib.build_emit_transects()
-    if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
-      lib.nearest_emit_site()
-    lib.build_emit_endmembers()
-    #lib.build_em_collection()
-    #lib.build_gis_data()
-    #lib.em_qty_check()
+    #if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
+    #  lib.nearest_emit_site()
+    #lib.build_emit_endmembers()
+    lib.build_em_collection()
+    lib.build_gis_data()
+    lib.em_qty_check()
