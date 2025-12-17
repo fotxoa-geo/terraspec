@@ -19,7 +19,8 @@ import tetracorder.tetracorder as tc
 import spectral.io.envi as envi
 from emit_utils.file_checks import envi_header
 from scipy.interpolate import interp1d
-import ast
+
+
 
 def get_dd_coords(coord):
     dd_mm = float(str(coord).split(".")[0][-2:] + "." + str(coord).split(".")[1])/60
@@ -1177,75 +1178,7 @@ class spectra:
                                 wvls=True)
         save_envi(output_raster, meta_spectra, spectra_grid)
 
-    @classmethod
-    def plot_asd_file(cls, asd_file, out_directory):
-        # Load asd data
-        from matplotlib.ticker import MultipleLocator
-        data = asdreader.reader(asd_file)
-        asd_wl = data.wavelengths
 
-        try:
-            outfname = os.path.join(out_directory, f'{os.path.basename(asd_file)}.png')
-            if os.path.isfile(outfname):
-                pass
-
-            else:
-                asd_refl = data.reflectance
-
-                plt.plot(asd_wl, asd_refl, label=os.path.basename(asd_file))
-                plt.legend()
-                plt.ylabel("Reflectance (%)")
-                plt.xlabel("Wavelenghts (nm)")
-                plt.ylim([0, 1])
-                plt.xlim([325, 2525])
-
-                ax = plt.gca()
-
-                # Major ticks every 100
-                ax.xaxis.set_major_locator(MultipleLocator(100))
-                # Minor ticks every 50
-                ax.xaxis.set_minor_locator(MultipleLocator(50))
-
-                # Major ticks every 0.10
-                ax.xaxis.set_major_locator(MultipleLocator(0.10))
-                # Minor ticks every 0.05
-                ax.xaxis.set_minor_locator(MultipleLocator(0.05))
-
-                plt.savefig(outfname, bbox_inches='tight')
-                plt.clf()
-                plt.close()
-
-        except:
-            raise
-            print(asd_file, out_directory)
-
-    @classmethod
-    def plot_sed_file(cls, sed_file, out_directory):
-        # load sed data
-        data = sedreader.reader(sed_file)
-        sed_wvl = data.wavelengths
-
-
-        try:
-            outfname = os.path.join(out_directory, os.path.basename(sed_file) + '.png')
-            if os.path.isfile(outfname):
-                pass
-
-            else:
-                sed_refl = data.reflectance
-
-                plt.plot(sed_wvl, sed_refl, label=os.path.basename(sed_file))
-                plt.legend()
-                plt.ylabel("Reflectance (%)")
-                plt.xlabel("Wavelenghts (nm)")
-                plt.ylim([0, 110])
-
-                plt.savefig(outfname, bbox_inches='tight')
-                plt.clf()
-                plt.close()
-
-        except:
-            print(sed_file, out_directory)
     
     @classmethod
     def vector_normalize_spectrum(cls, array):
@@ -1309,12 +1242,5 @@ class spectra:
 
         return sim_dictionary, df_minerals_sim
 
-    @classmethod
-    def white_ref_correction(cls, spectra, time_s, white_reference_spectra_t1, white_reference_spectra_t2, time_1, time_2):
-
-        m = (white_reference_spectra_t2 - white_reference_spectra_t1) / int((time_2 - time_1).total_seconds())
-        r = spectra / (white_reference_spectra_t1 + m * (int((time_s - time_1).total_seconds())))
-
-        return r
 
 

@@ -84,17 +84,20 @@ class build_libraries:
             if int(i['plot_num']) in [114,113]:
                 continue
 
-            if os.path.isfile(os.path.join(self.output_transect_directory, f'{plot_name}-transect-{self.instrument}.csv')):
+            if os.path.isfile(os.path.join(self.output_transect_directory, f'{plot_name}_SLPIT_{self.instrument}.csv')):
                 continue
 
             print(f'\t loading... {plot_name}')
 
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}'))
-            plot_base_directory = os.path.join(self.output_transect_directory, f'{plot_name}')
             img_data = requests.get(plot_pic_url).content
-            with open(os.path.join(plot_base_directory, f'{plot_name}_landscape_picture.jpg'),
+            with open(os.path.join(self.output_transect_directory, f'{plot_name}', f'{plot_name}_landscape_pic.jpg'),
                       'wb') as handler:
                 handler.write(img_data)
+
+            create_directory(os.path.join(self.output_transect_directory, f'{plot_name}', 'RFL'))
+            plot_base_directory = os.path.join(self.output_transect_directory, f'{plot_name}', 'RFL')
+
 
             # white ref table
             df_white_ref = slpit.df_white_ref_table(record=i)
@@ -109,11 +112,11 @@ class build_libraries:
             create_directory(os.path.join(plot_base_directory, 'individual_spectra_plots'))
 
             if all_spectrometer_files:
-                p_map(partial(spectra.plot_asd_file, out_directory=os.path.join(plot_base_directory, 'individual_spectra_plots')),
+                p_map(partial(slpit.plot_asd_file, out_directory=os.path.join(plot_base_directory, 'individual_spectra_plots')),
                       all_spectrometer_files, **{"desc": "\t\t plotting asd files: " + plot_name + "...", "ncols": 150})
 
             else:
-                p_map(partial(spectra.plot_sed_file, out_directory=os.path.join(plot_base_directory, 'individual_spectra_plots')),
+                p_map(partial(slpit.plot_sed_file, out_directory=os.path.join(plot_base_directory, 'individual_spectra_plots')),
                       all_spectrometer_files, **{"desc": "\t\t plotting sed files: " + plot_name + "...", "ncols": 150})
 
             # white refs from transects
@@ -185,7 +188,7 @@ class build_libraries:
                     df_spectra_array = df_spectra.iloc[:, 9:].to_numpy()
                     df_time_array = df_spectra.iloc[:, 8].to_numpy()
 
-                    corrected_reflectance = p_map(partial(spectra.white_ref_correction,
+                    corrected_reflectance = p_map(partial(slpit.white_ref_correction,
                                                           white_reference_spectra_t1=white_reference_spectra_t1,
                                                           white_reference_spectra_t2=white_reference_spectra_t2,
                                                           time_1=t1, time_2=t2),
@@ -225,7 +228,7 @@ class build_libraries:
                     print(f"\t\t no white ref correction available on: {plot_name} {line_num}")
 
             df_corrected_all = pd.concat(adjusted_dfs)
-            df_corrected_all.to_csv(os.path.join(plot_base_directory, f'{plot_name}-transect.csv'),
+            df_corrected_all.to_csv(os.path.join(plot_base_directory, f'{plot_name}_SLPIT_asd.csv'),
                                     index=False)
 
             # convolve wavelengths to user specified instrument
@@ -237,7 +240,7 @@ class build_libraries:
             df_convolve = pd.DataFrame(results_convolve)
             df_convolve.columns = list(self.wvls)
             df_convolve = pd.concat([df_corrected_all.iloc[:, :9].reset_index(drop=True), df_convolve], axis=1)
-            df_convolve.to_csv(os.path.join(plot_base_directory, f'{plot_name}-transect-{self.instrument}.csv'), index=False)
+            df_convolve.to_csv(os.path.join(plot_base_directory, f'{plot_name}_SLPIT_{self.instrument}.csv'), index=False)
 
             # get the line counts
             max_line_files = []
@@ -262,7 +265,7 @@ class build_libraries:
             print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
             meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls,
                                     wvls=True)
-            output_raster = os.path.join(plot_base_directory, f'{plot_name.replace(" ", "")}.hdr')
+            output_raster = os.path.join(plot_base_directory, f'{plot_name.replace(" ", "")}_SLPIT_{self.instrument}.hdr')
             save_envi(output_raster, meta_spectra, spectra_grid)
             time.sleep(3)
 
@@ -275,6 +278,7 @@ class build_libraries:
         for i in records:
             plot_name = f"{i['team_names'].capitalize()} - {i['plot_num']:03d}"
             plot_directory = os.path.join(self.spectral_transect_directory, plot_name)
+            plot_name = f"{i['team_names'].capitalize()}-{i['plot_num']:03d}"
             date = i['sample_date']
             plot_measurements = i['plot_measurements'].split(",")
 
@@ -284,13 +288,17 @@ class build_libraries:
             if 'thermal' in i['team_names']:
                 continue
 
-            if os.path.isfile(os.path.join(self.output_transect_em_directory_raw, f'{plot_name.replace(" ", "")}-{self.instrument}.csv')):
+            if os.path.isfile(os.path.join(self.output_transect_directory, f'{plot_name.replace(" ", "")}-{self.instrument}.csv')):
                 continue
 
             if int(i['plot_num']) in [114,113, 119, 114, 113]:
                 continue
 
             print(f'\t loading... {plot_name}')
+
+            create_directory(os.path.join(self.output_transect_directory, f'{plot_name}'))
+            create_directory(os.path.join(self.output_transect_directory, f'{plot_name}', 'EMS'))
+            plot_em_directory = os.path.join(self.output_transect_directory, f'{plot_name}', 'EMS')
 
             # em table
             df_transect_em = slpit.df_em_table(record=i)
@@ -342,7 +350,7 @@ class build_libraries:
                                                                         'species', 'notes']] = line_num, em_clas, species, notes
 
             df_results = df_results.sort_values("level_1")
-            df_results.to_csv(os.path.join(self.output_transect_em_directory_raw, plot_name.replace(" ", "") + '-asd.csv'),
+            df_results.to_csv(os.path.join(plot_em_directory, f'{plot_name.replace(" ", "")}_EMS_asd.csv'),
                               index=False)
 
             # convolve wavelengths to user specified instrument
@@ -354,8 +362,9 @@ class build_libraries:
             df_convolve = pd.concat([df_results.iloc[:, :11].reset_index(drop=True), df_convolve], axis=1)
 
             df_convolve = df_convolve.sort_values("level_1")
-            df_convolve.to_csv(os.path.join(self.output_transect_em_directory_raw,
-                                            plot_name.replace(" ", "") + '-' + self.instrument + '.csv'), index=False)
+            df_convolve.to_csv(os.path.join(plot_em_directory,
+                                            f'{plot_name.replace(" ", "")}_EMS_{self.instrument}.csv'),
+                               index=False)
 
             # save files as envi files
             spectra_grid = np.zeros((len(results_convolve), 1, len(self.wvls)))
@@ -368,7 +377,7 @@ class build_libraries:
             print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
             meta_spectra = get_meta(lines=len(results_convolve), samples=spectra_grid.shape[1], bands=self.wvls,
                                     wvls=True)
-            output_raster = os.path.join(self.output_transect_em_directory_raw, plot_name.replace(" ", "") + '-' + self.instrument + ".hdr")
+            output_raster = os.path.join(plot_em_directory, f'{plot_name.replace(" ", "")}_EMS_{self.instrument}.hdr')
             save_envi(output_raster, meta_spectra, spectra_grid)
             time.sleep(3)
             print("done")
@@ -547,10 +556,10 @@ class build_libraries:
 
 def run_build_workflow(base_directory, sensor):
     lib = build_libraries(base_directory=base_directory, sensor=sensor)
-    lib.build_emit_transects()
-    #if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
-    #   lib.nearest_emit_site()
-    #lib.build_emit_endmembers()
+    #lib.build_emit_transects()
+    if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
+      lib.nearest_emit_site()
+    lib.build_emit_endmembers()
     #lib.build_em_collection()
     #lib.build_gis_data()
     #lib.em_qty_check()
