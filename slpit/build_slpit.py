@@ -84,9 +84,6 @@ class build_libraries:
             if int(i['plot_num']) in [114,113]:
                 continue
 
-            if os.path.isfile(os.path.join(self.output_transect_directory, f'{plot_name}_SLPIT_{self.instrument}.csv')):
-                continue
-
             print(f'\t loading... {plot_name}')
 
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}'))
@@ -98,6 +95,8 @@ class build_libraries:
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}', 'RFL'))
             plot_base_directory = os.path.join(self.output_transect_directory, f'{plot_name}', 'RFL')
 
+            if os.path.isfile(os.path.join(plot_base_directory, f'{plot_name}_SLPIT_{self.instrument}.csv')):
+                continue
 
             # white ref table
             df_white_ref = slpit.df_white_ref_table(record=i)
@@ -556,10 +555,10 @@ class build_libraries:
 
 def run_build_workflow(base_directory, sensor):
     lib = build_libraries(base_directory=base_directory, sensor=sensor)
-    #lib.build_emit_transects()
+    lib.build_emit_transects()
     if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
       lib.nearest_emit_site()
     lib.build_emit_endmembers()
-    #lib.build_em_collection()
-    #lib.build_gis_data()
-    #lib.em_qty_check()
+    lib.build_em_collection()
+    lib.build_gis_data()
+    lib.em_qty_check()

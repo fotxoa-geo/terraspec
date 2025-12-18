@@ -1,19 +1,9 @@
 import argparse
-import os
 from osgeo import gdal
-import math
-import sys
-import numpy as np 
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-utils_path = os.path.join(current_dir, '..')
-sys.path.append(utils_path)
-
-
+import numpy as np
 from utils.envi import get_meta, save_envi
 from utils.spectra_utils import spectra
 import os
-from spectral.io import envi
 import pandas as pd
 import geopandas as gp
 import netCDF4 as nc
