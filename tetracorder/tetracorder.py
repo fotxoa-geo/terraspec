@@ -85,13 +85,13 @@ def decode_expert_system(tetra_expert_file, groups=DEFAULT_GROUPS, log_file=DEFA
                 for key in globals.keys():
                     if key in expert_file_text[expert_line_index]:
                         line_remainder = expert_file_text[expert_line_index][len(key) + 2].strip()
-                        if '\#' in line_remainder:
-                            line_remainder = line_remainder[:line_remainder.index('\#')]
+                        if r'\#' in line_remainder:
+                            line_remainder = line_remainder[:line_remainder.index(r'\#')]
                         globals[key] = line_remainder
             elif expert_file_text[expert_line_index].startswith('groupname'):
                 split_line = expert_file_text[expert_line_index].strip().split()
                 group_str = expert_file_text[expert_line_index][
-                            len('groupname ' + split_line[1]) + 1:expert_file_text[expert_line_index].index('\#')]
+                            len('groupname ' + split_line[1]) + 1:expert_file_text[expert_line_index].index(r'\#')]
                 group_str = group_str.replace('region', '').strip()
                 group_str = group_str.replace(' broad', '-broad').strip()
                 group_str = group_str.replace(' curve', '_curve').strip()
@@ -101,7 +101,7 @@ def decode_expert_system(tetra_expert_file, groups=DEFAULT_GROUPS, log_file=DEFA
                 split_line = expert_file_text[expert_line_index].strip().split()
                 casenames[split_line[1]] = expert_file_text[expert_line_index][
                                            len('casename ' + split_line[1]):expert_file_text[expert_line_index].index(
-                                               '\#')]
+                                               r'\#')]
 
             expert_line_index = expert_line_index + 1
             continue
@@ -133,7 +133,7 @@ def decode_expert_system(tetra_expert_file, groups=DEFAULT_GROUPS, log_file=DEFA
                 longname += ' ' + toks[_t]
 
         if 'use=' in expert_file_text[expert_line_index]:
-            use = expert_file_text[expert_line_index].split('use=')[1].split('\#')[0].strip()
+            use = expert_file_text[expert_line_index].split('use=')[1].split(r'\#')[0].strip()
 
         # if keyword 'group' appears, define the current group name
         if expert_file_text[expert_line_index].startswith('group'):
@@ -150,7 +150,7 @@ def decode_expert_system(tetra_expert_file, groups=DEFAULT_GROUPS, log_file=DEFA
             for linehunt in range(100):
                 if 'endoutput' in expert_file_text[expert_line_index + linehunt]:
                     break
-                if expert_file_text[expert_line_index + linehunt][:2] == '\#':
+                if expert_file_text[expert_line_index + linehunt][:2] == r'\#':
                     line_offset += 1
 
             tetra_filename = expert_file_text[expert_line_index + 2 + line_offset].strip().split()[0]
@@ -173,7 +173,7 @@ def decode_expert_system(tetra_expert_file, groups=DEFAULT_GROUPS, log_file=DEFA
 
                     last_valid = len(toks)
                     for _t in range(len(toks) - 1, 5, -1):
-                        if '\#' in toks[_t]:
+                        if r'\#' in toks[_t]:
                             last_valid = _t
                         elif toks[_t] in valid_feature_constraints:
                             local_feature[toks[_t]] = recast_globals(
@@ -192,7 +192,7 @@ def decode_expert_system(tetra_expert_file, groups=DEFAULT_GROUPS, log_file=DEFA
                 if toks[0] == 'constraint:':
                     last_valid = len(toks)
                     for _t in range(len(toks) - 1, 0, -1):
-                        if '\#' in toks[_t]:
+                        if r'\#' in toks[_t]:
                             last_valid = _t
                         elif np.any([vcc in toks[_t] for vcc in valid_constituent_constraints]):
                             if '<' in toks[_t]:
@@ -219,7 +219,7 @@ def read_mineral_fractions(file_list: List):
         Dictionary keyed with unique file identifiers corresponding to expert system file
     """
     mineral_fractions = OrderedDict()
-    mineral_names = [re.split('\.|-', os.path.basename(x))[0] for x in file_list]
+    mineral_names = [re.split(r'\.|-', os.path.basename(x))[0] for x in file_list]
     for _f, filename in enumerate(file_list):
         with open(filename, 'r') as fin:
             fractions_file_commented = fin.readlines()

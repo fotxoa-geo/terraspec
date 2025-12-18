@@ -176,61 +176,6 @@ class unmix_runs:
 
         print(f'total {mode} calls: {count}')
     
-    
-    def unmix_scenes(self, mode:str):
-        print(f"unmixing scenes... {mode}")
-        create_directory(os.path.join(self.scene_directory, mode))
-        
-        emit_scenes = glob(os.path.join(self.gis_directory, 'emit-data', 'envi', 'l2a', '*_reflectance'))
-                
-        if mode == 'mesma' or mode == 'mesma-best':
-            simulation_parameters = self.optimal_parameters_mesma
-        
-        elif mode == 'sma' or mode == 'sma-best':
-            simulation_parameters = self.optimal_parameters_sma
-        
-        count = 0
-
-        output_dest = os.path.join(self.scene_directory, mode)
-        
-        for i in emit_scenes:
-            data_type = os.path.basename(i).split('_')[2]
-
-            if data_type == 'RFL': 
-                
-                call_unmix(mode=mode, dry_run=self.dry_run, reflectance_file=i, em_file=self.emit_global, parameters=simulation_parameters, 
-                output_dest=os.path.join(output_dest, os.path.basename(i)), scale=self.scale, spectra_starting_column=self.spectra_starting_column_global, scenes=True)
-                
-                count += 1
-
-            else:
-                pass
-
-    
-    def ortho_scenes(self, mode:str):
-        print(f"ortho scenes... {mode}")
-        create_directory(os.path.join(self.scene_directory, f'{mode}-ortho'))
-        out_path = os.path.join(self.scene_directory, f'{mode}-ortho')
-        emit_scenes = glob(os.path.join(self.output_directory, 'scenes', f'{mode}', '*_reflectance*_fractional_cover'))
-        
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        ortho_path = os.path.join(current_dir, 'ortho_frac_cover.py')
-        
-        for file in emit_scenes:
-            acquisition_date = os.path.basename(file).split("_")[4]
-            acquisition_type = os.path.basename(file).split("_")[2]             
-            version = os.path.basename(file).split("_")[3]
-            product = os.path.basename(file).split("_")[1]
-
-            corresponding_nc_file = sorted(glob(os.path.join(self.gis_directory, 'emit-data', 'nc_files', product.lower(), f'*{product}_{acquisition_type}_{version}_{acquisition_date}*.nc')))
-            nc_file = corresponding_nc_file[0]
-            
-            base_call = f'python {ortho_path} -frac_img {file} -nc_file {nc_file} -out {out_path} '
-
-            outfile = os.path.join(self.output_directory, 'scenes', 'outlogs', f"{acquisition_date}-{mode}-ortho.out")
-            sbatch_cmd = f"sbatch -N 1 -c 1 --mem 50G --output {outfile} --job-name emit.ortho  --wrap='{base_call}'"
-            subprocess.run(sbatch_cmd, shell=True, text=True)
-
 def run_slipt_unmix(base_directory, dry_run):
     all_runs = unmix_runs(base_directory, dry_run)
     
@@ -243,10 +188,6 @@ def run_slipt_unmix(base_directory, dry_run):
             all_runs.unmix_calls(mode='sma')
             all_runs.unmix_calls(mode='mesma')
             all_runs.unmix_calls(mode='sma-best')
-        elif user_input == 'B':
-            all_runs.unmix_scenes(mode='sma')
-        elif user_input == 'C':
-            all_runs.ortho_scenes(mode='sma')
         elif user_input == 'D':
             break
             

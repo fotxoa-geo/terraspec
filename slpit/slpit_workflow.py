@@ -52,8 +52,8 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
             run_build_workflow(base_directory=base_directory, sensor=sensor)
 
         # run the geoprocess on the emit imagery
-        elif user_input == 'D':
-            run_geoprocess_utils(base_directory=base_directory, dry_run=dry_run)
+        #elif user_input == 'D':
+        #    run_geoprocess_utils(base_directory=base_directory, dry_run=dry_run)
 
         elif user_input =='F':
             sync_extracts(base_directory, project='emit')

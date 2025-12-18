@@ -15,7 +15,7 @@ from utils.text_guide import cursor_print, query_yes_no
 from utils.slpit_utils import slpit
 from math import radians, sin, cos, sqrt, atan2
 import geopandas as gpd
-
+import subprocess
 
 def haversine_distance(lat1, lon1, lat2, lon2, plot):
     R = 6371.0  # Earth radius in kilometers
@@ -61,6 +61,9 @@ class build_libraries:
 
         # output data directories
         self.output_transect_directory = os.path.join(self.output_directory, 'spectral_transects')
+        
+        # output gis directory
+        self.imagery_directory =  os.path.join(base_directory, 'gis')
 
     def build_emit_transects(self):
         # the transect spectra
@@ -386,14 +389,14 @@ class build_libraries:
         # will use the nearest site for geographic distance
         em_min_samples = {'PV': 30, 'NPV': 30, 'Soil': 75}
 
-        emit_ems = sorted(spectra.get_all_ems(output_directory=self.output_directory, instrument=self.instrument))
+        emit_ems = sorted(spectra.get_all_ems(output_directory=self.output_transect_directory, instrument=self.instrument))
         df_all_emit_ems = pd.read_csv(os.path.join(self.output_directory, f"all-endmembers-{self.instrument}.csv"),
                                       low_memory=False)
         df_distance = pd.read_csv(os.path.join('gis', 'min_dist_to_emit_plots.csv'))
         all_ems = sorted(list(df_all_emit_ems.level_1.unique()))
 
         for i in emit_ems:
-            plot_number = os.path.basename(i).split('-')[1]
+            plot_number = os.path.basename(i).split('-')[1].split('_')[0]
             if int(plot_number) > 60:
                 continue
             df_em_site = pd.read_csv(i, low_memory=False)
@@ -459,7 +462,7 @@ class build_libraries:
                         remaining_samples -= remaining_samples
 
             # if list is empty do nothing
-            out_csv = os.path.join(self.output_transect_em_directory, f"{os.path.basename(i)}")
+            out_csv = os.path.join(self.output_transect_directory, 'EMS', f'Spectral-{plot_number}', f"unmix_{os.path.basename(i)}")
 
             if not ems_to_append:
                 df_em_site.to_csv(out_csv, index=False)
@@ -471,8 +474,8 @@ class build_libraries:
 
     def build_em_collection(self):
         # merge all endmembers - instrument based wavelengths
-        emit_ems = spectra.get_all_ems(output_directory=self.output_directory, instrument=self.instrument)
-        asd_ems = spectra.get_all_ems(output_directory=self.output_directory, instrument='asd')
+        emit_ems = spectra.get_all_ems(output_directory=self.output_transect_directory, instrument=self.instrument)
+        asd_ems = spectra.get_all_ems(output_directory=self.output_transect_directory, instrument='asd')
 
         # dataframes of all endmembers
         df = pd.concat((pd.read_csv(f) for f in emit_ems), ignore_index=True)
@@ -485,11 +488,11 @@ class build_libraries:
         df.to_csv(os.path.join(self.output_directory, "all-endmembers-asd.csv"), index=False)
 
         # merge all transect spectra - emit
-        emit_transects = glob(os.path.join(self.output_transect_directory, "*transect-" + self.instrument + ".csv"))
+        emit_transects = glob(os.path.join(self.output_transect_directory, '**', f'*_SLPIT_{self.instrument}.csv'), recursive=True)
         df_transect = pd.concat((pd.read_csv(f) for f in emit_transects), ignore_index=True)
-        df_transect.to_csv(os.path.join(self.output_directory, "all-transect-emit.csv"), index=False)
+        df_transect.to_csv(os.path.join(self.output_directory, f"all-SLPIT-{self.instrument}.csv"), index=False)
         spectra.df_to_envi(df=df_transect, spectral_starting_column=9, wvls=self.wvls,
-                           output_raster=os.path.join(self.output_directory, f'all-transect-{self.instrument}.hdr'))
+                           output_raster=os.path.join(self.output_directory, f'all-SLPIT-{self.instrument}.hdr'))
 
     def build_gis_data(self):
         print("Building spectral endmember gis shapefile data...", sep=' ', end='', flush=True)
@@ -500,7 +503,7 @@ class build_libraries:
         df = df.interpolate(method='nearest')
         spectra.df_to_shapefile(df, out_name=f'{self.instrument}_endmembers_slpit')
 
-        df = pd.read_csv(os.path.join(self.output_directory, f'all-transect-{self.instrument}.csv'))
+        df = pd.read_csv(os.path.join(self.output_directory, f'all-SLPIT-{self.instrument}.csv'))
         df = df.iloc[:, :8]
         df = df.replace('unk', np.nan)
         df = df.interpolate(method='nearest')
@@ -551,6 +554,41 @@ class build_libraries:
         column_names[-1] = 'emit_plot_analysis'
         min_dist_df.columns = column_names
         min_dist_df.to_csv(os.path.join('gis', 'min_dist_to_emit_plots.csv'), index=False)
+    
+    def extract_windows(self, pad, window_size):
+        # get plot center points from ipad - these are the plot centers
+        spatial_field_data = os.path.join('gis', "Observation.json")
+        
+        # get reflectance and uncertainty files
+        reflectance_files = sorted(glob(os.path.join(self.imagery_directory, 'emit-data', 'products' ,'**', '*_reflectance'), recursive=True))
+        reflectance_uncertainty_files = sorted(glob(os.path.join(self.imagery_directory, 'emit-data' ,'products', '**', '*_reflectance_uncertainty'), recursive=True))
+        
+        # get mask files
+        mask_files = sorted(glob(os.path.join(self.imagery_directory, 'emit-data', 'products', '**', '*_mask'), recursive=True))
+        mask_files = [file for file in mask_files if '_band_mask' not in file]
+
+        all_files = reflectance_files + reflectance_uncertainty_files + mask_files
+        
+        # create outlogs directory for extractions
+        create_directory(os.path.join(self.output_transect_directory, 'extract_outlogs'))
+        extract_outlog_directory = os.path.join(self.output_transect_directory, 'extract_outlogs')
+        
+        # extract specific window sized from images
+        for file in all_files:
+            acquisition_date = os.path.basename(file).split("_")[4]
+            acquisition_type = os.path.basename(file).split("_")[2]
+            version = os.path.basename(file).split("_")[3]
+            product = os.path.basename(file).split("_")[1]
+            
+            corresponding_nc_file = sorted(glob(os.path.join(self.imagery_directory, 'emit-data', 'nc_files', '**', f'*{product}_{acquisition_type}_{version}_{acquisition_date}*.nc'), recursive=True))
+            nc_file = corresponding_nc_file[0]
+
+            base_call = f'python slpit/window_extract.py -rfl_img {file} -nc_file {nc_file} -w_size {window_size} ' \
+                         f'-shp {spatial_field_data} -pad {pad} -out {self.output_transect_directory} '
+                         
+            outfile = os.path.join(extract_outlog_directory, f'{acquisition_date}_{acquisition_type}.out')
+            sbatch_cmd = f"sbatch -p patient -N 1 -c 1 --mem 15G --output {outfile} --job-name emit.extract  --wrap='{base_call}'"
+            subprocess.run(sbatch_cmd, shell=True, text=True)
 
 
 def run_build_workflow(base_directory, sensor):
@@ -562,3 +600,4 @@ def run_build_workflow(base_directory, sensor):
     lib.build_em_collection()
     lib.build_gis_data()
     lib.em_qty_check()
+    lib.extract_windows(pad=1, window_size=3)
