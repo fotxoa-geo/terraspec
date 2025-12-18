@@ -1144,18 +1144,18 @@ class spectra:
         return first_derivative
 
     @classmethod
-    def get_all_ems(cls,output_directory: str, instrument: str):
+    def get_all_ems(cls, output_directory: str, instrument: str):
         #spectral_endmembers = glob(os.path.join(output_directory, 'spectral_endmembers', '*' + instrument + ".csv"))
-        emit_transect_endmembers = glob(os.path.join(output_directory, 'spectral_transects', 'endmembers-raw', '*' + instrument + ".csv"))
+        emit_transect_endmembers = glob(os.path.join(output_directory,'**' , f'*EMS_{instrument}.csv'), recursive=True)
         emit_transect_endmembers = [item for item in emit_transect_endmembers if "Thermal" not in item]
         all_ems = emit_transect_endmembers
 
         return all_ems
 
     @classmethod
-    def df_to_shapefile(cls,df, base_directory: str, out_name):
+    def df_to_shapefile(cls, df, out_name, base_directory=None):
         df_shp = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.longitude, df.latitude), crs="EPSG:4326")
-        df_shp.to_file(os.path.join(base_directory, "gis", out_name + '.shp'), driver='ESRI Shapefile')
+        df_shp.to_file(os.path.join("gis", f'{out_name}.geojson'), driver='GeoJSON')
 
     @classmethod
     def save_df_em(cls, df, output, instrument):

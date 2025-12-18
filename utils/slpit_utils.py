@@ -67,11 +67,12 @@ class slpit:
 
     @classmethod
     def plot_asd_file(cls, asd_file, out_directory):
-        # Load asd data
-        data = asdreader.reader(asd_file)
-        asd_wl = data.wavelengths
 
         try:
+            # Load asd data
+            data = asdreader.reader(asd_file)
+            asd_wl = data.wavelengths
+            
             outfname = os.path.join(out_directory, f'{os.path.basename(asd_file)}.png')
             if os.path.isfile(outfname):
                 pass
@@ -103,7 +104,7 @@ class slpit:
                 plt.close()
 
         except:
-            raise
+            #raise
             print(asd_file, out_directory)
 
     @classmethod
