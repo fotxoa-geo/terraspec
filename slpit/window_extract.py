@@ -1,5 +1,4 @@
 import argparse
-import os
 from osgeo import gdal
 import math
 import sys

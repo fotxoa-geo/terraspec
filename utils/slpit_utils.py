@@ -106,15 +106,17 @@ class slpit:
         except:
             #raise
             print(asd_file, out_directory)
+            #raise
+
 
     @classmethod
     def plot_sed_file(cls, sed_file, out_directory):
-        # load sed data
-        data = sedreader.reader(sed_file)
-        sed_wvl = data.wavelengths
-
         try:
-            outfname = os.path.join(out_directory, os.path.basename(sed_file) + '.png')
+            # load sed data
+            data = sedreader.reader(sed_file)
+            sed_wvl = data.wavelengths
+
+            outfname = os.path.join(out_directory, f'{os.path.basename(sed_file)}.png')
             if os.path.isfile(outfname):
                 pass
 
@@ -132,4 +134,6 @@ class slpit:
                 plt.close()
 
         except:
-            print(sed_file, out_directory)
+            print(sed_file)
+            raise
+
