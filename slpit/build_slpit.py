@@ -15,7 +15,7 @@ from utils.text_guide import cursor_print, query_yes_no
 from utils.slpit_utils import slpit
 from math import radians, sin, cos, sqrt, atan2
 import geopandas as gpd
-
+import subprocess
 
 def haversine_distance(lat1, lon1, lat2, lon2, plot):
     R = 6371.0  # Earth radius in kilometers
@@ -61,6 +61,9 @@ class build_libraries:
 
         # output data directories
         self.output_transect_directory = os.path.join(self.output_directory, 'spectral_transects')
+        
+        # output gis directory
+        self.imagery_directory =  os.path.join(base_directory, 'gis')
 
     def build_emit_transects(self):
         # the transect spectra
@@ -551,14 +554,50 @@ class build_libraries:
         column_names[-1] = 'emit_plot_analysis'
         min_dist_df.columns = column_names
         min_dist_df.to_csv(os.path.join('gis', 'min_dist_to_emit_plots.csv'), index=False)
+    
+    def extract_windows(self, pad, window_size):
+        # get plot center points from ipad - these are the plot centers
+        spatial_field_data = os.path.join('gis', "Observation.json")
+        
+        # get reflectance and uncertainty files
+        reflectance_files = sorted(glob(os.path.join(self.imagery_directory, 'emit-data', 'products' ,'**', '*_reflectance'), recursive=True))
+        reflectance_uncertainty_files = sorted(glob(os.path.join(self.imagery_directory, 'emit-data' ,'products', '**', '*_reflectance_uncertainty'), recursive=True))
+        
+        # get mask files
+        mask_files = sorted(glob(os.path.join(self.imagery_directory, 'emit-data', 'products', '**', '*_mask'), recursive=True))
+        mask_files = [file for file in mask_files if '_band_mask' not in file]
+
+        all_files = reflectance_files + reflectance_uncertainty_files + mask_files
+        
+        # create outlogs directory for extractions
+        create_directory(os.path.join(self.output_transect_directory, 'extract_outlogs'))
+        extract_outlog_directory = os.path.join(self.output_transect_directory, 'extract_outlogs')
+        
+        # extract specific window sized from images
+        for file in all_files:
+            acquisition_date = os.path.basename(file).split("_")[4]
+            acquisition_type = os.path.basename(file).split("_")[2]
+            version = os.path.basename(file).split("_")[3]
+            product = os.path.basename(file).split("_")[1]
+            
+            corresponding_nc_file = sorted(glob(os.path.join(self.imagery_directory, 'emit-data', 'nc_files', '**', f'*{product}_{acquisition_type}_{version}_{acquisition_date}*.nc'), recursive=True))
+            nc_file = corresponding_nc_file[0]
+
+            base_call = f'python slpit/window_extract.py -rfl_img {file} -nc_file {nc_file} -w_size {window_size} ' \
+                         f'-shp {spatial_field_data} -pad {pad} -out {self.output_transect_directory} '
+                         
+            outfile = os.path.join(extract_outlog_directory, f'{acquisition_date}_{acquisition_type}.out')
+            sbatch_cmd = f"sbatch -p patient -N 1 -c 1 --mem 15G --output {outfile} --job-name emit.extract  --wrap='{base_call}'"
+            subprocess.run(sbatch_cmd, shell=True, text=True)
 
 
 def run_build_workflow(base_directory, sensor):
     lib = build_libraries(base_directory=base_directory, sensor=sensor)
-    #lib.build_emit_transects()
-    #if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
-    #  lib.nearest_emit_site()
-    #lib.build_emit_endmembers()
+    lib.build_emit_transects()
+    if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
+      lib.nearest_emit_site()
+    lib.build_emit_endmembers()
     lib.build_em_collection()
     lib.build_gis_data()
     lib.em_qty_check()
+    lib.extract_windows(pad=1, window_size=3)

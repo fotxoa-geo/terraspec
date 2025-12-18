@@ -34,9 +34,9 @@ nc_out_directory=${nc_fid_directory}/${product}/
 mkdir ${nc_out_directory} -p
 
 if [ "${product}" = "L1B" ]; then
-    python ./emit-utils/emit_utils/reformat.py ${nc_file} ${nc_out_directory} "--orthorectify"
+    python ./emit-utils/emit_utils/reformat.py ${nc_file} ${nc_out_directory} --orthorectify --overwrite
 else
-    python ./emit-utils/emit_utils/reformat.py ${nc_file} ${nc_out_directory}
+    python ./emit-utils/emit_utils/reformat.py ${nc_file} ${nc_out_directory} --overwrite
 fi
 
 echo "Geoprocess complete!"
@@ -46,7 +46,7 @@ echo "Geoprocess complete!"
 if [ "${data_type}" = "RFL" ]; then
 
     rfl_img=${nc_out_directory}/${filebase_name}_reflectance
-
+    
     #create rgbs if images
     python slpit/envi_to_rgb.py -rfl_img $rfl_img -nc_file ${nc_file} -out ${nc_out_directory}
     
