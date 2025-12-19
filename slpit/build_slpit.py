@@ -591,6 +591,10 @@ class build_libraries:
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
     def unmix_reflectances(self, sensor):
+        # create outlogs for unmix and tc
+        create_directory(os.path.join(self.output_transect_directory, 'unmix_tc_outlogs'))
+        extract_outlog_directory = os.path.join(self.output_transect_directory, 'unmix_tc_outlogs')
+
         # get plot center points from ipad - these are the plot centers
         spatial_field_data = os.path.join('gis', "Observation.json")
 
@@ -600,8 +604,9 @@ class build_libraries:
             plot_number = os.path.basename(i).split("_")[0]
             plot_base_directory = os.path.join(self.output_transect_directory, plot_number)
             em_file = os.path.join(plot_base_directory, f'unmix_{plot_number}_EMS_{sensor}.csv')
-            base_call = f'sh {os.path.join("slpit", "slpit_image_process.sh")} {i} {em_file} {plot_base_directory}'
-            sbatch_cmd = f"sbatch -p patient -N 1 -c 50 --mem 50G --job-name slpit.umix  --wrap='{base_call}'"
+            outfile = os.path.join(extract_outlog_directory, f'{os.path.basename(i)}.out')
+            base_call = f'sh {os.path.join("slpit", "slpit_image_processing.sh")} {i} {em_file} {plot_base_directory}'
+            sbatch_cmd = f"sbatch -p patient -N 1 -c 50 --mem 40G --output {outfile} --job-name slpit.umix  --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
         reflectance_emit_files = sorted(glob(os.path.join(self.output_transect_directory, '**', f'*_EXT'), recursive=True))
@@ -610,12 +615,12 @@ class build_libraries:
 
 def run_build_workflow(base_directory, sensor):
     lib = build_libraries(base_directory=base_directory, sensor=sensor)
-    lib.build_emit_transects()
-    if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
-      lib.nearest_emit_site()
-    lib.build_emit_endmembers()
-    lib.build_em_collection()
-    lib.build_gis_data()
-    lib.em_qty_check()
-    lib.extract_windows(pad=1, window_size=3)
+    #lib.build_emit_transects()
+    #if not os.path.isfile(os.path.join('gis', 'min_dist_to_emit_plots.csv')):
+    #  lib.nearest_emit_site()
+    #lib.build_emit_endmembers()
+    #lib.build_em_collection()
+    #lib.build_gis_data()
+    #lib.em_qty_check()
+    #lib.extract_windows(pad=1, window_size=3)
     lib.unmix_reflectances(sensor=sensor)

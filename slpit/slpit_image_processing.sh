@@ -7,8 +7,8 @@ echo " "
 rfl_file=$1
 unmixing_library_local=$2
 out_base=$3
-unmixing_library_global=/terraspec_output/simulation/output/endmember_libraries/convex_hull__n_dims_4_sensor_emit_geofilter_True_unmix_library.csv
-kalahari_unmixing_library=/terraspec_output/simulation/output/production/meyer-okin.csv
+unmixing_library_global=./terraspec_output/simulation/output/endmember_libraries/convex_hull__n_dims_4_sensor_emit_geofilter_True_unmix_library.csv
+kalahari_unmixing_library=./terraspec_output/simulation/output/production/meyer-okin.csv
 
 filebase_name=$(basename "$rfl_file")
 NORMALIZED_PATH_OUTBASE=$(echo "${out_base}" | tr '\\' '/')
@@ -17,19 +17,21 @@ NORMALIZED_LOCAL_LIB_PATH=$(echo "${unmixing_library_local}" | tr '\\' '/')
 NORMALIZED_Kalahari_LIB_PATH=$(echo "${kalahari_unmixing_library}" | tr '\\' '/')
 
 echo "basename: ${rfl_file}"
+echo "You are currently in: $PWD"
 
 # Seperate basename into components
 IFS='_' read -r -a RFL_ARRAY <<< "$filebase_name"
 
 # run unmixing call on data
 emc_out_directory=${out_base}/emc2/
-mkdir -p emc_out_directory
+echo ${emc_out_directory}
+mkdir -p ${emc_out_directory}
 julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 ${emc_out_directory}/global_${filebase_name} --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 11 --log_file ${emc_out_directory}/global_${filebase_name}.out
 julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${emc_out_directory}/local_${filebase_name} --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 8 --log_file ${emc_out_directory}/local_${filebase_name}.out
 julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_Kalahari_LIB_PATH} level_1 ${emc_out_directory}/kalahari_${filebase_name} --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 11 --log_file ${emc_out_directory}/kalahari_${filebase_name}.out
 
 mesma_out_directory=${out_base}/mesma/
-mkdir -p mesma_out_directory
+mkdir -p ${mesma_out_directory}
 julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 ${mesma_out_directory}/global_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 11 --log_file ${mesma_out_directory}/global_${filebase_name}.out
 julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 8 --log_file ${mesma_out_directory}/local_${filebase_name}.out
 julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_Kalahari_LIB_PATH} level_1 ${mesma_out_directory}/kalhari_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 11 --log_file ${mesma_out_directory}/kalahari_${filebase_name}.out
@@ -44,6 +46,6 @@ mkdir -p ${tetracorder_out_directory}
 # augment rfl data
 python ./utils/augment_file.py -reflectance_image ${rfl_img} -out_directory ${tetracorder_out_directory} --augment
 
-./tetracorder/tetracorder.sh ${rfl_img} ${tetracorder_out_directory}
+./tetracorder/tetracorder.sh ${rfl_img}_augmented ${tetracorder_out_directory}
 
 # deaugment data
