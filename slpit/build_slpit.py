@@ -590,6 +590,23 @@ class build_libraries:
             sbatch_cmd = f"sbatch -p patient -N 1 -c 1 --mem 15G --output {outfile} --job-name emit.extract  --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
+    def unmix_reflectances(self, sensor):
+        # get plot center points from ipad - these are the plot centers
+        spatial_field_data = os.path.join('gis', "Observation.json")
+
+        # get reflectance and uncertainty files
+        reflectance_slpit_files = sorted(glob(os.path.join(self.output_transect_directory, '**', f'*_SLPIT_{sensor}'), recursive=True))
+        for i in reflectance_slpit_files:
+            plot_number = os.path.basename(i).split("_")[0]
+            plot_base_directory = os.path.join(self.output_transect_directory, plot_number)
+            em_file = os.path.join(plot_base_directory, f'unmix_{plot_number}_EMS_{sensor}.csv')
+            base_call = f'sh {os.path.join("slpit", "slpit_image_process.sh")} {i} {em_file} {plot_base_directory}'
+            sbatch_cmd = f"sbatch -p patient -N 1 -c 50 --mem 50G --job-name slpit.umix  --wrap='{base_call}'"
+            subprocess.run(sbatch_cmd, shell=True, text=True)
+
+        reflectance_emit_files = sorted(glob(os.path.join(self.output_transect_directory, '**', f'*_EXT'), recursive=True))
+        for i in reflectance_emit_files:
+            print(reflectance_emit_files)
 
 def run_build_workflow(base_directory, sensor):
     lib = build_libraries(base_directory=base_directory, sensor=sensor)
@@ -601,3 +618,4 @@ def run_build_workflow(base_directory, sensor):
     lib.build_gis_data()
     lib.em_qty_check()
     lib.extract_windows(pad=1, window_size=3)
+    lib.unmix_reflectances(sensor=sensor)

@@ -1,7 +1,6 @@
 import argparse
 from osgeo import gdal
-import math
-import sys
+import os
 import numpy as np 
 from utils.envi import get_meta, save_envi, envi_to_array
 from utils.spectra_utils import spectra
