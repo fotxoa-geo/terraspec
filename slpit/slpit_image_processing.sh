@@ -4,35 +4,51 @@ START_TIME=$SECONDS
 echo "################# Running unmixing  ################"
 echo " "
 # These are the variables
-rfl_file=$1
+rfl_img=$1
 unmixing_library_local=$2
 out_base=$3
+rfl_uncert=$4
 unmixing_library_global=/terraspec_output/simulation/output/endmember_libraries/convex_hull__n_dims_4_sensor_emit_geofilter_True_unmix_library.csv
 kalahari_unmixing_library=/terraspec_output/simulation/output/production/meyer-okin.csv
 
-filebase_name=$(basename "$rfl_file")
+filebase_name=$(basename "rfl_img")
 NORMALIZED_PATH_OUTBASE=$(echo "${out_base}" | tr '\\' '/')
 NORMALIZED_GLOBAL_LIB_PATH=$(echo "${unmixing_library_global}" | tr '\\' '/')
 NORMALIZED_LOCAL_LIB_PATH=$(echo "${unmixing_library_local}" | tr '\\' '/')
 NORMALIZED_Kalahari_LIB_PATH=$(echo "${kalahari_unmixing_library}" | tr '\\' '/')
 
-echo "basename: ${rfl_file}"
+echo "basename: ${rfl_img}"
 
 # Seperate basename into components
 IFS='_' read -r -a RFL_ARRAY <<< "$filebase_name"
-
-# run unmixing call on data
 emc_out_directory=${out_base}/emc2/
 mkdir -p emc_out_directory
-julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 ${emc_out_directory}/global_${filebase_name} --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 11 --log_file ${emc_out_directory}/global_${filebase_name}.out
-julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${emc_out_directory}/local_${filebase_name} --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 8 --log_file ${emc_out_directory}/local_${filebase_name}.out
-julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_Kalahari_LIB_PATH} level_1 ${emc_out_directory}/kalahari_${filebase_name} --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 11 --log_file ${emc_out_directory}/kalahari_${filebase_name}.out
 
 mesma_out_directory=${out_base}/mesma/
 mkdir -p mesma_out_directory
-julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 ${mesma_out_directory}/global_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 11 --log_file ${mesma_out_directory}/global_${filebase_name}.out
-julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 8 --log_file ${mesma_out_directory}/local_${filebase_name}.out
-julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_Kalahari_LIB_PATH} level_1 ${mesma_out_directory}/kalhari_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 11 --log_file ${mesma_out_directory}/kalahari_${filebase_name}.out
+# run unmixing call on data
+if [ -z "${rfl_uncert}" ]; then
+  # sma calls
+  julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 ${emc_out_directory}/global_${filebase_name} --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 11 --log_file ${emc_out_directory}/global_${filebase_name}.out
+  julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${emc_out_directory}/local_${filebase_name} --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 8 --log_file ${emc_out_directory}/local_${filebase_name}.out
+  julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_Kalahari_LIB_PATH} level_1 ${emc_out_directory}/kalahari_${filebase_name} --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 11 --log_file ${emc_out_directory}/kalahari_${filebase_name}.out
+
+  # mesma calls
+  julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 ${mesma_out_directory}/global_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 11 --log_file ${mesma_out_directory}/global_${filebase_name}.out
+  julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 8 --log_file ${mesma_out_directory}/local_${filebase_name}.out
+  julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_Kalahari_LIB_PATH} level_1 ${mesma_out_directory}/kalhari_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 11 --log_file ${mesma_out_directory}/kalahari_${filebase_name}.out
+else
+  # sma calls
+  julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 ${emc_out_directory}/global_${filebase_name} --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 11 --log_file ${emc_out_directory}/global_${filebase_name}.out --reflectance_uncertainty_file ${rfl_uncert}
+  julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${emc_out_directory}/local_${filebase_name} --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 8 --log_file ${emc_out_directory}/local_${filebase_name}.out --reflectance_uncertainty_file ${rfl_uncert}
+  julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_Kalahari_LIB_PATH} level_1 ${emc_out_directory}/kalahari_${filebase_name} --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 11 --log_file ${emc_out_directory}/kalahari_${filebase_name}.out --reflectance_uncertainty_file ${rfl_uncert}
+
+  # mesma calls
+  julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 ${mesma_out_directory}/global_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 11 --log_file ${mesma_out_directory}/global_${filebase_name}.out --reflectance_uncertainty_file ${rfl_uncert}
+  julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 8 --log_file ${mesma_out_directory}/local_${filebase_name}.out --reflectance_uncertainty_file ${rfl_uncert}
+  julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_Kalahari_LIB_PATH} level_1 ${mesma_out_directory}/kalhari_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 11 --log_file ${mesma_out_directory}/kalahari_${filebase_name}.out --reflectance_uncertainty_file ${rfl_uncert}
+
+fi
 
 echo "################# Running tetracorder ################"
 echo " "
