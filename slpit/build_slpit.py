@@ -606,12 +606,12 @@ class build_libraries:
             em_file = os.path.join(plot_base_directory, f'unmix_{plot_number}_EMS_{sensor}.csv')
             outfile = os.path.join(extract_outlog_directory, f'{os.path.basename(i)}.out')
             base_call = f'sh {os.path.join("slpit", "slpit_image_processing.sh")} {i} {em_file} {plot_base_directory}'
-            sbatch_cmd = f"sbatch -p patient -N 1 -c 50 --mem 40G --output {outfile} --job-name slpit.umix  --wrap='{base_call}'"
+            sbatch_cmd = f"sbatch -p patient -N 1 -c 20 --mem 20G --output {outfile} --job-name slpit.umix  --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
         reflectance_emit_files = sorted(glob(os.path.join(self.output_transect_directory, '**', f'*_EXT'), recursive=True))
-        for i in reflectance_emit_files:
-            print(reflectance_emit_files)
+        #for i in reflectance_emit_files:
+        #    print(reflectance_emit_files)
 
 def run_build_workflow(base_directory, sensor):
     lib = build_libraries(base_directory=base_directory, sensor=sensor)

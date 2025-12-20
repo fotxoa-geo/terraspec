@@ -35,6 +35,7 @@ def augment_envi(file, out_envi_file, wvls, vertical_average=False, em_index_min
                             wvls=True)
     meta_spectra['data ignore value'] = -9999
     save_envi(out_envi_file, meta_spectra, spectra_grid)
+    print(f'saved augmented envi file to {out_envi_file}')
 
 def deaugment_envi():
     print('hiii')
@@ -44,9 +45,9 @@ def main():
     parser = argparse.ArgumentParser(description='Run vegetation workflow')
     parser.add_argument('reflectance_image', type=str, help='Reflectance image')
     parser.add_argument('out_directory', type=str, help="Specify output destination")
-    parser.add_argument('--augment', type='store_true', help="augment data")
-    parser.add_argument('--deaugment', type='store_true', help="deaugment data")
-    parser.add_argument('--sensor', type='str', help="sensor", default='emit')
+    parser.add_argument('--augment', action='store_true', help="augment data")
+    parser.add_argument('--deaugment', action='store_true', help="deaugment data")
+    parser.add_argument('--sensor', type=str, help="sensor", default='emit')
     args = parser.parse_args()
 
     wvls, fwhm = spectra.load_wavelengths(sensor=args.sensor)

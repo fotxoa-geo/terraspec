@@ -36,16 +36,22 @@ julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH
 julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 12 --log_file ${mesma_out_directory}/local_${filebase_name}.out
 julia -p 40 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_Kalahari_LIB_PATH} level_1 ${mesma_out_directory}/kalhari_${filebase_name} --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 11 --log_file ${mesma_out_directory}/kalahari_${filebase_name}.out
 
-echo "################# Running tetracorder ################"
 echo " "
 
 # run tetracorder
 tetracorder_out_directory=${out_base}/tetracorder/
+
+if [ -d "$tetracorder_out_directory" ]; then
+    echo "Directory '$tetracorder_out_directory' exists. Removing..."
+    rm -rf "$tetracorder_out_directory"
+fi
+
 mkdir -p ${tetracorder_out_directory}
+echo "Created tetracorder dir: ${tetracorder_out_directory}"
 
 # augment rfl data
-python ./utils/augment_file.py -reflectance_image ${rfl_img} -out_directory ${tetracorder_out_directory} --augment
+python ./utils/augment_file.py ${rfl_img} ${tetracorder_out_directory} --augment
 
-./tetracorder/tetracorder.sh ${rfl_img}_augmented ${tetracorder_out_directory}
+./tetracorder/tetracorder.sh "${tetracorder_out_directory}/${filebase_name}_augmented" ${tetracorder_out_directory}
 
 # deaugment data
