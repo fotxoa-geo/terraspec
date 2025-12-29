@@ -584,7 +584,7 @@ class build_libraries:
             nc_file = corresponding_nc_file[0]
 
             base_call = f'python slpit/window_extract.py -rfl_img {file} -nc_file {nc_file} -w_size {window_size} ' \
-                         f'-shp {spatial_field_data} -pad {pad} -out {self.output_transect_directory} '
+                         f'-shp {spatial_field_data} -pad {pad} -out {self.output_transect_directory} --del_nc'
                          
             outfile = os.path.join(extract_outlog_directory, f'{acquisition_date}_{acquisition_type}.out')
             sbatch_cmd = f"sbatch -p patient -N 1 -c 1 --mem 15G --output {outfile} --job-name emit.extract  --wrap='{base_call}'"
@@ -622,5 +622,5 @@ def run_build_workflow(base_directory, sensor):
     #lib.build_em_collection()
     #lib.build_gis_data()
     #lib.em_qty_check()
-    #lib.extract_windows(pad=1, window_size=3)
-    lib.unmix_reflectances(sensor=sensor)
+    lib.extract_windows(pad=1, window_size=3)
+    #lib.unmix_reflectances(sensor=sensor)

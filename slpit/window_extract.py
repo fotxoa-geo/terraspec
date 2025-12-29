@@ -20,6 +20,7 @@ def main():
     parser.add_argument('-pad', '--padding', type=int, help="Specify padding", default=1)
     parser.add_argument('-out', '--output_directory', type=str, help="Specify output destination")
     parser.add_argument('-sns', '--sensor', help="sensor", default='emit')
+    parser.add_argument('-del_nc', '--delete_nc_file', help='Delete nc file', action='store_true')
     args = parser.parse_args()
     
     print(args.reflectance_image)
@@ -90,14 +91,6 @@ def main():
 
             # get pixel value and its neighboors
             try:
-                #window = ds.ReadAsArray(float(col_index) - args.padding, float(row_index) - args.padding, args.padding *2 +1, args.padding *2 +1).transpose((1,2,0))
-
-                #if np.any(window == 0) and acquisition_type != 'MASK':
-                #    print(plot, " has at least one pixel of fill values")
-
-                #elif np.all(window == 0) and acquisition_type != 'MASK':
-                #    print(plot, " has all fill values")
-
                 if window.shape != (3,3, window.shape[2]):
                     print(f"\t {plot} does not have enough coverage!")
                 else:
@@ -136,7 +129,13 @@ def main():
                     save_envi(output_name, meta, window, ds)
 
                     print(f"\t {plot} successfully saved: {output_name}")
-
+                
+                if args.delete_nc_file:
+                    if os.path.exists(args.netcdf_file):
+                        os.remove(args.netcdf_file)
+                        print(f"{args.netcdf_file} deleted successfully.")
+                    else:
+                        print(f"{args.netcdf_file} does not exist.")
             except:
                 raise
                 print(f"\t {plot} could not open!")

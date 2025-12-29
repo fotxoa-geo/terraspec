@@ -54,4 +54,7 @@ python ./utils/augment_file.py ${rfl_img} ${tetracorder_out_directory} --augment
 
 ./tetracorder/tetracorder.sh "${tetracorder_out_directory}/${filebase_name}_augmented" ${tetracorder_out_directory}
 
-# deaugment data
+# deaugment data in tetracorder output directory
+python ./utils/augment_file.py ${rfl_img} ${tetracorder_out_directory} --deaugment
+
+/usr/bin/rclone copy ${out_base} cdrive:terraspec_output/slpit/output/spectral_transects -P

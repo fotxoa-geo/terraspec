@@ -64,11 +64,14 @@ if [ "${data_type}" = "RFL" ]; then
     ./tetracorder/tetracorder.sh ${rfl_img} ${tetracorder_out_directory}
     
     #ortho-rectify mineral outputs
+    python slpit/ortho_tetracorder.py -tc_dir ${tetracorder_out_directory} -nc_file ${nc_file}
+
+    # push data to drive
+    /usr/bin/rclone clone copy  ${nc_fid_directory} cdrive:terraspec_output/slpit/gis/emit-data/products -P --exclude "*.nc"
+
 else
     echo "Reflectance data not detected. Skipping spectral processes!!"
 fi
-
-# Create RGB imgs for field ipad
 
 DURATION=$(( $SECONDS - $START_TIME ))
 echo "processing time: $DURATION seconds."

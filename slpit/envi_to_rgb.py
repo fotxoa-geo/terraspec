@@ -37,7 +37,7 @@ def main():
     rfl_ortho_dat = single_image_ortho(rfl_array, glt)
     
     # create rgb subset - for figure purposes
-    rgb_subset = np.zeros((rfl_ortho_dat.shape[0], rfl_ortho_dat.shape[1], len(rgb_wvls_out)))
+    rgb_subset = np.ones((rfl_ortho_dat.shape[0], rfl_ortho_dat.shape[1], len(rgb_wvls_out))) * -9999.
     rgb_subset[rgb_subset == 0] = -9999
     
     for wvl in rgb_wvls_out:
@@ -47,7 +47,8 @@ def main():
     meta = get_meta(lines=rgb_subset.shape[0], samples=rgb_subset.shape[1], bands=rgb_wvls_out, wvls=True)
     meta['map info'] = f'{{Geographic Lat/Lon, 1, 1, {gt[0]}, {gt[3]}, {gt[1]}, {gt[5]*-1},WGS-84}}'
     meta['coordinate system string'] = f'{{ {nc_ds.__dict__["spatial_ref"]} }}'
-    
+    meta['data ignore value'] = -9999
+
     output_name = os.path.join(args.output_directory, f'RGB_{os.path.basename(args.reflectance_image)}.hdr')
     save_envi(output_name, meta, rgb_subset)
     print(f'successfully saved {output_name}')
