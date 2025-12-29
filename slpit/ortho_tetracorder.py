@@ -36,12 +36,14 @@ def main():
     
         # apply glt - returns ortho'd image for figures
         mineral_ortho_dat = single_image_ortho(mineral_array, glt)
-        
+        mask_2d = np.all(mineral_ortho_dat == 0, axis=2)
+        mineral_ortho_dat[mask_2d] = -9999
         meta = get_meta(lines=mineral_ortho_dat.shape[0], samples=mineral_ortho_dat.shape[1], bands=['Group 1 Band Depth', 'Group 1 Index', 'Group 2 Band Depth', 'Group 2 Index'], wvls=False)
         meta['map info'] = f'{{Geographic Lat/Lon, 1, 1, {gt[0]}, {gt[3]}, {gt[1]}, {gt[5]*-1},WGS-84}}'
         meta['coordinate system string'] = f'{{ {nc_ds.__dict__["spatial_ref"]} }}'
-        
-        output_name = os.path.join(args.tetracorder_directory, i)
+        meta['data ignore value'] = -9999
+
+        output_name = os.path.join(args.tetracorder_directory, os.path.basename(i))
         save_envi(output_name, meta, mineral_ortho_dat)
         print(f'successfully saved {output_name}')
 

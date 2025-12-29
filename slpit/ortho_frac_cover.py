@@ -30,6 +30,8 @@ def main():
 
     # apply glt - returns ortho'd image for figures
     fraction_ortho_dat = single_image_ortho(frac_array, glt)
+    mask_2d = np.all(fraction_ortho_dat == 0, axis=2)
+    fraction_ortho_dat[mask_2d] = -9999
     meta = get_meta(lines=fraction_ortho_dat.shape[0], samples=fraction_ortho_dat.shape[1], bands=['npv', 'pv', 'soil', 'shade'], wvls=False)
     meta['map info'] = f'{{Geographic Lat/Lon, 1, 1, {gt[0]}, {gt[3]}, {gt[1]}, {gt[5]*-1},WGS-84}}'
     meta['coordinate system string'] = f'{{ {nc_ds.__dict__["spatial_ref"]} }}'
