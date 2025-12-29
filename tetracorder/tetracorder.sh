@@ -24,7 +24,7 @@ export SP_BIN=${SP_LOCAL}/bin
 export TETRA=/store/shared/spectroscopy-tetracorder/tetracorder5.27 # ops_sds_config.json:tetracorder_path
 export TETRA_CMDS=/store/shared/tetracorder5.27c.cmds/ #tetracorder_cmds_path
 export PYTHONPATH=/store/brodrick/repos/emit-utils/
-export /usr/bin/rclone
+#export /usr/bin/rclone
 
 export PATH="${PATH}:${SP_LOCAL}/bin:${TETRA}/bin:/usr/bin"
 
@@ -49,4 +49,4 @@ mkdir ${cpwd}/${out_base}${filebase}_minerals/ -p
 cp $out_tetra_path/cmds.abundances/lists.of.files.by.mineral/* ${cpwd}/${out_base}${filebase}_minerals/ -r 
 
 echo "Current UTC time is: ${date}"
-#rm -rf $out_tetra_path
+rm -rf $out_tetra_path
