@@ -4,6 +4,7 @@ from osgeo import gdal
 from utils.envi import save_envi, get_meta, envi_to_array
 import numpy as np
 from utils.spectra_utils import spectra
+from glob import glob
 
 def augment_envi(file, out_envi_file, wvls, vertical_average=False, em_index_min=None, em_index_max=None, bad_bands=None):
 
@@ -37,8 +38,30 @@ def augment_envi(file, out_envi_file, wvls, vertical_average=False, em_index_min
     save_envi(out_envi_file, meta_spectra, spectra_grid)
     print(f'saved augmented envi file to {out_envi_file}')
 
-def deaugment_envi():
-    print('hiii')
+def deaugment_envi(file, augmented_file, out_envi_file):
+    ds = gdal.Open(file, gdal.GA_ReadOnly)
+    ds_array = envi_to_array(file)
+    
+    # spectra grid of original file 
+    spectra_grid = np.ones((ds_array.shape[0], ds_array.shape[1], ds_array.shape[2])) * -9999
+    
+
+    # load augmented data
+    ds_augmented = gdal.Open(augmented_file, gdal.GA_ReadOnly)
+    ds_augmented_array = envi_to_array(augmented_file)
+
+    # transfer data from augmented to original size
+    for _row, row in enumerate(ds_array):
+        for _col, col in enumerate(row):
+            spectra_grid[_row, _col, :] = ds_augmented_array[_row, _col, :]
+
+    
+    # save data
+    meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=list(range(spectra_grid.shape[2])), wvls=False)
+    meta_spectra['data ignore value'] = -9999
+    save_envi(out_envi_file, meta_spectra, spectra_grid)
+    print(f'saved augmented envi file to {out_envi_file}')
+
 
 def main():
     # Define arguments
@@ -51,16 +74,20 @@ def main():
     args = parser.parse_args()
 
     wvls, fwhm = spectra.load_wavelengths(sensor=args.sensor)
+    
+    augmented_envi_file = os.path.join(args.out_directory, f'{os.path.basename(args.reflectance_image)}_augmented.hdr')
 
     if args.augment:
-        out_envi_file = os.path.join(args.out_directory, f'{os.path.basename(args.reflectance_image)}_augmented.hdr')
-        augment_envi(file=args.reflectance_image, out_envi_file=out_envi_file, wvls=wvls, vertical_average=False,
+        augment_envi(file=args.reflectance_image, out_envi_file=augmented_envi_file, wvls=wvls, vertical_average=False,
                      em_index_min=None, em_index_max=None, bad_bands=None)
 
     if args.deaugment:
-        out_envi_file = os.path.join(args.out_directory, f'{os.path.basename(args.reflectance_image)}.hdr')
-        print(out_envi_file)
-        deaugment_envi()
+        hdr_files = glob(os.path.join(args.out_directory, '*.hdr'))
+        for i in hdr_files:
+            img = os.path.splitext(i)[0]
+
+            out_envi_file = os.path.join(args.out_directory, f'{os.path.basename(i)}.hdr')
+            deaugment_envi(file=args.reflectance_image, augmented_file=i, out_envi_file=out_envi_file)
 
 if __name__ == '__main__':
     main()
