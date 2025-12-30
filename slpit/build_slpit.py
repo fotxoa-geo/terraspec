@@ -597,21 +597,22 @@ class build_libraries:
 
         # get plot center points from ipad - these are the plot centers
         spatial_field_data = os.path.join('gis', "Observation.json")
-
+        gdf = gpd.read_file(spatial_field_data)
+        gdf['Name'] = gdf['Name'].str.replace(' ', '', regex=False)
+        
         # get reflectance and uncertainty files
         reflectance_slpit_files = sorted(glob(os.path.join(self.output_transect_directory, '**', f'*_SLPIT_{sensor}'), recursive=True))
         for i in reflectance_slpit_files:
             plot_number = os.path.basename(i).split("_")[0]
+            emit_date = gdf.loc[gdf['Name'] == f'{plot_number.replace("Spectral", "SPEC")}', 'EMIT DATE'].values[0]
             plot_base_directory = os.path.join(self.output_transect_directory, plot_number)
             em_file = os.path.join(plot_base_directory, f'unmix_{plot_number}_EMS_{sensor}.csv')
+            em_local_rfl = os.path.join(plot_base_directory, 'EMS', f'{plot_number}_EMS_{sensor}')
+            emit_rfl_ext = os.path.join(plot_base_directory, 'EXT', f'{plot_number}_RFL_{emit_date}_EXT')
             outfile = os.path.join(extract_outlog_directory, f'{os.path.basename(i)}.out')
-            base_call = f'sh {os.path.join("slpit", "slpit_image_processing.sh")} {i} {em_file} {plot_base_directory}'
-            sbatch_cmd = f"sbatch -p patient -N 1 -c 20 --mem 20G --output {outfile} --job-name slpit.umix  --wrap='{base_call}'"
+            base_call = f'sh {os.path.join("slpit", "slpit_image_processing.sh")} {i} {em_file} {plot_base_directory} {em_local_rfl} {emit_rfl_ext}'
+            sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 20 --mem 20G --output {outfile} --job-name slpit.umix  --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
-
-        reflectance_emit_files = sorted(glob(os.path.join(self.output_transect_directory, '**', f'*_EXT'), recursive=True))
-        #for i in reflectance_emit_files:
-        #    print(reflectance_emit_files)
 
 def run_build_workflow(base_directory, sensor):
     lib = build_libraries(base_directory=base_directory, sensor=sensor)
@@ -622,5 +623,5 @@ def run_build_workflow(base_directory, sensor):
     #lib.build_em_collection()
     #lib.build_gis_data()
     #lib.em_qty_check()
-    lib.extract_windows(pad=1, window_size=3)
-    #lib.unmix_reflectances(sensor=sensor)
+    #lib.extract_windows(pad=1, window_size=3)
+    lib.unmix_reflectances(sensor=sensor)
