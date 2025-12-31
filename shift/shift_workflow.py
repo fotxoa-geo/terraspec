@@ -1,5 +1,5 @@
 from utils.text_guide import cursor_print
-from utils.slpit_download import download_shift_slpit, sync_gdrive
+from utils.slpit_download import download_shift_slpit
 from shift.build_shift import run_build_workflow
 from shift.shift_unmix import run_shift_unmix
 from shift.shift_tables import run_tables
