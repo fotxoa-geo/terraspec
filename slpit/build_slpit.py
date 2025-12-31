@@ -290,8 +290,7 @@ class build_libraries:
             if 'thermal' in i['team_names']:
                 continue
 
-            if os.path.isfile(os.path.join(self.output_transect_directory, f'{plot_name.replace(" ", "")}-{self.instrument}.csv')):
-                continue
+            
 
             if int(i['plot_num']) in [114,113, 119, 114, 113]:
                 continue
@@ -301,6 +300,9 @@ class build_libraries:
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}'))
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}', 'EMS'))
             plot_em_directory = os.path.join(self.output_transect_directory, f'{plot_name}', 'EMS')
+            
+            if os.path.isfile(os.path.join(plot_em_directory, f'{plot_name.replace(" ", "")}_EMS_{self.instrument}.csv')):
+                continue
 
             # em table
             df_transect_em = slpit.df_em_table(record=i)
@@ -329,7 +331,7 @@ class build_libraries:
 
             results = p_map(partial(spectra.get_reflectance_transect, plot_directory=plot_directory,
                                     team_name_key=self.team_keys[i['team_names']]), endmember_spectra,
-                            **{"desc": "\t\t processing plot: " + plot_name + " ...", "ncols": 150})
+                            **{"desc": f"\t\t processing plot: {plot_name}...", "ncols": 150})
 
             df_results = pd.DataFrame(results)
             df_results.columns = ["plot_name", "file_name", "file_num", "longitude", "latitude", "elevation",
@@ -462,7 +464,7 @@ class build_libraries:
                         remaining_samples -= remaining_samples
 
             # if list is empty do nothing
-            out_csv = os.path.join(self.output_transect_directory, 'EMS', f'Spectral-{plot_number}', f"unmix_{os.path.basename(i)}")
+            out_csv = os.path.join(self.output_transect_directory, f'Spectral-{plot_number}', f"unmix_{os.path.basename(i)}")
 
             if not ems_to_append:
                 df_em_site.to_csv(out_csv, index=False)
@@ -554,59 +556,35 @@ class build_libraries:
         column_names[-1] = 'emit_plot_analysis'
         min_dist_df.columns = column_names
         min_dist_df.to_csv(os.path.join('gis', 'min_dist_to_emit_plots.csv'), index=False)
-    
-    def extract_windows(self, pad, window_size):
-        # get plot center points from ipad - these are the plot centers
-        spatial_field_data = os.path.join('gis', "Observation.json")
-        
-        # get reflectance and uncertainty files
-        reflectance_files = sorted(glob(os.path.join(self.imagery_directory, 'emit-data', 'products' ,'**', '*_reflectance'), recursive=True))
-        reflectance_uncertainty_files = sorted(glob(os.path.join(self.imagery_directory, 'emit-data' ,'products', '**', '*_reflectance_uncertainty'), recursive=True))
-        
-        # get mask files
-        mask_files = sorted(glob(os.path.join(self.imagery_directory, 'emit-data', 'products', '**', '*_mask'), recursive=True))
-        mask_files = [file for file in mask_files if '_band_mask' not in file]
-
-        all_files = reflectance_files + reflectance_uncertainty_files + mask_files
-        
-        # create outlogs directory for extractions
-        create_directory(os.path.join(self.output_transect_directory, 'extract_outlogs'))
-        extract_outlog_directory = os.path.join(self.output_transect_directory, 'extract_outlogs')
-        
-        # extract specific window sized from images
-        for file in all_files:
-            acquisition_date = os.path.basename(file).split("_")[4]
-            acquisition_type = os.path.basename(file).split("_")[2]
-            version = os.path.basename(file).split("_")[3]
-            product = os.path.basename(file).split("_")[1]
-            
-            corresponding_nc_file = sorted(glob(os.path.join(self.imagery_directory, 'emit-data', 'nc_files', '**', f'*{product}_{acquisition_type}_{version}_{acquisition_date}*.nc'), recursive=True))
-            nc_file = corresponding_nc_file[0]
-
-            base_call = f'python slpit/window_extract.py -rfl_img {file} -nc_file {nc_file} -w_size {window_size} ' \
-                         f'-shp {spatial_field_data} -pad {pad} -out {self.output_transect_directory} '
-                         
-            outfile = os.path.join(extract_outlog_directory, f'{acquisition_date}_{acquisition_type}.out')
-            sbatch_cmd = f"sbatch -p patient -N 1 -c 1 --mem 15G --output {outfile} --job-name emit.extract  --wrap='{base_call}'"
-            subprocess.run(sbatch_cmd, shell=True, text=True)
 
     def unmix_reflectances(self, sensor):
+        # create outlogs for unmix and tc
+        create_directory(os.path.join(self.output_transect_directory, 'unmix_tc_outlogs'))
+        extract_outlog_directory = os.path.join(self.output_transect_directory, 'unmix_tc_outlogs')
+
         # get plot center points from ipad - these are the plot centers
         spatial_field_data = os.path.join('gis', "Observation.json")
-
+        gdf = gpd.read_file(spatial_field_data)
+        gdf['Name'] = gdf['Name'].str.replace(' ', '', regex=False)
+        
         # get reflectance and uncertainty files
         reflectance_slpit_files = sorted(glob(os.path.join(self.output_transect_directory, '**', f'*_SLPIT_{sensor}'), recursive=True))
         for i in reflectance_slpit_files:
             plot_number = os.path.basename(i).split("_")[0]
+            try:
+                emit_date = gdf.loc[gdf['Name'] == f'{plot_number.replace("Spectral", "SPEC")}', 'EMIT DATE'].values[0]
+            except:
+                print(f"No sensor time data found for {plot_number}")
+                continue
             plot_base_directory = os.path.join(self.output_transect_directory, plot_number)
             em_file = os.path.join(plot_base_directory, f'unmix_{plot_number}_EMS_{sensor}.csv')
-            base_call = f'sh {os.path.join("slpit", "slpit_image_process.sh")} {i} {em_file} {plot_base_directory}'
-            sbatch_cmd = f"sbatch -p patient -N 1 -c 50 --mem 50G --job-name slpit.umix  --wrap='{base_call}'"
+            em_local_rfl = os.path.join(plot_base_directory, 'EMS', f'{plot_number}_EMS_{sensor}')
+            emit_rfl_ext = os.path.join(plot_base_directory, 'EXT', f'{plot_number}_RFL_{emit_date}_EXT')
+            emit_rfl_unc = os.path.join(plot_base_directory, 'EXT', f'{plot_number}_RFLUNCERT_{emit_date}_EXT')
+            outfile = os.path.join(extract_outlog_directory, f'{os.path.basename(i)}.out')
+            base_call = f'sh {os.path.join("slpit", "slpit_image_processing.sh")} {i} {em_file} {plot_base_directory} {em_local_rfl} {emit_rfl_ext} {emit_rfl_unc}'
+            sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 20 --mem 20G --output {outfile} --job-name slpit.umix  --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
-
-        reflectance_emit_files = sorted(glob(os.path.join(self.output_transect_directory, '**', f'*_EXT'), recursive=True))
-        for i in reflectance_emit_files:
-            print(reflectance_emit_files)
 
 def run_build_workflow(base_directory, sensor):
     lib = build_libraries(base_directory=base_directory, sensor=sensor)
@@ -617,5 +595,4 @@ def run_build_workflow(base_directory, sensor):
     lib.build_em_collection()
     lib.build_gis_data()
     lib.em_qty_check()
-    lib.extract_windows(pad=1, window_size=3)
     lib.unmix_reflectances(sensor=sensor)
