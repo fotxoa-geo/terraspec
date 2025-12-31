@@ -42,19 +42,17 @@ def deaugment_envi(file, augmented_file, out_envi_file):
     ds = gdal.Open(file, gdal.GA_ReadOnly)
     ds_array = envi_to_array(file)
     
-    # spectra grid of original file 
-    spectra_grid = np.ones((ds_array.shape[0], ds_array.shape[1], ds_array.shape[2])) * -9999
-    
-
     # load augmented data
     ds_augmented = gdal.Open(augmented_file, gdal.GA_ReadOnly)
     ds_augmented_array = envi_to_array(augmented_file)
-
+    
+    # spectra grid of original file 
+    spectra_grid = np.ones((ds_array.shape[0], ds_array.shape[1], ds_augmented_array.shape[2])) * -9999
+    
     # transfer data from augmented to original size
     for _row, row in enumerate(ds_array):
         for _col, col in enumerate(row):
             spectra_grid[_row, _col, :] = ds_augmented_array[_row, _col, :]
-
     
     # save data
     meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=list(range(spectra_grid.shape[2])), wvls=False)
@@ -82,12 +80,10 @@ def main():
                      em_index_min=None, em_index_max=None, bad_bands=None)
 
     if args.deaugment:
-        hdr_files = glob(os.path.join(args.out_directory, '*.hdr'))
-        for i in hdr_files:
-            img = os.path.splitext(i)[0]
-
-            out_envi_file = os.path.join(args.out_directory, f'{os.path.basename(i)}.hdr')
-            deaugment_envi(file=args.reflectance_image, augmented_file=i, out_envi_file=out_envi_file)
+        
+        for i in ["_augmented", "_augmented_min", "_augmented_minunc"]:
+            augmented_file = os.path.join(args.out_directory, f'{os.path.basename(args.reflectance_image)}{i}')
+            deaugment_envi(file=args.reflectance_image, augmented_file=augmented_file, out_envi_file=f'{augmented_file}.hdr')
 
 if __name__ == '__main__':
     main()

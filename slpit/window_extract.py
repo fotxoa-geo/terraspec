@@ -23,7 +23,6 @@ def main():
     parser.add_argument('-del_nc', '--delete_nc_file', help='Delete nc file', action='store_true')
     args = parser.parse_args()
     
-    print(args.reflectance_image)
     # load glts and spatial info from nc file
     emit_nc = nc.Dataset(args.netcdf_file, 'r', format='NETCDF4')
     gt = np.array(emit_nc.__dict__["geotransform"])
@@ -96,7 +95,12 @@ def main():
                 else:
                     # make array an envi array for unmixing
                     window[window == -0.01] = -9999.0
-                    meta = get_meta(lines=window.shape[0], samples=window.shape[1], bands=wvls, wvls=True)
+                    print(acquisition_type)
+                    if acquisition_type in ['MASK']:
+                        meta = get_meta(lines=window.shape[0], samples=window.shape[1], bands=list(range(window.shape[2])), wvls=False)
+                    else:
+                        meta = get_meta(lines=window.shape[0], samples=window.shape[1], bands=wvls, wvls=True)
+                    
                     meta['coordinate system string'] = proj_string
 
                     # map info with updated ul coordinates
@@ -130,19 +134,19 @@ def main():
 
                     print(f"\t {plot} successfully saved: {output_name}")
                 
-                if args.delete_nc_file:
-                    if os.path.exists(args.netcdf_file):
-                        os.remove(args.netcdf_file)
-                        print(f"{args.netcdf_file} deleted successfully.")
-                    else:
-                        print(f"{args.netcdf_file} does not exist.")
             except:
                 raise
                 print(f"\t {plot} could not open!")
 
         else:
             print(f"\t {plot} is not within image: {os.path.basename(args.reflectance_image)}")
-
+    
+    if args.delete_nc_file:
+        if os.path.exists(args.netcdf_file):
+            os.remove(args.netcdf_file)
+            print(f"{args.netcdf_file} deleted successfully.")
+        else:
+            print(f"{args.netcdf_file} does not exist.")
 
 if __name__ == '__main__':
     main()

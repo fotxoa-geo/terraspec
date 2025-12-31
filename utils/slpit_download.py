@@ -61,7 +61,19 @@ def download_emit(base_directory, sensor):
 
     df = pd.DataFrame(gp.read_file(shapefile))
     df = df.sort_values('Name')
-
+    
+    # Create output directories
+    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'products'))
+    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'products', 'logs'))
+    
+    # create outlog directory
+    out_base = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products')
+    out_logs = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products', 'logs')
+    
+    # em file for unmixing
+    em_file = os.path.join('terraspec_output', 'simulation', 'output', 'endmember_libraries', f'convex_hull__n_dims_4_sensor_{sensor}_geofilter_True_unmix_library.csv')
+    
+    # loop through points and process
     for index, row in df.iterrows():
         plot = row['Name']
         plot_num = int(plot.split('-')[1])
@@ -86,63 +98,23 @@ def download_emit(base_directory, sensor):
                                               bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
                                               temporal=(previous_plot_months, next_plot_months), count=-1)
             files = earthaccess.download(results, os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l2a'))
-            results = earthaccess.search_data(short_name=data_product_key[sensor]['radiance'],
-                                              version=data_product_key[sensor]['version'], cloud_hosted=True,
-                                              bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
-                                              temporal=(previous_plot_months, next_plot_months), count=-1)
-            files = earthaccess.download(results, os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l1b'))
-
-    # Create output directories
-    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'products'))
-    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'products', 'logs'))
-
-    nc_files = (glob(os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l1b', '*.nc'), recursive=True)
-                + glob(os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l2a', '*.nc'), recursive=True))
-
-    out_base = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products')
-    out_logs = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products', 'logs')
-
-    em_file = os.path.join('terraspec_output', 'simulation', 'output', 'endmember_libraries',
-                           f'convex_hull__n_dims_4_sensor_{sensor}_geofilter_True_unmix_library.csv')
-
-    for nc_file in nc_files:
-        basename = os.path.basename(nc_file)
-        base_call = f'sh {os.path.join("slpit", "emit_image_process.sh")} {nc_file} {em_file} {out_base}'
-        outfile = os.path.join(f"{os.path.join(out_logs, basename)}.out")
-        sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 40 --mem 50G --output {outfile} --job-name slpit --wrap='{base_call}'"
-        subprocess.call(sbatch_cmd, shell=True)
+            print(f"\t download successful... {len(files)} scenes downloaded") 
+            for nc_file in files:
+                basename = os.path.basename(nc_file)
+                base_call = f'sh {os.path.join("slpit", "emit_image_process.sh")} {nc_file} {em_file} {out_base}'
+                outfile = os.path.join(f"{os.path.join(out_logs, basename)}.out")
+                sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 40 --mem 50G --output {outfile} --job-name slpit.em --wrap='{base_call}'"
+                subprocess.call(sbatch_cmd, shell=True)    
+            
+            #results = earthaccess.search_data(short_name=data_product_key[sensor]['radiance'],
+            #                                  version=data_product_key[sensor]['version'], cloud_hosted=True,
+            #                                  bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
+            #                                  temporal=(previous_plot_months, next_plot_months), count=-1)
+            #files = earthaccess.download(results, os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l1b'))
+       
 
 def run_download_emit(base_directory, sensor):
     download_emit(base_directory=base_directory, sensor=sensor)
-
-
-def sync_gdrive(base_directory, project):
-
-    if "linux" in platform:
-        output_directory = os.path.join(base_directory, 'data', 'spectral_transects')
-        create_directory(output_directory)
-        if project == 'emit':
-            base_call = f"rclone copy gdrive:terraspec/slpit/data/spectral_transects {output_directory} -P"
-        else:
-            output_directory = os.path.join(base_directory, 'data')
-            base_call = f"rclone copy gdrive:terraspec/shift/data/ {output_directory} -P"
-        subprocess.call(base_call, shell=True)
-    else:
-        print("Cannot sync between local machine! Upload data from ASD computer to google drive.")
-
-
-def sync_extracts(base_directory, project):
-    if "linux" in platform:
-        output_directory = os.path.join(base_directory, 'gis', f'{project}-data-clip')
-        create_directory(output_directory)
-        if project == 'emit':
-            base_call = f"rclone copy {output_directory} gdrive:terraspec/slpit/gis/{project}-data-clip/ -P"
-        else:
-            base_call = f"rclone copy {output_directory} gdrive:terraspec/shift/gis/{project}-data-clip/ -P"
-        subprocess.call(base_call, shell=True)
-    else:
-        print("Extracts are being done in cluster! Cannot sync between local machine.")
-
 
 def get_ck_sk():
     f = open('slpit/config.json')
