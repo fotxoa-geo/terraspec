@@ -269,6 +269,30 @@ class build_libraries:
                                     wvls=True)
             output_raster = os.path.join(plot_base_directory, f'{plot_name.replace(" ", "")}_SLPIT_{self.instrument}.hdr')
             save_envi(output_raster, meta_spectra, spectra_grid)
+
+            # save asd data
+            asd_spectra_grid = np.ones((max(max_line_files), len(df_corrected_all.line_num.unique()), len(self.wvls))) * -9999
+
+            for _line, line in enumerate(df_corrected_all.line_num.unique()):
+                df_line_select = df_corrected_all[df_corrected_all['line_num'] == line].copy()
+                df_line_select = df_line_select.sort_values('file_num')
+
+                line_spectra_array = df_line_select.iloc[:, 9:].to_numpy()
+
+                for _row, row in enumerate(line_spectra_array):
+                    asd_spectra_grid[_row, _line, :] = line_spectra_array[_row, :]
+
+            # save the asd spectra
+            print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
+            asd_wvls = spectra.load_asd_wavelenghts()
+            meta_spectra = get_meta(lines=asd_spectra_grid.shape[0], samples=asd_spectra_grid.shape[1], bands=asd_wvls,
+                                    wvls=True)
+            output_raster = os.path.join(plot_base_directory,
+                                         f'{plot_name.replace(" ", "")}_SLPIT_asd.hdr')
+            save_envi(output_raster, meta_spectra, spectra_grid)
+
+
+
             time.sleep(3)
 
     def build_emit_endmembers(self):

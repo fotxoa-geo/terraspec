@@ -158,8 +158,12 @@ class figures:
             # load rfl data
             slpit_rfl = envi_to_array(os.path.join(spectral_transect_directory, 'RFL', f'{plot_name}_SLPIT_emit'))
             slpit_rfl[slpit_rfl == -9999] = np.nan
-            df_slpit_rfl = pd.read_csv(os.path.join(spectral_transect_directory, 'RFL', f'{plot_name}_SLPIT_emit.csv'))
-            df_em_spectra = pd.read_csv(os.path.join(spectral_transect_directory, 'EMS', f'{plot_name}_EMS_emit.csv'))
+            df_slpit_rfl = pd.read_csv(os.path.join(spectral_transect_directory, 'RFL', f'{plot_name}_SLPIT_asd.csv'))
+
+            try:
+                df_em_spectra = pd.read_csv(os.path.join(spectral_transect_directory, 'EMS', f'{plot_name}_EMS_asd.csv'))
+            except:
+                print(os.path.join(spectral_transect_directory, 'EMS', f'{plot_name}_EMS_emit.csv'), "not found!")
 
             # get gis data
             df_transect = df_gis.loc[df_gis['Name'] == plot_name.replace("Spectral", 'SPEC')].copy()
@@ -253,8 +257,10 @@ class figures:
                 sensor_mean = np.nanmean(sensor_rfl, axis=(0, 1))
                 sensor_std = np.nanstd(sensor_rfl, axis=(0, 1))
 
-                ax_rfl_plot.plot(self.wvls, sensor_mean, label=base_label, linewidth=1, color=sensor_cmap(_))
-                ax_rfl_plot.fill_between(self.wvls, sensor_mean - sensor_std*2, sensor_mean + sensor_std*2,
+                if days <= 90:
+                    sensor_mean = np.nanmean(sensor_rfl, axis=(0, 1))
+                    ax_rfl_plot.plot(self.wvls, sensor_mean, label=base_label, linewidth=1, color=sensor_cmap(_))
+                    ax_rfl_plot.fill_between(self.wvls, sensor_mean - sensor_std*2, sensor_mean + sensor_std*2,
                                          color=sensor_cmap(_), alpha=0.2)
 
             ax_rfl_plot.legend()
@@ -325,84 +331,88 @@ class figures:
             ax_pv_spectra.legend(prop={'size': 6}, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
 
             # plot soil endmembers
-            ax_soil_spectra = plt.subplot2grid((16, 16), (8, 9), colspan=7, rowspan=4)
-            df_spectra = df_em_spectra[(df_em_spectra['level_1'] == 'Soil')].copy()
-            soil_index_min = min(df_spectra.index[df_spectra['level_1'] == 'Soil'].tolist())
-            soil_index_max = max(df_spectra.index[df_spectra['level_1'] == 'Soil'].tolist())
-            soil_tetracorder_results = envi_to_array(os.path.join(spectral_transect_directory, 'tetracorder',
-                                                                  f'{plot_name}_EMS_emit_augmented_min'))[soil_index_min:soil_index_max + 1, :, :]
+            try:
+                ax_soil_spectra = plt.subplot2grid((16, 16), (8, 9), colspan=7, rowspan=4)
+                df_spectra = df_em_spectra[(df_em_spectra['level_1'] == 'Soil')].copy()
+                soil_index_min = min(df_spectra.index[df_spectra['level_1'] == 'Soil'].tolist())
+                soil_index_max = max(df_spectra.index[df_spectra['level_1'] == 'Soil'].tolist())
+                soil_tetracorder_results = envi_to_array(os.path.join(spectral_transect_directory, 'tetracorder',
+                                                                      f'{plot_name}_EMS_emit_augmented_min'))[soil_index_min:soil_index_max + 1, :, :]
 
-            g1_unique = soil_tetracorder_results[:, 0, 1]
-            g2_unique = soil_tetracorder_results[:, 0, 3]
-            df_spectra.insert(0, "g1_minerals", g1_unique)
-            df_spectra.insert(0, "g2_minerals", g2_unique)
+                g1_unique = soil_tetracorder_results[:, 0, 1]
+                g2_unique = soil_tetracorder_results[:, 0, 3]
+                df_spectra.insert(0, "g1_minerals", g1_unique)
+                df_spectra.insert(0, "g2_minerals", g2_unique)
 
-            df_spectra['g1_minerals'] = df_spectra['g1_minerals'].map(df_mineral_matrix.set_index('Index')['Name'])
-            df_spectra['g2_minerals'] = df_spectra['g2_minerals'].map(df_mineral_matrix.set_index('Index')['Name'])
-            df_spectra['g1_minerals'] = df_spectra['g1_minerals'].fillna('No Detection')
-            df_spectra['g2_minerals'] = df_spectra['g2_minerals'].fillna('No Detection')
+                df_spectra['g1_minerals'] = df_spectra['g1_minerals'].map(df_mineral_matrix.set_index('Index')['Name'])
+                df_spectra['g2_minerals'] = df_spectra['g2_minerals'].map(df_mineral_matrix.set_index('Index')['Name'])
+                df_spectra['g1_minerals'] = df_spectra['g1_minerals'].fillna('No Detection')
+                df_spectra['g2_minerals'] = df_spectra['g2_minerals'].fillna('No Detection')
 
-            num_minerals_g1 = len(sorted(list(df_spectra.g1_minerals.unique())))
-            g1_minerals_cmap = plt.cm.get_cmap('jet', num_minerals_g1)
-            unique_minerals_g1 = sorted(df_spectra['g1_minerals'].unique())
+                num_minerals_g1 = len(sorted(list(df_spectra.g1_minerals.unique())))
+                g1_minerals_cmap = plt.cm.get_cmap('jet', num_minerals_g1)
+                unique_minerals_g1 = sorted(df_spectra['g1_minerals'].unique())
 
-            # plot g1 minerals
-            for i, soils_unique in enumerate(unique_minerals_g1):
+                # plot g1 minerals
+                for i, soils_unique in enumerate(unique_minerals_g1):
 
-                # Filter and extract spectra data in one go
-                em_spectra = df_spectra[df_spectra['g1_minerals'] == soils_unique].iloc[:, 13:].to_numpy()
+                    # Filter and extract spectra data in one go
+                    em_spectra = df_spectra[df_spectra['g1_minerals'] == soils_unique].iloc[:, 13:].to_numpy()
 
-                # Plot all rows at once. Transposing em_spectra (T) allows .plot()
-                # to handle all lines in a single call.
-                color = g1_minerals_cmap(i)
-                ax_soil_spectra.plot(self.wvls, em_spectra.T, color=color, alpha=0.5)
+                    # Plot all rows at once. Transposing em_spectra (T) allows .plot()
+                    # to handle all lines in a single call.
+                    color = g1_minerals_cmap(i)
+                    ax_soil_spectra.plot(self.wvls, em_spectra.T, color=color, alpha=0.5)
 
-                # Get the label and add a single dummy entry for the legend
-                ax_soil_spectra.plot([], [], color=color, label=soils_unique)
+                    # Get the label and add a single dummy entry for the legend
+                    ax_soil_spectra.plot([], [], color=color, label=soils_unique)
 
-            ax_soil_spectra.set_xlim(320, 2550)
-            ax_soil_spectra.xaxis.set_major_locator(MultipleLocator(100))
-            ax_soil_spectra.xaxis.set_minor_locator(MultipleLocator(50))
-            ax_soil_spectra.get_xaxis().set_ticklabels([])
+                ax_soil_spectra.set_xlim(320, 2550)
+                ax_soil_spectra.xaxis.set_major_locator(MultipleLocator(100))
+                ax_soil_spectra.xaxis.set_minor_locator(MultipleLocator(50))
+                ax_soil_spectra.get_xaxis().set_ticklabels([])
 
-            ax_soil_spectra.set_ylim(0, 1)
-            ax_soil_spectra.yaxis.set_major_locator(MultipleLocator(0.2))
-            ax_soil_spectra.yaxis.set_minor_locator(MultipleLocator(0.1))
+                ax_soil_spectra.set_ylim(0, 1)
+                ax_soil_spectra.yaxis.set_major_locator(MultipleLocator(0.2))
+                ax_soil_spectra.yaxis.set_minor_locator(MultipleLocator(0.1))
 
-            ax_soil_spectra.text(385, 0.85, f"Soil (n = {str(df_spectra.shape[0])})", fontsize=12)
-            ax_soil_spectra.legend(prop={'size': 6}, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+                ax_soil_spectra.text(385, 0.85, f"Soil (n = {str(df_spectra.shape[0])})", fontsize=12)
+                ax_soil_spectra.legend(prop={'size': 6}, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
 
-            # plot group 2 minerals
-            ax_soil_spectra2 = plt.subplot2grid((16, 16), (12, 9), colspan=7, rowspan=4)
-            num_minerals_g2 = len(sorted(list(df_spectra.g2_minerals.unique())))
-            g2_minerals_cmap = plt.cm.get_cmap('viridis', num_minerals_g2)
-            unique_minerals_g2 = sorted(df_spectra['g2_minerals'].unique())
+                # plot group 2 minerals
+                ax_soil_spectra2 = plt.subplot2grid((16, 16), (12, 9), colspan=7, rowspan=4)
+                num_minerals_g2 = len(sorted(list(df_spectra.g2_minerals.unique())))
+                g2_minerals_cmap = plt.cm.get_cmap('viridis', num_minerals_g2)
+                unique_minerals_g2 = sorted(df_spectra['g2_minerals'].unique())
 
-            # plot g2 minerals
-            for i, soils_unique in enumerate(unique_minerals_g2):
-                # Filter and extract spectra data in one go
-                em_spectra = df_spectra[df_spectra['g2_minerals'] == soils_unique].iloc[:, 13:].to_numpy()
+                # plot g2 minerals
+                for i, soils_unique in enumerate(unique_minerals_g2):
+                    # Filter and extract spectra data in one go
+                    em_spectra = df_spectra[df_spectra['g2_minerals'] == soils_unique].iloc[:, 13:].to_numpy()
 
-                # Plot all rows at once. Transposing em_spectra (T) allows .plot()
-                # to handle all lines in a single call.
-                color = g2_minerals_cmap(i)
-                ax_soil_spectra2.plot(self.wvls, em_spectra.T, color=color, alpha=0.5)
+                    # Plot all rows at once. Transposing em_spectra (T) allows .plot()
+                    # to handle all lines in a single call.
+                    color = g2_minerals_cmap(i)
+                    ax_soil_spectra2.plot(self.wvls, em_spectra.T, color=color, alpha=0.5)
 
-                # Get the label and add a single dummy entry for the legend
-                ax_soil_spectra2.plot([], [], color=color, label=soils_unique)
+                    # Get the label and add a single dummy entry for the legend
+                    ax_soil_spectra2.plot([], [], color=color, label=soils_unique)
 
-            ax_soil_spectra2.set_xlim(320, 2550)
-            ax_soil_spectra2.xaxis.set_major_locator(MultipleLocator(100))
-            ax_soil_spectra2.xaxis.set_minor_locator(MultipleLocator(50))
-            ax_soil_spectra2.tick_params(axis='x', rotation=45)
+                ax_soil_spectra2.set_xlim(320, 2550)
+                ax_soil_spectra2.xaxis.set_major_locator(MultipleLocator(100))
+                ax_soil_spectra2.xaxis.set_minor_locator(MultipleLocator(50))
+                ax_soil_spectra2.tick_params(axis='x', rotation=45)
 
-            ax_soil_spectra2.set_ylim(0, 1)
-            ax_soil_spectra2.yaxis.set_major_locator(MultipleLocator(0.2))
-            ax_soil_spectra2.yaxis.set_minor_locator(MultipleLocator(0.1))
+                ax_soil_spectra2.set_ylim(0, 1)
+                ax_soil_spectra2.yaxis.set_major_locator(MultipleLocator(0.2))
+                ax_soil_spectra2.yaxis.set_minor_locator(MultipleLocator(0.1))
 
-            ax_soil_spectra2.text(385, 0.85, f"Soil (n = {str(df_spectra.shape[0])})", fontsize=12)
-            ax_soil_spectra2.legend(prop={'size': 6}, bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0.)
+                ax_soil_spectra2.text(385, 0.85, f"Soil (n = {str(df_spectra.shape[0])})", fontsize=12)
+                ax_soil_spectra2.legend(prop={'size': 6}, bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0.)
 
+            except:
+                print('Soil not found!')
+                pass
             plt.tight_layout()
             plt.savefig(os.path.join(self.fig_directory, 'plot_stats', f'{plot_name}.pdf'), format="pdf", dpi=300,
                         bbox_inches="tight")
