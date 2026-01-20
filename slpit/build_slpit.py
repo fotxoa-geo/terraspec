@@ -583,7 +583,7 @@ class build_libraries:
             emit_rfl_unc = os.path.join(plot_base_directory, 'EXT', f'{plot_number}_RFLUNCERT_{emit_date}_EXT')
             outfile = os.path.join(extract_outlog_directory, f'{os.path.basename(i)}.out')
             base_call = f'sh {os.path.join("slpit", "slpit_image_processing.sh")} {i} {em_file} {plot_base_directory} {em_local_rfl} {emit_rfl_ext} {emit_rfl_unc}'
-            sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 20 --mem 20G --output {outfile} --job-name slpit.umix  --wrap='{base_call}'"
+            sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 1 --mem 20G --output {outfile} --job-name slpit.umix  --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
 def run_build_workflow(base_directory, sensor):
