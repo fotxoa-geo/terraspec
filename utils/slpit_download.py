@@ -72,45 +72,68 @@ def download_emit(base_directory, sensor):
     
     # em file for unmixing
     em_file = os.path.join('terraspec_output', 'simulation', 'output', 'endmember_libraries', f'convex_hull__n_dims_4_sensor_{sensor}_geofilter_True_unmix_library.csv')
+    sensor_dates = sorted(list(df['EMIT DATE'].unique()))
     
-    # loop through points and process
-    for index, row in df.iterrows():
-        plot = row['Name']
-        plot_num = int(plot.split('-')[1])
-        if plot_num <= 1:
-            lon = row['geometry'].x
-            lat = row['geometry'].y
-            emit_date = row['EMIT DATE']
+    
+    for sensor_date in sensor_dates:
+        if sensor_date == '':
+            continue
+        
+        print(f"downloading... {sensor_date}")
+        results = earthaccess.search_data(short_name=data_product_key[sensor]['reflectance'], version=data_product_key[sensor]['version'], cloud_hosted=True, granule_name=f'*{sensor_date}*')
 
-            plot_date = datetime.datetime.strptime(emit_date, '%Y%m%dT%H%M%S')
-
-            next_plot_months =  plot_date + relativedelta(months=3)
-            next_plot_months = next_plot_months.strftime('%Y-%m')
-
-            previous_plot_months = plot_date - relativedelta(months=3)
-            previous_plot_months = previous_plot_months.strftime('%Y-%m')
-
-            lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat = lon, lat, lon, lat
-
-            print(f"downloading... {plot}")
-            results = earthaccess.search_data(short_name=data_product_key[sensor]['reflectance'],
-                                              version=data_product_key[sensor]['version'], cloud_hosted=True,
-                                              bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
-                                              temporal=(previous_plot_months, next_plot_months), count=-1)
+        if results:
+            print(f'found {len(results)} granules!')
             files = earthaccess.download(results, os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l2a'))
-            print(f"\t download successful... {len(files)} scenes downloaded") 
+            
+            print(f"\t download successful... {len(files)} granules downloaded")
+            
+            # run nc downloads
+            print(files)
             for nc_file in files:
                 basename = os.path.basename(nc_file)
                 base_call = f'sh {os.path.join("slpit", "emit_image_process.sh")} {nc_file} {em_file} {out_base}'
                 outfile = os.path.join(f"{os.path.join(out_logs, basename)}.out")
-                sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 40 --mem 50G --output {outfile} --job-name slpit.em --wrap='{base_call}'"
-                subprocess.call(sbatch_cmd, shell=True)    
-            
-            #results = earthaccess.search_data(short_name=data_product_key[sensor]['radiance'],
-            #                                  version=data_product_key[sensor]['version'], cloud_hosted=True,
-            #                                  bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
+                sbatch_cmd = f"sbatch -p patient -N 1 -c 20 --mem 25G --output {outfile} --job-name slpit.em --wrap='{base_call}'"
+                subprocess.call(sbatch_cmd, shell=True)
+        
+        else:
+            print(f'no scenes found for {sensor_date}')
+
+
+    # loop through points and process
+    #for index, row in df.iterrows():
+    #    plot = row['Name']
+    #    plot_num = int(plot.split('-')[1])
+    #    if plot_num <= 60:
+    #        lon = row['geometry'].x
+    #        lat = row['geometry'].y
+    #        emit_date = row['EMIT DATE']
+
+    #        plot_date = datetime.datetime.strptime(emit_date, '%Y%m%dT%H%M%S')
+
+     #       next_plot_months =  plot_date + relativedelta(months=3)
+     #       next_plot_months = next_plot_months.strftime('%Y-%m')
+
+      #      previous_plot_months = plot_date - relativedelta(months=3)
+      #      previous_plot_months = previous_plot_months.strftime('%Y-%m')
+
+       #     lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat = lon, lat, lon, lat
+
+        #    print(f"downloading... {plot}")
+         #   results = earthaccess.search_data(short_name=data_product_key[sensor]['reflectance'],
+          #                                    version=data_product_key[sensor]['version'], cloud_hosted=True,
+           #                                   bounding_box=(lower_left_lon, lower_left_lat, upper_right_lon, upper_right_lat),
             #                                  temporal=(previous_plot_months, next_plot_months), count=-1)
-            #files = earthaccess.download(results, os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l1b'))
+            #files = earthaccess.download(results, os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l2a'))
+            #print(f"\t download successful... {len(files)} scenes downloaded") 
+            
+            #for nc_file in files:
+            #    basename = os.path.basename(nc_file)
+            #    base_call = f'sh {os.path.join("slpit", "emit_image_process.sh")} {nc_file} {em_file} {out_base}'
+            #    outfile = os.path.join(f"{os.path.join(out_logs, basename)}.out")
+            #    sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 40 --mem 50G --output {outfile} --job-name slpit.em --wrap='{base_call}'"
+            #    subprocess.call(sbatch_cmd, shell=True)    
        
 
 def run_download_emit(base_directory, sensor):
