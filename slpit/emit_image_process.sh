@@ -96,7 +96,7 @@ else
     
     img_name=${nc_out_directory}/${filebase_name}_${file_endings[$data_type]}
     
-    python ./slpit/window_extract.py -rfl_img ${img_name} -nc_file ${nc_file} -w_size 3 -shp ./gis/Observation.json -pad 1 -out ${ext_out_directory} -del_nc
+    python ./slpit/window_extract.py -rfl_img ${img_name} -nc_file ${nc_file} -w_size 3 -shp ./gis/Observation.json -pad 1 -out ${ext_out_directory}
 fi
 
 echo "Geoprocess complete!"
