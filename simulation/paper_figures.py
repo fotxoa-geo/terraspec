@@ -15,8 +15,8 @@ from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import ast
 
-if not "win32" in platform:
-    plt.switch_backend('Agg')
+#if not "win32" in platform:
+#    plt.switch_backend('Agg')
 
 class figures:
     def __init__(self, base_directory: str, sensor: str, major_axis_fontsize, minor_axis_fontsize, title_fontsize,

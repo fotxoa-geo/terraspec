@@ -55,7 +55,7 @@ def run_slpit_workflow(base_directory:str, dry_run, sensor):
 
                 result_input = input('\nPlease indicate the desired mode: ').upper()
                 if result_input == 'A':
-                    run_figures(base_directory=base_directory)
+                    run_figures(base_directory=base_directory, sensor=sensor)
 
                 elif result_input == 'B':
                     run_tables(base_directory=base_directory)
