@@ -9,6 +9,7 @@ from tetracorder.tetracorder_workflow import run_tetracorder_workflow
 from shift.shift_workflow import run_shift_workflow
 from utils.ecosis_format import run_ecosis
 import time
+import platform
 
 def display_menu():
     print("Welcome to the Interactive Menu")
@@ -80,4 +81,7 @@ def main():
 
 
 if __name__ == '__main__':
+    if platform.system() == "Darwin":
+        import pathos
+        pathos.helpers.mp.set_start_method('spawn')
     main()
