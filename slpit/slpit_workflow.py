@@ -1,7 +1,5 @@
-import os
 from utils.text_guide import cursor_print, query_slpit_mode, query_yes_no
-from utils.slpit_download import run_download_emit, run_dowloand_slpit 
-from slpit.geoprocess import run_geoprocess_utils
+from utils.slpit_download import run_download_emit, run_dowloand_slpit
 from slpit.build_slpit import run_build_workflow
 from slpit.figures import run_figures
 from slpit.slpit_tables import run_tables
