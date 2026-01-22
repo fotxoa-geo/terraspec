@@ -84,9 +84,6 @@ class build_libraries:
             if 'thermal' in i['team_names']:
                 continue
 
-            if int(i['plot_num']) in [114,113]:
-                continue
-
             print(f'\t loading... {plot_name}')
 
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}'))
@@ -98,8 +95,8 @@ class build_libraries:
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}', 'RFL'))
             plot_base_directory = os.path.join(self.output_transect_directory, f'{plot_name}', 'RFL')
 
-            #if os.path.isfile(os.path.join(plot_base_directory, f'{plot_name}_SLPIT_{self.instrument}.csv')):
-            #    continue
+            if os.path.isfile(os.path.join(plot_base_directory, f'{plot_name}_SLPIT_{self.instrument}.csv')):
+               continue
 
             # white ref table
             df_white_ref = slpit.df_white_ref_table(record=i)
@@ -115,7 +112,7 @@ class build_libraries:
 
             if all_spectrometer_files:
                 p_map(partial(slpit.plot_asd_file, out_directory=os.path.join(plot_base_directory, 'individual_spectra_plots')),
-                      all_spectrometer_files, **{"desc": "\t\t plotting asd files: " + plot_name + "...", "ncols": 150})
+                      all_spectrometer_files, **{"desc": "\t\t plotting asd files: " + plot_name + "...", "ncols": 150, "num_cpus":10})
 
             else:
                 p_map(partial(slpit.plot_sed_file, out_directory=os.path.join(plot_base_directory, 'individual_spectra_plots')),
@@ -285,15 +282,12 @@ class build_libraries:
 
             # save the asd spectra
             print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
-            
+
             meta_spectra = get_meta(lines=asd_spectra_grid.shape[0], samples=asd_spectra_grid.shape[1], bands=asd_wvls,
                                     wvls=True)
             output_raster = os.path.join(plot_base_directory,
                                          f'{plot_name.replace(" ", "")}_SLPIT_asd.hdr')
             save_envi(output_raster, meta_spectra, asd_spectra_grid)
-
-
-
             time.sleep(3)
 
     def build_emit_endmembers(self):
@@ -307,6 +301,7 @@ class build_libraries:
             plot_directory = os.path.join(self.spectral_transect_directory, plot_name)
             plot_name = f"{i['team_names'].capitalize()}-{i['plot_num']:03d}"
             date = i['sample_date']
+            plot_pic_url = i['landscape_pic']
             plot_measurements = i['plot_measurements'].split(",")
 
             if 'endmembers' not in plot_measurements:
@@ -315,16 +310,16 @@ class build_libraries:
             if 'thermal' in i['team_names']:
                 continue
 
-            
-
-            if int(i['plot_num']) in [114,113, 119, 114, 113]:
-                continue
-
             print(f'\t loading... {plot_name}')
 
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}'))
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}', 'EMS'))
             plot_em_directory = os.path.join(self.output_transect_directory, f'{plot_name}', 'EMS')
+
+            img_data = requests.get(plot_pic_url).content
+            with open(os.path.join(self.output_transect_directory, f'{plot_name}', f'{plot_name}_landscape_pic.jpg'),
+                      'wb') as handler:
+                handler.write(img_data)
             
             if os.path.isfile(os.path.join(plot_em_directory, f'{plot_name.replace(" ", "")}_EMS_{self.instrument}.csv')):
                 continue
