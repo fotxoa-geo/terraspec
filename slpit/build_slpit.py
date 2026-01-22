@@ -98,8 +98,8 @@ class build_libraries:
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}', 'RFL'))
             plot_base_directory = os.path.join(self.output_transect_directory, f'{plot_name}', 'RFL')
 
-            if os.path.isfile(os.path.join(plot_base_directory, f'{plot_name}_SLPIT_{self.instrument}.csv')):
-                continue
+            #if os.path.isfile(os.path.join(plot_base_directory, f'{plot_name}_SLPIT_{self.instrument}.csv')):
+            #    continue
 
             # white ref table
             df_white_ref = slpit.df_white_ref_table(record=i)
@@ -271,7 +271,8 @@ class build_libraries:
             save_envi(output_raster, meta_spectra, spectra_grid)
 
             # save asd data
-            asd_spectra_grid = np.ones((max(max_line_files), len(df_corrected_all.line_num.unique()), len(self.wvls))) * -9999
+            asd_wvls = spectra.load_asd_wavelenghts()
+            asd_spectra_grid = np.ones((max(max_line_files), len(df_corrected_all.line_num.unique()), len(asd_wvls))) * -9999
 
             for _line, line in enumerate(df_corrected_all.line_num.unique()):
                 df_line_select = df_corrected_all[df_corrected_all['line_num'] == line].copy()
@@ -284,12 +285,12 @@ class build_libraries:
 
             # save the asd spectra
             print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
-            asd_wvls = spectra.load_asd_wavelenghts()
+            
             meta_spectra = get_meta(lines=asd_spectra_grid.shape[0], samples=asd_spectra_grid.shape[1], bands=asd_wvls,
                                     wvls=True)
             output_raster = os.path.join(plot_base_directory,
                                          f'{plot_name.replace(" ", "")}_SLPIT_asd.hdr')
-            save_envi(output_raster, meta_spectra, spectra_grid)
+            save_envi(output_raster, meta_spectra, asd_spectra_grid)
 
 
 
