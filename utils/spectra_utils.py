@@ -142,7 +142,7 @@ class spectra:
 
     @classmethod
     def load_asd_wavelenghts(cls):
-        wavelengths_asd = np.linspace(350, 2500, 2151).tolist()
+        wavelengths_asd = np.linspace(350, 2500, 2151)
 
         return wavelengths_asd
 
@@ -150,7 +150,7 @@ class spectra:
     def load_global_library(cls, output_directory, sensor, spectra_starting_col=None, geo_filter=True):
 
         if geo_filter:
-            df = pd.read_csv(os.path.join(output_directory, 'convolved', f'geofilter_sensor_{sensor}_convolved.csv'))
+            df = pd.read_csv(os.path.join('terraspec_output', 'simulation', 'output', 'convolved', f'geofilter_sensor_{sensor}_convolved.csv'))
 
         else:
             df = pd.read_csv(os.path.join(output_directory, 'convolved', f'all_data_sensor_{sensor}_convolved.csv'))
