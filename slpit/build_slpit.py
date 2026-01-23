@@ -95,13 +95,8 @@ class build_libraries:
             create_directory(os.path.join(self.output_transect_directory, f'{plot_name}', 'RFL'))
             plot_base_directory = os.path.join(self.output_transect_directory, f'{plot_name}', 'RFL')
 
-<<<<<<< HEAD
-            #if os.path.isfile(os.path.join(plot_base_directory, f'{plot_name}_SLPIT_{self.instrument}.csv')):
-            #    continue
-=======
             if os.path.isfile(os.path.join(plot_base_directory, f'{plot_name}_SLPIT_{self.instrument}.csv')):
                continue
->>>>>>> research
 
             # white ref table
             df_white_ref = slpit.df_white_ref_table(record=i)
