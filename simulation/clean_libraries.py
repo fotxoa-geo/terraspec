@@ -115,8 +115,9 @@ def download_data(base_directory, output_directory):
         url_content = requests.get(fileURL)
         df_ngsa = pd.read_csv(BytesIO(url_content.content)).T.reset_index()
         df_ngsa.columns = df_ngsa.iloc[0]
-        df_ngsa = df_ngsa[1:]
-        df_ngsa.columns.values[0] = "SITEID"
+        df_ngsa = df_ngsa[1:].reset_index(drop=True)
+        df_ngsa.columns.name = None
+        df_ngsa.rename(columns={df_ngsa.columns[0]: "SITEID"}, inplace=True)
         df_ngsa["SITEID"] = df_ngsa["SITEID"].str.split('.').str[0]
         df_ngsa["SITEID"] = df_ngsa["SITEID"].str.split(':').str[1]
         df_ngsa["SITEID"] = df_ngsa["SITEID"].astype(str)
@@ -201,7 +202,7 @@ def standardize_all_data(base_directory, output_directory, geo_filter, spectral_
             # add level 1 classification
             df.insert(0, 'level_1', 'soil')
             df.insert(0, 'dataset', ds_name.lower())
-            col_pilot2 = ["dataset", "level_1", "level_2", "level_3", 'longitude', 'latitude'] + wavelengths_asd
+            col_pilot2 = ["dataset", "level_1", "level_2", "level_3", 'longitude', 'latitude'] + wavelengths_asd.tolist()
             df.columns = col_pilot2
             df.insert(4, 'fname', df.level_3)
 
