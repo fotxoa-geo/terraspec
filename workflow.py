@@ -9,6 +9,7 @@ from tetracorder.tetracorder_workflow import run_tetracorder_workflow
 from shift.shift_workflow import run_shift_workflow
 from utils.ecosis_format import run_ecosis
 import time
+import platform
 
 def display_menu():
     print("Welcome to the Interactive Menu")
@@ -58,7 +59,7 @@ def main():
 
         elif choice == 'C':
             run_tetracorder_workflow(base_directory, sensor=args.sensor, dry_run=args.dry_run,
-                                     new_simulation_bundles=args.new_simulation_bundles, spectral_bundles=int(args.number_of_bundles))
+                                     spectral_bundles=int(args.number_of_bundles))
 
         elif choice == 'D':
             run_shift_workflow(os.path.join(base_directory, 'shift'), sensor='aviris_ng', dry_run=args.dry_run)
@@ -80,4 +81,7 @@ def main():
 
 
 if __name__ == '__main__':
+    if platform.system() == "Darwin":
+        import pathos
+        pathos.helpers.mp.set_start_method('spawn')
     main()
