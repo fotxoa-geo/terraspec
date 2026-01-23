@@ -282,7 +282,6 @@ class build_libraries:
 
             # save the asd spectra
             print('\t\t\tcreating reflectance file...', sep=' ', end='', flush=True)
-
             meta_spectra = get_meta(lines=asd_spectra_grid.shape[0], samples=asd_spectra_grid.shape[1], bands=asd_wvls,
                                     wvls=True)
             output_raster = os.path.join(plot_base_directory,
