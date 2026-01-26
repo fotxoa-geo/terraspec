@@ -25,13 +25,13 @@ def tetracorder_build_menu():
     cursor_print(msg)
 
     print("Welcome to the Tetracorder build Mode....")
-    print("A... Simulated Reflectance")
-    print("B... Hypertrace workflow")
-    print("C... Unmix simulated reflectance")
-    print("D... Reconstruct vegetation signals from EMC² and band depths")
-    print("E... Augment pixels and field data")
-    print("F... Unmix augmented SLPIT data")
-    print("G... Reconstruct vegetation signals from EMC² and band depths from EMIT scene")
+    print("A... Run Tetrecorder on endmember libraries")
+    print("B... Generate synthetic reflectance")
+    print("C... ")
+    print("D... ")
+    print("E... ")
+    print("F... ")
+    print("G... ")
     print("H... Exit")
 
 
@@ -70,7 +70,8 @@ class Tetracorder:
         self.sensor = sensor
 
         # create output directory for augmented files
-        # create_directory(os.path.join(self.tetra_output_directory, 'augmented'))
+        create_directory(os.path.join(self.tetra_output_directory, 'synthethic_rfls'))
+        self.synthetic_dir = os.path.join(os.path.join(self.tetra_output_directory, 'synthethic_rfls'))
         # create_directory(os.path.join(self.tetra_output_directory, 'spectral_abundance'))
         # create_directory(os.path.join(self.tetra_output_directory, 'fractions'))
         # create_directory(os.path.join(self.tetra_output_directory, 'simulated_spectra'))
@@ -120,10 +121,11 @@ class Tetracorder:
         df_veg = pd.concat([df_npv, df_pv], axis=0, ignore_index=True)
 
         # load spectral abundance of simulation library
-        spectral_abundance_array = envi_to_array(os.path.join(self.tetra_output_directory, 'spectral_abundance',
-                                                              'convex_hull__n_dims_4_simulation_library_min'))[:, 0, :]
-
-        df_minerals_indentified_dict, df_minerals_indentified = spectra.get_mineral_reclassification(os.path.join(self.spectral_abun_dir, 'convex_hull__n_dims_4_simulation_library_minerals'))
+        spectral_abundance_array = envi_to_array(os.path.join(self.tetra_output_directory, 'libraries', 'sim_lib', 'tetracorder',
+                                                              'sim_lib_augmented_min'))[:, 0, :]
+        
+        # load txt files outputs from tetracorder
+        df_minerals_indentified_dict, df_minerals_indentified = spectra.get_mineral_reclassification(os.path.join(self.tetra_output_directory, 'libraries', 'sim_lib', 'tetracorder', 'sim_lib_augmented_minerals'))
 
         # these are the corresponding indices
         valid_rows_g1 = []
@@ -152,43 +154,70 @@ class Tetracorder:
             if g1_index in valid_g1_indices:
                 valid_rows_g1.append(df_row)
                 indices_used_g1.append(g1_index)
-            else:
-                print(f"Index: {g1_index} not part of allowed indices")
 
             g2_index = spectral_abundance_array[df_index, 3]
             if g2_index in valid_g2_indices:
                 valid_rows_g2.append(df_row)
                 indices_used_g2.append(g2_index)
         
-        print(sorted(list(set(indices_used_g1))))
+        create_directory(os.path.join(self.synthetic_dir, 'tetracorder_g1'))
         df_soil_g1 = pd.DataFrame(valid_rows_g1)
         df_sim_g1 = pd.concat([df_veg, df_soil_g1], axis=0, ignore_index=True)
         df_sim_g1 = df_sim_g1.sort_values('level_1')
         
-
-        df_sim_g1.to_csv(os.path.join(self.sim_spectra_dir, 'df_sim_1.csv'))
-
-        print(sorted(list(set(indices_used_g2))))
+        df_sim_g1.to_csv(os.path.join(self.synthetic_dir, 'tetracorder_g1', 'df_sim_1.csv'))
+        
+        create_directory(os.path.join(self.synthetic_dir, 'tetracorder_g2'))
         df_soil_g2 = pd.DataFrame(valid_rows_g2)
         df_sim_g2 = pd.concat([df_veg, df_soil_g2], axis=0, ignore_index=True)
         df_sim_g2 = df_sim_g2.sort_values('level_1')
-        df_sim_g2.to_csv(os.path.join(self.sim_spectra_dir, 'df_sim_2.csv'))
+        df_sim_g2.to_csv(os.path.join(self.synthetic_dir, 'tetracorder_g2' ,'df_sim_2.csv'))
+        
 
+        create_directory(os.path.join(self.synthetic_dir, 'rem'))
+        rem_array = envi_to_array(os.path.join(self.tetra_data_directory, 'Esfordi_emit'))
+        rem_array = rem_array.reshape(rem_array.shape[0], rem_array.shape[2])
+        df_rem = pd.DataFrame(rem_array, columns=df_sim_g2.columns[-285:])
+        df_rem.insert(0, 'level_1', 'soil') 
+        
+        df_sim_rem = pd.concat([df_veg, df_rem], axis=0, ignore_index=True)
+        df_sim_rem = df_sim_rem.sort_values('level_1')
+        df_sim_rem.to_csv(os.path.join(self.synthetic_dir, 'rem' ,'df_sim_rem.csv'))
 
         print(f"Indices used G1: {sorted(list(set(indices_used_g1)))}")
         print(f"Indices used G2: {sorted(list(set(indices_used_g2)))}")
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim_g1,
                                       level='level_1', spectral_bundles=spectral_bundles, increment_size=0.05,
-                                      output_directory=self.sim_spectra_dir, wvls=self.wvls,
+                                      output_directory=os.path.join(self.synthetic_dir, 'tetracorder_g1'), wvls=self.wvls,
                                       name='tetracorder_g1_simulation', spectra_starting_col=8, endmember='soil',
-                                    spectral_bundle_project='tetracorder_g1', new_simulation_bundles=new_simulation_bundles)
+                                      spectral_bundle_project='tetracorder_g1', new_simulation_bundles=spectral_bundles)
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim_g2,
                                       level='level_1', spectral_bundles=spectral_bundles, increment_size=0.05,
-                                      output_directory=self.sim_spectra_dir, wvls=self.wvls,
+                                      output_directory=os.path.join(self.synthetic_dir, 'tetracorder_g2'), wvls=self.wvls,
                                       name='tetracorder_g2_simulation', spectra_starting_col=8, endmember='soil',
-                                      spectral_bundle_project='tetracorder_g2', new_simulation_bundles=new_simulation_bundles)
+                                      spectral_bundle_project='tetracorder_g2', new_simulation_bundles=spectral_bundles)
+        
+        spectra.increment_reflectance(class_names=sorted(list(df_sim_rem.level_1.unique())), simulation_table=df_sim_rem,
+                                      level='level_1', spectral_bundles=spectral_bundles, increment_size=0.05,
+                                      output_directory=os.path.join(self.synthetic_dir, 'rem'), wvls=self.wvls,
+                                      name='tetracorder_rem_simulation', spectra_starting_col=8, endmember='soil',
+                                      spectral_bundle_project='tetracorder_rem', new_simulation_bundles=spectral_bundles)
+        
+        
+        create_directory(os.path.join(self.synthetic_dir, 'outlogs'))
+        log_file_dir = os.path.join(self.synthetic_dir, 'outlogs')
+        
+        rfl_files = sorted(list(glob(os.path.join(self.synthetic_dir, '**',  '*_spectra'), recursive=True)))
+
+        for _, rfl_img in enumerate(rfl_files):
+            outfile = os.path.join(log_file_dir, f'{os.path.basename(rfl_img)}.out')
+            lib_dir = os.path.dirname(rfl_img)
+            
+            base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {rfl_img} {lib_dir} --unmix '
+            sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 20 --mem 40G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
+            subprocess.run(sbatch_cmd, shell=True, text=True)
 
     def hypertrace_tetracorder(self):
         cursor_print('hypertrace: tetracorder')
@@ -337,45 +366,12 @@ class Tetracorder:
             self.run_tc(output_raster[:-4])
 
 
-
         # submitting tetracorder on emit scenes
 
 
         cursor_print("\t- done")
 
-    def augment_simulation(self):
-        cursor_print('augmenting data for tetracorder...')
-        print()
-        cursor_print('\t loading simulation data...')
-
-        # simulation spectra
-        sim_spectra_files = glob(os.path.join(self.sim_spectra_dir, '*'))
-        exclude = ['.hdr', '.xml', '.aux', '.csv']
-
-        files_to_augment = sim_spectra_files
-        
-        output_rasters = []
-        output_files = []
-        for i in files_to_augment:
-            basename = os.path.basename(i)
-            file_type = os.path.basename(i).split('_')[-1]
-
-            if os.path.splitext(i)[1] not in exclude:
-                if file_type in ['index', 'fractions', 'gv', 'npv']:
-                    continue
-                else:
-                    output_raster = os.path.join(self.tetra_output_directory, 'augmented', f"{basename}_augmented.hdr")
-                    output_rasters.append(output_raster)
-                    output_files.append(i)
-
-        p_map(partial(augment_envi, wvls=self.wvls), output_files, output_rasters,
-              **{"desc": "\t\t augmenting envi files...", "ncols": 150})
-        
-        for i in output_rasters:
-            self.run_tc(i[:-4])
-
-        cursor_print("\t- done")
-
+    
     def mineral_lib_refl_cont(self):
 
         for group in ['g1', 'g2']:
@@ -421,12 +417,19 @@ class Tetracorder:
         cursor_print('\t loading simulation data...')
 
         # load simulation library - 4 dimension; convex hull
-        simulation_lib = os.path.join(self.simulation_output_directory, 'simulation_libraries',
+        simulation_lib_original = os.path.join(self.simulation_output_directory, 'simulation_libraries',
                                       'convex_hull__n_dims_4_sensor_emit_geofilter_True_simulation_library')
+        
+        shutil.copy(simulation_lib_original, os.path.join(self.tetra_data_directory, 'sim_lib'))
+        shutil.copy(f'{simulation_lib_original}.hdr', os.path.join(self.tetra_data_directory, 'sim_lib.hdr'))
+        simulation_lib = os.path.join(self.tetra_data_directory, f'sim_lib')
 
         # load unmix library - 4 dimensions; convex hull
-        unmix_lib = os.path.join(self.simulation_output_directory, 'endmember_libraries',
-                                 'convex_hull__n_dims_4_sensor_emit_geofilter_True_simulation_library')
+        unmix_lib_original = os.path.join(self.simulation_output_directory, 'endmember_libraries',
+                                 'convex_hull__n_dims_4_sensor_emit_geofilter_True_unmix_library')
+        shutil.copy(unmix_lib_original, os.path.join(self.tetra_data_directory, 'unmix_lib'))
+        shutil.copy(f'{unmix_lib_original}.hdr', os.path.join(self.tetra_data_directory, 'unmix_lib.hdr'))
+        unmix_lib = os.path.join(self.tetra_data_directory, f'unmix_lib')
 
         # create rare_earth lib
         rem_lib = os.path.join('utils', 'tetracorder', 'Esfordi_speclib.img')
@@ -446,6 +449,7 @@ class Tetracorder:
                                 wvls=True)
         output_raster = os.path.join(self.tetra_data_directory, f'Esfordi_{self.sensor}.hdr')
         save_envi(output_raster, meta_spectra, spectra_grid)
+        rem_lib = os.path.join(self.tetra_data_directory, f'Esfordi_{self.sensor}')
 
         # create output directories for libraries
         create_directory(os.path.join(self.tetra_output_directory, 'libraries'))
@@ -453,18 +457,13 @@ class Tetracorder:
         create_directory(os.path.join(self.tetra_output_directory, 'libraries', 'log_files'))
         log_file_dir = os.path.join(self.tetra_output_directory, 'libraries', 'log_files')
 
-        for _, rfl_img in enumerate([simulation_lib, unmix_lib, os.path.join(self.tetra_data_directory, f'Esfordi_{self.sensor}')]):
-            if _ == 0:
-                outfile = os.path.join(log_file_dir, f'simulation_{os.path.basename(rfl_img)}.out')
-                create_directory(os.path.join(lib_output_dir, f'simulation_{os.path.basename(rfl_img)}'))
-                lib_dir = os.path.join(lib_output_dir, f'simulation_{os.path.basename(rfl_img)}')
-            else:
-                outfile = os.path.join(log_file_dir, f'{os.path.basename(rfl_img)}.out')
-                create_directory(os.path.join(lib_output_dir, os.path.basename(rfl_img)))
-                lib_dir = os.path.join(lib_output_dir, os.path.basename(rfl_img))
+        for _, rfl_img in enumerate([simulation_lib, unmix_lib, rem_lib]):
+            outfile = os.path.join(log_file_dir, f'{os.path.basename(rfl_img)}.out')
+            create_directory(os.path.join(lib_output_dir, os.path.basename(rfl_img)))
+            lib_dir = os.path.join(lib_output_dir, os.path.basename(rfl_img))
 
-            base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {lib_dir} {rfl_img} '
-            sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 1 --mem 10G --output {outfile} --job-name reclaimer --wrap='{base_call}'"
+            base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {rfl_img} {lib_dir} '
+            sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 1 --mem 10G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
         cursor_print("\t- done")
@@ -535,9 +534,8 @@ def run_tetracorder_build(base_directory, sensor, dry_run, spectral_bundles):
 
         if user_input == 'A':
             tc.libraries_tetracorder()
+        elif user_input == 'B':
             tc.generate_tetracorder_reflectance(spectral_bundles=spectral_bundles)
-            #tc.augment_simulation()
-            #tc.run_on_scenes()
         # elif user_input == 'B':
         #     tc.hypertrace_tetracorder()
         # elif user_input == 'C':
