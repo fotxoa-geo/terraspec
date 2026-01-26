@@ -109,7 +109,7 @@ class Tetracorder:
         cursor_print('generating reflectance...')
 
         df_sim = pd.read_csv(os.path.join(self.simulation_output_directory, 'simulation_libraries',
-                                          'convex_hull__n_dims_4_sensor_simulation_library.csv'))
+                                          'convex_hull__n_dims_4_sensor_emit_geofilter_True_simulation_library.csv'))
 
         df_pv = df_sim.loc[df_sim['level_1'] == 'pv'].copy()
         df_pv = df_pv.sample(n=8, random_state=13).reset_index(drop=True)
