@@ -7,7 +7,7 @@ from simulation.sim_workflow import run_sim_workflow
 from slpit.slpit_workflow import run_slpit_workflow
 from tetracorder.tetracorder_workflow import run_tetracorder_workflow
 from shift.shift_workflow import run_shift_workflow
-from utils.ecosis_format import run_ecosis
+from fire.fire_workflow import run_fire_workflow
 import time
 import platform
 
@@ -17,7 +17,7 @@ def display_menu():
     print("B... SLPIT")
     print("C... Tetracorder")
     print('D... SHIFT')
-    print("E... ECOSIS tables")
+    print("E... Fire mode")
     print("F... Exit")
 
 def main():
@@ -32,6 +32,7 @@ def main():
     parser.add_argument('-norm', '--normalization', type=bool, help='Brightness normalization enabled for PC!', default=True)
     parser.add_argument('-spec_start_col', '--spectra_start_col', type=str, help='Spectra starting column', default='7')
     parser.add_argument('-n_cores', '--number_of_cores', type=str, help='Number of cores to use', default='40')
+    parser.add_argument('-aoi', '--area_of_interest', type=str, help='Area of interest for fire spectra', default='sedgwick_boundary_approx.geojson')
 
     args = parser.parse_args()
     
@@ -65,7 +66,8 @@ def main():
             run_shift_workflow(os.path.join(base_directory, 'shift'), sensor='aviris_ng', dry_run=args.dry_run)
 
         elif choice == 'E':
-            run_ecosis(base_directory=base_directory)
+            run_fire_workflow(os.path.join(base_directory, 'fire'), sensor=args.sensor, dry_run=args.dry_run,
+                              aoi=os.path.join('gis', args.area_of_interest))
 
         elif choice == "F":
             outro = "TerraSpec processes complete. Thank you for using Terraspec!"
