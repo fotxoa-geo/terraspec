@@ -58,4 +58,4 @@ mkdir ${cpwd}/${out_base}${filebase}_minerals/ -p
 cp $out_tetra_path/cmds.abundances/lists.of.files.by.mineral/* ${cpwd}/${out_base}${filebase}_minerals/ -r 
 
 echo "Current UTC time is: ${date}"
-rm -rf $out_tetra_path
+#rm -rf $out_tetra_path

@@ -65,4 +65,4 @@ python ./utils/augment_file.py ${rfl_img} ${out_base} --augment # augment rfl fi
 python ./utils/augment_file.py ${rfl_img} ${out_base} --deaugment
 
 # push data to drive
-/store/shared/rclone/bin/rclone copy ${out_base} cdrive:terraspec_output/tetracorder/output/${out_base_name} -P
+/store/shared/rclone/bin/rclone copy "${out_base}" "cdrive:${out_base#./}" -P
