@@ -84,9 +84,9 @@ def download_scenes(base_directory, sensor, aoi):
         # run nc downloads
         for nc_file in files:
             basename = os.path.basename(nc_file)
-            base_call = f'sh {os.path.join("fire", "emit_aoi_process.sh")} {nc_file} {em_file} {out_base}'
+            base_call = f'sh {os.path.join("fire", "emit_aoi_process.sh")} {nc_file} {em_file} {out_base} {aoi}'
             outfile = os.path.join(f"{os.path.join(out_logs, basename)}.out")
-            sbatch_cmd = f"sbatch -p patient -N 1 -c 15 --mem 25G --output {outfile} --job-name lake-fire --wrap='{base_call}'"
+            sbatch_cmd = f"sbatch -p patient -N 1 -c 10 --mem 25G --output {outfile} --job-name lake-fire --wrap='{base_call}'"
             subprocess.call(sbatch_cmd, shell=True)
 
 
