@@ -1145,7 +1145,6 @@ class spectra:
 
     @classmethod
     def get_all_ems(cls, output_directory: str, instrument: str):
-        #spectral_endmembers = glob(os.path.join(output_directory, 'spectral_endmembers', '*' + instrument + ".csv"))
         emit_transect_endmembers = glob(os.path.join(output_directory,'**' , f'*EMS_{instrument}.csv'), recursive=True)
         emit_transect_endmembers = [item for item in emit_transect_endmembers if "Thermal" not in item]
         all_ems = emit_transect_endmembers
@@ -1237,8 +1236,8 @@ class spectra:
         df_minerals_sim = df_minerals_sim.dropna()
         df_minerals_sim['Index'] = df_minerals_sim['Index'].astype(int)
 
-        sim_dictionary = df_minerals_sim.set_index('Index')['emit_group'].to_dict()
-        sim_dictionary.update({0: "no detection", -9999: "No Data", 96: "vegetation", 97: "vegetation", 98: "vegetation"})
+        sim_dictionary = df_minerals_sim.groupby('Index')['emit_group'].apply(list).to_dict()
+        sim_dictionary.update({0: ["no detection"], -9999: ["No Data"], 96: ["vegetation"], 97: ["vegetation"], 98: ["vegetation"]})
 
         return sim_dictionary, df_minerals_sim
 
