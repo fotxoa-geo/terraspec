@@ -154,6 +154,7 @@ cython_debug/
 
 emit_utils/
 terraspec_output/
+SpectralUtil/
 
 slpit/config.json
 *.ipynb

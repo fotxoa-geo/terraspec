@@ -420,6 +420,13 @@ class build_libraries:
             plot_number = os.path.basename(i).split('-')[1].split('_')[0]
             if int(plot_number) > 60:
                 continue
+
+            out_csv = os.path.join(self.output_transect_directory, f'Spectral-{plot_number}',
+                                   f"unmix_{os.path.basename(i)}")
+            if os.path.exists(out_csv):
+                print(f'{out_csv} exists, skipping!')
+                continue
+
             df_em_site = pd.read_csv(i, low_memory=False)
             site_em = sorted(list(df_em_site.level_1.unique()))
             df_nearest_distances = df_distance.loc[df_distance['emit_plot_analysis'] == f"SPEC - {plot_number}"].copy()
@@ -483,7 +490,7 @@ class build_libraries:
                         remaining_samples -= remaining_samples
 
             # if list is empty do nothing
-            out_csv = os.path.join(self.output_transect_directory, f'Spectral-{plot_number}', f"unmix_{os.path.basename(i)}")
+
 
             if not ems_to_append:
                 df_em_site.to_csv(out_csv, index=False)

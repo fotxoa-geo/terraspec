@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as font_manager
 from glob import glob
-
+from matplotlib.lines import Line2D
 import pytz
 from osgeo import gdal
 import matplotlib.gridspec as gridspec
@@ -26,6 +26,7 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from rasterio.plot import show
 import geopandas as gpd
+import matplotlib.patches as mpatches
 import rasterio
 from rasterio.features import geometry_mask
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes, mark_inset
@@ -636,6 +637,161 @@ class figures:
             plt.close()
 
 
+    def map_detail_figure(self):
+        emit_rfl = envi_to_array(os.path.join(self.fig_directory, 'sedgwick_boundary_approx_RFL_20230927T214531_EXT'))[:,:, [39,24,10]]
+        emit_fractional_cover = envi_to_array(os.path.join(self.fig_directory, 'EMIT_L2A_RFL_001_20230927T214531_2327014_002_fractional_cover'))[:,:, :-1]
+        landscape_pic = os.path.join(self.output_directory, 'spectral_transects', 'Spectral-051', 'Spectral-051_landscape_pic.jpg')
+        slpit_rfl = envi_to_array(os.path.join(self.output_directory, 'spectral_transects', 'Spectral-051', 'RFL', 'Spectral-051_SLPIT_asd'))
+        df_slpit_rfl = pd.read_csv(os.path.join(self.output_directory, 'spectral_transects', 'Spectral-051', 'RFL',
+                                                'Spectral-051_SLPIT_asd.csv'))
+        sensor_rfl = envi_to_array(os.path.join(self.output_directory, 'spectral_transects', 'Spectral-051', 'EXT', 'Spectral-051_RFL_20230927T214531_EXT'))
+
+        # get spatial data
+        img = envi.open(os.path.join(self.fig_directory, 'sedgwick_boundary_approx_RFL_20230927T214531_EXT.hdr'))
+        metadata = img.metadata
+
+        # Spectral doesn't calculate extent automatically,
+        # but it organizes the 'map info' into a list for you
+        map_info = metadata.get('map info', [])
+
+        # MapX is index 3, MapY is index 4, DX is 5, DY is 6
+        ul_x = float(map_info[3])
+        ul_y = float(map_info[4])
+        dx = float(map_info[5])
+        dy = float(map_info[6])
+
+        extent = [ul_x, ul_x + (img.ncols * dx), ul_y - (img.nrows * dy), ul_y]
+
+        # load gis data
+        df_gis = gp.read_file(os.path.join('gis', "Observation.json"))
+        df_gis['longitude'] = df_gis.geometry.x
+        df_gis['latitude'] = df_gis.geometry.y
+        df_gis = pd.DataFrame(df_gis.drop(columns='geometry'))
+        df_gis['Name'] = df_gis['Name'].str.replace(' ', '', regex=False)
+        df_gis = df_gis.sort_values('Name')
+
+
+        # Create figure and subplots
+        fig = plt.figure(figsize=(10, 6))
+
+        # Axes for the reflectance plot (main area)
+        ax_rfl_plot = plt.subplot2grid((12, 12), (6, 0), colspan=12, rowspan=6)
+        ax_rfl_plot.set_xlabel('Wavelength (nm)')
+        ax_rfl_plot.set_ylabel('Reflectance (%)')
+
+        ax_rfl_plot.set_xlim(300, 2550)
+        ax_rfl_plot.xaxis.set_major_locator(MultipleLocator(100))
+        ax_rfl_plot.xaxis.set_minor_locator(MultipleLocator(50))
+        ax_rfl_plot.set_ylim(0, 1)
+        ax_rfl_plot.yaxis.set_major_locator(MultipleLocator(0.2))
+        ax_rfl_plot.yaxis.set_minor_locator(MultipleLocator(0.1))
+        ax_rfl_plot.tick_params(axis='x', rotation=45)
+
+        # load rfl data
+        slpit_rfl[slpit_rfl == -9999] = np.nan
+
+        # # get date and time from slpit
+        slpit_date = df_slpit_rfl['date'].unique()[0]
+        slpit_datetime = datetime.strptime(df_slpit_rfl['date'].unique()[0], "%Y-%m-%d")
+
+        df_transect = df_gis.loc[df_gis['Name'] == 'Spectral-051'.replace("Spectral", 'SPEC')].copy()
+        acquisition_date = '20230927T214531'
+
+        # calculate geometries
+        acquisition_datetime_utc = datetime.strptime(acquisition_date, "%Y%m%dT%H%M%S").replace(
+            tzinfo=timezone.utc)
+        geometry_results_sensor = sunpos(acquisition_datetime_utc, np.mean(df_transect.latitude),
+                                         np.mean(df_transect.longitude), np.mean(df_slpit_rfl.elevation))
+        acquisition_datetime = datetime.strptime(acquisition_date, "%Y%m%dT%H%M%S")
+        delta = slpit_datetime - acquisition_datetime
+        days = np.absolute(delta.days)
+
+        #base_label = f'EMIT Acquistion Date:{acquisition_date} (±{days:02d} days)  SZA : {str(int(geometry_results_sensor[1]))}°'
+        base_label = f'EMIT Acquisition Date: 2023-09-27'
+        sensor_std = np.nanstd(sensor_rfl, axis=(0, 1))
+        sensor_mean = np.nanmean(sensor_rfl, axis=(0, 1))
+        ax_rfl_plot.plot(self.wvls, sensor_mean, label=base_label, linewidth=1, color='blue')
+        ax_rfl_plot.fill_between(self.wvls, sensor_mean - sensor_std * 2, sensor_mean + sensor_std * 2,
+                                 color='skyblue', alpha=0.2)
+
+        # Calculate mean time of ASD  collections
+
+        y_mean = np.nanmean(slpit_rfl, axis=(0, 1))
+        y_std = np.nanstd(slpit_rfl, axis=(0, 1))
+
+        # plot slpit data
+        ax_rfl_plot.plot(self.asd_wvls, y_mean, label=f'SLPIT Acquisition Date: {slpit_date}', linewidth=2, color='black')
+
+        # fill 1 sigma
+        ax_rfl_plot.fill_between(self.asd_wvls, y_mean - y_std * 2, y_mean + y_std * 2,
+                                 color='grey', alpha=0.2)
+        ax_rfl_plot.legend()
+
+        # get gis data
+        lon = df_transect['longitude'].values[0]
+        lat = df_transect['latitude'].values[0]
+
+        gdf = gpd.read_file(os.path.join('gis', 'sedgwick_boundary_approx.geojson'))
+
+        # # plot emit fractional cover
+        ax_map = plt.subplot2grid((12, 12), (0, 0), colspan=4, rowspan=6)
+        gdf.plot(ax=ax_map, facecolor='none', edgecolor='cyan', linewidth=2)
+        ax_map.set_title('EMIT Fractional Cover')
+        vmin, vmax = np.percentile(emit_fractional_cover, [2, 98])
+        img_display = np.clip((emit_fractional_cover - vmin) / (vmax - vmin), 0, 1)
+        ax_map.imshow(img_display, extent=extent, aspect='equal')
+        ax_map.axis('off')
+        ax_map.set_xlim(extent[0], extent[1])
+        ax_map.set_ylim(extent[2], extent[3])
+        ax_map.scatter(lon, lat, color='yellow', marker='*', s=150, zorder=9, label='SLPIT')
+
+        ax_map.annotate('N', xy=(0.05, 0.995), xytext=(0.05, 0.88),
+                         arrowprops=dict(facecolor='white', width=2, headwidth=7.5),
+                         ha='center', va='center', fontsize=12, color='white',
+                         xycoords='axes fraction')
+
+        red_patch = mpatches.Patch(color='red', label='R: NPV')
+        green_patch = mpatches.Patch(color='green', label='G: GV')
+        blue_patch = mpatches.Patch(color='blue', label='B: Soil')
+
+        # Get the existing legend handles and labels from the map
+        handles, labels = ax_map.get_legend_handles_labels()
+        all_handles = handles + [red_patch, green_patch, blue_patch]
+
+
+        ax_map.legend(handles=all_handles, loc='center left', bbox_to_anchor=(1.05, 0.5),
+                      fontsize='small', frameon=True, borderaxespad=0, facecolor='wheat',
+                      title_fontsize='small', framealpha=0.65)
+
+        # plot RGB image
+        ax_map2 = plt.subplot2grid((12, 12), (0, 4), colspan=4, rowspan=6)
+        gdf.plot(ax=ax_map2, facecolor='none', edgecolor='cyan', linewidth=2, label='Boundary')
+        ax_map2.set_title('EMIT RGB')
+        vmin, vmax = np.percentile(emit_rfl, [5, 95])
+        img_display = np.clip((emit_rfl - vmin) / (vmax - vmin), 0, 1)
+        ax_map2.imshow(img_display, extent=extent, aspect='equal')
+        ax_map2.axis('off')
+        ax_map2.set_xlim(extent[0], extent[1])
+        ax_map2.set_ylim(extent[2], extent[3])
+        ax_map2.scatter(lon, lat, color='yellow', marker='*', s=150, zorder=9)
+
+        ax_map2.annotate('N', xy=(0.05, 0.995), xytext=(0.05, 0.88),
+                        arrowprops=dict(facecolor='white', width=2, headwidth=7.5),
+                        ha='center', va='center', fontsize=12, color='white',
+                        xycoords='axes fraction')
+
+        # # plot landsacpe image
+        ax_landspace_pic = plt.subplot2grid((12, 12), (0, 8), colspan=4, rowspan=6)
+        ax_landspace_pic.set_title('Landscape Picture')
+        img = mpimg.imread(landscape_pic)
+        ax_landspace_pic.imshow(img, aspect='auto')
+        ax_landspace_pic.axis('off')
+
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.fig_directory, 'map_detailed_slpit.png'), format="png", dpi=400,
+                   bbox_inches="tight")
+        plt.clf()
+        plt.close()
 
 
 def run_figures(base_directory, sensor):
@@ -655,10 +811,7 @@ def run_figures(base_directory, sensor):
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs)
 
-    fig.plot_summary()
-    fig.plot_rmse(norm_option='brightness')
-    #fig.plot_rmse(norm_option='none')
-    fig.local_slpit()
-    fig.sza_plot(norm_option='brightness')
-    #fig.sza_plot(norm_option='none')
-    #fig.map_detail_figure()
+    #fig.plot_summary()
+    #fig.local_slpit()
+    #fig.sza_plot(norm_option='brightness')
+    fig.map_detail_figure()

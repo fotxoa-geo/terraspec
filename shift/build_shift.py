@@ -650,6 +650,10 @@ class build_libraries:
             # if list is empty do nothing
             out_csv = os.path.join(self.output_transect_em_directory, f"{os.path.basename(i)}")
 
+            if os.path.isfile(out_csv):
+                print(out_csv, 'already exists! Skipping...')
+                continue
+
             if not ems_to_append:
                 df_em_site.to_csv(out_csv, index=False)
             else:
@@ -661,11 +665,11 @@ class build_libraries:
 def run_build_workflow(base_directory, sensor):
 
     lib = build_libraries(base_directory=base_directory, sensor=sensor)
-    #lib.build_transects()
+    lib.build_transects()
     if not os.path.isfile(os.path.join('gis', 'shift_min_dist_to_all_plots.csv')):
         lib.nearest_site()
-    #lib.convolve_emit_sites()
-    #lib.convolve_global_lib()
+    lib.convolve_emit_sites()
+    lib.convolve_global_lib()
     lib.build_endmember_lib()
     lib.build_em_collection()
     lib.build_gis_data()
