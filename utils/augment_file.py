@@ -73,9 +73,8 @@ def main():
 
     wvls, fwhm = spectra.load_wavelengths(sensor=args.sensor)
     
-    augmented_envi_file = os.path.join(args.out_directory, f'{os.path.basename(args.reflectance_image)}_augmented.hdr')
-
     if args.augment:
+        augmented_envi_file = os.path.join(args.out_directory, f'{os.path.basename(args.reflectance_image)}_augmented.hdr')
         augment_envi(file=args.reflectance_image, out_envi_file=augmented_envi_file, wvls=wvls, vertical_average=False,
                      em_index_min=None, em_index_max=None, bad_bands=None)
 

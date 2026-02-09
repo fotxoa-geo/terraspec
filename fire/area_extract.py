@@ -60,8 +60,8 @@ def main():
     col_indices = []
    
     for c_lat, c_lon in corners:
-        row = int(np.floor((c_lon - ox) / pw))
-        col = int(np.floor((c_lat - oy) / ph))
+        col = int(np.floor((c_lon - ox) / pw))
+        row = int(np.floor((c_lat - oy) / ph))
         
         row_indices.append(row)
         col_indices.append(col)

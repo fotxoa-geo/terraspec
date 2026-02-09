@@ -47,7 +47,7 @@ else
 fi
 
 # run tetracorder
-tetracorder_out_directory=${out_base}/tetracorder/
+tetracorder_out_directory=${out_base}/tetracorder_${filebase_name}/
 
 if [ -d "$tetracorder_out_directory" ]; then
     echo "Directory '$tetracorder_out_directory' exists. Removing..."
@@ -58,11 +58,15 @@ mkdir -p ${tetracorder_out_directory}
 echo "Created tetracorder dir: ${tetracorder_out_directory}"
 
 # augment rfl data and run tetracorder
-python ./utils/augment_file.py ${rfl_img} ${out_base} --augment # augment rfl file
-./tetracorder/tetracorder.sh "${out_base}/${filebase_name}_augmented" ${tetracorder_out_directory}
+python ./utils/augment_file.py ${rfl_img} ${tetracorder_out_directory} --augment # augment rfl file
+./tetracorder/tetracorder.sh "${tetracorder_out_directory}/${filebase_name}_augmented" ${tetracorder_out_directory} --delete_tc_output 
 
-# deaugment data in tetracorder output directory
-python ./utils/augment_file.py ${rfl_img} ${out_base} --deaugment
+# deaugment data in tetracorder output director
+cp ${rfl_img} ${tetracorder_out_directory}
+cp ${rfl_img}.hdr ${tetracorder_out_directory}
+python ./utils/augment_file.py ${tetracorder_out_directory}/${filebase_name} ${tetracorder_out_directory} --deaugment
+rm ${tetracorder_out_directory}/${filebase_name}
+${tetracorder_out_directory}/${filebase_name}.hdr
 
 # push data to drive
-/store/shared/rclone/bin/rclone copy "${out_base}" "cdrive:${out_base#./}" -P
+/store/shared/rclone/bin/rclone copy ${out_base}/ "cdrive:${out_base#./}" -P 

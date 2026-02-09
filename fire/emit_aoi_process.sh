@@ -77,7 +77,7 @@ if [ "${data_type}" = "RFL" ]; then
 
     mkdir -p ${tetracorder_out_directory}
     echo "Created directory: $tetracorder_out_directory"
-    tetracorder/tetracorder.sh ${aoi_img} ${tetracorder_out_directory}
+    tetracorder/tetracorder.sh ${aoi_img} ${tetracorder_out_directory} --delete_tc_output
 
     #ortho-rectify mineral outputs
     python utils/ortho_known_file.py -non_ortho_img ${tetracorder_out_directory}/${aoi_basename}_${data_type}_${fid}_EXT_min -ortho_img ${aoi_img}
