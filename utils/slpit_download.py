@@ -1,8 +1,6 @@
 import os
 import datetime
 import subprocess
-import time
-from dateutil.relativedelta import relativedelta
 from zerionPy import IFB
 import pickle
 import earthaccess
@@ -12,6 +10,7 @@ from utils.create_tree import create_directory
 from sys import platform
 import json
 from glob import glob
+from datetime import datetime, timedelta
 
 # create object folder to store the pickle objects
 create_directory('objects')
@@ -41,9 +40,15 @@ def load_pickle(filename):
         return b
 
 
-data_product_key = {"emit": { 'reflectance': 'EMITL2ARFL',
+data_product_key = {"emit": {'reflectance': 'EMITL2ARFL',
                               'radiance': 'EMITL1BRAD',
-                              'version': '001'}}
+                              'version': '001'},
+                    "aviris_ng": {'reflectance': 'SHIFT_AVNG_L2A_RFL_V2_2431',
+                                    'version': '2'}}
+
+aviris_ng_scenes = [ '20220308t190523', '20220308t191151', '20220308t204043', '20220308t205512', '20220316t210303',
+                     '20220322t204749', '20220412t205405', '20220511t190344', '20220511t212317', '20220914t184300',
+                     '20220915t185652', '20220915t195816', '20220915t200714', '20220915t203517']
 
 
 def download_scenes(base_directory, sensor, aoi):
@@ -100,12 +105,20 @@ def download_emit(base_directory, sensor):
         create_directory(os.path.join(base_directory, 'gis', f'emit-data', 'nc_files', 'l1b'))
         create_directory(os.path.join(base_directory, 'gis', f'emit-data', 'nc_files', 'l2a'))
 
-    # get plot center points from ipad
-    shapefile = os.path.join('gis', "Observation.json")
+        # get plot center points from ipad
+        shapefile = os.path.join('gis', "Observation.json")
+        df = pd.DataFrame(gp.read_file(shapefile))
+        df = df.sort_values('Name')
 
-    df = pd.DataFrame(gp.read_file(shapefile))
-    df = df.sort_values('Name')
-    
+    if sensor == 'aviris_ng':
+        create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files'))
+        create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l1b'))
+        create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l2a'))
+
+        # get plot center points from ipad
+        shapefile = os.path.join('gis', "shift_transects_centroid.shp")
+        df = pd.DataFrame(gp.read_file(shapefile))
+
     # Create output directories
     create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'products'))
     create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'products', 'logs'))
@@ -116,8 +129,11 @@ def download_emit(base_directory, sensor):
     
     # em file for unmixing
     em_file = os.path.join('terraspec_output', 'simulation', 'output', 'endmember_libraries', f'convex_hull__n_dims_4_sensor_{sensor}_geofilter_True_unmix_library.csv')
-    sensor_dates = sorted(list(df['EMIT DATE'].unique()))
-    
+
+    if sensor == 'emit':
+        sensor_dates = sorted(list(df['EMIT DATE'].unique()))
+    elif sensor == 'aviris_ng':
+        sensor_dates = sorted(list(aviris_ng_scenes))
     
     for sensor_date in sensor_dates:
         if sensor_date == '':
@@ -125,7 +141,6 @@ def download_emit(base_directory, sensor):
         
         print(f"downloading... {sensor_date}")
         results = earthaccess.search_data(short_name=data_product_key[sensor]['reflectance'], version=data_product_key[sensor]['version'], cloud_hosted=True, granule_name=f'*{sensor_date}*')
-
         if results:
             print(f'found {len(results)} granules!')
             files = earthaccess.download(results, os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l2a'))
@@ -144,6 +159,60 @@ def download_emit(base_directory, sensor):
             print(f'no scenes found for {sensor_date}')
 
        
+def download_shift_imagery(base_directory, sensor):
+    auth = earthaccess.login(strategy="netrc")
+
+    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data'))
+    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files'))
+    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l1b'))
+    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l2a'))
+
+    # get plot center points from ipad
+    shapefile = os.path.join('gis', "shift_plot_coordinates.csv")
+    df = pd.read_csv(shapefile)
+
+    # Create output directories
+    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'products'))
+    create_directory(os.path.join(base_directory, 'gis', f'{sensor}-data', 'products', 'logs'))
+
+    # create outlog directory
+    out_base = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products')
+    out_logs = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products', 'logs')
+
+    # em file for unmixing
+    em_file = os.path.join('terraspec_output', 'simulation', 'output', 'endmember_libraries',
+                           f'convex_hull__n_dims_4_sensor_{sensor}_geofilter_True_unmix_library.csv')
+    for index, row in df.iterrows():
+        lon = row['longitude']
+        lat = row['latitude']
+        plot_name = row['Plot Name']
+        season = row['Season']
+        date = row['Date']
+
+        sample_date = datetime.strptime(date, "%m/%d/%Y")
+        previous_date = sample_date - timedelta(days=5)
+        previous_date = previous_date.strftime("%Y/%m/%d")
+
+        print(f"downloading... {plot_name} {season}")
+        results = earthaccess.search_data(short_name=data_product_key[sensor]['reflectance'],
+                                          version=data_product_key[sensor]['version'], cloud_hosted=True,
+                                          bounding_box=(lon, lat, lon, lat), temporal=(previous_date, sample_date))
+        if results:
+            print(f'found {len(results)} granules!')
+            files = earthaccess.download(results,
+                                         os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l2a'))
+            print(f"\t download successful... {len(files)} granules downloaded")
+
+            # run nc downloads
+            for nc_file in files:
+                basename = os.path.basename(nc_file)
+                base_call = f'sh {os.path.join("slpit", "emit_image_process.sh")} {nc_file} {em_file} {out_base}'
+                outfile = os.path.join(f"{os.path.join(out_logs, basename)}.out")
+                sbatch_cmd = f"sbatch -p patient -N 1 -c 20 --mem 25G --output {outfile} --job-name slpit.em --wrap='{base_call}'"
+                subprocess.call(sbatch_cmd, shell=True)
+
+        else:
+            print(f'no scenes found for {plot_name}')
 
 def run_download_emit(base_directory, sensor):
     download_emit(base_directory=base_directory, sensor=sensor)
