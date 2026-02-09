@@ -58,4 +58,29 @@ mkdir ${cpwd}/${out_base}${filebase}_minerals/ -p
 cp $out_tetra_path/cmds.abundances/lists.of.files.by.mineral/* ${cpwd}/${out_base}${filebase}_minerals/ -r 
 
 echo "Current UTC time is: ${date}"
-#rm -rf $out_tetra_path
+
+
+delete_tc_output=false
+while [[ $# -gt 0 ]]; do
+    case $1 in 
+    --delete_tc_output)
+      delete_tc_output=true
+      shift # Move to the next argument      
+      ;;
+    *)
+      # This handles positional arguments or unknown flags
+      POSITIONAL_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [ "$delete_tc_output" = true ]; then
+    echo "Deleting TC output."
+    rm -rf $out_tetra_path 
+else
+    echo "Tetracorder outputs saved!"
+fi
+
+
+
