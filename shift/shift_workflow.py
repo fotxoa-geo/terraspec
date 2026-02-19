@@ -47,14 +47,6 @@ def run_shift_workflow(base_directory:str, dry_run, sensor):
         elif user_input == 'C':
             run_build_workflow(base_directory=base_directory, sensor=sensor)
 
-        # extract the 3x3 windows - can only be executed on EMIT cluster!
-        elif user_input == 'D':
-            run_geoprocess_extract(base_directory=base_directory, dry_run=dry_run)
-
-        # sync extracts between google drive and ucla cluster
-        elif user_input == 'E':
-            sync_extracts(base_directory)
-
         # run unmixing code
         elif user_input == 'D':
             run_shift_unmix(base_directory=base_directory, dry_run=dry_run)

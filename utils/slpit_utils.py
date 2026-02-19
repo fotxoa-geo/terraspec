@@ -4,6 +4,9 @@ import pandas as pd
 from utils import asdreader, sedreader
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
+import numpy as np
+import struct
+from utils.spectra_utils import spectra
 
 class slpit:
     "ceratin utilities for split processing of asd data and arranging data"
@@ -104,9 +107,92 @@ class slpit:
                 plt.close()
 
         except:
-            #raise
             print(asd_file, out_directory)
-            #raise
+
+    @classmethod
+    def plot_shift_file(cls, asd_file, out_directory):
+
+        parent_dir, filename = os.path.split(asd_file)
+        file_type = os.path.split(parent_dir)[1]
+
+        # Extract file_num exactly as before
+        try:
+            file_num = int(filename.split(".")[0].split("_")[-1])
+        except (ValueError, IndexError):
+            file_num = int(filename.split(".")[-1])
+
+        # Extract line_num from two directories up
+        line_num = os.path.split(os.path.split(parent_dir)[0])[1].lower()
+        outfname = os.path.join(out_directory, f'{line_num}_{file_type}_{file_num}.png')
+
+        try:
+            # Load asd data
+            data = asdreader.reader(asd_file)
+            asd_wl = data.wavelengths
+
+            if os.path.isfile(outfname):
+                pass
+            else:
+                try:
+                    asd_refl = data.reflectance
+                except:
+                    print(asd_file)
+
+                plt.plot(asd_wl, asd_refl, label=os.path.basename(asd_file))
+                plt.legend()
+                plt.ylabel("Reflectance (%)")
+                plt.xlabel("Wavelenghts (nm)")
+                plt.ylim([0, 1 * 1.05])
+                plt.xlim([325, 2525])
+
+                ax = plt.gca()
+
+                # Major ticks every 100
+                ax.xaxis.set_major_locator(MultipleLocator(500))
+                # Minor ticks every 50
+                ax.xaxis.set_minor_locator(MultipleLocator(100))
+
+                # Major ticks every 0.10 - yaxis
+                ax.yaxis.set_major_locator(MultipleLocator(0.10))
+                # Minor ticks every 0.05 - yaxis
+                ax.yaxis.set_minor_locator(MultipleLocator(0.05))
+
+                plt.savefig(outfname, bbox_inches='tight')
+                plt.clf()
+                plt.close()
+
+        except:
+            file = asd_file
+            data = open(file, "rb").read()
+            file_num = int(os.path.basename(file).split(".")[1])
+
+            # asd reflectance
+            spectrum = data[484:]
+            asd_refl = np.array(list(struct.iter_unpack('<f', spectrum)), dtype=float).flatten()
+            asd_refl[:651] *= asd_refl[651] / asd_refl[650]
+
+            plt.plot(spectra.load_asd_wavelenghts(), asd_refl, label=os.path.basename(asd_file))
+            plt.legend()
+            plt.ylabel("Reflectance (%)")
+            plt.xlabel("Wavelenghts (nm)")
+            plt.ylim([0, 1 * 1.05])
+            plt.xlim([325, 2525])
+
+            ax = plt.gca()
+
+            # Major ticks every 100
+            ax.xaxis.set_major_locator(MultipleLocator(500))
+            # Minor ticks every 50
+            ax.xaxis.set_minor_locator(MultipleLocator(100))
+
+            # Major ticks every 0.10 - yaxis
+            ax.yaxis.set_major_locator(MultipleLocator(0.10))
+            # Minor ticks every 0.05 - yaxis
+            ax.yaxis.set_minor_locator(MultipleLocator(0.05))
+
+            plt.savefig(outfname, bbox_inches='tight')
+            plt.clf()
+            plt.close()
 
 
     @classmethod
