@@ -1098,7 +1098,7 @@ class spectra:
                     dd_lat = lat
                     dd_long = long
 
-                return [f'{plot_name}-{season}', file, line_num, file_num, dd_long, dd_lat, elevation, utc_time] + list(asd_refl)
+                return [f'{plot_name}_{season}', file, line_num, file_num, dd_long, dd_lat, elevation, utc_time] + list(asd_refl)
 
             except Exception as e:
                 print("An error occurred:", e)
@@ -1125,7 +1125,7 @@ class spectra:
             asd_refl = np.array(list(struct.iter_unpack('<f', spectrum)), dtype=float).flatten()
             asd_refl[:651] *= asd_refl[651] / asd_refl[650]
 
-            return [plot_name + '-' + season, file, line_num, file_num, dd_long, dd_lat, elevation, utc_time] + list(asd_refl)
+            return [f'{plot_name}_{season}', file, line_num, file_num, dd_long, dd_lat, elevation, utc_time] + list(asd_refl)
 
     @classmethod
     def first_derivative(cls, df_row, spectral_starting_col, wvls):
@@ -1147,6 +1147,7 @@ class spectra:
     def get_all_ems(cls, output_directory: str, instrument: str):
         emit_transect_endmembers = glob(os.path.join(output_directory,'**' , f'*EMS_{instrument}.csv'), recursive=True)
         emit_transect_endmembers = [item for item in emit_transect_endmembers if "Thermal" not in item]
+        emit_transect_endmembers = [item for item in emit_transect_endmembers if "unmix" not in item]
         all_ems = emit_transect_endmembers
 
         return all_ems
