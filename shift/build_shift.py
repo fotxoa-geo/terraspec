@@ -658,22 +658,26 @@ class build_libraries:
         # # get reflectance and uncertainty files
         reflectance_slpit_files = sorted(
             glob(os.path.join(self.output_transect_directory, '**', f'*_SLPIT_{sensor}'), recursive=True))
-
+        
+        print(reflectance_slpit_files)
         for i in reflectance_slpit_files:
             plot_name = os.path.basename(i).split("_")[0]
             season = os.path.basename(i).split("_")[1]
             plot_number = f"{plot_name}_{season}"
-
-            try:
-                flight_date =
-            except:
-                print(f"No sensor time data found for {plot_number}")
-                continue
+            
+            print(plot_number)
+            #try:
+            #    flight_date =
+            #except:
+            #    print(f"No sensor time data found for {plot_number}")
+            #    continue
 
             plot_base_directory = os.path.join(self.output_transect_directory, plot_number)
             em_file = os.path.join(plot_base_directory, f'unmix_{plot_number}_EMS_{sensor}.csv')
             em_local_rfl = os.path.join(plot_base_directory, 'EMS', f'{plot_number}_EMS_{sensor}')
-        #     emit_rfl_ext = os.path.join(plot_base_directory, 'EXT', f'{plot_number}_RFL_{emit_date}_EXT')
+            exts = sorted(glob(os.path.join(plot_base_directory, 'EXT', f'*_EXT')))
+            print(exts)
+        # emit_rfl_ext = os.path.join(plot_base_directory, 'EXT', f'{plot_number}_RFL_{emit_date}_EXT')
         #     emit_rfl_unc = os.path.join(plot_base_directory, 'EXT', f'{plot_number}_RFLUNCERT_{emit_date}_EXT')
             outfile = os.path.join(extract_outlog_directory, f'{os.path.basename(i)}.out')
 
