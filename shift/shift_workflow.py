@@ -15,16 +15,13 @@ def display_shift_menu():
     print("A... Download SHIFT Imagery")
     print("B... Download SHIFT Transect Data")
     print("C... Build Reflectance Files from ASD")
-    #print("E... Extract Reflectance from SHIFT Centroids")
-    #print("F... Sync extracted 3x3 windows")
-    print("D... Unmix Signals")
-    print("E... Process Figures and Tables")
-    print("F... Exit")
+    print("D... Process Figures and Tables")
+    print("E... Exit")
 
 def display_result_menu():
     msg = f"You have entered SHIFT mode! " \
           f"\nThere are various options to chose from: "
-    cursor_print(msg)
+    print(msg)
 
     print("A... Tables")
     print("B... Figures")
@@ -35,7 +32,7 @@ def run_shift_workflow(base_directory:str, dry_run, sensor):
         display_shift_menu()
         user_input = input('\nPlease indicate the desired mode: ').upper()
 
-        # download EMIT NC images
+        # download shift nc images
         if user_input == 'A':
             download_shift_imagery(base_directory=base_directory, sensor=sensor)
 
@@ -47,12 +44,8 @@ def run_shift_workflow(base_directory:str, dry_run, sensor):
         elif user_input == 'C':
             run_build_workflow(base_directory=base_directory, sensor=sensor)
 
-        # run unmixing code
-        elif user_input == 'D':
-            run_shift_unmix(base_directory=base_directory, dry_run=dry_run)
-
         # run the figure set
-        elif user_input == 'E':
+        elif user_input == 'D':
             while True:
                 display_result_menu()
 
@@ -68,7 +61,7 @@ def run_shift_workflow(base_directory:str, dry_run, sensor):
                     print("Returning to SLPIT menu.")
                     break
 
-        elif user_input == "F":
+        elif user_input == "E":
             print("Returning to main menu.")
             break
         else:

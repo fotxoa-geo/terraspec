@@ -37,6 +37,7 @@ export PATH="${PATH}:${SP_LOCAL}/bin:${TETRA}/bin:/usr/bin"
 
 cpwd=$PWD
 
+echo "${sensor}"
 if [ "${sensor}" = "emit" ]; then
     $TETRA_CMDS/cmd-setup-tetrun $tmp_tetra_path emit_e cube $tmp_rfl_path 1 -T -20 80 C -P .5 1.5 bar
 elif [ "${sensor}" = "aviris_ng" ]; then
@@ -58,7 +59,7 @@ if [ "${sensor}" = "emit" ]; then
     python /store/brodrick/repos/emit-sds-l2b/group_aggregator.py $out_tetra_path /store/fochoa/terraspec/utils/tetracorder/mineral_grouping_matrix_20230503.csv $out_min_path $out_minunc_path --reflectance_file $tmp_rfl_path --reflectance_uncertainty_file $tmp_rfl_path --reference_library /store/shared/tetracorder_libraries/s06emitd_envi --research_library /store/shared/tetracorder_libraries/r06emitd_envi --expert_system_file cmd.lib.setup.t5.27d1 --calculate_uncertainty 
 elif [ "${sensor}" = "aviris_ng" ]; then
     python /store/brodrick/repos/emit-sds-l2b/group_aggregator.py $out_tetra_path /store/fochoa/terraspec/utils/tetracorder/mineral_grouping_matrix_20230503.csv $out_min_path $out_minunc_path --reflectance_file $tmp_rfl_path --reflectance_uncertainty_file $tmp_rfl_path --reference_library /store/shared/tetracorder_libraries/ran2311a_envi --research_library /store/shared/tetracorder_libraries/san2311a_envi --expert_system_file cmd.lib.setup.t5.27d1 --calculate_uncertainty 
-
+fi
 
 rm $tmp_rfl_path
 rm ${tmp_rfl_path}.hdr
