@@ -23,6 +23,33 @@ from isofit.core.sunposition import sunpos
 import spectral.io.envi as envi
 
 
+scene_key = {'DPA-004_FALL': {'flightline': 'ang20220915t195816', 'version': '003'},
+             'DPB-003_FALL': {'flightline': 'ang20220915t195816', 'version': '003'},
+             'DPB-004_FALL': {'flightline': 'ang20220915t200714', 'version': '000'},
+             'DPB-005_FALL': {'flightline': 'ang20220915t195816', 'version': '003'},
+             'DPB-020_SPRING': {'flightline': 'ang20220322t204749', 'version': '000'},
+             'DPB-027_SPRING': {'flightline': 'ang20220412t205405', 'version': '001'},
+             'SRA-007_FALL': {'flightline': 'ang20220914t184300', 'version': '000'},
+             'SRA-008_FALL': {'flightline': 'ang20220914t184300', 'version': '000'},
+             'SRA-019_SPRING': {'flightline': 'ang20220308t204043', 'version': '008'},
+             'SRA-020_SPRING': {'flightline': 'ang20220308t205512', 'version': '002'},
+             'SRA-021_SPRING': {'flightline': 'ang20220308t204043', 'version': '008'},
+             'SRA-033_SPRING': {'flightline': 'ang20220316t210303', 'version': '002'},
+             'SRA-034_SPRING': {'flightline': 'ang20220316t210303', 'version': '002'},
+             'SRA-056_FALL': {'flightline': 'ang20220914t184300', 'version': '000'},
+             'SRA-109_SPRING': {'flightline': 'ang20220511t190344', 'version': '002'},
+             'SRB-010_FALL': {'flightline': 'ang20220915t203517', 'version': '001'},
+             'SRB-021_SPRING': {'flightline': 'ang20220308t205512', 'version': '002'},
+             'SRB-026_SPRING': {'flightline': 'ang20220308t204043', 'version': '007'},
+             'SRB-045_FALL': {'flightline': 'ang20220915t203517', 'version': '001'},
+             'SRB-046_FALL': {'flightline': 'ang20220915t203517', 'version': '001'},
+             'SRB-084_SPRING': {'flightline': 'ang20220511t191813', 'version': '007'},
+             'SRB-100_FALL': {'flightline': 'ang20220915t203517', 'version': '001'},
+             'SRB-050_FALL': {'flightline': 'ang20220914t184300', 'version': '000'},
+             'SRB-047_SPRING': {'flightline': 'ang20220405t201359', 'version': '002'},
+             'SRB-004_FALL': {'flightline': 'ang20220914t184300', 'version': '000'},
+             'SRB-200_FALL': {'flightline': 'ang20220914t184300', 'version': '000'}}
+
 class figures:
     def __init__(self, base_directory: str, sensor: str, major_axis_fontsize, minor_axis_fontsize, title_fontsize,
                  axis_label_fontsize, fig_height, fig_width, linewidth, sig_figs):
@@ -90,7 +117,7 @@ class figures:
         for spectral_transect_directory in spectral_transects_directories:
             plot_name = os.path.basename(spectral_transect_directory)
 
-            if plot_name in ['unmix_tc_outlogs', 'DPA-9999_FALL', 'SRA-9999_FALL']:
+            if plot_name in ['unmix_tc_outlogs', 'DPA-9999_FALL', 'SRA-9999_FALL', 'SRA-000_SPRING']:
                 continue
             print(plot_name)
 
@@ -188,54 +215,48 @@ class figures:
 
 
             # plot sensor data
+            sensor_rfl_file = os.path.join(spectral_transect_directory, 'EXT',
+                                   f'{plot_name}_RFL_{scene_key[plot_name]["flightline"]}_{scene_key[plot_name]["version"]}_EXT')
+            acquisition_date = os.path.basename(sensor_rfl_file).split("_")[3][3:]
+            version = os.path.basename(sensor_rfl_file).split("_")[4]
+            sensor_rfl = envi_to_array(sensor_rfl_file)
 
-            rfl_files = glob(os.path.join(spectral_transect_directory, "EXT", "*_RFL*_EXT"))
+            # calculate geometries
+            acquisition_datetime_utc = datetime.strptime(acquisition_date, "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
+            geometry_results_sensor = sunpos(acquisition_datetime_utc, np.mean(df_transect.latitude),
+                                             np.mean(df_transect.longitude), np.mean(df_slpit_rfl.elevation))
+            acquisition_datetime = datetime.strptime(acquisition_date, "%Y%m%dT%H%M%S")
+            delta = slpit_datetime - acquisition_datetime
+            days = np.absolute(delta.days)
 
-            for rfl_file in rfl_files:
+            if days > 3:
+                continue
 
-                sensor_rfl_file = rfl_file
-                acquisition_date = os.path.basename(sensor_rfl_file).split("_")[3][3:]
-                version = os.path.basename(sensor_rfl_file).split("_")[4]
-                if version == 'EXT':
-                    continue
+            # Open the image using the header file
+            img = envi.open(f'{sensor_rfl_file}.hdr')
 
-                sensor_rfl = envi_to_array(sensor_rfl_file)
+            # Access the raw metadata dictionary
+            metadata = img.metadata
+            map_info = metadata['map info']
+            x_res = map_info[5]
+            y_res = map_info[6]
 
-                # calculate geometries
-                acquisition_datetime_utc = datetime.strptime(acquisition_date, "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
-                geometry_results_sensor = sunpos(acquisition_datetime_utc, np.mean(df_transect.latitude),
-                                                 np.mean(df_transect.longitude), np.mean(df_slpit_rfl.elevation))
-                acquisition_datetime = datetime.strptime(acquisition_date, "%Y%m%dT%H%M%S")
-                delta = slpit_datetime - acquisition_datetime
-                days = np.absolute(delta.days)
+            if float(x_res) < 1.5:
+                continue
 
-                if days > 3:
-                    continue
-
-                # Open the image using the header file
-                img = envi.open(f'{rfl_file}.hdr')
-
-                # Access the raw metadata dictionary
-                metadata = img.metadata
-                map_info = metadata['map info']
-                x_res = map_info[5]
-                y_res = map_info[6]
-
-                if float(x_res) < 1.5:
-                    continue
-
-                base_label = f'{acquisition_date} (±{days:02d} days); version: {version}; SZA : {str(int(geometry_results_sensor[1]))}°; xres,yres: {x_res},{y_res}'
-                sensor_std = np.nanstd(sensor_rfl, axis=(0, 1))
-                sensor_mean = np.nanmean(sensor_rfl, axis=(0, 1))
-                ax_rfl_plot.plot(self.wvls, sensor_mean, label=base_label, linewidth=1)
-                #ax_rfl_plot.fill_between(self.wvls, sensor_mean - sensor_std * 2, sensor_mean + sensor_std * 2,
-                 #                        color='skyblue', alpha=0.2)
+            base_label = f'{acquisition_date} (±{days:02d} days); version: {version}; SZA : {str(int(geometry_results_sensor[1]))}°; xres,yres: {x_res},{y_res}'
+            sensor_std = np.nanstd(sensor_rfl, axis=(0, 1))
+            sensor_mean = np.nanmean(sensor_rfl, axis=(0, 1))
+            ax_rfl_plot.plot(self.wvls, sensor_mean, label=base_label, linewidth=1, color='skyblue')
+            ax_rfl_plot.fill_between(self.wvls, sensor_mean - sensor_std * 2, sensor_mean + sensor_std * 2,
+                                    color='skyblue', alpha=0.2)
 
             ax_rfl_plot.legend()
 
             # plot NPV endmembers
             ax_npv_spectra = plt.subplot2grid((16, 16), (0, 9), colspan=7, rowspan=4)
-            df_spectra = df_em_spectra[(df_em_spectra['level_1'] == 'NPV')].copy()
+            df_spectra = df_em_spectra[(df_em_spectra['level_1'] == 'npv')].copy()
+            df_spectra['species'] = df_spectra['species'].fillna('UNK-')
             df_species_key = pd.read_csv(os.path.join('utils', 'species_santabarbara_ca.csv'))
             num_species = len(sorted(list(df_spectra.species.unique())))
             npv_cmap = plt.cm.get_cmap(self.cmap_kw, num_species)
@@ -243,7 +264,7 @@ class figures:
 
             for i, species in enumerate(unique_species):
                 # Filter and extract spectra data in one go
-                em_spectra = df_spectra[df_spectra['species'] == species].iloc[:, 11:].to_numpy()
+                em_spectra = df_spectra[df_spectra['species'] == species].iloc[:, 12:].to_numpy()
 
                 # Plot all rows at once. Transposing em_spectra (T) allows .plot()
                 # to handle all lines in a single call.
@@ -268,14 +289,15 @@ class figures:
 
             # plot PV endmembers
             ax_pv_spectra = plt.subplot2grid((16, 16), (4, 9), colspan=7, rowspan=4)
-            df_spectra = df_em_spectra[(df_em_spectra['level_1'] == 'PV')].copy()
+            df_spectra = df_em_spectra[(df_em_spectra['level_1'] == 'pv')].copy()
+            df_spectra['species'] = df_spectra['species'].fillna('UNK-')
             num_species = len(sorted(list(df_spectra.species.unique())))
             pv_cmap = plt.cm.get_cmap(self.cmap_kw, num_species)
             unique_species = sorted(df_spectra['species'].unique())
 
             for i, species in enumerate(unique_species):
                 # Filter and extract spectra data in one go
-                em_spectra = df_spectra[df_spectra['species'] == species].iloc[:, 11:].to_numpy()
+                em_spectra = df_spectra[df_spectra['species'] == species].iloc[:, 12:].to_numpy()
 
                 # Plot all rows at once. Transposing em_spectra (T) allows .plot()
                 # to handle all lines in a single call.
@@ -301,11 +323,11 @@ class figures:
             # # plot soil endmembers
             try:
                 ax_soil_spectra = plt.subplot2grid((16, 16), (8, 9), colspan=7, rowspan=4)
-                df_spectra = df_em_spectra[(df_em_spectra['level_1'] == 'Soil')].copy()
-                soil_index_min = min(df_spectra.index[df_spectra['level_1'] == 'Soil'].tolist())
-                soil_index_max = max(df_spectra.index[df_spectra['level_1'] == 'Soil'].tolist())
+                df_spectra = df_em_spectra[(df_em_spectra['level_1'] == 'soil')].copy()
+                soil_index_min = min(df_spectra.index[df_spectra['level_1'] == 'soil'].tolist())
+                soil_index_max = max(df_spectra.index[df_spectra['level_1'] == 'soil'].tolist())
                 soil_tetracorder_results = envi_to_array(os.path.join(spectral_transect_directory, 'tetracorder',
-                                                                      f'{plot_name}_EMS_emit_augmented_min'))[
+                                                                      f'{plot_name}_EMS_aviris_ng_augmented_min'))[
                     soil_index_min:soil_index_max + 1, :, :]
 
                 g1_unique = soil_tetracorder_results[:, 0, 1]
@@ -327,8 +349,7 @@ class figures:
                 # plot g1 minerals
                 for i, soils_unique in enumerate(unique_minerals_g1):
                     # Filter and extract spectra data in one go
-                    em_spectra = df_spectra[df_spectra['g1_minerals'] == soils_unique].iloc[:, 13:].to_numpy()
-
+                    em_spectra = df_spectra[df_spectra['g1_minerals'] == soils_unique].iloc[:, 14:].to_numpy()
                     # Plot all rows at once. Transposing em_spectra (T) allows .plot()
                     # to handle all lines in a single call.
                     color = g1_minerals_cmap(i)
@@ -359,7 +380,7 @@ class figures:
                 # plot g2 minerals
                 for i, soils_unique in enumerate(unique_minerals_g2):
                     # Filter and extract spectra data in one go
-                    em_spectra = df_spectra[df_spectra['g2_minerals'] == soils_unique].iloc[:, 13:].to_numpy()
+                    em_spectra = df_spectra[df_spectra['g2_minerals'] == soils_unique].iloc[:, 14:].to_numpy()
 
                     # Plot all rows at once. Transposing em_spectra (T) allows .plot()
                     # to handle all lines in a single call.
