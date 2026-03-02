@@ -51,7 +51,7 @@ def run_shift_workflow(base_directory:str, dry_run, sensor):
 
                 result_input = input('\nPlease indicate the desired mode: ').upper()
                 if result_input == 'B':
-                    mt_fig(base_directory=base_directory)
+                    #mt_fig(base_directory=base_directory)
                     run_figures(base_directory=base_directory)
 
                 elif result_input == 'A':
