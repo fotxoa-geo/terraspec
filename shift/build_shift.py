@@ -647,6 +647,41 @@ class build_libraries:
                 df_convolve.to_csv(out_csv, index=False)
 
     def unmix_reflectances(self, sensor):
+
+        scene_key = {'DPA-004_FALL': {'flightline': 'ang20220915t195816', 'version': '003'},
+                     'DPB-003_FALL': {'flightline': 'ang20220915t195816', 'version': '003'},
+                     'DPB-004_FALL': {'flightline': 'ang20220915t200714', 'version': '000'},
+                     'DPB-005_FALL': {'flightline': 'ang20220915t195816', 'version': '003'},
+                     'DPB-020_SPRING': {'flightline': 'ang20220322t204749', 'version': '000'},
+                     'DPB-027_SPRING': {'flightline': 'ang20220412t205404', 'version': '001'},
+                     'SRA-007_FALL': {'flightline': 'ang20220914t183400', 'version': '000'},
+                     'SRA-008_FALL': {'flightline': 'ang20220914t183400', 'version': '000'},
+                     'SRA-019_SPRING': {'flightline': 'ang20220308t204043', 'version': '008'},
+                     'SRA-020_SPRING': {'flightline': 'ang20220308t205512', 'version': '002'},
+                     'SRA-021_SPRING': {'flightline': 'ang20220308t204043', 'version': '008'},
+                     'SRA-033_SPRING': {'flightline': 'ang20220316t210303', 'version': '002'},
+                     'SRA-034_SPRING': {'flightline': 'ang20220316t210303', 'version': '002'},
+                     'SRA-056_FALL': {'flightline': 'ang20220914t184300', 'version': '000'},
+                     'SRA-109_SPRING': {'flightline': 'ang20220511t190344', 'version': '002'},
+                     'SRB-010_FALL': {'flightline': 'ang20220915t203517', 'version': '001'},
+                     'SRB-021_SPRING': {'flightline': 'ang20220308t205512', 'version': '002'},
+                     'SRB-026_SPRING': {'flightline': 'ang20220308t204043', 'version': '007'},
+                     'SRB-045_FALL': {'flightline': 'ang20220915t203517', 'version': '001'},
+                     'SRB-046_FALL': {'flightline': 'ang20220915t203517', 'version': '001'},
+                     'SRB-084_SPRING': {'flightline': 'ang20220511t191813', 'version': '007'},
+                     'SRB-100_FALL': {'flightline': 'ang20220915t203517', 'version': '001'},
+                     'SRB-050_FALL': {'flightline': 'ang20220914t184300', 'version': '001'},
+                     'SRB-047_SPRING': {'flightline': 'ang20220405t1359', 'version': '002'},
+                     }
+
+
+            # ['20220308t190523', '20220308t191151', '20220308t204043', '20220308t205512',
+            #                 '20220316t210303',
+            #                 '20220322t204749', '20220412t205405', '20220511t190344', '20220511t212317',
+            #                 '20220914t184300',
+            #                 '20220915t185652', '20220915t195816', '20220915t200714', '20220915t203517']
+
+
         # create outlogs for unmix and tc
         create_directory(os.path.join(self.output_transect_directory, 'unmix_tc_outlogs'))
         extract_outlog_directory = os.path.join(self.output_transect_directory, 'unmix_tc_outlogs')
@@ -664,11 +699,11 @@ class build_libraries:
             season = os.path.basename(i).split("_")[1]
             plot_number = f"{plot_name}_{season}"
 
-            try:
-                flight_date =
-            except:
-                print(f"No sensor time data found for {plot_number}")
-                continue
+            #try:
+            #    flight_date =
+            #except:
+            #    print(f"No sensor time data found for {plot_number}")
+            #    continue
 
             plot_base_directory = os.path.join(self.output_transect_directory, plot_number)
             em_file = os.path.join(plot_base_directory, f'unmix_{plot_number}_EMS_{sensor}.csv')

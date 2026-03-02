@@ -3,15 +3,10 @@ import os
 from osgeo import gdal, osr, ogr
 import math
 import sys
-import numpy as np 
-
-
-
-
+import numpy as np
 from utils.envi import get_meta, save_envi
 from utils.spectra_utils import spectra
 import os
-from spectral.io import envi
 import pandas as pd
 import geopandas as gp
 

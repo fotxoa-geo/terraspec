@@ -8,18 +8,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.image as mpimg
 import matplotlib.gridspec as gridspec
-#from mpl_toolkits.basemap import Basemap
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from utils.spectra_utils import spectra
 from utils.create_tree import create_directory
-#from pypdf import PdfMerger
 from utils.envi import envi_to_array
-from datetime import datetime
-import geopandas as gpd
+import geopandas as gp
 from utils.results_utils import r2_calculations, load_data
 from matplotlib.ticker import FormatStrFormatter
-
-
+from matplotlib.ticker import MultipleLocator
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+from datetime import datetime, timezone
+from isofit.core.sunposition import sunpos
+import spectral.io.envi as envi
 
 
 class figures:
@@ -27,18 +28,25 @@ class figures:
                  axis_label_fontsize, fig_height, fig_width, linewidth, sig_figs):
 
         self.base_directory = base_directory
-        self.figure_directory = os.path.join(base_directory, 'figures')
         self.output_directory = os.path.join(base_directory, 'output')
-        create_directory(self.figure_directory)
+        self.fig_directory = os.path.join(base_directory, "figures")
+        self.gis_directory = os.path.join(base_directory, "gis")
 
         # load wavelengths
-        self.wvls, self.fwhm = spectra.load_wavelengths(sensor='aviris_ng')
-        self.exclude = ['.hdr', '.csv', '.ini', '.xml']
+        self.wvls, self.fwhm = spectra.load_wavelengths(sensor=sensor)
+        self.good_sensor_bands = spectra.get_good_bands_mask(self.wvls, wavelength_pairs=None)
+        self.wvls[~self.good_sensor_bands] = np.nan
+
+        # load asd wvls
+        self.asd_wvls = spectra.load_asd_wavelenghts()
+        self.good_asd_bands = spectra.get_good_bands_mask(self.asd_wvls, wavelength_pairs=None)
+        self.asd_wvls[~self.good_asd_bands] = np.nan
+
+        create_directory(os.path.join(base_directory, "figures"))
 
         # ems
         self.ems = ['NPV', 'GV', 'Soil']
-
-        self.ems_short = ['npv', 'GV', 'soil']
+        self.cmap_kw = 'Accent'
 
         # figure fonts, font size, etc
         self.major_axis_fontsize = major_axis_fontsize
@@ -63,201 +71,327 @@ class figures:
 
 
     def plot_summary(self):
-        # spectral data
-        create_directory(os.path.join(self.figure_directory, 'plot_stats'))
-        transect_data = pd.read_csv(os.path.join(self.output_directory, 'all-transect-asd.csv'))
-        em_data = pd.read_csv(os.path.join(self.output_directory, 'all-endmembers-aviris-ng.csv'))
 
-        # load asd wavelengths
-        asd_wavelengths = spectra.load_asd_wavelenghts()
-        good_bands = spectra.get_good_bands_mask(asd_wavelengths, wavelength_pairs=None)
-        asd_wavelengths[~good_bands] = np.nan
 
-        # load instrument wavelengths
-        ins_wvls = self.wvls
-        good_ins_band = spectra.get_good_bands_mask(ins_wvls, wavelength_pairs=None)
-        ins_wvls[~good_ins_band] = np.nan
+        # spectral data directories
+        create_directory(os.path.join(self.fig_directory, 'plot_stats'))
+        spectral_transects_directories = glob(os.path.join(self.output_directory, 'spectral_transects', '**'))
 
-        # plot summary - merged
-        merger = PdfMerger()
+        # load gis data
+        df_gis = gp.read_file(os.path.join('gis', "shift_transects_centroid.geojson"))
 
-        # fractional cover
-        for plot in sorted(list(transect_data.plot_name.unique())):
+        df_gis['longitude'] = df_gis.geometry.x
+        df_gis['latitude'] = df_gis.geometry.y
+        df_gis = pd.DataFrame(df_gis.drop(columns='geometry'))
 
-            plot = plot.upper()
+        # load tetracorder mineral grouping tables
+        df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
+
+        for spectral_transect_directory in spectral_transects_directories:
+            plot_name = os.path.basename(spectral_transect_directory)
+
+            if plot_name in ['unmix_tc_outlogs', 'DPA-9999_FALL', 'SRA-9999_FALL']:
+                continue
+            print(plot_name)
+
+            # Create figure and subplots
             fig = plt.figure(figsize=(14, 8))
+            # Axes for the reflectance plot (main area)
+            ax_rfl_plot = plt.subplot2grid((16, 16), (7, 0), colspan=9, rowspan=9)
+            ax_rfl_plot.set_xlabel('Wavelength (nm)')
+            ax_rfl_plot.set_ylabel('Reflectance (%)')
 
-            fig.suptitle(f"SHIFT: {plot}")
-            gs1 = gridspec.GridSpec(2, 2)
-            gs1.update(left=0.05, right=0.49, wspace=0.05, hspace=0.1)
-            ax1 = plt.subplot(gs1[:-1, 0])
-            ax2 = plt.subplot(gs1[:-1, 1])
-            ax3 = plt.subplot(gs1[-1, :])
+            ax_rfl_plot.set_xlim(300, 2550)
+            ax_rfl_plot.xaxis.set_major_locator(MultipleLocator(100))
+            ax_rfl_plot.xaxis.set_minor_locator(MultipleLocator(50))
+            ax_rfl_plot.set_ylim(0, 1)
+            ax_rfl_plot.yaxis.set_major_locator(MultipleLocator(0.2))
+            ax_rfl_plot.yaxis.set_minor_locator(MultipleLocator(0.1))
+            ax_rfl_plot.tick_params(axis='x', rotation=45)
 
-            gs2 = gridspec.GridSpec(4, 4)
-            gs2.update(left=0.53, right=0.98, hspace=0.1, wspace=0.05)
+            # load rfl data
+            try:
+                slpit_rfl = envi_to_array(
+                    os.path.join(spectral_transect_directory, 'RFL', f'{plot_name}_SLPIT_asd'))
+                slpit_rfl[slpit_rfl == -9999] = np.nan
+                df_slpit_rfl = pd.read_csv(
+                    os.path.join(spectral_transect_directory, 'RFL', f'{plot_name}_SLPIT_asd.csv'))
 
-            ax4 = plt.subplot(gs2[0, :])
-            ax5 = plt.subplot(gs2[1, :])
-            ax6 = plt.subplot(gs2[2, :])
-            ax7 = plt.subplot(gs2[3, :])
+                # # get date and time from slpit
+                slpit_date = df_slpit_rfl['date'].unique()[0]
+                slpit_datetime = datetime.strptime(df_slpit_rfl['date'].unique()[0], "%Y-%m-%d")
 
-            axes = [ax1, ax2, ax3, ax4, ax5, ax6, ax7]
+                # Calculate mean time of ASD  collections
+                ax_rfl_plot.set_title(f'SLPIT Acquistion Date: {slpit_date}')
 
-            site = plot.split("-")[0] + '-' + plot.split("-")[1]
-            season = plot.split("-")[-1]
-            df_coords = pd.read_csv('plot_coordinates.csv')
-            df_coords['Date'] = pd.to_datetime(df_coords['Date'])
-            date = df_coords.loc[(df_coords['Plot Name'] == site) & (df_coords['Season'] == season.upper()), 'Date'].iloc[0]
-            date = datetime.strptime(str(date).split(' ')[0], "%Y-%m-%d")
+                y_mean = np.nanmean(slpit_rfl, axis=(0, 1))
+                y_std = np.nanstd(slpit_rfl, axis=(0, 1))
 
-            em_data = pd.read_csv(os.path.join(self.output_directory, 'spectral_transects', 'endmembers',
-                                               f'{site}_{season.upper()}_original_{self.instrument}.csv'))
-            for ax in axes:
-                if ax == ax1:
-                    ax.set_title('Plot Map')
-                    long = df_coords.loc[(df_coords['Plot Name'] == site) & (df_coords['Season'] == season.upper()), 'longitude'].iloc[0]
-                    lat = df_coords.loc[(df_coords['Plot Name'] == site) & (df_coords['Season'] == season.upper()), 'latitude'].iloc[0]
+                # plot slpit data
+                ax_rfl_plot.plot(self.asd_wvls, y_mean, label=f"SLPIT mean", linewidth=2, color='black')
 
-                    if site[:2] == 'DP':
-                        lleft_lat = 34.4086695
-                        uright_lat = 34.7477056
-                        lleft_lon = -120.6851337
-                        uright_lon = -120.0943748
-                    else:
-                        lleft_lat = 34.5747161
-                        uright_lat = 34.7916992
-                        lleft_lon = -120.2198138
-                        uright_lon = -119.8417282
+                # fill 1 sigma
+                ax_rfl_plot.fill_between(self.asd_wvls, y_mean - y_std * 2, y_mean + y_std * 2,
+                                         color='grey', alpha=0.2)
 
-                    m = Basemap(projection='merc', llcrnrlat=lleft_lat, urcrnrlat=uright_lat,
-                                llcrnrlon=lleft_lon, urcrnrlon=uright_lon, ax=ax1, epsg=4326)
-                    m.arcgisimage(service='World_Imagery', xpixels=1000, ypixels=1000, dpi=300, verbose=True)
-                    ax.scatter(float(long), float(lat), color='red', s=12)
+            except:
+                print(f'RFL {plot_name} not found!')
+                raise
 
-                if ax == ax2:
 
-                    flip = ['SRA-019-SPRING', 'DPA-004-FALL', 'DPB-005-FALL', 'SRB-010-FALL', 'SRB-045-FALL', 'SRB-050-FALL',
-                            'SRB-004-FALL', 'SRA-056-FALL', 'SRA-007-FALL', 'SRA-008-FALL']
-                    flip_90 = ['SRA-034-SPRING', 'SRB-026-SPRING', 'SRB-046-FALL', 'SRB-010-FALL']
+            try:
+                df_em_spectra = pd.read_csv(os.path.join(spectral_transect_directory, 'EMS', f'{plot_name}_EMS_aviris_ng.csv'))
+            except:
+                print(os.path.join(spectral_transect_directory, 'EMS', f'{plot_name}_EMS_aviris_ng.csv'), "not found!")
 
-                    ax.set_title('Landscape\nPicture')
-                    pics = glob(os.path.join(self.base_directory, 'field', 'pictures', f'*{site}*'))
+            # get gis data
+            df_transect = df_gis.loc[df_gis['plot'] == plot_name].copy()
 
-                    if not pics:
-                        ax.text(0.5, 0.5, 'No Plot Picture Available', transform=ax.transAxes, fontsize=8,
-                                verticalalignment='top')
-                    else:
-                        img = mpimg.imread(pics[0])
-                        if plot in flip:
-                            ax.imshow(img, origin='lower')
-                        elif plot in flip_90:
-                            flipped_img = np.flip(np.transpose(img, axes=(1, 0, 2)), axis=0)
-                            ax.imshow(flipped_img, origin='lower')
-                        else:
-                            ax.imshow(img)
-                    ax.axis('off')
+            # plot map
+            ax_map = plt.subplot2grid((16, 16), (0, 0), colspan=5, rowspan=7,
+                                      projection=ccrs.PlateCarree())
+            ax_map.set_title('Plot Map')
+            ax_map.set_global()
+            ax_map.set_xlim(-125, -90)  # Longitude range
+            ax_map.set_ylim(25, 45)  # Latitude range
+            ax_map.add_feature(cfeature.LAND)
+            ax_map.add_feature(cfeature.OCEAN)
+            ax_map.add_feature(cfeature.BORDERS, linestyle=':')
+            ax_map.coastlines()
+            ax_map.plot(np.mean(df_transect.longitude), np.mean(df_transect.latitude), marker='o', color='red',
+                        markersize=8, transform=ccrs.PlateCarree())
 
-                if ax == ax7:
-                    ax.set_title('Mineralogy')
+            # add states
+            states_provinces = cfeature.NaturalEarthFeature(
+                category='cultural',
+                name='admin_1_states_provinces_lines',
+                scale='50m',
+                facecolor='none')
+            ax_map.add_feature(states_provinces, edgecolor='gray', linewidth=0.5)
 
-                if ax == ax4:
-                    df_spectra = em_data[em_data['level_1'] == 'npv'].copy()
-                    specific_string = 'UNK-'
-                    df_spectra['species'] = df_spectra['species'].fillna(specific_string)
-                    df_species_key = pd.read_csv(os.path.join('utils', 'species_santabarbara_ca.csv'))
-                    num_species = len(sorted(list(df_spectra.species.unique())))
-                    colors = np.random.rand(num_species, 3)
+            # Enable gridlines and labels
+            gl = ax_map.gridlines(draw_labels=True, linestyle='--', color='gray', alpha=0.5)
+            gl.top_labels = False  # Turn off labels at the top
+            gl.right_labels = False
 
-                    for _species, species in enumerate(sorted(list(df_spectra.species.unique()))):
-                        df_species = df_spectra[df_spectra['species'] == species].copy()
-                        em_spectra = df_species.iloc[:, 10:].to_numpy()
+            # plot landsacpe image
 
-                        for _row, row in enumerate(em_spectra):
-                            ax.plot(ins_wvls, row, color=colors[_species])
+            ax_landspace_pic = plt.subplot2grid((16, 16), (0, 5), colspan=4, rowspan=7)
+            ax_landspace_pic.set_title('Landscape\nPicture')
+            try:
+                pic_path = os.path.join(spectral_transect_directory, f'{plot_name.split("_")[0]}_landscape_pic.jpg')
+                img = mpimg.imread(pic_path)
+                ax_landspace_pic.imshow(img)
+                ax_landspace_pic.axis('off')
+            except:
+                print(f'Landscape {plot_name} not found!')
 
-                        common_name = df_species_key.loc[df_species_key['key_value'] == species, ['label']].values[0][0]
-                        ax.plot(ins_wvls, row, c=colors[_species], label=common_name)
 
-                    ax.get_xaxis().set_ticklabels([])
-                    ax.set_ylim(0, 1)
-                    ax.set_xlim(320, 2550)
-                    ax.text(385, 0.85, f"NPV (n = {str(df_spectra.shape[0])})", fontsize=12)
-                    ax.legend(prop={'size': 6})
+            # plot sensor data
 
-                if ax == ax5:
-                    df_spectra = em_data[em_data['level_1'] == 'pv'].copy()
-                    specific_string = 'UNK-'
-                    df_spectra['species'] = df_spectra['species'].fillna(specific_string)
-                    df_species_key = pd.read_csv(os.path.join('utils', 'species_santabarbara_ca.csv'))
-                    num_species = len(sorted(list(df_spectra.species.unique())))
-                    colors = np.random.rand(num_species, 3)
+            rfl_files = glob(os.path.join(spectral_transect_directory, "EXT", "*_RFL*_EXT"))
 
-                    for _species, species in enumerate(sorted(list(df_spectra.species.unique()))):
-                        df_species = df_spectra[df_spectra['species'] == species].copy()
-                        em_spectra = df_species.iloc[:, 10:].to_numpy()
+            for rfl_file in rfl_files:
 
-                        for _row, row in enumerate(em_spectra):
-                            ax.plot(ins_wvls, row, color=colors[_species])
+                sensor_rfl_file = rfl_file
+                acquisition_date = os.path.basename(sensor_rfl_file).split("_")[3][3:]
+                version = os.path.basename(sensor_rfl_file).split("_")[4]
+                if version == 'EXT':
+                    continue
 
-                        common_name = df_species_key.loc[df_species_key['key_value'] == species, ['label']].values[0][0]
-                        ax.plot(ins_wvls, row, c=colors[_species], label=common_name)
+                sensor_rfl = envi_to_array(sensor_rfl_file)
 
-                    ax.get_xaxis().set_ticklabels([])
-                    ax.set_ylim(0, 1)
-                    ax.set_xlim(320, 2550)
-                    ax.text(385, 0.85, f"PV (n = {str(df_spectra.shape[0])})", fontsize=12)
-                    ax.legend(prop={'size': 6})
+                # calculate geometries
+                acquisition_datetime_utc = datetime.strptime(acquisition_date, "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
+                geometry_results_sensor = sunpos(acquisition_datetime_utc, np.mean(df_transect.latitude),
+                                                 np.mean(df_transect.longitude), np.mean(df_slpit_rfl.elevation))
+                acquisition_datetime = datetime.strptime(acquisition_date, "%Y%m%dT%H%M%S")
+                delta = slpit_datetime - acquisition_datetime
+                days = np.absolute(delta.days)
 
-                if ax == ax6:
-                    df_spectra = em_data[em_data['level_1'] == 'soil'].copy()
-                    em_spectra = df_spectra.iloc[:, 10:].to_numpy()
-                    for _row, row in enumerate(em_spectra):
-                        ax.plot(ins_wvls, row, color='blue')
-                    ax.get_xaxis().set_ticklabels([])
-                    ax.set_ylim(0, 1)
-                    ax.set_xlim(320, 2550)
-                    ax.text(385, 0.85, f"Soil (n = {str(df_spectra.shape[0])})", fontsize=12)
+                if days > 3:
+                    continue
 
-                if ax == ax3:
-                    # plot average spectra
-                    df_spectra = transect_data[transect_data['plot_name'] == site + '-' + season.upper()].copy()
-                    transect_spectra = df_spectra.iloc[:, 9:].to_numpy()
+                # Open the image using the header file
+                img = envi.open(f'{rfl_file}.hdr')
 
-                    refl_data = sorted(glob(os.path.join(self.base_directory, 'gis', 'shift-data-clip', f"*{plot}_*")))
-                    exclude = ['.hdr', '.aux', '.xml']
+                # Access the raw metadata dictionary
+                metadata = img.metadata
+                map_info = metadata['map info']
+                x_res = map_info[5]
+                y_res = map_info[6]
 
-                    for i in refl_data:
-                        if os.path.splitext(i)[1] in exclude:
-                            pass
-                        else:
-                            img_date = datetime.strptime(i.split("_")[-1], "ang%Y%m%dt%H%M%S")
-                            refl = envi_to_array(i)
-                            refl = np.mean(refl, axis=(0, 1))
-                            img_diff = img_date - date
-                            img_diff = img_diff.days
+                if float(x_res) < 1.5:
+                    continue
 
-                            if np.absolute(img_diff) > 10:
-                                pass
-                            else:
-                                ax.plot(ins_wvls, refl, label=f"{img_date}: {img_diff}")
+                base_label = f'{acquisition_date} (±{days:02d} days); version: {version}; SZA : {str(int(geometry_results_sensor[1]))}°; xres,yres: {x_res},{y_res}'
+                sensor_std = np.nanstd(sensor_rfl, axis=(0, 1))
+                sensor_mean = np.nanmean(sensor_rfl, axis=(0, 1))
+                ax_rfl_plot.plot(self.wvls, sensor_mean, label=base_label, linewidth=1)
+                #ax_rfl_plot.fill_between(self.wvls, sensor_mean - sensor_std * 2, sensor_mean + sensor_std * 2,
+                 #                        color='skyblue', alpha=0.2)
 
-                    # plot average of SLPIT
-                    ax.set_title(f'Field Sample Date: {date}')
-                    ax.plot(asd_wavelengths, np.mean(transect_spectra, axis=0), color='black', label=f"ASD Mean Refl")
-                    ax.set_xlabel('Wavelength (nm)')
-                    ax.set_ylim(0, 1)
-                    ax.set_xlim(320, 2550)
-                    ax.legend(fontsize='8')
+            ax_rfl_plot.legend()
 
-            plt.savefig(os.path.join(self.figure_directory, 'plot_stats', plot + '.pdf'), format="pdf", dpi=300)
+            # plot NPV endmembers
+            ax_npv_spectra = plt.subplot2grid((16, 16), (0, 9), colspan=7, rowspan=4)
+            df_spectra = df_em_spectra[(df_em_spectra['level_1'] == 'NPV')].copy()
+            df_species_key = pd.read_csv(os.path.join('utils', 'species_santabarbara_ca.csv'))
+            num_species = len(sorted(list(df_spectra.species.unique())))
+            npv_cmap = plt.cm.get_cmap(self.cmap_kw, num_species)
+            unique_species = sorted(df_spectra['species'].unique())
+
+            for i, species in enumerate(unique_species):
+                # Filter and extract spectra data in one go
+                em_spectra = df_spectra[df_spectra['species'] == species].iloc[:, 11:].to_numpy()
+
+                # Plot all rows at once. Transposing em_spectra (T) allows .plot()
+                # to handle all lines in a single call.
+                color = npv_cmap(i)
+                ax_npv_spectra.plot(self.wvls, em_spectra.T, color=color, alpha=0.5)
+
+                # Get the label and add a single dummy entry for the legend
+                common_name = df_species_key.loc[df_species_key['key_value'] == species, 'label'].iloc[0]
+                ax_npv_spectra.plot([], [], color=color, label=common_name)
+
+            ax_npv_spectra.set_xlim(320, 2550)
+            ax_npv_spectra.xaxis.set_major_locator(MultipleLocator(100))
+            ax_npv_spectra.xaxis.set_minor_locator(MultipleLocator(50))
+            ax_npv_spectra.get_xaxis().set_ticklabels([])
+
+            ax_npv_spectra.set_ylim(0, 1)
+            ax_npv_spectra.yaxis.set_major_locator(MultipleLocator(0.2))
+            ax_npv_spectra.yaxis.set_minor_locator(MultipleLocator(0.1))
+
+            ax_npv_spectra.text(385, 0.85, f"NPV (n = {str(df_spectra.shape[0])})", fontsize=12)
+            ax_npv_spectra.legend(prop={'size': 6}, bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0.)
+
+            # plot PV endmembers
+            ax_pv_spectra = plt.subplot2grid((16, 16), (4, 9), colspan=7, rowspan=4)
+            df_spectra = df_em_spectra[(df_em_spectra['level_1'] == 'PV')].copy()
+            num_species = len(sorted(list(df_spectra.species.unique())))
+            pv_cmap = plt.cm.get_cmap(self.cmap_kw, num_species)
+            unique_species = sorted(df_spectra['species'].unique())
+
+            for i, species in enumerate(unique_species):
+                # Filter and extract spectra data in one go
+                em_spectra = df_spectra[df_spectra['species'] == species].iloc[:, 11:].to_numpy()
+
+                # Plot all rows at once. Transposing em_spectra (T) allows .plot()
+                # to handle all lines in a single call.
+                color = pv_cmap(i)
+                ax_pv_spectra.plot(self.wvls, em_spectra.T, color=color, alpha=0.5)
+
+                # Get the label and add a single dummy entry for the legend
+                common_name = df_species_key.loc[df_species_key['key_value'] == species, 'label'].iloc[0]
+                ax_pv_spectra.plot([], [], color=color, label=common_name)
+
+            ax_pv_spectra.set_xlim(320, 2550)
+            ax_pv_spectra.xaxis.set_major_locator(MultipleLocator(100))
+            ax_pv_spectra.xaxis.set_minor_locator(MultipleLocator(50))
+            ax_pv_spectra.get_xaxis().set_ticklabels([])
+
+            ax_pv_spectra.set_ylim(0, 1)
+            ax_pv_spectra.yaxis.set_major_locator(MultipleLocator(0.2))
+            ax_pv_spectra.yaxis.set_minor_locator(MultipleLocator(0.1))
+
+            ax_pv_spectra.text(385, 0.85, f"PV (n = {str(df_spectra.shape[0])})", fontsize=12)
+            ax_pv_spectra.legend(prop={'size': 6}, bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0.)
+
+            # # plot soil endmembers
+            try:
+                ax_soil_spectra = plt.subplot2grid((16, 16), (8, 9), colspan=7, rowspan=4)
+                df_spectra = df_em_spectra[(df_em_spectra['level_1'] == 'Soil')].copy()
+                soil_index_min = min(df_spectra.index[df_spectra['level_1'] == 'Soil'].tolist())
+                soil_index_max = max(df_spectra.index[df_spectra['level_1'] == 'Soil'].tolist())
+                soil_tetracorder_results = envi_to_array(os.path.join(spectral_transect_directory, 'tetracorder',
+                                                                      f'{plot_name}_EMS_emit_augmented_min'))[
+                    soil_index_min:soil_index_max + 1, :, :]
+
+                g1_unique = soil_tetracorder_results[:, 0, 1]
+                g2_unique = soil_tetracorder_results[:, 0, 3]
+                df_spectra.insert(0, "g1_minerals", g1_unique)
+                df_spectra.insert(0, "g2_minerals", g2_unique)
+
+                df_spectra['g1_minerals'] = df_spectra['g1_minerals'].map(
+                    df_mineral_matrix.set_index('Index')['Name'])
+                df_spectra['g2_minerals'] = df_spectra['g2_minerals'].map(
+                    df_mineral_matrix.set_index('Index')['Name'])
+                df_spectra['g1_minerals'] = df_spectra['g1_minerals'].fillna('No Detection')
+                df_spectra['g2_minerals'] = df_spectra['g2_minerals'].fillna('No Detection')
+
+                num_minerals_g1 = len(sorted(list(df_spectra.g1_minerals.unique())))
+                g1_minerals_cmap = plt.cm.get_cmap('jet', num_minerals_g1)
+                unique_minerals_g1 = sorted(df_spectra['g1_minerals'].unique())
+
+                # plot g1 minerals
+                for i, soils_unique in enumerate(unique_minerals_g1):
+                    # Filter and extract spectra data in one go
+                    em_spectra = df_spectra[df_spectra['g1_minerals'] == soils_unique].iloc[:, 13:].to_numpy()
+
+                    # Plot all rows at once. Transposing em_spectra (T) allows .plot()
+                    # to handle all lines in a single call.
+                    color = g1_minerals_cmap(i)
+                    ax_soil_spectra.plot(self.wvls, em_spectra.T, color=color, alpha=0.5)
+
+                    # Get the label and add a single dummy entry for the legend
+                    ax_soil_spectra.plot([], [], color=color, label=soils_unique)
+
+                ax_soil_spectra.set_xlim(320, 2550)
+                ax_soil_spectra.xaxis.set_major_locator(MultipleLocator(100))
+                ax_soil_spectra.xaxis.set_minor_locator(MultipleLocator(50))
+                ax_soil_spectra.get_xaxis().set_ticklabels([])
+
+                ax_soil_spectra.set_ylim(0, 1)
+                ax_soil_spectra.yaxis.set_major_locator(MultipleLocator(0.2))
+                ax_soil_spectra.yaxis.set_minor_locator(MultipleLocator(0.1))
+
+                ax_soil_spectra.text(385, 0.85, f"Soil (n = {str(df_spectra.shape[0])})", fontsize=12)
+                ax_soil_spectra.legend(prop={'size': 6}, bbox_to_anchor=(1.01, 1), loc='upper left',
+                                       borderaxespad=0.)
+
+                # plot group 2 minerals
+                ax_soil_spectra2 = plt.subplot2grid((16, 16), (12, 9), colspan=7, rowspan=4)
+                num_minerals_g2 = len(sorted(list(df_spectra.g2_minerals.unique())))
+                g2_minerals_cmap = plt.cm.get_cmap('viridis', num_minerals_g2)
+                unique_minerals_g2 = sorted(df_spectra['g2_minerals'].unique())
+
+                # plot g2 minerals
+                for i, soils_unique in enumerate(unique_minerals_g2):
+                    # Filter and extract spectra data in one go
+                    em_spectra = df_spectra[df_spectra['g2_minerals'] == soils_unique].iloc[:, 13:].to_numpy()
+
+                    # Plot all rows at once. Transposing em_spectra (T) allows .plot()
+                    # to handle all lines in a single call.
+                    color = g2_minerals_cmap(i)
+                    ax_soil_spectra2.plot(self.wvls, em_spectra.T, color=color, alpha=0.5)
+
+                    # Get the label and add a single dummy entry for the legend
+                    ax_soil_spectra2.plot([], [], color=color, label=soils_unique)
+
+                ax_soil_spectra2.set_xlim(320, 2550)
+                ax_soil_spectra2.xaxis.set_major_locator(MultipleLocator(100))
+                ax_soil_spectra2.xaxis.set_minor_locator(MultipleLocator(50))
+                ax_soil_spectra2.tick_params(axis='x', rotation=45)
+
+                ax_soil_spectra2.set_ylim(0, 1)
+                ax_soil_spectra2.yaxis.set_major_locator(MultipleLocator(0.2))
+                ax_soil_spectra2.yaxis.set_minor_locator(MultipleLocator(0.1))
+
+                ax_soil_spectra2.text(385, 0.85, f"Soil (n = {str(df_spectra.shape[0])})", fontsize=12)
+                ax_soil_spectra2.legend(prop={'size': 6}, bbox_to_anchor=(1.01, 1), loc='upper left',
+                                        borderaxespad=0.)
+                ax_soil_spectra2.set_xlabel('Wavelength (nm)')
+
+            except:
+                print('Soil not found!')
+                pass
+
+            plt.tight_layout()
+            plt.savefig(os.path.join(self.fig_directory, 'plot_stats', f'{plot_name}.png'), format="png", dpi=300,
+                        bbox_inches="tight")
             plt.clf()
             plt.close()
-            merger.append(os.path.join(self.figure_directory, 'plot_stats', plot + '.pdf'))
-
-        # write pdf
-        merger.write(os.path.join(self.figure_directory, 'plot_stats', 'plot_summary.pdf'))
-        merger.close()
 
     def plot_rmse(self, norm_option):
 
@@ -1354,17 +1488,16 @@ def run_figures(base_directory):
                         minor_axis_fontsize=minor_axis_fontsize, title_fontsize=title_fontsize,
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs)
-    #fig.plot_summary()
-
+    fig.plot_summary()
     #fig.plot_remse(norm_option='brightness')
-    fig.mesma_vs_emc2(norm_option='brightness')
-    fig.cross_norm(mode='mesma')
-    fig.cross_norm(mode='sma')
-    #fig.error_vs_time(norm_option='brightness')
-    #fig.plot_rmse(norm_option='none')
-    fig.plot_combined(norm_option='brightness')
-    fig.supplemental_combined(norm_option='brightness')
-    fig.uncertainty_table()
+    # fig.mesma_vs_emc2(norm_option='brightness')
+    # fig.cross_norm(mode='mesma')
+    # fig.cross_norm(mode='sma')
+    # #fig.error_vs_time(norm_option='brightness')
+    # #fig.plot_rmse(norm_option='none')
+    # fig.plot_combined(norm_option='brightness')
+    # fig.supplemental_combined(norm_option='brightness')
+    # fig.uncertainty_table()
     #fig.uncertainty_vs_error()
     #fig.plot_combined_npp(norm_option='brightness')
     #fig.plot_combined(norm_option='none')
