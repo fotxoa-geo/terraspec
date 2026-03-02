@@ -13,7 +13,7 @@ from utils.slpit_download import load_pickle
 from slpit.build_slpit import haversine_distance
 from utils.slpit_utils import slpit
 import requests
-
+import subprocess
 
 class build_libraries:
     def __init__(self, base_directory: str, sensor:str):
@@ -647,7 +647,7 @@ class build_libraries:
                 df_convolve.to_csv(out_csv, index=False)
 
     def unmix_reflectances(self, sensor):
-
+        # scene overlaps
         scene_key = {'DPA-004_FALL': {'flightline': 'ang20220915t195816', 'version': '003'},
                      'DPB-003_FALL': {'flightline': 'ang20220915t195816', 'version': '003'},
                      'DPB-004_FALL': {'flightline': 'ang20220915t200714', 'version': '000'},
@@ -674,14 +674,6 @@ class build_libraries:
                      'SRB-047_SPRING': {'flightline': 'ang20220405t1359', 'version': '002'},
                      }
 
-
-            # ['20220308t190523', '20220308t191151', '20220308t204043', '20220308t205512',
-            #                 '20220316t210303',
-            #                 '20220322t204749', '20220412t205405', '20220511t190344', '20220511t212317',
-            #                 '20220914t184300',
-            #                 '20220915t185652', '20220915t195816', '20220915t200714', '20220915t203517']
-
-
         # create outlogs for unmix and tc
         create_directory(os.path.join(self.output_transect_directory, 'unmix_tc_outlogs'))
         extract_outlog_directory = os.path.join(self.output_transect_directory, 'unmix_tc_outlogs')
@@ -691,31 +683,26 @@ class build_libraries:
         gdf = gpd.read_file(spatial_field_data)
 
         # # get reflectance and uncertainty files
-        reflectance_slpit_files = sorted(
-            glob(os.path.join(self.output_transect_directory, '**', f'*_SLPIT_{sensor}'), recursive=True))
-
+        reflectance_slpit_files = sorted(glob(os.path.join(self.output_transect_directory, '**', f'*_SLPIT_{sensor}'), recursive=True))
+        
         for i in reflectance_slpit_files:
             plot_name = os.path.basename(i).split("_")[0]
             season = os.path.basename(i).split("_")[1]
             plot_number = f"{plot_name}_{season}"
-
-            #try:
-            #    flight_date =
-            #except:
-            #    print(f"No sensor time data found for {plot_number}")
-            #    continue
-
+            
+            if plot_number in ['SRB-004_FALL', 'SRB-200_FALL','SRA-000_SPRING', 'DPB-9999_FALL', 'SRB-9999_FALL']:
+                continue
+            
             plot_base_directory = os.path.join(self.output_transect_directory, plot_number)
             em_file = os.path.join(plot_base_directory, f'unmix_{plot_number}_EMS_{sensor}.csv')
             em_local_rfl = os.path.join(plot_base_directory, 'EMS', f'{plot_number}_EMS_{sensor}')
-        #     emit_rfl_ext = os.path.join(plot_base_directory, 'EXT', f'{plot_number}_RFL_{emit_date}_EXT')
-        #     emit_rfl_unc = os.path.join(plot_base_directory, 'EXT', f'{plot_number}_RFLUNCERT_{emit_date}_EXT')
+            rfl_ext = os.path.join(plot_base_directory, 'EXT', f'{plot_number}_RFL_{scene_key[plot_number]["flightline"]}_{scene_key[plot_number]["version"]}_EXT')
+            rfl_unc = os.path.join(plot_base_directory, 'EXT', f'{plot_number}_UNC_{scene_key[plot_number]["flightline"]}_{scene_key[plot_number]["version"]}_EXT')
             outfile = os.path.join(extract_outlog_directory, f'{os.path.basename(i)}.out')
 
-        #     base_call = f'sh {os.path.join("slpit", "slpit_image_processing.sh")} {i} {em_file} {plot_base_directory} {em_local_rfl} {emit_rfl_ext} {emit_rfl_unc}'
-        #     sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 1 --mem 20G --output {outfile} --job-name slpit.umix  --wrap='{base_call}'"
-        #     subprocess.run(sbatch_cmd, shell=True, text=True)
-
+            base_call = f'sh {os.path.join("shift", "slpit_shift_image_processing.sh" )} {i} {em_file} {plot_base_directory} {em_local_rfl} {rfl_ext} {rfl_unc}'
+            sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 1 --mem 20G --output {outfile} --job-name shift.umix  --wrap='{base_call}'"
+            subprocess.run(sbatch_cmd, shell=True, text=True)
 
 def run_build_workflow(base_directory, sensor):
 

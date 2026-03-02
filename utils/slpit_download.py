@@ -190,29 +190,34 @@ def download_shift_imagery(base_directory, sensor):
         date = row['Date']
 
         sample_date = datetime.strptime(date, "%m/%d/%Y")
+        next_date = sample_date + timedelta(days=5) 
         previous_date = sample_date - timedelta(days=5)
         previous_date = previous_date.strftime("%Y/%m/%d")
+        next_date = next_date.strftime("%Y/%m/%d")
 
-        print(f"downloading... {plot_name} {season}")
+        print(f"downloading... {plot_name} {season} {date}")
         results = earthaccess.search_data(short_name=data_product_key[sensor]['reflectance'],
                                           version=data_product_key[sensor]['version'], cloud_hosted=True,
-                                          bounding_box=(lon, lat, lon, lat), temporal=(previous_date, sample_date))
+                                          bounding_box=(lon, lat, lon, lat), temporal=(previous_date, next_date))
         if results:
             print(f'found {len(results)} granules!')
             files = earthaccess.download(results,
                                          os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l2a'))
             print(f"\t download successful... {len(files)} granules downloaded")
 
-            # run nc downloads
-            for nc_file in files:
-                basename = os.path.basename(nc_file)
-                base_call = f'sh {os.path.join("slpit", "emit_image_process.sh")} {nc_file} {em_file} {out_base}'
-                outfile = os.path.join(f"{os.path.join(out_logs, basename)}.out")
-                sbatch_cmd = f"sbatch -p patient -N 1 -c 20 --mem 25G --output {outfile} --job-name slpit.em --wrap='{base_call}'"
-                subprocess.call(sbatch_cmd, shell=True)
-
         else:
             print(f'no scenes found for {plot_name}')
+    
+    # run nc downloads
+    files = list(sorted(glob(os.path.join(base_directory, 'gis', f'{sensor}-data', 'nc_files', 'l2a', '*.nc'))))
+    files = [f for f in files if f.endswith('.nc')]
+    for nc_file in files:
+        basename = os.path.basename(nc_file)
+        base_call = f'sh {os.path.join("shift", "aviris_image_process.sh")} {nc_file} {em_file} {out_base} {sensor}'
+        outfile = os.path.join(f"{os.path.join(out_logs, basename)}.out")
+        sbatch_cmd = f"sbatch -p patient -N 1 -c 20 --mem 40G --output {outfile} --job-name shift --wrap='{base_call}'"
+        subprocess.call(sbatch_cmd, shell=True)
+
 
 def run_download_emit(base_directory, sensor):
     download_emit(base_directory=base_directory, sensor=sensor)

@@ -121,11 +121,11 @@ class Tetracorder:
         df_veg = pd.concat([df_npv, df_pv], axis=0, ignore_index=True)
 
         # load spectral abundance of simulation library
-        spectral_abundance_array = envi_to_array(os.path.join(self.tetra_output_directory, 'libraries', 'sim_lib', 'tetracorder',
+        spectral_abundance_array = envi_to_array(os.path.join(self.tetra_output_directory, 'libraries', 'sim_lib', 'tetracorder_sim_lib',
                                                               'sim_lib_augmented_min'))[:, 0, :]
         
         # load txt files outputs from tetracorder
-        df_minerals_indentified_dict, df_minerals_indentified = spectra.get_mineral_reclassification(os.path.join(self.tetra_output_directory, 'libraries', 'sim_lib', 'tetracorder', 'sim_lib_augmented_minerals'))
+        df_minerals_indentified_dict, df_minerals_indentified = spectra.get_mineral_reclassification(os.path.join(self.tetra_output_directory, 'libraries', 'sim_lib', 'tetracorder_sim_lib', 'sim_lib_augmented_minerals'))
 
         # these are the corresponding indices
         valid_rows_g1 = []
@@ -218,6 +218,17 @@ class Tetracorder:
             base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {rfl_img} {lib_dir} --unmix '
             sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 20 --mem 40G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
+        
+        soil_files = sorted(list(glob(os.path.join(self.synthetic_dir, '**',  '*_soils'), recursive=True)))
+        for _, soil_img in enumerate(soil_files):
+            outfile = os.path.join(log_file_dir, f'{os.path.basename(soil_img)}.out')
+            lib_dir = os.path.dirname(soil_img)
+            
+            base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {soil_img} {lib_dir} '
+            sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 1 --mem 15G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
+            subprocess.run(sbatch_cmd, shell=True, text=True)
+        
+
 
     def hypertrace_tetracorder(self):
         cursor_print('hypertrace: tetracorder')
