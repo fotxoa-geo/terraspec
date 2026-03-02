@@ -37,6 +37,7 @@ export PATH="${PATH}:${SP_LOCAL}/bin:${TETRA}/bin:/usr/bin"
 
 cpwd=$PWD
 
+echo "${sensor}"
 if [ "${sensor}" = "emit" ]; then
     $TETRA_CMDS/cmd-setup-tetrun $tmp_tetra_path emit_e cube $tmp_rfl_path 1 -T -20 80 C -P .5 1.5 bar
 elif [ "${sensor}" = "aviris_ng" ]; then
