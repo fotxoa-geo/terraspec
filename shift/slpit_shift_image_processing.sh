@@ -9,7 +9,7 @@ out_base=$3
 em_rfl_file=$4
 sensor_rfl_ext_file=$5
 sensor_rfl_unc=$6
-unmixing_library_global=./terraspec_output/simulation/output/endmember_libraries/convex_hull__n_dims_4_sensor_emit_geofilter_True_unmix_library.csv
+unmixing_library_global=./terraspec_output/simulation/output/endmember_libraries/convex_hull__n_dims_4_sensor_aviris_ng_geofilter_True_unmix_library.csv
 kalahari_unmixing_library=./terraspec_output/simulation/output/production/meyer-okin.csv
 
 filebase_name=$(basename "$rfl_img")
@@ -42,10 +42,10 @@ julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH}
 julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 "${emc_out_directory}/global_${ext_filebase_name}_normalization_none_" --mode sma --normalization none --num_endmember 20 --n_mc 25 --spectral_starting_col 11 --reflectance_uncertainty_file ${sensor_rfl_unc}
 
 # these are local unmix calls
-julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 "${emc_out_directory}/local_${filebase_name}_normalization_brightness_" --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 12
-julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_LOCAL_LIB_PATH} level_1 "${emc_out_directory}/local_${ext_filebase_name}_normalization_brightness_" --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 12 --reflectance_uncertainty_file ${sensor_rfl_unc}
-julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 "${emc_out_directory}/local_${filebase_name}_normalization_none_" --mode sma --normalization none --num_endmember 20 --n_mc 25 --spectral_starting_col 12
-julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_LOCAL_LIB_PATH} level_1 "${emc_out_directory}/local_${ext_filebase_name}_normalization_none_" --mode sma --normalization none --num_endmember 20 --n_mc 25 --spectral_starting_col 12 --reflectance_uncertainty_file ${sensor_rfl_unc}
+julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 "${emc_out_directory}/local_${filebase_name}_normalization_brightness_" --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 13
+julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_LOCAL_LIB_PATH} level_1 "${emc_out_directory}/local_${ext_filebase_name}_normalization_brightness_" --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 13 --reflectance_uncertainty_file ${sensor_rfl_unc}
+julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 "${emc_out_directory}/local_${filebase_name}_normalization_none_" --mode sma --normalization none --num_endmember 20 --n_mc 25 --spectral_starting_col 13
+julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_LOCAL_LIB_PATH} level_1 "${emc_out_directory}/local_${ext_filebase_name}_normalization_none_" --mode sma --normalization none --num_endmember 20 --n_mc 25 --spectral_starting_col 13 --reflectance_uncertainty_file ${sensor_rfl_unc}
 
 # these are kalahari lib
 julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_Kalahari_LIB_PATH} level_1 "${emc_out_directory}/kalahari_${filebase_name}_normalization_brightness_" --mode sma --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 11
@@ -70,10 +70,10 @@ julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH}
 julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 ${mesma_out_directory}/global_${ext_filebase_name}_normalization_none_ --mode mesma --normalization none --max_combinations 100 --n_mc 25 --spectral_starting_col 11 --reflectance_uncertainty_file ${sensor_rfl_unc}
 
 # these are local unmix calls
-julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${filebase_name}_normalization_brightness_ --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 12
-julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${ext_filebase_name}_normalization_brightness_ --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 12 --reflectance_uncertainty_file ${sensor_rfl_unc}
-julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${filebase_name}_normalization_none_ --mode mesma --normalization none --max_combinations 100 --n_mc 25 --spectral_starting_col 12
-julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${ext_filebase_name}_normalization_none_ --mode mesma --normalization none --max_combinations 100 --n_mc 25 --spectral_starting_col 12 --reflectance_uncertainty_file ${sensor_rfl_unc}
+julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${filebase_name}_normalization_brightness_ --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 13
+julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${ext_filebase_name}_normalization_brightness_ --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 13 --reflectance_uncertainty_file ${sensor_rfl_unc}
+julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${filebase_name}_normalization_none_ --mode mesma --normalization none --max_combinations 100 --n_mc 25 --spectral_starting_col 13
+julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_LOCAL_LIB_PATH} level_1 ${mesma_out_directory}/local_${ext_filebase_name}_normalization_none_ --mode mesma --normalization none --max_combinations 100 --n_mc 25 --spectral_starting_col 13 --reflectance_uncertainty_file ${sensor_rfl_unc}
 
 # these are kalahari unmix calls
 julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_Kalahari_LIB_PATH} level_1 ${mesma_out_directory}/kalahari_${filebase_name}_normalization_brightness_ --mode mesma --normalization brightness --max_combinations 100 --n_mc 25 --spectral_starting_col 11
@@ -95,12 +95,12 @@ mkdir -p ${tetracorder_out_directory}
 echo "Created tetracorder dir: ${tetracorder_out_directory}"
 
 # augment rfl data
-python ./utils/augment_file.py ${rfl_img} ${tetracorder_out_directory} --augment # slpit data
+python ./utils/augment_file.py ${rfl_img} ${tetracorder_out_directory} --augment --sensor aviris_ng   # slpit data
 em_filebase_name=$(basename "$em_rfl_file")
-python ./utils/augment_file.py ${em_rfl_file} ${tetracorder_out_directory} --augment # em data
+python ./utils/augment_file.py ${em_rfl_file} ${tetracorder_out_directory} --augment --sensor aviris_ng # em data
 
-./tetracorder/tetracorder.sh "${tetracorder_out_directory}/${filebase_name}_augmented" ${tetracorder_out_directory}
-./tetracorder/tetracorder.sh "${tetracorder_out_directory}/${em_filebase_name}_augmented" ${tetracorder_out_directory}
+./tetracorder/tetracorder.sh "${tetracorder_out_directory}/${filebase_name}_augmented" ${tetracorder_out_directory} aviris_ng --delete_tc_output
+./tetracorder/tetracorder.sh "${tetracorder_out_directory}/${em_filebase_name}_augmented" ${tetracorder_out_directory} aviris_ng --delete_tc_output
 
 # deaugment data in tetracorder output directory
 python ./utils/augment_file.py ${rfl_img} ${tetracorder_out_directory} --deaugment
@@ -108,4 +108,4 @@ python ./utils/augment_file.py ${em_rfl_file} ${tetracorder_out_directory} --dea
 
 # push data to drive
 out_base_name=$(basename "${out_base}")
-/store/shared/rclone/bin/rclone sync ${out_base} cdrive:terraspec_output/slpit/output/spectral_transects/${out_base_name}/ -P
+/store/shared/rclone/bin/rclone sync ${out_base} cdrive:terraspec_output/shift/output/spectral_transects/${out_base_name}/ -P
