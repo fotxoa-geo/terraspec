@@ -982,7 +982,7 @@ def run_figures(base_directory):
                         minor_axis_fontsize=minor_axis_fontsize, title_fontsize=title_fontsize,
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs, legend_text=legend_text)
-    #fig.plot_summary()
+
     fig.quad_cover()
     fig.mesma_vs_emc2_1()
     fig.mesma_vs_emc2_2()

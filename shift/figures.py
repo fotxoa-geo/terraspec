@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.image as mpimg
 import matplotlib.gridspec as gridspec
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import root_mean_squared_error, mean_absolute_error
 from utils.spectra_utils import spectra
 from utils.create_tree import create_directory
 from utils.envi import envi_to_array
@@ -537,10 +537,13 @@ class figures:
         df_emit = pd.read_csv(os.path.join(self.slpit_figures, 'fraction_output.csv'))
         df_emit['Team'] = df_emit['plot'].str.split('-').str[0].str.strip()
         df_emit = df_emit[df_emit['Team'] != 'THERM']
+        df_emit['plot_num'] = df_emit['plot'].str.split('-').str[1].str.strip().astype(int)
+        df_emit = df_emit[df_emit['plot_num'] <= 60]
         df_emit['campaign'] = 'emit'
 
-        skip = ['SRA-000-SPRING', 'SRB-047-SPRING', 'SRB-004-FALL', 'SRB-050-FALL', 'SRB-200-FALL']
-        df_aviris = pd.read_csv(os.path.join(self.figure_directory, 'shift_fraction_output.csv'))
+        #skip = ['SRA-000-SPRING', 'SRB-047-SPRING', 'SRB-004-FALL', 'SRB-050-FALL', 'SRB-200-FALL']
+        skip = ['SRA-000_SPRING', 'SRB-004_FALL', 'SRB-200_FALL']
+        df_aviris = pd.read_csv(os.path.join(self.fig_directory, 'shift_fraction_output.csv'))
         df_aviris = df_aviris[~df_aviris['plot'].isin(skip)]
         df_aviris['campaign'] = 'shift'
         df_all = pd.concat([df_emit, df_aviris], ignore_index=True)
@@ -560,16 +563,16 @@ class figures:
         # # loop through figure columns
         for row in range(nrows):
             if row == 0:
-                df_select_emit = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'local') & (df_all['campaign'] == 'emit') & (df_all['normalization'] == norm_option) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 20)].copy()
-                df_select_shift = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'local') & (df_all['campaign'] == 'shift') & (df_all['normalization'] == norm_option) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 20)].copy()
+                df_select_emit = df_all[(df_all['unmix_mode'] == 'emc2') & (df_all['lib_mode'] == 'local') & (df_all['campaign'] == 'emit') & (df_all['normalization'] == norm_option) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 25)].copy()
+                df_select_shift = df_all[(df_all['unmix_mode'] == 'emc2') & (df_all['lib_mode'] == 'local') & (df_all['campaign'] == 'shift') & (df_all['normalization'] == norm_option) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 25)].copy()
 
             if row == 1:
-                df_select_emit = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global') & (df_all['campaign'] == 'emit') & (df_all['normalization'] == norm_option) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 20)].copy()
-                df_select_shift = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global') & (df_all['campaign'] == 'shift') & (df_all['normalization'] == norm_option) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 20)].copy()
+                df_select_emit = df_all[(df_all['unmix_mode'] == 'emc2') & (df_all['lib_mode'] == 'global') & (df_all['campaign'] == 'emit') & (df_all['normalization'] == norm_option) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 25)].copy()
+                df_select_shift = df_all[(df_all['unmix_mode'] == 'emc2') & (df_all['lib_mode'] == 'global') & (df_all['campaign'] == 'shift') & (df_all['normalization'] == norm_option) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 25)].copy()
 
             if row == 2:
                 df_select_emit = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['num_mc'] == 25) & (df_all['campaign'] == 'emit') & (df_all['normalization'] == norm_option) & (df_all['num_cmb_em'] == 100)].copy()
-                df_select_shift = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['campaign'] == 'shift') & (df_all['normalization'] == norm_option) & (df_all['num_cmb_em'] == 100)].copy()
+                df_select_shift = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') &  (df_all['num_mc'] == 25) & (df_all['campaign'] == 'shift') & (df_all['normalization'] == norm_option) & (df_all['num_cmb_em'] == 100)].copy()
 
             if row == 3:
                 df_select_emit = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'global') & (df_all['num_mc'] == 25) & (df_all['campaign'] == 'emit') & (df_all['normalization'] == norm_option) & (df_all['num_cmb_em'] == 100)].copy()
@@ -596,7 +599,7 @@ class figures:
 
                 if col == 0:
                     #ax.set_ylabel(mode.upper() + '$_{'+lib_mode +'}$', fontsize=self.axis_label_fontsize)
-                    if mode == 'sma':
+                    if mode == 'emc2':
                         mode = 'E(MC)$^2$'
 
                     ax.set_ylabel(mode.upper() + '$_{'+lib_mode +'}$', fontsize=self.axis_label_fontsize)
@@ -611,12 +614,15 @@ class figures:
                     ax.set_xticklabels([])
 
                 # emit variables
-                df_x_emit = df_select_emit[(df_select_emit['instrument'] == 'asd')].copy().reset_index(drop=True)
-                df_y_emit = df_select_emit[(df_select_emit['instrument'] == 'emit')].copy().reset_index(drop=True)
+                df_x_emit = df_select_emit[(df_select_emit['instrument'] == 'SLPIT')].copy().reset_index(drop=True)
+                df_y_emit = df_select_emit[(df_select_emit['instrument'] == 'RFL')].copy().reset_index(drop=True)
 
                 # aviris variables
-                df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'asd')].copy().reset_index(drop=True)
-                df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'aviris')].copy().reset_index(drop=True)
+                df_x_shift = df_select_shift[(df_select_shift['instrument'] == 'SLPIT')].copy().reset_index(drop=True)
+                df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'RFL')].copy().reset_index(drop=True)
+
+                print(df_x_shift)
+                print(df_y_shift)
 
                 # plot fractional cover values
                 x_emit = df_x_emit[col_map[col]]
@@ -652,13 +658,13 @@ class figures:
                     ax.legend(loc='lower right')
 
                 # Add error metrics
-                rmse = mean_squared_error(x, y, squared=False)
+                rmse = root_mean_squared_error(x, y)
                 mae = mean_absolute_error(x, y)
                 r2 = r2_calculations(x, y)
 
                 txtstr = '\n'.join((
                      r'MAE(RMSE): %.2f(%.2f)' % (mae,rmse),
-                    r'R$^2$: %.2f' % (r2,),
+                    r'R$^2$: %.2f' % (r2[0],),
                     r'n = ' + str(len(x)),
                 ))
 
@@ -667,7 +673,7 @@ class figures:
                         verticalalignment='top', bbox=props)
 
         fig.supylabel(r'Spaceborne\Airborne Fractions', fontsize=self.axis_label_fontsize)
-        plt.savefig(os.path.join(self.figure_directory, f'regression_combined_{norm_option}.png'), format="png", dpi=400, bbox_inches="tight")# load all fraction files
+        plt.savefig(os.path.join(self.fig_directory, f'regression_combined_{norm_option}.png'), format="png", dpi=400, bbox_inches="tight")# load all fraction files
 
     def plot_combined_npp(self, norm_option):
 
@@ -1509,17 +1515,17 @@ def run_figures(base_directory):
                         minor_axis_fontsize=minor_axis_fontsize, title_fontsize=title_fontsize,
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs)
-    fig.plot_summary()
-    #fig.plot_remse(norm_option='brightness')
+    #fig.plot_summary()
+    # fig.plot_rmse(norm_option='brightness')
     # fig.mesma_vs_emc2(norm_option='brightness')
     # fig.cross_norm(mode='mesma')
     # fig.cross_norm(mode='sma')
-    # #fig.error_vs_time(norm_option='brightness')
-    # #fig.plot_rmse(norm_option='none')
-    # fig.plot_combined(norm_option='brightness')
+    # fig.error_vs_time(norm_option='brightness')
+    # fig.plot_rmse(norm_option='none')
+    fig.plot_combined(norm_option='brightness')
     # fig.supplemental_combined(norm_option='brightness')
     # fig.uncertainty_table()
-    #fig.uncertainty_vs_error()
-    #fig.plot_combined_npp(norm_option='brightness')
+    # fig.uncertainty_vs_error()
+    # fig.plot_combined_npp(norm_option='brightness')
     #fig.plot_combined(norm_option='none')
     #fig.local_slpit()
