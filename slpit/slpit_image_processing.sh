@@ -108,4 +108,4 @@ python ./utils/augment_file.py ${em_rfl_file} ${tetracorder_out_directory} --dea
 
 # push data to drive
 out_base_name=$(basename "${out_base}")
-/store/shared/rclone/bin/rclone copy ${out_base} cdrive:terraspec_output/slpit/output/spectral_transects/${out_base_name} -P
+/store/shared/rclone/bin/rclone sync ${out_base} cdrive:terraspec_output/slpit/output/spectral_transects/${out_base_name}/ -P
