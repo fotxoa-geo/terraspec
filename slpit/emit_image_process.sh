@@ -76,13 +76,13 @@ else
     
         mkdir -p ${tetracorder_out_directory}
         echo "Created directory: $tetracorder_out_directory"
-        tetracorder/tetracorder.sh ${rfl_img} ${tetracorder_out_directory}
+        tetracorder/tetracorder.sh ${rfl_img} ${tetracorder_out_directory} --delete_tc_output
     
         #ortho-rectify mineral outputs
         python slpit/ortho_tetracorder.py -tc_dir ${tetracorder_out_directory} -nc_file ${nc_file}
 
         # push data to drive
-        /store/shared/rclone/bin/rclone copy ${nc_fid_directory} cdrive:terraspec_output/slpit/gis/emit-data/products/${fid} -P --exclude "*.nc"
+        #/store/shared/rclone/bin/rclone copy ${nc_fid_directory} cdrive:terraspec_output/slpit/gis/emit-data/products/${fid} -P --exclude "*.nc"
     
     else
         echo "Reflectance data not detected. Skipping spectral processes!!"
