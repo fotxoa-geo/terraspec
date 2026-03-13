@@ -54,14 +54,14 @@ def fraction_file_info(fraction_file):
     if unmix_mode == 'mesma':
         num_cmb_em = 100
     else:
-        num_cmb_em = 25
+        num_cmb_em = 20
 
     library_mode = name.split("_")[0]
     instrument = name.split("_")[2]
     plot = name.split("_")[1]
 
     num_mc = 25
-    normalization = 'brightness'
+    normalization = name.split("_")[-4]
     fraction_array = envi_to_array(fraction_file)
 
     unc_path = os.path.join(f'{fraction_file}_uncertainty')
@@ -162,7 +162,7 @@ class figures:
         for spectral_transect_directory in spectral_transects_directories:
             plot_name = os.path.basename(spectral_transect_directory)
 
-            if plot_name == 'unmix_tc_outlogs':
+            if plot_name in ['unmix_tc_outlogs', 'THERM-001', 'THERM-003', 'THERM-002']:
                 continue
             print(plot_name)
 
@@ -218,7 +218,7 @@ class figures:
             # plot map
             ax_map = plt.subplot2grid((16, 16), (0, 0), colspan=5, rowspan=7,
                                       projection=ccrs.PlateCarree())
-            ax_map.set_title('Plot Map')
+            ax_map.set_title(f'{plot_name} Plot Map')
             ax_map.set_global()
             ax_map.set_xlim(-125, -90)  # Longitude range
             ax_map.set_ylim(25, 45)  # Latitude range
@@ -266,7 +266,7 @@ class figures:
                 delta = slpit_datetime - acquisition_datetime
                 days = np.absolute(delta.days)
 
-                base_label = f'{acquisition_date} (±{days:02d} days)  SZA : {str(int(geometry_results_sensor[1]))}°'
+                base_label = f'{acquisition_date} (±{days:02d} days)  SZA : {str(int(geometry_results_sensor[1]))}°; Spatial Res: 60 m'
                 sensor_std = np.nanstd(sensor_rfl, axis=(0, 1))
                 sensor_mean = np.nanmean(sensor_rfl, axis=(0, 1))
                 ax_rfl_plot.plot(self.wvls, sensor_mean, label=base_label, linewidth=1, color='blue')
@@ -429,7 +429,7 @@ class figures:
                 pass
 
             plt.tight_layout()
-            plt.savefig(os.path.join(self.fig_directory, 'plot_stats', f'{plot_name}.png'), format="png", dpi=300,
+            plt.savefig(os.path.join(self.fig_directory, 'plot_stats', f'{plot_name}.pdf'), format="pdf", dpi=300,
                         bbox_inches="tight")
             plt.clf()
             plt.close()
@@ -439,7 +439,7 @@ class figures:
 
         df_rows = []
         # gis shapefile
-        gdf = gp.read_file(os.path.join('gis', "Observation.shp"))
+        gdf = gp.read_file(os.path.join('gis', "Observation.json"))
         df_gis = gdf.drop(columns='geometry')
         df_gis['latitude'] = gdf['geometry'].apply(lambda geom: geom.y)
         df_gis['longitude'] = gdf['geometry'].apply(lambda geom: geom.x)
@@ -448,12 +448,14 @@ class figures:
         df_gis = df_gis[df_gis['Team'] != 'THERM']
 
         # transect data for elevation
-        transect_data = pd.read_csv(os.path.join(self.output_directory, 'all-transect-emit.csv'))
+        transect_data = pd.read_csv(os.path.join(self.output_directory, 'all-SLPIT-emit.csv'))
 
         # load fraction outputs
         df_all = pd.read_csv(os.path.join(self.fig_directory, 'fraction_output.csv'))
         df_all['Team'] = df_all['plot'].str.split('-').str[0].str.strip()
         df_all = df_all[df_all['Team'] != 'THERM']
+        df_all['plot_num'] = df_all['plot'].str.split('-').str[1].str.strip().astype(int)
+        df_all = df_all[df_all['plot_num'] <= 60]
 
         df_rows = []
         for index, row in df_gis.iterrows():
@@ -492,10 +494,10 @@ class figures:
 
         for row in range(nrows):
             if row == 0:
-                df_select = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'local') & (df_all['normalization'] == norm_option)].copy()
+                df_select = df_all[(df_all['unmix_mode'] == 'emc2') & (df_all['lib_mode'] == 'local') & (df_all['normalization'] == norm_option)].copy()
 
             if row == 1:
-                df_select = df_all[(df_all['unmix_mode'] == 'sma') & (df_all['lib_mode'] == 'global') & (df_all['normalization'] == norm_option)].copy()
+                df_select = df_all[(df_all['unmix_mode'] == 'emc2') & (df_all['lib_mode'] == 'global') & (df_all['normalization'] == norm_option)].copy()
 
             if row == 2:
                 df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == 'local') & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 100) & (df_all['normalization'] == norm_option)].copy()
@@ -522,7 +524,7 @@ class figures:
                     ax.set_xticklabels([''] + ax.get_xticklabels()[1:])
 
                 if col == 0:
-                    if mode == 'sma':
+                    if mode == 'emc2':
                         mode = 'E(MC)$^2$'
 
                     ax.set_ylabel(mode.upper() + '$_{' + lib_mode + '}$',
@@ -537,11 +539,10 @@ class figures:
                     ax.set_yticklabels([''] + ax.get_yticklabels()[1:])
                     ax.set_xticklabels([])
 
-                df_x = df_select[(df_select['instrument'] == 'asd')].copy().reset_index(drop=True)
+                df_x = df_select[(df_select['instrument'] == 'SLPIT')].copy().reset_index(drop=True)
                 df_x = df_x.sort_values('plot')
-                df_y = df_select[(df_select['instrument'] == 'emit')].copy().reset_index(drop=True)
+                df_y = df_select[(df_select['instrument'] == 'RFL')].copy().reset_index(drop=True)
                 df_y = df_y.sort_values('plot')
-
                 # plot fractional cover values
                 x = df_x[col_map[col]].values
                 y = df_y[col_map[col]].values
@@ -549,8 +550,8 @@ class figures:
                 abs_error = np.absolute(x-y)
                 sza_vals = df['sza'].values
 
-                ax.scatter(sza_vals, abs_error)
-                r2 = r2_calculations(sza_vals, abs_error)
+                ax.scatter(sza_vals, abs_error, marker='s', color='blue', edgecolor='black', label='EMIT', zorder=10)
+                r2, bias = r2_calculations(sza_vals, abs_error)
                 txtstr = '\n'.join((
                     r'R$^2$: %.2f' % (r2,),
                     r'n = ' + str(len(x))))
@@ -570,7 +571,6 @@ class figures:
         df_all['plot_num'] = df_all['plot'].str.split('-').str[1].str.strip().astype(int)
         df_all = df_all[df_all['plot_num'] <= 60]
 
-        df_all['lib_mode'] = df_all['lib_mode'].replace('kalhari', 'kalahari')
         for lib_mode in df_all['lib_mode'].unique():
             # create figure
             fig = plt.figure(constrained_layout=True, figsize=(12, 8))
@@ -583,19 +583,23 @@ class figures:
             # loop through figure columns
             for row in range(nrows):
                 if row == 0:
-                    df_select = df_all[(df_all['unmix_mode'] == 'emc2') & (df_all['lib_mode'] == lib_mode)].copy()
+                    df_select = df_all[(df_all['unmix_mode'] == 'emc2') & (df_all['lib_mode'] == lib_mode) & (df_all['normalization'] == 'brightness')].copy()
 
                 if row == 1:
-                    df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == lib_mode) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 100)].copy()
+                    df_select = df_all[(df_all['unmix_mode'] == 'mesma') & (df_all['lib_mode'] == lib_mode) & (df_all['num_mc'] == 25) & (df_all['num_cmb_em'] == 100) & (df_all['normalization'] == 'brightness')].copy()
 
                 for col in range(ncols):
                     ax = fig.add_subplot(gs[row, col])
                     ax.grid('on', linestyle='--')
-                    ax.set_xlabel('SLPIT Fractions')
-                    ax.set_ylabel("EMIT Fractions")
+
+                    if row == 0:
+                        ax.set_xlabel('SLPIT -emc2- Fractions')
+                        ax.set_ylabel("EMIT Fractions")
+                    if row ==1:
+                        ax.set_xlabel('SLPIT -mesma- Fractions')
+                        ax.set_ylabel("EMIT Fractions")
 
                     ax.set_aspect(1. / ax.get_data_ratio())
-
                     ax.set_title(f'{self.ems[col]}')
                     ax.set_xlim(0, 1)
                     ax.set_ylim(0, 1)
@@ -606,7 +610,6 @@ class figures:
 
                     df_x = df_select[(df_select['instrument'] == 'SLPIT')].copy().reset_index(drop=True)
                     df_y = df_select[(df_select['instrument'] == 'RFL')].copy().reset_index(drop=True)
-
 
                     # plot fractional cover values
                     x = df_x[col_map[col]]
@@ -672,12 +675,12 @@ class figures:
 
 
         # Create figure and subplots
-        fig = plt.figure(figsize=(10, 6))
+        fig = plt.figure(figsize=(8, 6))
 
         # Axes for the reflectance plot (main area)
         ax_rfl_plot = plt.subplot2grid((12, 12), (6, 0), colspan=12, rowspan=6)
-        ax_rfl_plot.set_xlabel('Wavelength (nm)')
-        ax_rfl_plot.set_ylabel('Reflectance (%)')
+        ax_rfl_plot.set_xlabel('Wavelength (nm)', fontsize=12)
+        ax_rfl_plot.set_ylabel('Reflectance (%)', fontsize=12)
 
         ax_rfl_plot.set_xlim(300, 2550)
         ax_rfl_plot.xaxis.set_major_locator(MultipleLocator(100))
@@ -715,7 +718,6 @@ class figures:
                                  color='skyblue', alpha=0.2)
 
         # Calculate mean time of ASD  collections
-
         y_mean = np.nanmean(slpit_rfl, axis=(0, 1))
         y_std = np.nanstd(slpit_rfl, axis=(0, 1))
 
@@ -725,7 +727,7 @@ class figures:
         # fill 1 sigma
         ax_rfl_plot.fill_between(self.asd_wvls, y_mean - y_std * 2, y_mean + y_std * 2,
                                  color='grey', alpha=0.2)
-        ax_rfl_plot.legend()
+        ax_rfl_plot.legend(fontsize=12)
 
         # get gis data
         lon = df_transect['longitude'].values[0]
@@ -734,18 +736,18 @@ class figures:
         gdf = gpd.read_file(os.path.join('gis', 'sedgwick_boundary_approx.geojson'))
 
         # # plot emit fractional cover
-        ax_map = plt.subplot2grid((12, 12), (0, 0), colspan=4, rowspan=6)
+        ax_map = plt.subplot2grid((12, 12), (0, 0), colspan=4, rowspan=5)
         gdf.plot(ax=ax_map, facecolor='none', edgecolor='cyan', linewidth=2)
         ax_map.set_title('EMIT Fractional Cover')
         vmin, vmax = np.percentile(emit_fractional_cover, [2, 98])
         img_display = np.clip((emit_fractional_cover - vmin) / (vmax - vmin), 0, 1)
-        ax_map.imshow(img_display, extent=extent, aspect='equal')
+        ax_map.imshow(img_display, extent=extent, aspect='auto')
         ax_map.axis('off')
         ax_map.set_xlim(extent[0], extent[1])
         ax_map.set_ylim(extent[2], extent[3])
         ax_map.scatter(lon, lat, color='yellow', marker='*', s=150, zorder=9, label='SLPIT')
 
-        ax_map.annotate('N', xy=(0.05, 0.995), xytext=(0.05, 0.88),
+        ax_map.annotate('N', xy=(0.05, 0.995), xytext=(0.05, 0.85),
                          arrowprops=dict(facecolor='white', width=2, headwidth=7.5),
                          ha='center', va='center', fontsize=12, color='white',
                          xycoords='axes fraction')
@@ -759,37 +761,36 @@ class figures:
         all_handles = handles + [red_patch, green_patch, blue_patch]
 
 
-        ax_map.legend(handles=all_handles, loc='center left', bbox_to_anchor=(1.05, 0.5),
-                      fontsize='small', frameon=True, borderaxespad=0, facecolor='wheat',
-                      title_fontsize='small', framealpha=0.65)
+        ax_map.legend(handles=all_handles, loc='center left', bbox_to_anchor=(-0.40, 0.5),
+                      fontsize=8, frameon=True, borderaxespad=0, facecolor='wheat',
+                      title_fontsize=8, framealpha=0.65)
 
         # plot RGB image
-        ax_map2 = plt.subplot2grid((12, 12), (0, 4), colspan=4, rowspan=6)
+        ax_map2 = plt.subplot2grid((12, 12), (0, 4), colspan=4, rowspan=5)
         gdf.plot(ax=ax_map2, facecolor='none', edgecolor='cyan', linewidth=2, label='Boundary')
         ax_map2.set_title('EMIT RGB')
-        vmin, vmax = np.percentile(emit_rfl, [5, 95])
+        vmin, vmax = np.percentile(emit_rfl, [2.5, 95])
         img_display = np.clip((emit_rfl - vmin) / (vmax - vmin), 0, 1)
-        ax_map2.imshow(img_display, extent=extent, aspect='equal')
+        ax_map2.imshow(img_display, extent=extent, aspect='auto')
         ax_map2.axis('off')
         ax_map2.set_xlim(extent[0], extent[1])
         ax_map2.set_ylim(extent[2], extent[3])
         ax_map2.scatter(lon, lat, color='yellow', marker='*', s=150, zorder=9)
 
-        ax_map2.annotate('N', xy=(0.05, 0.995), xytext=(0.05, 0.88),
+        ax_map2.annotate('N', xy=(0.05, 0.995), xytext=(0.05, 0.85),
                         arrowprops=dict(facecolor='white', width=2, headwidth=7.5),
                         ha='center', va='center', fontsize=12, color='white',
                         xycoords='axes fraction')
 
         # # plot landsacpe image
-        ax_landspace_pic = plt.subplot2grid((12, 12), (0, 8), colspan=4, rowspan=6)
-        ax_landspace_pic.set_title('Landscape Picture')
+        ax_landspace_pic = plt.subplot2grid((12, 12), (0, 8), colspan=4, rowspan=5)
+        ax_landspace_pic.set_title('Landscape Picture', fontsize=14)
         img = mpimg.imread(landscape_pic)
         ax_landspace_pic.imshow(img, aspect='auto')
         ax_landspace_pic.axis('off')
 
         plt.tight_layout()
-        plt.savefig(os.path.join(self.fig_directory, 'map_detailed_slpit.png'), format="png", dpi=400,
-                   bbox_inches="tight")
+        plt.savefig(os.path.join(self.fig_directory, 'map_detailed_slpit.png'), format="png", dpi=600)
         plt.clf()
         plt.close()
 
@@ -811,7 +812,7 @@ def run_figures(base_directory, sensor):
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs)
 
-    #fig.plot_summary()
-    #fig.local_slpit()
-    #fig.sza_plot(norm_option='brightness')
+    fig.plot_summary()
+    fig.local_slpit()
+    fig.sza_plot(norm_option='brightness')
     fig.map_detail_figure()

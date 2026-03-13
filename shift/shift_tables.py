@@ -31,7 +31,7 @@ def fraction_file_info(fraction_file):
         num_cmb_em = 20
 
     library_mode = name.split("_")[0]
-    instrument = name.split("_")[-1]
+    instrument = name.split("_")[3]
     plot = f'{name.split("_")[1]}_{name.split("_")[2]}'
 
     num_mc = 25
