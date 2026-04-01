@@ -83,7 +83,8 @@ def main():
 
     # make array an envi array for unmixing
     window[window == -0.01] = -9999.0
-    
+    window[window == 0.] = -9999.0
+
     if acquisition_type in ['MASK']:
         meta = get_meta(lines=window.shape[0], samples=window.shape[1], bands=list(range(window.shape[2])), wvls=False)
     else:
