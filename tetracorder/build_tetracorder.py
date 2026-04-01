@@ -27,12 +27,7 @@ def tetracorder_build_menu():
     print("Welcome to the Tetracorder build Mode....")
     print("A... Run Tetrecorder on endmember libraries")
     print("B... Generate synthetic reflectance")
-    print("C... ")
-    print("D... ")
-    print("E... ")
-    print("F... ")
-    print("G... ")
-    print("H... Exit")
+    print("C... Exit")
 
 
 def process_complete_fractions_row(row, unmix_library_array, wvls):
@@ -179,22 +174,44 @@ class Tetracorder:
         
         rfl_files = sorted(list(glob(os.path.join(self.synthetic_dir, '**',  '*_spectra'), recursive=True)))
 
-        for _, rfl_img in enumerate(rfl_files):
-            outfile = os.path.join(log_file_dir, f'{os.path.basename(rfl_img)}.out')
-            lib_dir = os.path.dirname(rfl_img)
-            
-            base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {rfl_img} {lib_dir} --unmix '
-            sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 20 --mem 40G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
-            subprocess.run(sbatch_cmd, shell=True, text=True)
-        
-        soil_files = sorted(list(glob(os.path.join(self.synthetic_dir, '**',  '*_soils'), recursive=True)))
-        for _, soil_img in enumerate(soil_files):
-            outfile = os.path.join(log_file_dir, f'{os.path.basename(soil_img)}.out')
-            lib_dir = os.path.dirname(soil_img)
-            
-            base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {soil_img} {lib_dir} '
-            sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 1 --mem 15G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
-            subprocess.run(sbatch_cmd, shell=True, text=True)
+        global_unmixing_library = os.path.join(self.simulation_output_directory, 'endmember_libraries',
+                                      'convex_hull__n_dims_4_sensor_emit_geofilter_True_unmix_library.csv')
+        df_unmix = pd.read_csv(global_unmixing_library)
+        df_rock = pd.read_csv(os.path.join('utils', 'tetracorder', 'rock.csv'))
+        df_rock.insert(0, 'level_2', 'rock')
+        df_rock['level_1'] = 'soil'
+        asd_wvls = spectra.load_asd_wavelenghts()
+
+        results = p_map(partial(spectra.convolve, asd_wvl=asd_wvls, wvl=self.wvls, fwhm=self.fwhm,
+                                spectra_starting_col=2), [row for row in df_rock.iterrows()],
+                        **{"desc": f"\t loading convolution... ", "ncols": 150})
+
+        df_convolve = pd.DataFrame(results)
+        df_convolve.columns = list(self.wvls)
+        df_rock = pd.concat([df_rock.iloc[:, :2].reset_index(drop=True), df_convolve], axis=1)
+
+        df_unmix_with_rock = pd.concat([df_unmix, df_rock], axis=0, ignore_index=True)
+        df_unmix_with_rock = df_unmix_with_rock.fillna(-9999)
+        output_with_rock = os.path.join(self.tetra_data_directory, 'unmix_with_rock.csv')
+        df_unmix_with_rock.to_csv(output_with_rock)
+
+        for unmixing_library in [global_unmixing_library, output_with_rock]:
+            for _, rfl_img in enumerate(rfl_files):
+                outfile = os.path.join(log_file_dir, f'{os.path.basename(rfl_img)}.out')
+                lib_dir = os.path.dirname(rfl_img)
+
+                base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {rfl_img} {lib_dir} {unmixing_library} --unmix '
+                sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 20 --mem 40G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
+                subprocess.run(sbatch_cmd, shell=True, text=True)
+
+            soil_files = sorted(list(glob(os.path.join(self.synthetic_dir, '**',  '*_soils'), recursive=True)))
+            for _, soil_img in enumerate(soil_files):
+                outfile = os.path.join(log_file_dir, f'{os.path.basename(soil_img)}.out')
+                lib_dir = os.path.dirname(soil_img)
+
+                base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {soil_img} {lib_dir} {unmixing_library}'
+                sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 1 --mem 15G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
+                subprocess.run(sbatch_cmd, shell=True, text=True)
 
 
     def reconstruct_em_sma(self, user_em):
@@ -302,7 +319,7 @@ class Tetracorder:
             create_directory(os.path.join(lib_output_dir, os.path.basename(rfl_img)))
             lib_dir = os.path.join(lib_output_dir, os.path.basename(rfl_img))
 
-            base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {rfl_img} {lib_dir} '
+            base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {rfl_img} {lib_dir} {self.sensor} '
             sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 1 --mem 10G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
@@ -321,7 +338,7 @@ def run_tetracorder_build(base_directory, sensor, dry_run, spectral_bundles):
             tc.libraries_tetracorder()
         elif user_input == 'B':
             tc.generate_tetracorder_reflectance(spectral_bundles=spectral_bundles)
-        elif user_input == 'H':
+        elif user_input == 'C':
             print("Returning to Tetracorder main menu.")
             break
         else:
