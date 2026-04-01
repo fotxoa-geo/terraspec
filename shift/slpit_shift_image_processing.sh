@@ -53,6 +53,27 @@ julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_Kala
 julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_Kalahari_LIB_PATH} level_1 "${emc_out_directory}/kalahari_${filebase_name}_normalization_none_" --mode sma --normalization none --num_endmember 20 --n_mc 25 --spectral_starting_col 11
 julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_Kalahari_LIB_PATH} level_1 "${emc_out_directory}/kalahari_${ext_filebase_name}_normalization_none_" --mode sma --normalization none --num_endmember 20 --n_mc 25 --spectral_starting_col 11 --reflectance_uncertainty_file ${sensor_rfl_unc}
 
+# run unmixing call on data
+emc_best_out_directory=${out_base}/emc2_best/
+if [ -d "$emc_best_out_directory" ]; then
+    echo "Directory '$emc_best_out_directory' exists. Removing..."
+    rm -rf "$emc_best_out_directory"
+fi
+echo "Created emc2-best dir: $emc_best_out_directory"
+mkdir -p ${emc_best_out_directory}
+
+# these are global unmix calls
+julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 "${emc_best_out_directory}/global_${filebase_name}_normalization_brightness_" --mode sma-best --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 11
+julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 "${emc_best_out_directory}/global_${ext_filebase_name}_normalization_brightness_" --mode sma-best --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 11 --reflectance_uncertainty_file ${sensor_rfl_unc}
+julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 "${emc_best_out_directory}/global_${filebase_name}_normalization_none_" --mode sma-best --normalization none --num_endmember 20 --n_mc 25 --spectral_starting_col 11
+julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_GLOBAL_LIB_PATH} level_1 "${emc_best_out_directory}/global_${ext_filebase_name}_normalization_none_" --mode sma-best --normalization none --num_endmember 20 --n_mc 25 --spectral_starting_col 11 --reflectance_uncertainty_file ${sensor_rfl_unc}
+ 
+# these are local unmix calls
+julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 "${emc_best_out_directory}/local_${filebase_name}_normalization_brightness_" --mode sma-best --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 13
+julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_LOCAL_LIB_PATH} level_1 "${emc_best_out_directory}/local_${ext_filebase_name}_normalization_brightness_" --mode sma-best --normalization brightness --num_endmember 20 --n_mc 25 --spectral_starting_col 13 --reflectance_uncertainty_file ${sensor_rfl_unc}
+julia -p 1 ../SpectralUnmixing/unmix.jl ${rfl_img} ${NORMALIZED_LOCAL_LIB_PATH} level_1 "${emc_best_out_directory}/local_${filebase_name}_normalization_none_" --mode sma-best --normalization none --num_endmember 20 --n_mc 25 --spectral_starting_col 13
+julia -p 1 ../SpectralUnmixing/unmix.jl ${sensor_rfl_ext_file} ${NORMALIZED_LOCAL_LIB_PATH} level_1 "${emc_best_out_directory}/local_${ext_filebase_name}_normalization_none_" --mode sma-best --normalization none --num_endmember 20 --n_mc 25 --spectral_starting_col 13 --reflectance_uncertainty_file ${sensor_rfl_unc}
+
 mesma_out_directory=${out_base}/mesma/
 
 if [ -d "$mesma_out_directory" ]; then
@@ -108,4 +129,4 @@ python ./utils/augment_file.py ${em_rfl_file} ${tetracorder_out_directory} --dea
 
 # push data to drive
 out_base_name=$(basename "${out_base}")
-/store/shared/rclone/bin/rclone sync ${out_base} cdrive:terraspec_output/shift/output/spectral_transects/${out_base_name}/ -P
+/store/shared/rclone/bin/rclone copy ${out_base} cdrive:terraspec_output/shift/output/spectral_transects/${out_base_name}/ -P

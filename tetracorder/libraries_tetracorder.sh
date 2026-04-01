@@ -5,7 +5,7 @@ echo " "
 rfl_img=$1
 out_base=$2
 filebase_name=$(basename "$rfl_img")
-
+unmixing_library_global=$3
 
 echo $rfl_img
 echo $out_base
@@ -39,7 +39,6 @@ if [ "$UNMIX" = true ]; then
     echo "Created emc2 dir: ${emc_out_directory}"
     mkdir -p ${emc_out_directory}
     
-    unmixing_library_global=./terraspec_output/simulation/output/endmember_libraries/convex_hull__n_dims_4_sensor_emit_geofilter_True_unmix_library.csv
     julia -p 20 ../SpectralUnmixing/unmix.jl ${rfl_img} ${unmixing_library_global} level_1 "${emc_out_directory}/global_${filebase_name}_normalization_brightness_" --mode sma --normalization brightness --num_endmember 30 --n_mc 25 --spectral_starting_col 11
 
 else
