@@ -29,7 +29,7 @@ def get_dd_coords(coord):
     return dd
 
 # bad wavelength regions
-bad_wv_regions = [[0, 440], [1310, 1490], [1770, 2050], [2440, 2880]]
+bad_wv_regions = [[1310, 1490], [1770, 2050]]
 
 
 def load_white_ref_correction():
