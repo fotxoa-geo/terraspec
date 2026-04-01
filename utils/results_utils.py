@@ -247,7 +247,7 @@ def r2_calculations(x_vals, y_vals):
     intercept = model.intercept_
     y_pred = model.predict(X)
     r2 = r2_score(y_vals, y_pred)
-    bias = np.mean(y_pred - y_vals)
+    bias = np.sum(y - x_vals) / len(y_vals)
 
     return np.round(r2,2), np.round(bias, 2)
 
