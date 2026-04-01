@@ -410,16 +410,16 @@ class figures:
 
 
     def methods_diagram(self):
-        fig, axes = plt.subplots(3, 2, figsize=(10, 12), layout='constrained')
+        fig, axes = plt.subplots(3, 3, figsize=(8, 6.5), layout='constrained')
 
-        (ax_slpit, ax_rfl_plot), (ax_wp, ax_wp_grid), (ax_quadrat, ax_quadrat_grid) = axes
+        (ax_slpit, ax_rfl_plot, ax_slpit_photo), (ax_wp, ax_wp_grid, ax_wp_photo), (ax_quadrat, ax_quadrat_grid, ax_quad_photo) = axes
 
         # Formatting helper to keep them square
         for ax in [ax_slpit, ax_wp, ax_quadrat]:
             ax.set_aspect('equal', adjustable='box')
 
         # ------SLPIT Diagram--------
-        ax_slpit.set_title('SLPIT Sampling Design', fontweight='bold', fontsize=10)
+        ax_slpit.set_title('SLPIT Diagram', fontweight='bold', fontsize=10)
         grid_limit = 8
         x_transects = [2, 6]
         y_points = np.arange(0, 8.01, 0.33)
@@ -438,23 +438,19 @@ class figures:
         circle_proxy = mlines.Line2D([], [], color='red', marker='o', linestyle='None',
                                      markersize=10, markerfacecolor=(1, 0, 0, 0.2),
                                      markeredgecolor='red', label='ASD GIFOV')
-        ax_slpit.legend(handles=[circle_proxy], fontsize=8) #, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=2, borderaxespad=0)
+        ax_slpit.legend(handles=[circle_proxy], fontsize=8) # loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=2, borderaxespad=0)
 
-        # # ------SLPIT Data--------
-        # (Assuming your reflectance data processing happens here)
+        ax_rfl_plot.set_box_aspect(1)
         ax_rfl_plot.set_title('SLPIT Reflectance', fontweight='bold', fontsize=10)
         ax_rfl_plot.set_xlabel('Wavelength (nm)', fontsize=8)
         ax_rfl_plot.set_ylabel('Reflectance (%)', fontsize=8)
-
-
         ax_rfl_plot.set_xlim(300, 2550)
-        ax_rfl_plot.xaxis.set_major_locator(MultipleLocator(200))
+        ax_rfl_plot.xaxis.set_major_locator(MultipleLocator(500))
         ax_rfl_plot.xaxis.set_minor_locator(MultipleLocator(100))
         ax_rfl_plot.set_ylim(0, 1)
         ax_rfl_plot.yaxis.set_major_locator(MultipleLocator(0.2))
         ax_rfl_plot.yaxis.set_minor_locator(MultipleLocator(0.1))
         ax_rfl_plot.tick_params(axis='both', which='major', labelsize=8)
-
 
         slpit_rfl = envi_to_array(os.path.join(self.output_directory, 'spectral_transects', 'DPB-020_SPRING', 'RFL',
                                                f'DPB-020_SPRING_SLPIT_asd'))
@@ -462,28 +458,23 @@ class figures:
         y_mean = np.nanmean(slpit_rfl, axis=(0, 1))
         y_std = np.nanstd(slpit_rfl, axis=(0, 1))
 
-        # plot slpit data
-        ax_rfl_plot.plot(self.asd_wvls, y_mean, label=f"SLPIT mean", linewidth=2, color='red')
 
-        # fill 1 sigma
+        ax_rfl_plot.plot(self.asd_wvls, y_mean, label=f"SLPIT mean", linewidth=2, color='red')
         ax_rfl_plot.fill_between(self.asd_wvls, y_mean - y_std * 1, y_mean + y_std * 1,
                                  color='red', alpha=0.2, label=f"1σ", linewidth=2)
-
         ax_rfl_plot.legend(fontsize=8)
+
 
         #  ------Wonderpole Diagram--------
         inset_gap = 0.05
         square_size = (grid_limit / 2) - (2 * inset_gap)
 
-        ax_wp.set_title('Wonderpole Sampling Design', fontweight='bold', fontsize=10)
+        ax_wp.set_title('Wonderpole Diagram', fontweight='bold', fontsize=10)
         ax_wp.set_xlabel('8 m')
         ax_wp.set_ylabel('8 m')
 
-        # 1. Plot the Main Quadrant Division Lines (dashed)
         ax_wp.axvline(grid_limit / 2, color='black', linestyle='--', alpha=0.5, zorder=1)
         ax_wp.axhline(grid_limit / 2, color='black', linestyle='--', alpha=0.5, zorder=1)
-
-
 
         quad_data = [
             (4 + inset_gap, 4 + inset_gap, square_size, square_size, 'blue', 'NW Photo'),
@@ -505,15 +496,15 @@ class figures:
             text_y = y_start + (square_size / 2)
 
             ax_wp.text(text_x, text_y, label,
-                       color='black',  # Black text over light alpha
+                       color='black',
                        fontweight='bold',
                        fontsize=9,
-                       horizontalalignment='center',  # Crucial for centering
-                       verticalalignment='center',  # Crucial for centering
-                       zorder=3)  # Ensure text is on top of the fill
+                       horizontalalignment='center',
+                       verticalalignment='center',
+                       zorder=3)
 
         #  ------Wonderpole Data--------
-        ax_wp_grid.set_title('Wonderpole Photo Grid', fontweight='bold', fontsize=10)
+        ax_wp_grid.set_title('Wonderpole Photos', fontweight='bold', fontsize=10)
 
         ax_wp_grid.set_xlim(0, 8)
         ax_wp_grid.set_ylim(0, 8)
@@ -522,22 +513,10 @@ class figures:
         photo_basepath = f'20220324_DPB-020_wp'
 
         photo_configs = [
-            {
-                'path': os.path.join(photo_dir, f'{photo_basepath}_NE_1.jpg'),
-                'pos': (0, 1), 'color': 'green', 'label': 'Q1'  # Top Left
-            },
-            {
-                'path': os.path.join(photo_dir, f'{photo_basepath}_NW_1.jpg'),
-                'pos': (1, 1), 'color': 'blue', 'label': 'Q2'  # Top Right
-            },
-            {
-                'path': os.path.join(photo_dir, f'{photo_basepath}_SE_1.jpg'),
-                'pos': (0, 0), 'color': 'orange', 'label': 'Q3'  # Bottom Left
-            },
-            {
-                'path': os.path.join(photo_dir, f'{photo_basepath}_SW_1.jpg'),
-                'pos': (1, 0), 'color': 'red', 'label': 'Q4'  # Bottom Right
-            }
+            {'path': os.path.join(photo_dir, f'{photo_basepath}_NE_1.jpg'), 'pos': (0, 1), 'color': 'green', 'label': 'Q1'},
+            {'path': os.path.join(photo_dir, f'{photo_basepath}_NW_1.jpg'), 'pos': (1, 1), 'color': 'blue', 'label': 'Q2'},
+            {'path': os.path.join(photo_dir, f'{photo_basepath}_SE_1.jpg'), 'pos': (0, 0), 'color': 'orange', 'label': 'Q3'},
+            {'path': os.path.join(photo_dir, f'{photo_basepath}_SW_1.jpg'), 'pos': (1, 0), 'color': 'red', 'label': 'Q4'}
         ]
 
         buffer = 0.01
@@ -572,7 +551,7 @@ class figures:
         ax_wp_grid.axis('off')
 
         # -------Quadrats----------
-        ax_quadrat.set_title('Quadrat Sampling Design', fontweight='bold', fontsize=10)
+        ax_quadrat.set_title('Quadrat Diagram', fontweight='bold', fontsize=10)
 
         # 1. Grid Divisions
         ax_quadrat.axvline(4, color='black', linestyle='--', alpha=0.5, zorder=1)
@@ -583,12 +562,8 @@ class figures:
         q_height = 1
 
         # 3. Define Centers for each 4x4 quadrant
-        quad_centers = [
-            (2, 6, 'green', 'NE Quadrat'),  # Top Left
-            (6, 6, 'blue', 'NW Quadrat'),  # Top Right
-            (2, 2, 'orange', 'SE Quadrat'),  # Bottom Left
-            (6, 2, 'red', 'SW Quadrat')  # Bottom Right
-        ]
+        quad_centers = [(2, 6, 'green', 'NE Quadrat'), (6, 6, 'blue', 'NW Quadrat'),
+                        (2, 2, 'orange', 'SE Quadrat'), (6, 2, 'red', 'SW Quadrat')]
 
         for cx, cy, color, label in quad_centers:
             # Calculate bottom-left corner from center
@@ -607,29 +582,16 @@ class figures:
 
 
         #  ------Quadrat Data--------
-        ax_quadrat_grid.set_title('Quadrat Photo Grid', fontweight='bold', fontsize=10)
+        ax_quadrat_grid.set_title('Quadrat Photos', fontweight='bold', fontsize=10)
 
         photo_dir = os.path.join('objects', 'shift_photos')
         photo_basepath = f'20220324_DPB-020_quad'
 
         photo_configs = [
-            {
-                'path': os.path.join(photo_dir, f'{photo_basepath}_NE.jpg'),
-                'pos': (0, 1), 'color': 'green', 'label': 'Q1'  # Top Left
-            },
-            {
-                'path': os.path.join(photo_dir, f'{photo_basepath}_NW.jpg'),
-                'pos': (1, 1), 'color': 'blue', 'label': 'Q2'  # Top Right
-            },
-            {
-                'path': os.path.join(photo_dir, f'{photo_basepath}_SE.jpg'),
-                'pos': (0, 0), 'color': 'orange', 'label': 'Q3'  # Bottom Left
-            },
-            {
-                'path': os.path.join(photo_dir, f'{photo_basepath}_SW.jpg'),
-                'pos': (1, 0), 'color': 'red', 'label': 'Q4'  # Bottom Right
-            }
-        ]
+            {'path': os.path.join(photo_dir, f'{photo_basepath}_NE.jpg'), 'pos': (0, 1), 'color': 'green', 'label': 'Q1'},
+            {'path': os.path.join(photo_dir, f'{photo_basepath}_NW.jpg'), 'pos': (1, 1), 'color': 'blue', 'label': 'Q2'},
+            {'path': os.path.join(photo_dir, f'{photo_basepath}_SE.jpg'), 'pos': (0, 0), 'color': 'orange', 'label': 'Q3'},
+            {'path': os.path.join(photo_dir, f'{photo_basepath}_SW.jpg'), 'pos': (1, 0), 'color': 'red', 'label': 'Q4'}]
 
         buffer = 0.01
         sq_size = 1.0 - (2 * buffer)
@@ -637,19 +599,12 @@ class figures:
         for p in photo_configs:
             x_base, y_base = p['pos']
 
-            # Calculate the 'Safe Zone' for this specific photo
             xmin = x_base + buffer
             ymin = y_base + buffer
             ext = [xmin, xmin + sq_size, ymin, ymin + sq_size]
 
             img_data = mpimg.imread(p['path'])
-            # Rotate 90 degrees for vertical orientation
-
-            # --- 3. Plot the Image ---
             ax_quadrat_grid.imshow(img_data, extent=ext, aspect='auto', zorder=1)
-
-            # --- 4. Add the Border ---
-            # Because xmin/ymin are buffered, the blue line will never touch the green line
             rect = Rectangle((xmin, ymin), sq_size, sq_size,
                              edgecolor=p['color'],
                              facecolor='none',
@@ -657,7 +612,6 @@ class figures:
                              zorder=2)
             ax_quadrat_grid.add_patch(rect)
 
-        # --- 6. Clean up the View ---
         ax_quadrat_grid.set_xlim(0, 2)
         ax_quadrat_grid.set_ylim(0, 2)
         ax_quadrat_grid.axis('off')
@@ -670,12 +624,30 @@ class figures:
             ax.set_xlabel('8 m')
             ax.set_ylabel('8 m')
 
-            ax.annotate('N', xy=(-0.05, 0.98), xytext=(-0.05, 0.875),
-                           arrowprops=dict(facecolor='black', width=1, headwidth=6.5),
-                           ha='center', va='center', fontsize=12, color='black',
+            ax.annotate('N', xy=(-0.05, 0.98), xytext=(-0.05, 0.775),
+                           arrowprops=dict(facecolor='black', width=1, headwidth=5.5),
+                           ha='center', va='center', fontsize=10, color='black',
                            xycoords='axes fraction', annotation_clip=False)
 
-        #plt.tight_layout(h_pad=3.0, w_pad=2.0)
+        landscape_paths = [os.path.join(photo_dir, 'SLPIT.jpg'),
+                           os.path.join(photo_dir, 'WP.jpg'),
+                           os.path.join(photo_dir, 'quadrats.jpg')]
+
+        title = {0: "SLPIT", 1: "Wonderpole", 2:"Quadrat"}
+
+        landscape_axes = [ax_slpit_photo, ax_wp_photo, ax_quad_photo]
+        for i, ax in enumerate(landscape_axes):
+            ax.set_title(f'{title[i]}', fontweight='bold', fontsize=10)
+            img = mpimg.imread(landscape_paths[i])
+            ax.imshow(img, zorder=1, aspect='equal')
+            ax.axis('off')
+
+        for ax in [ax_wp_grid, ax_quadrat_grid]:
+            ax.set_xlim(0, 2)
+            ax.set_ylim(0, 2)
+            ax.set_aspect('equal', adjustable='box')
+
+        plt.show()
         plt.savefig(os.path.join(self.figure_directory, 'methods_diagram.png'), dpi=600)
         plt.clf()
         plt.close()
