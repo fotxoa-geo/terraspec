@@ -1,0 +1,1467 @@
+"Plot_name","Quadrat_corner","Species_or_type","Count","Phenophase","Date","Notes","Plot_event_ID","Sample_number1","Sample_number2"
+"DPA-001","NE","Brassica nigra - Black mustard",43,"full leaf out",2022-02-23,"N/A",19,1,-9999
+"DPA-001","NW","Brassica nigra - Black mustard",48,"full leaf out",2022-02-23,"N/A",19,1,-9999
+"DPA-001","SE","Brassica nigra - Black mustard",14,"full leaf out",2022-02-23,"N/A",19,1,-9999
+"DPA-001","SW","Brassica nigra - Black mustard",30,"full leaf out",2022-02-23,"N/A",19,1,-9999
+"DPA-001","NE","Annual grass",2,"full leaf out",2022-02-23,"N/A",19,2,-9999
+"DPA-001","SE","Annual grass",14,"full leaf out",2022-02-23,"N/A",19,2,-9999
+"DPA-001","SW","Annual grass",7,"full leaf out",2022-02-23,"N/A",19,2,-9999
+"DPA-001","NE","Silybum marianum - Milk thistle",2,"full leaf out",2022-02-23,"N/A",19,3,-9999
+"DPA-001","NW","Silybum marianum - Milk thistle",1,"full leaf out",2022-02-23,"N/A",19,3,-9999
+"DPA-001","SW","Silybum marianum - Milk thistle",2,"full leaf out",2022-02-23,"N/A",19,3,-9999
+"DPA-001","NE","Erodium moschatum",2,"full leaf out",2022-02-23,"N/A",19,4,-9999
+"DPA-001","SE","Erodium moschatum",13,"full leaf out",2022-02-23,"N/A",19,4,-9999
+"DPA-001","SW","Erodium moschatum",9,"full leaf out",2022-02-23,"N/A",19,4,-9999
+"SRB-001","NW","Avena barbata - Slender oat",2,"full leaf out",2022-02-24,"N/A",40,7,-9999
+"SRB-001","NE","Erodium moschatum",2,"full leaf out",2022-02-24,"N/A",40,8,-9999
+"SRB-001","SE","Erodium moschatum",7,"full leaf out",2022-02-24,"N/A",40,8,-9999
+"SRB-001","SW","Erodium moschatum",1,"full leaf out",2022-02-24,"N/A",40,8,-9999
+"SRB-001","NE","Amsinckia menziesii - Fiddleneck",20,"full leaf out",2022-02-24,"N/A",40,9,-9999
+"SRB-001","NW","Amsinckia menziesii - Fiddleneck",15,"full leaf out",2022-02-24,"N/A",40,9,-9999
+"SRB-001","SE","Amsinckia menziesii - Fiddleneck",23,"full leaf out",2022-02-24,"N/A",40,9,-9999
+"SRB-001","SW","Amsinckia menziesii - Fiddleneck",28,"full leaf out",2022-02-24,"N/A",40,9,-9999
+"SRB-001","NE","Bromus diandrus - Ripgut brome",24,"full leaf out",2022-02-24,"N/A",40,10,-9999
+"SRB-001","NW","Bromus diandrus - Ripgut brome",33,"full leaf out",2022-02-24,"N/A",40,10,-9999
+"SRB-001","SE","Bromus diandrus - Ripgut brome",18,"full leaf out",2022-02-24,"N/A",40,10,-9999
+"SRB-001","SW","Bromus diandrus - Ripgut brome",16,"full leaf out",2022-02-24,"N/A",40,10,-9999
+"SRA-001","NE","Bromus diandrus - Ripgut brome",25,"full leaf out",2022-02-24,"N/A",31,12,-9999
+"SRA-001","NW","Bromus diandrus - Ripgut brome",50,"full leaf out",2022-02-24,"N/A",31,12,-9999
+"SRA-001","SE","Bromus diandrus - Ripgut brome",48,"full leaf out",2022-02-24,"N/A",31,12,-9999
+"SRA-001","SW","Bromus diandrus - Ripgut brome",50,"full leaf out",2022-02-24,"N/A",31,12,-9999
+"SRB-004","NE","Annual grass",20,"full leaf out",2022-02-25,"N/A",61,16,-9999
+"SRB-004","NW","Annual grass",32,"full leaf out",2022-02-25,"N/A",61,16,-9999
+"SRB-004","SE","Annual grass",18,"full leaf out",2022-02-25,"N/A",61,16,-9999
+"SRB-004","NE","Eschscholzia californica - California poppy",4,"full leaf out",2022-02-25,"N/A",61,17,-9999
+"SRB-004","NW","Eschscholzia californica - California poppy",2,"full leaf out",2022-02-25,"N/A",61,17,-9999
+"SRB-004","NW","Calandrinia menzieszii - Red maids",1,"full leaf out",2022-02-25,"N/A",61,22,-9999
+"SRB-004","NE","Lupinus nanus - Sky lupine",6,"full leaf out",2022-02-25,"N/A",61,23,-9999
+"SRB-004","SE","Lupinus nanus - Sky lupine",3,"full leaf out",2022-02-25,"N/A",61,23,-9999
+"SRB-007","NE","Erodium cicutarium",6,"full leaf out",2022-03-01,"N/A",73,26,-9999
+"SRB-007","NW","Erodium cicutarium",1,"full leaf out",2022-03-01,"N/A",73,26,-9999
+"SRB-007","SE","Erodium cicutarium",10,"full leaf out",2022-03-01,"N/A",73,26,-9999
+"SRB-007","SW","Erodium cicutarium",14,"full leaf out",2022-03-01,"N/A",73,26,-9999
+"SRB-007","SE","Centaurea melitensis",2,"full leaf out",2022-03-01,"N/A",73,27,-9999
+"SRB-007","SW","Centaurea melitensis",14,"full leaf out",2022-03-01,"N/A",73,27,-9999
+"SRB-007","NE","Stipa pulchra - Purple needle grass",2,"full leaf out",2022-03-01,"N/A",73,28,-9999
+"SRB-007","NE","Annual grass",10,"full leaf out",2022-03-01,"N/A",73,29,-9999
+"SRB-007","NW","Annual grass",21,"full leaf out",2022-03-01,"N/A",73,29,-9999
+"SRB-007","SE","Annual grass",19,"full leaf out",2022-03-01,"N/A",73,29,-9999
+"SRB-007","SW","Annual grass",2,"full leaf out",2022-03-01,"N/A",73,29,-9999
+"SRB-008","NE","Brassica nigra - Black mustard",34,"early leaf out",2022-03-01,"N/A",79,30,-9999
+"SRB-008","NW","Brassica nigra - Black mustard",16,"early leaf out",2022-03-01,"N/A",79,30,-9999
+"SRB-008","SE","Brassica nigra - Black mustard",20,"early leaf out",2022-03-01,"N/A",79,30,-9999
+"SRB-008","SW","Brassica nigra - Black mustard",13,"early leaf out",2022-03-01,"N/A",79,30,-9999
+"DPB-001","NE","Annual grass",24,"full leaf out",2022-02-23,"N/A",16,31,-9999
+"DPB-001","NW","Annual grass",15,"full leaf out",2022-02-23,"N/A",16,31,-9999
+"DPB-001","SE","Annual grass",20,"full leaf out",2022-02-23,"N/A",16,31,-9999
+"DPB-001","SW","Annual grass",25,"full leaf out",2022-02-23,"N/A",16,31,-9999
+"DPB-001","NE","Erodium moschatum",23,"full leaf out",2022-02-23,"N/A",16,32,-9999
+"DPB-001","NW","Erodium moschatum",25,"full leaf out",2022-02-23,"N/A",16,32,-9999
+"DPB-001","SE","Erodium moschatum",23,"full leaf out",2022-02-23,"N/A",16,32,-9999
+"DPB-001","SW","Erodium moschatum",24,"full leaf out",2022-02-23,"N/A",16,32,-9999
+"SRA-005","NE","Erodium sp.",6,"full leaf out",2022-02-24,"N/A",67,39,-9999
+"SRA-005","NW","Erodium sp.",10,"full leaf out",2022-02-24,"N/A",67,39,-9999
+"SRA-005","SE","Erodium sp.",6,"full leaf out",2022-02-24,"N/A",67,39,-9999
+"SRA-005","SW","Erodium sp.",11,"full leaf out",2022-02-24,"N/A",67,39,-9999
+"SRB-021","NE","Annual grass",46,"full leaf out",2022-03-10,"N/A",226,42,-9999
+"SRB-021","NW","Annual grass",40,"full leaf out",2022-03-10,"N/A",226,42,-9999
+"SRB-021","SE","Annual grass",36,"full leaf out",2022-03-10,"N/A",226,42,-9999
+"SRB-021","SW","Annual grass",45,"full leaf out",2022-03-10,"N/A",226,42,-9999
+"SRB-008","NE","Avena fatua - Wild oat",4,"full leaf out",2022-03-01,"N/A",79,45,-9999
+"SRB-008","NW","Avena fatua - Wild oat",15,"full leaf out",2022-03-01,"N/A",79,45,-9999
+"SRB-008","SE","Avena fatua - Wild oat",8,"full leaf out",2022-03-01,"N/A",79,45,-9999
+"SRB-008","SW","Avena fatua - Wild oat",23,"full leaf out",2022-03-01,"N/A",79,45,-9999
+"DPB-022","NE","Bromus diandrus - Ripgut brome",24,"seeds",2022-04-06,"N/A",610,46,-9999
+"DPB-022","NW","Bromus diandrus - Ripgut brome",24,"flowers",2022-04-06,"N/A",610,46,-9999
+"DPB-022","SE","Bromus diandrus - Ripgut brome",17,"seeds",2022-04-06,"N/A",610,46,-9999
+"DPB-022","SW","Bromus diandrus - Ripgut brome",23,"seeds",2022-04-06,"N/A",610,46,-9999
+"SRB-009","NE","Annual grass",43,"full leaf out",2022-03-01,"N/A",82,47,-9999
+"SRB-009","NW","Annual grass",15,"full leaf out",2022-03-01,"N/A",82,47,-9999
+"SRB-009","SE","Annual grass",24,"full leaf out",2022-03-01,"N/A",82,47,-9999
+"SRB-009","SW","Annual grass",38,"full leaf out",2022-03-01,"N/A",82,47,-9999
+"SRB-010","NE","Annual grass",17,"full leaf out",2022-03-01,"N/A",85,48,-9999
+"SRB-010","NW","Annual grass",35,"full leaf out",2022-03-01,"N/A",85,48,-9999
+"SRB-010","SE","Annual grass",21,"full leaf out",2022-03-01,"N/A",85,48,-9999
+"SRB-010","SW","Annual grass",13,"full leaf out",2022-03-01,"N/A",85,48,-9999
+"SRA-005","NE","Avena fatua - Wild oat",6,"full leaf out",2022-02-24,"N/A",67,71,-9999
+"SRA-005","NW","Avena fatua - Wild oat",28,"full leaf out",2022-02-24,"N/A",67,71,-9999
+"SRA-005","SE","Avena fatua - Wild oat",10,"full leaf out",2022-02-24,"N/A",67,71,-9999
+"SRA-005","SW","Avena fatua - Wild oat",3,"full leaf out",2022-02-24,"N/A",67,71,-9999
+"SRA-005","NE","Medicago polymorpha - bur clover",17,"full leaf out",2022-02-24,"N/A",67,72,-9999
+"SRA-005","NW","Medicago polymorpha - bur clover",2,"full leaf out",2022-02-24,"N/A",67,72,-9999
+"SRA-005","SE","Medicago polymorpha - bur clover",16,"full leaf out",2022-02-24,"N/A",67,72,-9999
+"SRA-005","SW","Medicago polymorpha - bur clover",17,"full leaf out",2022-02-24,"N/A",67,72,-9999
+"SRA-007","NE","Lupinus nanus - Sky lupine",3,"full leaf out",2022-02-25,"N/A",58,74,-9999
+"SRA-007","NW","Lupinus nanus - Sky lupine",12,"full leaf out",2022-02-25,"N/A",58,74,-9999
+"SRA-007","SE","Lupinus nanus - Sky lupine",18,"full leaf out",2022-02-25,"N/A",58,74,-9999
+"SRA-007","SW","Lupinus nanus - Sky lupine",5,"full leaf out",2022-02-25,"N/A",58,74,-9999
+"SRA-007","NE","Bromus tectorum",4,"full leaf out",2022-02-25,"N/A",58,75,-9999
+"SRA-007","NW","Bromus tectorum",12,"full leaf out",2022-02-25,"N/A",58,75,-9999
+"SRA-007","SE","Bromus tectorum",8,"full leaf out",2022-02-25,"N/A",58,75,-9999
+"SRA-007","NE","Eschscholzia californica - California poppy",8,"full leaf out",2022-02-25,"N/A",58,76,-9999
+"SRA-007","SE","Eschscholzia californica - California poppy",4,"full leaf out",2022-02-25,"N/A",58,76,-9999
+"SRA-007","SW","Eschscholzia californica - California poppy",9,"full leaf out",2022-02-25,"N/A",58,76,-9999
+"SRA-007","NE","Calandrinia menzieszii - Red maids",9,"full leaf out",2022-02-25,"N/A",58,77,-9999
+"SRA-007","NW","Calandrinia menzieszii - Red maids",10,"full leaf out",2022-02-25,"N/A",58,77,-9999
+"SRA-007","SE","Calandrinia menzieszii - Red maids",3,"full leaf out",2022-02-25,"N/A",58,77,-9999
+"SRA-007","SW","Calandrinia menzieszii - Red maids",11,"full leaf out",2022-02-25,"N/A",58,77,-9999
+"SRA-010","NE","Annual grass",18,"early leaf out",2022-03-02,"N/A",94,80,-9999
+"SRA-010","NW","Annual grass",9,"early leaf out",2022-03-02,"N/A",94,80,-9999
+"SRA-010","SE","Annual grass",19,"early leaf out",2022-03-02,"N/A",94,80,-9999
+"SRA-010","SW","Annual grass",17,"early leaf out",2022-03-02,"N/A",94,80,-9999
+"SRA-005","NE","Brassica nigra - Black mustard",11,"flowers",2022-02-24,"N/A",67,91,-9999
+"SRA-005","NW","Brassica nigra - Black mustard",4,"flowers",2022-02-24,"N/A",67,91,-9999
+"SRA-005","SE","Brassica nigra - Black mustard",13,"flowers",2022-02-24,"N/A",67,91,-9999
+"SRA-005","SW","Brassica nigra - Black mustard",11,"flowers",2022-02-24,"N/A",67,91,-9999
+"SRB-025","NE","Annual grass",46,"full leaf out",2022-03-10,"N/A",238,105,-9999
+"SRB-025","NW","Annual grass",35,"full leaf out",2022-03-10,"N/A",238,105,-9999
+"SRB-025","SE","Annual grass",27,"full leaf out",2022-03-10,"N/A",238,105,-9999
+"SRB-025","SW","Annual grass",37,"full leaf out",2022-03-10,"N/A",238,105,-9999
+"SRB-022","NE","Annual grass",15,"full leaf out",2022-03-10,"N/A",229,109,-9999
+"SRB-022","NW","Annual grass",20,"full leaf out",2022-03-10,"N/A",229,109,-9999
+"SRB-022","SE","Annual grass",44,"full leaf out",2022-03-10,"N/A",229,109,-9999
+"SRB-022","SW","Annual grass",43,"full leaf out",2022-03-10,"N/A",229,109,-9999
+"SRB-022","NE","Amsinckia menziesii - Fiddleneck",3,"full leaf out",2022-03-10,"N/A",229,110,-9999
+"SRB-022","SW","Amsinckia menziesii - Fiddleneck",1,"full leaf out",2022-03-10,"N/A",229,110,-9999
+"SRA-019","NE","Avena fatua - Wild oat",4,"full leaf out",2022-03-10,"N/A",217,118,-9999
+"SRA-019","NW","Avena fatua - Wild oat",36,"full leaf out",2022-03-10,"N/A",217,118,-9999
+"SRA-019","SE","Avena fatua - Wild oat",30,"full leaf out",2022-03-10,"N/A",217,118,-9999
+"SRA-019","SW","Avena fatua - Wild oat",31,"full leaf out",2022-03-10,"N/A",217,118,-9999
+"SRA-020","NE","Hazardia squarrosa - Sawtooth goldenbush",1,"full leaf out",2022-03-10,"N/A",220,119,-9999
+"SRA-020","NW","Hazardia squarrosa - Sawtooth goldenbush",10,"early leaf out",2022-03-10,"N/A",220,119,-9999
+"SRA-020","SE","Hazardia squarrosa - Sawtooth goldenbush",3,"full leaf out",2022-03-10,"N/A",220,119,-9999
+"SRA-020","NE","Annual grass",19,"full leaf out",2022-03-10,"N/A",220,120,-9999
+"SRA-020","NW","Annual grass",21,"early leaf out",2022-03-10,"N/A",220,120,-9999
+"SRA-020","SE","Annual grass",15,"full leaf out",2022-03-10,"N/A",220,120,-9999
+"SRA-020","SW","Annual grass",8,"full leaf out",2022-03-10,"N/A",220,120,-9999
+"SRB-010","NW","Brassica nigra - Black mustard",8,"early leaf out",2022-03-01,"N/A",85,132,-9999
+"SRB-010","SW","Brassica nigra - Black mustard",7,"early leaf out",2022-03-01,"N/A",85,132,-9999
+"SRB-013","SE","Stipa pulchra - Purple needle grass",7,"full leaf out",2022-03-02,"N/A",109,135,-9999
+"SRB-013","SW","Stipa pulchra - Purple needle grass",5,"full leaf out",2022-03-02,"N/A",109,135,-9999
+"SRB-013","NE","Hazardia squarrosa - Sawtooth goldenbush",5,"full leaf out",2022-03-02,"N/A",109,136,-9999
+"SRB-013","NE","Annual grass",17,"full leaf out",2022-03-02,"N/A",109,137,-9999
+"SRB-013","NW","Annual grass",22,"full leaf out",2022-03-02,"N/A",109,137,-9999
+"SRB-013","SE","Annual grass",15,"full leaf out",2022-03-02,"N/A",109,137,-9999
+"SRB-013","SW","Annual grass",6,"full leaf out",2022-03-02,"N/A",109,137,-9999
+"SRB-015","NE","Toxicoscordion fremontii - Common star lily",3,"full leaf out",2022-03-02,"N/A",118,140,-9999
+"SRB-015","NW","Toxicoscordion fremontii - Common star lily",1,"full leaf out",2022-03-02,"N/A",118,140,-9999
+"SRB-015","SW","Toxicoscordion fremontii - Common star lily",6,"full leaf out",2022-03-02,"N/A",118,140,-9999
+"SRB-015","NE","Annual grass",21,"full leaf out",2022-03-02,"N/A",118,141,-9999
+"SRB-015","NW","Annual grass",21,"full leaf out",2022-03-02,"N/A",118,141,-9999
+"SRB-015","SE","Annual grass",29,"full leaf out",2022-03-02,"N/A",118,141,-9999
+"SRB-015","SW","Annual grass",12,"full leaf out",2022-03-02,"N/A",118,141,-9999
+"DPA-013","NE","Carpobrotus edulis - Iceplant",36,"full leaf out",2022-03-09,"N/A",187,149,150
+"DPA-013","NW","Carpobrotus edulis - Iceplant",29,"full leaf out",2022-03-09,"N/A",187,149,150
+"DPA-013","SE","Carpobrotus edulis - Iceplant",28,"full leaf out",2022-03-09,"N/A",187,149,150
+"DPA-013","SW","Carpobrotus edulis - Iceplant",39,"full leaf out",2022-03-09,"N/A",187,149,150
+"SRA-020","NE","Amsinckia menziesii - Fiddleneck",7,"full leaf out",2022-03-10,"N/A",220,151,-9999
+"SRA-020","SE","Amsinckia menziesii - Fiddleneck",11,"full leaf out",2022-03-10,"N/A",220,151,-9999
+"SRA-020","SW","Amsinckia menziesii - Fiddleneck",17,"full leaf out",2022-03-10,"N/A",220,151,-9999
+"SRA-022","NE","Annual grass",48,"full leaf out",2022-03-10,"N/A",223,153,-9999
+"SRA-022","NW","Annual grass",45,"full leaf out",2022-03-10,"N/A",223,153,-9999
+"SRA-022","SE","Annual grass",40,"full leaf out",2022-03-10,"N/A",223,153,-9999
+"SRA-022","SW","Annual grass",28,"full leaf out",2022-03-10,"N/A",223,153,-9999
+"DPB-003","NW","Amsinckia menziesii - Fiddleneck",18,"full leaf out",2022-03-03,"Flowering",124,154,-9999
+"DPB-003","SE","Amsinckia menziesii - Fiddleneck",5,"full leaf out",2022-03-03,"N/A",124,154,-9999
+"DPB-003","SW","Amsinckia menziesii - Fiddleneck",33,"full leaf out",2022-03-03,"N/A",124,154,-9999
+"DPB-003","NE","Croton setiger",44,"full leaf out",2022-03-03,"N/A",124,155,-9999
+"DPB-003","NW","Croton setiger",10,"full leaf out",2022-03-03,"N/A",124,155,-9999
+"DPB-003","NE","Bromus diandrus - Ripgut brome",5,"full leaf out",2022-03-03,"N/A",124,159,-9999
+"DPB-003","NW","Bromus diandrus - Ripgut brome",4,"full leaf out",2022-03-03,"N/A",124,159,-9999
+"DPB-003","SE","Bromus diandrus - Ripgut brome",24,"full leaf out",2022-03-03,"N/A",124,159,-9999
+"DPB-003","SW","Bromus diandrus - Ripgut brome",3,"full leaf out",2022-03-03,"N/A",124,159,-9999
+"DPB-004","NE","Bromus diandrus - Ripgut brome",47,"full leaf out",2022-03-03,"N/A",133,160,-9999
+"DPB-004","NW","Bromus diandrus - Ripgut brome",40,"full leaf out",2022-03-03,"N/A",133,160,-9999
+"DPB-004","SE","Bromus diandrus - Ripgut brome",35,"full leaf out",2022-03-03,"N/A",133,160,-9999
+"DPB-004","SW","Bromus diandrus - Ripgut brome",33,"full leaf out",2022-03-03,"N/A",133,160,-9999
+"DPB-004","NE","Lepidium nitidum",2,"full leaf out",2022-03-03,"N/A",133,161,-9999
+"DPB-004","SW","Lepidium nitidum",3,"full leaf out",2022-03-03,"N/A",133,161,-9999
+"DPB-005","NE","Plantago erecta - Foothill plantain",1,"full leaf out",2022-03-03,"N/A",142,162,-9999
+"DPB-005","NW","Plantago erecta - Foothill plantain",3,"full leaf out",2022-03-03,"N/A",142,162,-9999
+"DPB-005","SE","Plantago erecta - Foothill plantain",5,"full leaf out",2022-03-03,"N/A",142,162,-9999
+"DPB-005","SW","Plantago erecta - Foothill plantain",4,"full leaf out",2022-03-03,"N/A",142,162,-9999
+"DPB-005","NE","Annual grass",9,"full leaf out",2022-03-03,"N/A",142,163,-9999
+"DPB-005","NW","Annual grass",3,"full leaf out",2022-03-03,"N/A",142,163,-9999
+"DPB-005","SE","Annual grass",13,"full leaf out",2022-03-03,"N/A",142,163,-9999
+"DPB-005","SW","Annual grass",4,"full leaf out",2022-03-03,"N/A",142,163,-9999
+"DPB-005","NE","Calystegia macrostegia",3,"full leaf out",2022-03-03,"N/A",142,165,-9999
+"DPB-005","NW","Calystegia macrostegia",10,"full leaf out",2022-03-03,"N/A",142,165,-9999
+"DPB-005","SE","Calystegia macrostegia",3,"full leaf out",2022-03-03,"N/A",142,165,-9999
+"DPB-005","SW","Calystegia macrostegia",5,"full leaf out",2022-03-03,"N/A",142,165,-9999
+"SRA-038","NE","Eriogonum elonongatum - Longstem buckwheat",5,"full leaf out",2022-03-25,"N/A",490,171,-9999
+"SRA-038","NW","Eriogonum elonongatum - Longstem buckwheat",11,"full leaf out",2022-03-25,"N/A",490,171,-9999
+"SRA-038","SE","Eriogonum elonongatum - Longstem buckwheat",8,"early leaf out",2022-03-25,"N/A",490,171,-9999
+"SRA-038","SW","Eriogonum elonongatum - Longstem buckwheat",8,"full leaf out",2022-03-25,"N/A",490,171,-9999
+"SRA-036","NE","Annual grass",10,"full leaf out",2022-03-25,"N/A",484,178,-9999
+"SRA-036","NW","Annual grass",12,"full leaf out",2022-03-25,"N/A",484,178,-9999
+"SRA-036","SE","Annual grass",12,"full leaf out",2022-03-25,"N/A",484,178,-9999
+"SRA-036","SW","Annual grass",2,"full leaf out",2022-03-25,"N/A",484,178,-9999
+"SRA-036","NE","Amsinckia menziesii - Fiddleneck",1,"full leaf out",2022-03-25,"N/A",484,179,-9999
+"SRA-036","NW","Amsinckia menziesii - Fiddleneck",4,"full leaf out",2022-03-25,"N/A",484,179,-9999
+"SRA-036","SW","Amsinckia menziesii - Fiddleneck",3,"full leaf out",2022-03-25,"N/A",484,179,-9999
+"DPB-009","NE","Carpobrotus edulis - Iceplant",11,"full leaf out",2022-03-09,"N/A",199,183,-9999
+"DPB-009","NW","Carpobrotus edulis - Iceplant",49,"full leaf out",2022-03-09,"N/A",199,183,-9999
+"DPB-009","SE","Carpobrotus edulis - Iceplant",49,"full leaf out",2022-03-09,"N/A",199,183,-9999
+"DPB-009","SW","Carpobrotus edulis - Iceplant",43,"full leaf out",2022-03-09,"N/A",199,183,-9999
+"SRB-027","NE","Bromus diandrus - Ripgut brome",34,"full leaf out",2022-03-11,"N/A",304,194,-9999
+"SRB-027","NW","Bromus diandrus - Ripgut brome",32,"full leaf out",2022-03-11,"N/A",304,194,-9999
+"SRB-027","SE","Bromus diandrus - Ripgut brome",26,"full leaf out",2022-03-11,"N/A",304,194,-9999
+"SRB-027","SW","Bromus diandrus - Ripgut brome",20,"full leaf out",2022-03-11,"N/A",304,194,-9999
+"SRB-029","NE","Annual grass",12,"full leaf out",2022-03-11,"N/A",310,198,199
+"SRB-029","NW","Annual grass",10,"full leaf out",2022-03-11,"N/A",310,198,199
+"SRB-029","SE","Annual grass",21,"full leaf out",2022-03-11,"N/A",310,198,199
+"SRB-029","SW","Annual grass",26,"full leaf out",2022-03-11,"N/A",310,198,199
+"SRA-036","NE","Erodium cicutarium",15,"full leaf out",2022-03-25,"N/A",484,200,-9999
+"SRA-036","NW","Erodium cicutarium",3,"full leaf out",2022-03-25,"N/A",484,200,-9999
+"SRA-036","SE","Erodium cicutarium",7,"full leaf out",2022-03-25,"N/A",484,200,-9999
+"SRA-036","SW","Erodium cicutarium",15,"full leaf out",2022-03-25,"N/A",484,200,-9999
+"SRA-021","NE","Annual grass",11,"full leaf out",2022-03-10,"N/A",268,312,-9999
+"SRA-021","NW","Annual grass",3,"full leaf out",2022-03-10,"N/A",268,312,-9999
+"SRA-021","SE","Annual grass",1,"full leaf out",2022-03-10,"N/A",268,312,-9999
+"SRA-021","SW","Annual grass",4,"full leaf out",2022-03-10,"N/A",268,312,-9999
+"SRA-021","SW","Sisyrinchium bellum - Blue-eyed grass",14,"full leaf out",2022-03-10,"N/A",268,313,-9999
+"SRA-023","NE","Avena fatua - Wild oat",40,"full leaf out",2022-03-10,"N/A",271,319,-9999
+"SRA-023","NW","Avena fatua - Wild oat",26,"full leaf out",2022-03-10,"N/A",271,319,-9999
+"SRA-023","SE","Avena fatua - Wild oat",21,"full leaf out",2022-03-10,"N/A",271,319,-9999
+"SRA-023","SW","Avena fatua - Wild oat",31,"full leaf out",2022-03-10,"N/A",271,319,-9999
+"SRA-021","NE","Hazardia squarrosa - Sawtooth goldenbush",8,"full leaf out",2022-03-10,"N/A",268,320,-9999
+"SRA-021","NW","Hazardia squarrosa - Sawtooth goldenbush",15,"full leaf out",2022-03-10,"N/A",268,320,-9999
+"SRA-021","SE","Hazardia squarrosa - Sawtooth goldenbush",7,"full leaf out",2022-03-10,"N/A",268,320,-9999
+"SRA-021","SW","Hazardia squarrosa - Sawtooth goldenbush",10,"full leaf out",2022-03-10,"N/A",268,320,-9999
+"SRA-057","NE","Annual grass",7,"full leaf out",2022-04-08,"Bromus diandrus - Ripgut brome",679,343,-9999
+"SRA-057","NW","Annual grass",15,"full leaf out",2022-04-08,"Avena fatua - Wild oat",679,343,-9999
+"SRA-057","SE","Annual grass",10,"full leaf out",2022-04-08,"Avena fatua - Wild oat",679,343,-9999
+"SRA-057","SW","Annual grass",8,"full leaf out",2022-04-08,"Avena fatua - Wild oat",679,343,-9999
+"SRA-057","SW","Annual grass",4,"full leaf out",2022-04-08,"Bromus diandrus - Ripgut brome",679,343,-9999
+"SRA-057","NE","Lupinus nanus - Sky lupine",16,"full leaf out",2022-04-08,"N/A",679,345,-9999
+"SRA-057","NW","Lupinus nanus - Sky lupine",6,"full leaf out",2022-04-08,"N/A",679,345,-9999
+"SRA-057","SE","Lupinus nanus - Sky lupine",5,"full leaf out",2022-04-08,"N/A",679,345,-9999
+"SRA-057","SW","Lupinus nanus - Sky lupine",5,"full leaf out",2022-04-08,"N/A",679,345,-9999
+"SRA-057","NW","Avena fatua - Wild oat",12,"seeds",2022-04-08,"N/A",679,346,-9999
+"SRA-057","SE","Avena fatua - Wild oat",4,"seeds",2022-04-08,"N/A",679,346,-9999
+"SRA-057","SW","Avena fatua - Wild oat",12,"seeds",2022-04-08,"N/A",679,346,-9999
+"DPA-028","NW","Hazardia squarrosa - Sawtooth goldenbush",2,"full leaf out",2022-03-23,"N/A",415,353,-9999
+"DPA-028","SE","Hazardia squarrosa - Sawtooth goldenbush",10,"full leaf out",2022-03-23,"N/A",415,353,-9999
+"DPA-028","SW","Hazardia squarrosa - Sawtooth goldenbush",4,"full leaf out",2022-03-23,"N/A",415,353,-9999
+"DPA-030","NE","Hypochaeris glabra - Smooth cat's ear",4,"full leaf out",2022-03-24,"N/A",421,384,-9999
+"DPA-030","NW","Hypochaeris glabra - Smooth cat's ear",12,"early leaf out",2022-03-24,"N/A",421,384,-9999
+"DPA-030","SW","Hypochaeris glabra - Smooth cat's ear",10,"early leaf out",2022-03-24,"N/A",421,384,-9999
+"DPA-030","NE","Stipa pulchra - Purple needle grass",33,"full leaf out",2022-03-24,"N/A",421,385,-9999
+"DPA-030","NW","Stipa pulchra - Purple needle grass",14,"early leaf out",2022-03-24,"N/A",421,385,-9999
+"DPA-030","SE","Stipa pulchra - Purple needle grass",19,"early leaf out",2022-03-24,"N/A",421,385,-9999
+"DPA-030","SW","Stipa pulchra - Purple needle grass",17,"early leaf out",2022-03-24,"N/A",421,385,-9999
+"DPA-028","NE","Annual grass",35,"flowers",2022-03-23,"Bromus diandrus - Ripgut brome",415,386,-9999
+"DPA-028","NE","Annual grass",2,"flowers",2022-03-23,"Hordeum murinum ssp. leporinum",415,386,-9999
+"DPA-028","NW","Annual grass",22,"flowers",2022-03-23,"Bromus diandrus - Ripgut brome",415,386,-9999
+"DPA-028","SE","Annual grass",15,"flowers",2022-03-23,"Bromus diandrus - Ripgut brome",415,386,-9999
+"DPA-028","SE","Annual grass",2,"flowers",2022-03-23,"Hordeum murinum ssp. leporinum",415,386,-9999
+"DPA-028","SW","Annual grass",29,"flowers",2022-03-23,"Bromus diandrus - Ripgut brome",415,386,-9999
+"DPA-028","NE","Annual grass",3,"full leaf out",2022-03-23,"Bromus diandrus - Ripgut brome",415,387,-9999
+"DPA-028","NW","Annual grass",1,"full leaf out",2022-03-23,"Bromus diandrus - Ripgut brome",415,387,-9999
+"DPA-028","NE","Brassica nigra - Black mustard",6,"full leaf out",2022-03-23,"N/A",415,388,-9999
+"DPA-028","NW ","Brassica nigra - Black mustard",1,"full leaf out",2022-03-23,"N/A",415,388,-9999
+"DPA-028","SW","Brassica nigra - Black mustard",2,"full leaf out",2022-03-23,"N/A",415,388,-9999
+"DPA-028","NE","Amsinckia menziesii - Fiddleneck",1,"full leaf out",2022-03-23,"N/A",415,389,-9999
+"DPA-028","NW","Amsinckia menziesii - Fiddleneck",7,"full leaf out",2022-03-23,"N/A",415,389,-9999
+"DPA-028","SW","Amsinckia menziesii - Fiddleneck",2,"full leaf out",2022-03-23,"N/A",415,389,-9999
+"DPB-014","NE","Annual grass",40,"full leaf out",2022-03-17,"N/A",352,395,398
+"DPB-014","NW","Annual grass",44,"full leaf out",2022-03-17,"N/A",352,395,398
+"DPB-014","SE","Annual grass",38,"full leaf out",2022-03-17,"N/A",352,395,398
+"DPB-014","SW","Annual grass",28,"full leaf out",2022-03-17,"N/A",352,395,398
+"DPB-014","NE","Erodium cicutarium",6,"full leaf out",2022-03-17,"N/A",352,396,-9999
+"DPB-014","NW","Erodium cicutarium",4,"full leaf out",2022-03-17,"N/A",352,396,-9999
+"DPB-014","SE","Erodium cicutarium",7,"full leaf out",2022-03-17,"N/A",352,396,-9999
+"DPB-014","SW","Erodium cicutarium",3,"full leaf out",2022-03-17,"N/A",352,396,-9999
+"DPB-014","SW","Brassica nigra - Black mustard",19,"full leaf out",2022-03-17,"N/A",352,397,-9999
+"SRA-069","NE","NPV",34,"N/A",2022-04-21,"N/A",829,615,-9999
+"SRA-069","NW","NPV",35,"N/A",2022-04-21,"N/A",829,615,-9999
+"SRA-069","SE","NPV",20,"N/A",2022-04-21,"N/A",829,615,-9999
+"SRA-069","SW","NPV",33,"N/A",2022-04-21,"N/A",829,615,-9999
+"DPB-018","NE","Amsinckia menziesii - Fiddleneck",8,"full leaf out",2022-03-23,"N/A",400,629,-9999
+"DPB-018","SE","Amsinckia menziesii - Fiddleneck",2,"full leaf out",2022-03-23,"N/A",400,629,-9999
+"DPB-018","NE","Annual grass",34,"full leaf out",2022-03-23,"N/A",400,630,-9999
+"DPB-018","NW","Annual grass",44,"full leaf out",2022-03-23,"N/A",400,630,-9999
+"DPB-018","SE","Annual grass",30,"full leaf out",2022-03-23,"N/A",400,630,-9999
+"SRB-051","NE","Avena fatua - Wild oat",27,"full leaf out",2022-04-13,"N/A",697,632,-9999
+"SRB-051","NW","Avena fatua - Wild oat",4,"early leaf out",2022-04-13,"N/A",697,632,-9999
+"SRB-051","NW","Avena fatua - Wild oat",11,"full leaf out",2022-04-13,"N/A",697,632,-9999
+"SRB-051","SE","Avena fatua - Wild oat",5,"full leaf out",2022-04-13,"N/A",697,632,-9999
+"SRB-051","SW","Avena fatua - Wild oat",8,"full leaf out",2022-04-13,"N/A",697,632,-9999
+"SRB-051","NE","Avena fatua - Wild oat",15,"flowers",2022-04-13,"N/A",697,634,-9999
+"SRB-051","NW","Avena fatua - Wild oat",16,"flowers",2022-04-13,"N/A",697,634,-9999
+"SRB-051","SE","Avena fatua - Wild oat",31,"flowers",2022-04-13,"N/A",697,634,-9999
+"SRB-051","SW","Avena fatua - Wild oat",22,"flowers",2022-04-13,"N/A",697,634,-9999
+"SRB-050","NE","Eschscholzia californica - California poppy",4,"full leaf out",2022-04-08,"N/A",658,647,-9999
+"SRB-050","NW","Eschscholzia californica - California poppy",3,"full leaf out",2022-04-08,"N/A",658,647,-9999
+"SRB-050","SE","Eschscholzia californica - California poppy",3,"full leaf out",2022-04-08,"N/A",658,647,-9999
+"SRB-050","SW","Eschscholzia californica - California poppy",3,"full leaf out",2022-04-08,"N/A",658,647,-9999
+"SRB-050","NE","Avena fatua - Wild oat",6,"full leaf out",2022-04-08,"N/A",658,648,-9999
+"SRB-050","NW","Avena fatua - Wild oat",6,"full leaf out",2022-04-08,"N/A",658,648,-9999
+"SRB-050","SE","Avena fatua - Wild oat",13,"full leaf out",2022-04-08,"N/A",658,648,-9999
+"SRB-050","SW","Avena fatua - Wild oat",7,"full leaf out",2022-04-08,"N/A",658,648,-9999
+"SRB-050","NE","Avena fatua - Wild oat",20,"seeds",2022-04-08,"N/A",658,649,-9999
+"SRB-050","NW","Avena fatua - Wild oat",23,"seeds",2022-04-08,"N/A",658,649,-9999
+"SRB-050","SE","Avena fatua - Wild oat",5,"seeds",2022-04-08,"N/A",658,649,-9999
+"SRB-050","SW","Avena fatua - Wild oat",20,"seeds",2022-04-08,"N/A",658,649,-9999
+"SRA-056","NE","Eschscholzia californica - California poppy",8,"full leaf out",2022-04-08,"N/A",667,662,-9999
+"SRA-056","NW","Eschscholzia californica - California poppy",7,"full leaf out",2022-04-08,"N/A",667,662,-9999
+"SRA-056","SE","Eschscholzia californica - California poppy",13,"full leaf out",2022-04-08,"marked as sra-038",667,662,-9999
+"SRA-056","SW","Eschscholzia californica - California poppy",10,"full leaf out",2022-04-08,"marked as sra-038",667,662,-9999
+"SRA-057","NE","Lupinus nanus - Sky lupine",7,"flowers",2022-04-08,"N/A",679,663,-9999
+"SRA-057","NW","Lupinus nanus - Sky lupine",4,"flowers",2022-04-08,"N/A",679,663,-9999
+"SRA-057","SE","Lupinus nanus - Sky lupine",9,"flowers",2022-04-08,"N/A",679,663,-9999
+"SRA-057","SW","Lupinus nanus - Sky lupine",11,"flowers",2022-04-08,"N/A",679,663,-9999
+"SRA-056","NE","Eschscholzia californica - California poppy",4,"flowers",2022-04-08,"N/A",667,665,-9999
+"SRA-056","NW","Eschscholzia californica - California poppy",4,"flowers",2022-04-08,"N/A",667,665,-9999
+"SRA-056","SE","Eschscholzia californica - California poppy",11,"flowers",2022-04-08,"marked as sra-038",667,665,-9999
+"SRA-056","SW","Eschscholzia californica - California poppy",4,"flowers",2022-04-08,"marked as sra-038",667,665,-9999
+"DPA-019","NE","Annual grass",6,"full leaf out",2022-03-17,"Avena fatua - Wild oat",370,682,-9999
+"DPA-019","NW","Annual grass",1,"full leaf out",2022-03-17,"N/A",370,682,-9999
+"DPA-019","NW","Annual grass",3,"full leaf out",2022-03-17,"Avena fatua - Wild oat",370,682,-9999
+"DPA-019","SE","Annual grass",8,"full leaf out",2022-03-17,"N/A",370,682,-9999
+"DPA-019","SE","Annual grass",5,"full leaf out",2022-03-17,"Avena fatua - Wild oat",370,682,-9999
+"DPA-019","SW","Annual grass",1,"full leaf out",2022-03-17,"N/A",370,682,-9999
+"SRA-033","NE","Annual grass",18,"full leaf out",2022-03-18,"N/A",376,684,-9999
+"SRA-033","NW","Annual grass",13,"full leaf out",2022-03-18,"N/A",376,684,-9999
+"SRA-033","SE","Annual grass",17,"full leaf out",2022-03-18,"N/A",376,684,-9999
+"SRA-033","SW","Annual grass",20,"full leaf out",2022-03-18,"N/A",376,684,-9999
+"DPB-021","NE","Annual grass",12,"full leaf out",2022-03-24,"N/A",436,691,-9999
+"DPB-021","NW","Annual grass",28,"full leaf out",2022-03-24,"N/A",436,691,-9999
+"DPB-021","SE","Annual grass",22,"full leaf out",2022-03-24,"N/A",436,691,-9999
+"DPB-021","SW","Annual grass",11,"full leaf out",2022-03-24,"N/A",436,691,-9999
+"DPA-033","SE","Medicago polymorpha - bur clover",14,"full leaf out",2022-04-06,"N/A",601,692,-9999
+"DPA-033","SW","Medicago polymorpha - bur clover",9,"full leaf out",2022-04-06,"N/A",601,692,-9999
+"DPA-033","NE","Spergularia villosa - Hairy sand spurry",3,"full leaf out",2022-04-06,"N/A",601,693,-9999
+"DPA-033","NW","Spergularia villosa - Hairy sand spurry",30,"full leaf out",2022-04-06,"N/A",601,693,-9999
+"DPA-033","SW","Spergularia villosa - Hairy sand spurry",15,"full leaf out",2022-04-06,"N/A",601,693,-9999
+"SRA-051","NE","Avena fatua - Wild oat",9,"full leaf out",2022-04-07,"N/A",619,708,-9999
+"SRA-051","NW","Avena fatua - Wild oat",10,"full leaf out",2022-04-07,"N/A",619,708,-9999
+"SRA-051","SE","Avena fatua - Wild oat",6,"full leaf out",2022-04-07,"N/A",619,708,-9999
+"SRA-051","SW","Avena fatua - Wild oat",8,"full leaf out",2022-04-07,"N/A",619,708,-9999
+"SRA-051","NE","Avena fatua - Wild oat",17,"seeds",2022-04-07,"N/A",619,709,-9999
+"SRA-051","NW","Avena fatua - Wild oat",35,"seeds",2022-04-07,"N/A",619,709,-9999
+"SRA-051","SE","Avena fatua - Wild oat",40,"seeds",2022-04-07,"N/A",619,709,-9999
+"SRA-051","SW","Avena fatua - Wild oat",41,"seeds",2022-04-07,"N/A",619,709,-9999
+"SRA-050","NE","Avena fatua - Wild oat",10,"full leaf out",2022-04-07,"N/A",613,710,-9999
+"SRA-050","NW","Avena fatua - Wild oat",14,"full leaf out",2022-04-07,"N/A",613,710,-9999
+"SRA-050","SE","Avena fatua - Wild oat",11,"full leaf out",2022-04-07,"N/A",613,710,-9999
+"SRA-050","SW","Avena fatua - Wild oat",3,"full leaf out",2022-04-07,"N/A",613,710,-9999
+"SRA-050","NE","Avena fatua - Wild oat",31,"seeds",2022-04-07,"N/A",613,711,-9999
+"SRA-050","NW","Avena fatua - Wild oat",16,"seeds",2022-04-07,"N/A",613,711,-9999
+"SRA-050","SE","Avena fatua - Wild oat",36,"seeds",2022-04-07,"N/A",613,711,-9999
+"SRA-050","SW","Avena fatua - Wild oat",42,"seeds",2022-04-07,"N/A",613,711,-9999
+"SRB-045","SE","Avena fatua - Wild oat",32,"full leaf out",2022-04-07,"N/A",625,713,-9999
+"SRB-045","SW","Avena fatua - Wild oat",40,"full leaf out",2022-04-07,"N/A",625,713,-9999
+"SRB-048","NE","Eschscholzia californica - California poppy",5,"flowers",2022-04-07,"N/A",634,714,-9999
+"SRB-048","NW","Eschscholzia californica - California poppy",7,"flowers",2022-04-07,"N/A",634,714,-9999
+"SRB-048","SE","Eschscholzia californica - California poppy",7,"flowers",2022-04-07,"N/A",634,714,-9999
+"SRB-034","SE","Chlorogalum pomeridianum",8,"full leaf out",2022-03-25,"N/A",496,715,-9999
+"SRB-034","SW","Chlorogalum pomeridianum",5,"full leaf out",2022-03-25,"N/A",496,715,-9999
+"SRB-048","NE","Avena fatua - Wild oat",14,"seeds",2022-04-07,"N/A",634,716,-9999
+"SRB-048","NW","Avena fatua - Wild oat",3,"seeds",2022-04-07,"N/A",634,716,-9999
+"SRB-048","SE","Avena fatua - Wild oat",3,"seeds",2022-04-07,"N/A",634,716,-9999
+"SRB-048","NE","Eschscholzia californica - California poppy",4,"full leaf out",2022-04-07,"N/A",634,717,-9999
+"SRB-048","NW","Eschscholzia californica - California poppy",4,"full leaf out",2022-04-07,"N/A",634,717,-9999
+"SRB-048","SE","Eschscholzia californica - California poppy",10,"full leaf out",2022-04-07,"N/A",634,717,-9999
+"SRB-048","SW","Eschscholzia californica - California poppy",5,"full leaf out",2022-04-07,"N/A",634,717,-9999
+"SRB-033","NE","Plagiobothrys nothofulvus - Rusty popcornflower",1,"flowers",2022-03-25,"N/A",493,718,-9999
+"SRB-033","NE","Erodium cicutarium",14,"full leaf out",2022-03-25,"N/A",493,719,-9999
+"SRB-033","SE","Erodium cicutarium",4,"full leaf out",2022-03-25,"N/A",493,719,-9999
+"SRB-033","SW","Erodium cicutarium",2,"full leaf out",2022-03-25,"N/A",493,719,-9999
+"SRB-033","NE","Plagiobothrys nothofulvus - Rusty popcornflower",4,"full leaf out",2022-03-25,"N/A",493,720,-9999
+"SRB-033","NW","Plagiobothrys nothofulvus - Rusty popcornflower",19,"full leaf out",2022-03-25,"N/A",493,720,-9999
+"SRB-033","SE","Plagiobothrys nothofulvus - Rusty popcornflower",20,"full leaf out",2022-03-25,"N/A",493,720,-9999
+"SRB-033","SW","Plagiobothrys nothofulvus - Rusty popcornflower",4,"full leaf out",2022-03-25,"N/A",493,720,-9999
+"DPB-021","SE","Vicia villosa - Hairy vetch",1,"flowers",2022-03-24,"N/A",436,721,-9999
+"SRB-030","NE","Avena fatua - Wild oat",5,"full leaf out",2022-03-18,"N/A",361,722,-9999
+"SRB-030","NW","Avena fatua - Wild oat",17,"full leaf out",2022-03-18,"N/A",361,722,-9999
+"SRB-030","SE","Avena fatua - Wild oat",6,"full leaf out",2022-03-18,"N/A",361,722,-9999
+"SRB-030","SW","Avena fatua - Wild oat",9,"full leaf out",2022-03-18,"N/A",361,722,-9999
+"SRB-030","NE","Erodium cicutarium",10,"early senescence",2022-03-18,"N/A",361,723,-9999
+"SRB-030","NW","Erodium cicutarium",6,"full leaf out",2022-03-18,"N/A",361,723,-9999
+"SRB-030","SE","Erodium cicutarium",6,"early senescence",2022-03-18,"N/A",361,723,-9999
+"SRB-030","SE","Erodium cicutarium",6,"full leaf out",2022-03-18,"N/A",361,723,-9999
+"SRB-030","SW","Erodium cicutarium",2,"early senescence",2022-03-18,"N/A",361,723,-9999
+"SRB-030","SW","Erodium cicutarium",12,"full leaf out",2022-03-18,"N/A",361,723,-9999
+"DPB-020","NE","Annual grass",7,"full leaf out",2022-03-24,"N/A",430,726,-9999
+"DPB-020","NW","Annual grass",4,"full leaf out",2022-03-24,"N/A",430,726,-9999
+"DPB-020","SE","Annual grass",6,"full leaf out",2022-03-24,"N/A",430,726,-9999
+"DPB-020","SW","Annual grass",6,"full leaf out",2022-03-24,"N/A",430,726,-9999
+"DPB-020","NE","Stipa pulchra - Purple needle grass",15,"full leaf out",2022-03-24,"N/A",430,727,-9999
+"DPB-020","NW","Stipa pulchra - Purple needle grass",10,"full leaf out",2022-03-24,"N/A",430,727,-9999
+"DPB-020","SE","Stipa pulchra - Purple needle grass",17,"full leaf out",2022-03-24,"N/A",430,727,-9999
+"DPB-020","SW","Stipa pulchra - Purple needle grass",13,"early leaf out",2022-03-24,"N/A",430,727,-9999
+"DPB-020","NE","Erodium sp.",5,"full leaf out",2022-03-24,"Erodium botrys",430,728,-9999
+"DPB-020","NE","Erodium sp.",1,"full leaf out",2022-03-24,"Erodium cicutarium",430,728,-9999
+"DPB-020","NW","Erodium sp.",1,"full leaf out",2022-03-24,"Erodium cicutarium",430,728,-9999
+"DPB-020","SE","Erodium sp.",7,"full leaf out",2022-03-24,"Erodium botrys",430,728,-9999
+"DPB-020","SW","Erodium sp.",4,"full leaf out",2022-03-24,"Erodium botrys",430,728,-9999
+"DPB-020","SW","Erodium sp.",1,"full leaf out",2022-03-24,"Erodium cicutarium",430,728,-9999
+"DPB-021","NE","Vicia villosa - Hairy vetch",30,"full leaf out",2022-03-24,"N/A",436,729,-9999
+"DPB-021","NW","Vicia villosa - Hairy vetch",14,"full leaf out",2022-03-24,"N/A",436,729,-9999
+"DPB-021","SE","Vicia villosa - Hairy vetch",4,"full leaf out",2022-03-24,"N/A",436,729,-9999
+"DPB-021","SW","Vicia villosa - Hairy vetch",29,"full leaf out",2022-03-24,"N/A",436,729,-9999
+"SRB-034","NE","Stipa pulchra - Purple needle grass",2,"full leaf out",2022-03-25,"N/A",496,732,-9999
+"SRB-034","NW","Stipa pulchra - Purple needle grass",10,"full leaf out",2022-03-25,"N/A",496,732,-9999
+"SRB-034","SE","Stipa pulchra - Purple needle grass",6,"full leaf out",2022-03-25,"N/A",496,732,-9999
+"SRB-034","SW","Stipa pulchra - Purple needle grass",2,"full leaf out",2022-03-25,"N/A",496,732,-9999
+"SRB-047","NE","Avena fatua - Wild oat",9,"seeds",2022-04-07,"N/A",631,734,-9999
+"SRB-047","NW","Avena fatua - Wild oat",11,"seeds",2022-04-07,"N/A",631,734,-9999
+"SRB-047","SE","Avena fatua - Wild oat",26,"seeds",2022-04-07,"N/A",631,734,-9999
+"SRB-047","SW","Avena fatua - Wild oat",27,"seeds",2022-04-07,"N/A",631,734,-9999
+"SRB-046","NW","Avena fatua - Wild oat",9,"seeds",2022-04-07,"N/A",628,735,-9999
+"SRB-046","SE","Avena fatua - Wild oat",17,"seeds",2022-04-07,"N/A",628,735,-9999
+"SRB-046","SW","Avena fatua - Wild oat",16,"seeds",2022-04-07,"N/A",628,735,-9999
+"SRB-046","NE","Brassica nigra - Black mustard",20,"flowers",2022-04-07,"N/A",628,736,-9999
+"SRB-046","NW","Brassica nigra - Black mustard",7,"flowers",2022-04-07,"N/A",628,736,-9999
+"SRB-046","SE","Brassica nigra - Black mustard",13,"flowers",2022-04-07,"N/A",628,736,-9999
+"SRB-046","SW","Brassica nigra - Black mustard",14,"flowers",2022-04-07,"N/A",628,736,-9999
+"DPA-019","NE","Lupinus bicolor - Bicolored lupine",2,"full leaf out",2022-03-17,"N/A",370,742,-9999
+"DPA-019","SW","Lupinus bicolor - Bicolored lupine",1,"full leaf out",2022-03-17,"N/A",370,742,-9999
+"DPA-019","NE","Erodium moschatum",42,"full leaf out",2022-03-17,"N/A",370,744,-9999
+"DPA-019","NW","Erodium moschatum",1,"early leaf out",2022-03-17,"N/A",370,744,-9999
+"DPA-019","NW","Erodium moschatum",35,"full leaf out",2022-03-17,"N/A",370,744,-9999
+"DPA-019","SE","Erodium moschatum",33,"full leaf out",2022-03-17,"N/A",370,744,-9999
+"DPA-019","SW","Erodium moschatum",41,"full leaf out",2022-03-17,"N/A",370,744,-9999
+"SRA-034","NE","Annual grass",36,"full leaf out",2022-03-18,"N/A",379,746,-9999
+"SRA-034","NW","Annual grass",28,"full leaf out",2022-03-18,"N/A",379,746,-9999
+"SRA-034","SE","Annual grass",25,"full leaf out",2022-03-18,"N/A",379,746,-9999
+"SRA-034","SW","Annual grass",13,"full leaf out",2022-03-18,"N/A",379,746,-9999
+"DPA-033","NW","Annual grass",1,"flowers",2022-04-06,"Festuca perennis",601,749,-9999
+"DPA-033","SE","Annual grass",1,"flowers",2022-04-06,"Festuca perennis",601,749,-9999
+"DPA-033","SE","Annual grass",5,"flowers",2022-04-06,"Hordeum murinum ssp. leporinum",601,749,-9999
+"DPA-033","SE","Annual grass",1,"seeds",2022-04-06,"Festuca perennis",601,749,-9999
+"DPA-033","SW","Annual grass",3,"flowers",2022-04-06,"Festuca perennis",601,749,-9999
+"DPA-033","SW","Annual grass",1,"seeds",2022-04-06,"Bromus diandrus - Ripgut brome",601,749,-9999
+"SRB-084","NE","Hazardia squarrosa - Sawtooth goldenbush",6,"full leaf out",2022-05-13,"N/A",1072,790,-9999
+"SRB-084","SE","Hazardia squarrosa - Sawtooth goldenbush",4,"full leaf out",2022-05-13,"N/A",1072,790,-9999
+"SRB-084","SW","Hazardia squarrosa - Sawtooth goldenbush",3,"full leaf out",2022-05-13,"N/A",1072,790,-9999
+"SRB-084","NE","NPV",44,"N/A",2022-05-13,"N/A",1072,791,-9999
+"SRB-084","NW","NPV",50,"N/A",2022-05-13,"N/A",1072,791,-9999
+"SRB-084","SE","NPV",44,"N/A",2022-05-13,"N/A",1072,791,-9999
+"SRB-084","SW","NPV",47,"N/A",2022-05-13,"N/A",1072,791,-9999
+"SRA-109","NE","NPV",48,"N/A",2022-05-13,"N/A",1054,805,-9999
+"SRA-109","NW","NPV",50,"N/A",2022-05-13,"N/A",1054,805,-9999
+"SRA-109","SE","NPV",44,"N/A",2022-05-13,"N/A",1054,805,-9999
+"SRA-109","SW","NPV",47,"N/A",2022-05-13,"N/A",1054,805,-9999
+"SRB-058","NE","Avena fatua - Wild oat",21,"full leaf out",2022-04-15,"N/A",802,833,-9999
+"SRB-058","NW","Avena fatua - Wild oat",17,"full leaf out",2022-04-15,"N/A",802,833,-9999
+"SRB-058","SW","Avena fatua - Wild oat",12,"full leaf out",2022-04-15,"N/A",802,833,-9999
+"SRB-058","SE","Avena fatua - Wild oat",10,"flowers",2022-04-15,"N/A",802,834,-9999
+"SRB-058","NE","Bromus diandrus - Ripgut brome",8,"full leaf out",2022-04-15,"N/A",802,836,-9999
+"SRB-058","NW","Bromus diandrus - Ripgut brome",12,"full leaf out",2022-04-15,"N/A",802,836,-9999
+"SRB-058","SE","Bromus diandrus - Ripgut brome",2,"full leaf out",2022-04-15,"N/A",802,836,-9999
+"SRB-058","SW","Bromus diandrus - Ripgut brome",15,"full leaf out",2022-04-15,"N/A",802,836,-9999
+"SRA-063","NE","Elymus condensatus - Giant wild rye",4,"full leaf out",2022-04-15,"N/A",766,854,-9999
+"SRA-063","SE","Elymus condensatus - Giant wild rye",1,"early senescence",2022-04-15,"N/A",766,854,-9999
+"SRA-063","SE","Elymus condensatus - Giant wild rye",6,"full leaf out",2022-04-15,"N/A",766,854,-9999
+"SRA-081","NE","Avena fatua - Wild oat",30,"seeds",2022-05-05,"N/A",919,861,-9999
+"SRA-081","NW","Avena fatua - Wild oat",25,"seeds",2022-05-05,"N/A",919,861,-9999
+"SRA-081","SE","Avena fatua - Wild oat",34,"seeds",2022-05-05,"N/A",919,861,-9999
+"SRA-081","SW","Avena fatua - Wild oat",25,"seeds",2022-05-05,"N/A",919,861,-9999
+"SRA-082","NE","Avena fatua - Wild oat",32,"seeds",2022-05-05,"N/A",925,884,-9999
+"SRA-082","NW","Avena fatua - Wild oat",31,"seeds",2022-05-05,"N/A",925,884,-9999
+"SRA-082","SE","Avena fatua - Wild oat",23,"seeds",2022-05-05,"N/A",925,884,-9999
+"SRA-082","SW","Avena fatua - Wild oat",28,"seeds",2022-05-05,"N/A",925,884,-9999
+"SRA-068","NE","Avena fatua - Wild oat",23,"seeds",2022-04-21,"N/A",817,908,-9999
+"SRA-068","NW","Avena fatua - Wild oat",29,"seeds",2022-04-21,"N/A",817,908,-9999
+"SRA-068","SE","Avena fatua - Wild oat",14,"seeds",2022-04-21,"N/A",817,908,-9999
+"SRA-068","SW","Avena fatua - Wild oat",29,"seeds",2022-04-21,"N/A",817,908,-9999
+"SRA-109","NE","Hazardia squarrosa - Sawtooth goldenbush",2,"full leaf out",2022-05-13,"N/A",1054,1026,-9999
+"SRA-109","SE","Hazardia squarrosa - Sawtooth goldenbush",6,"full leaf out",2022-05-13,"N/A",1054,1026,-9999
+"SRA-109","SW","Hazardia squarrosa - Sawtooth goldenbush",3,"full leaf out",2022-05-13,"N/A",1054,1026,-9999
+"SRA-095","SE","Brassica nigra - Black mustard",16,"flowers",2022-05-18,"N/A",1105,1091,-9999
+"SRA-095","SW","Brassica nigra - Black mustard",2,"flowers",2022-05-18,"N/A",1105,1091,-9999
+"SRA-095","NE","Brassica nigra - Black mustard",2,"full leaf out",2022-05-18,"N/A",1105,1092,-9999
+"SRA-095","NW","Brassica nigra - Black mustard",7,"full leaf out",2022-05-18,"N/A",1105,1092,-9999
+"SRA-095","SW","Brassica nigra - Black mustard",6,"full leaf out",2022-05-18,"N/A",1105,1092,-9999
+"DPB-041","NE","Carpobrotus edulis - Iceplant",15,"full leaf out",2022-05-19,"N/A",1135,1096,-9999
+"DPB-041","SE","Carpobrotus edulis - Iceplant",14,"early leaf out",2022-05-19,"N/A",1135,1096,-9999
+"DPB-041","SW","Carpobrotus edulis - Iceplant",9,"early leaf out",2022-05-19,"N/A",1135,1096,-9999
+"DPB-042","NE","Carex pansa - Sand dune sedge",9,"full leaf out",2022-05-19,"N/A",1147,1098,-9999
+"DPB-042","NW","Carex pansa - Sand dune sedge",18,"full leaf out",2022-05-19,"N/A",1147,1098,-9999
+"DPB-042","SE","Carex pansa - Sand dune sedge",15,"full leaf out",2022-05-19,"N/A",1147,1098,-9999
+"DPB-042","SW","Carex pansa - Sand dune sedge",4,"full leaf out",2022-05-19,"N/A",1147,1098,-9999
+"DPB-041","NE","Juncus patens",22,"full leaf out",2022-05-19,"N/A",1135,1099,-9999
+"DPB-041","NW","Juncus patens",30,"full leaf out",2022-05-19,"N/A",1135,1099,-9999
+"DPB-041","SE","Juncus patens",24,"early leaf out",2022-05-19,"N/A",1135,1099,-9999
+"DPB-041","SW","Juncus patens",38,"early leaf out",2022-05-19,"N/A",1135,1099,-9999
+"DPA-053","NE","Cotula coronopifolia - Brass buttons",26,"early senescence",2022-05-19,"N/A",1150,1111,-9999
+"DPA-053","NW","Cotula coronopifolia - Brass buttons",14,"early senescence",2022-05-19,"N/A",1150,1111,-9999
+"DPA-053","NW","Cotula coronopifolia - Brass buttons",1,"full leaf out",2022-05-19,"N/A",1150,1111,-9999
+"DPA-053","SE","Cotula coronopifolia - Brass buttons",34,"early senescence",2022-05-19,"N/A",1150,1111,-9999
+"DPA-053","SE","Cotula coronopifolia - Brass buttons",3,"full leaf out",2022-05-19,"N/A",1150,1111,-9999
+"DPA-053","SW","Cotula coronopifolia - Brass buttons",32,"early senescence",2022-05-19,"N/A",1150,1111,-9999
+"DPA-053","SW","Cotula coronopifolia - Brass buttons",7,"full leaf out",2022-05-19,"N/A",1150,1111,-9999
+"DPA-052","NE","Distichlis spicata",9,"full leaf out",2022-05-19,"N/A",1144,1112,-9999
+"DPA-052","SE","Distichlis spicata",3,"full leaf out",2022-05-19,"N/A",1144,1112,-9999
+"DPA-052","NE","Juncus xiphioides - Iris leaved rush",5,"early senescence",2022-05-19,"N/A",1144,1113,-9999
+"DPA-052","NE","Juncus xiphioides - Iris leaved rush",9,"full leaf out",2022-05-19,"N/A",1144,1113,-9999
+"DPA-052","NW","Juncus xiphioides - Iris leaved rush",10,"early senescence",2022-05-19,"N/A",1144,1113,-9999
+"DPA-052","SE","Juncus xiphioides - Iris leaved rush",4,"early senescence",2022-05-19,"N/A",1144,1113,-9999
+"DPA-052","SE","Juncus xiphioides - Iris leaved rush",4,"full leaf out",2022-05-19,"N/A",1144,1113,-9999
+"DPA-052","SW","Juncus xiphioides - Iris leaved rush",7,"early senescence",2022-05-19,"N/A",1144,1113,-9999
+"DPA-052","SW","Juncus xiphioides - Iris leaved rush",15,"full leaf out",2022-05-19,"N/A",1144,1113,-9999
+"DPA-052","SW","Carpobrotus edulis - Iceplant",4,"full leaf out",2022-05-19,"N/A",1144,1114,-9999
+"DPA-053","NE","Distichlis spicata",21,"full leaf out",2022-05-19,"N/A",1150,1115,-9999
+"DPA-053","NW","Distichlis spicata",3,"full leaf out",2022-05-19,"N/A",1150,1115,-9999
+"DPA-053","NW","Cotula coronopifolia - Brass buttons",4,"flowers",2022-05-19,"N/A",1150,1116,-9999
+"DPA-053","SE","Cotula coronopifolia - Brass buttons",7,"flowers",2022-05-19,"N/A",1150,1116,-9999
+"DPA-053","SW","Cotula coronopifolia - Brass buttons",8,"flowers",2022-05-19,"N/A",1150,1116,-9999
+"DPB-042","NE","Juncus xiphioides - Iris leaved rush",4,"full leaf out",2022-05-19,"N/A",1147,1151,-9999
+"DPB-042","NW","Juncus xiphioides - Iris leaved rush",6,"full leaf out",2022-05-19,"N/A",1147,1151,-9999
+"DPB-042","SE","Juncus xiphioides - Iris leaved rush",2,"full leaf out",2022-05-19,"N/A",1147,1151,-9999
+"DPB-042","NW","Carpobrotus edulis - Iceplant",1,"early senescence",2022-05-19,"N/A",1147,1152,-9999
+"DPB-042","NW","Carpobrotus edulis - Iceplant",5,"full leaf out",2022-05-19,"N/A",1147,1152,-9999
+"DPB-042","SE","Carpobrotus edulis - Iceplant",8,"full leaf out",2022-05-19,"N/A",1147,1152,-9999
+"DPB-042","SW","Carpobrotus edulis - Iceplant",9,"full leaf out",2022-05-19,"N/A",1147,1152,-9999
+"DPB-042","NE","Isocoma menziesii",2,"full leaf out",2022-05-19,"N/A",1147,1153,-9999
+"DPB-042","SE","Isocoma menziesii",3,"full leaf out",2022-05-19,"N/A",1147,1153,-9999
+"DPB-042","SW","Isocoma menziesii",10,"full leaf out",2022-05-19,"N/A",1147,1153,-9999
+"DPB-043","NE","Juncus patens",24,"full leaf out",2022-05-19,"N/A",1153,1159,-9999
+"DPB-043","SE","Juncus patens",30,"full leaf out",2022-05-19,"N/A",1153,1159,-9999
+"DPB-043","SW","Juncus patens",26,"full leaf out",2022-05-19,"N/A",1153,1159,-9999
+"DPB-042","SE","Baccharis glutinosa - Saltmarsh baccharis",1,"full leaf out",2022-05-19,"N/A",1147,1160,-9999
+"DPB-042","SW","Baccharis glutinosa - Saltmarsh baccharis",3,"full leaf out",2022-05-19,"N/A",1147,1160,-9999
+"SRB-095","NE","Juncus mexicanus",35,"full leaf out",2022-05-25,"N/A",1207,1176,-9999
+"SRB-095","NW","Juncus mexicanus",16,"full leaf out",2022-05-25,"N/A",1207,1176,-9999
+"SRB-095","SW","Juncus mexicanus",36,"full leaf out",2022-05-25,"N/A",1207,1176,-9999
+"SRB-095","SE","Muhlenbergia rigens - Deergrass",25,"full leaf out",2022-05-25,"N/A",1207,1177,-9999
+"SRB-095","SW","Muhlenbergia rigens - Deergrass",8,"full leaf out",2022-05-25,"N/A",1207,1177,-9999
+"SRB-095","NW","Asclepias fascicularis - Narrow-leaved milkweed",10,"full leaf out",2022-05-25,"N/A",1207,1178,-9999
+"SRB-095","SE","Asclepias fascicularis - Narrow-leaved milkweed",3,"full leaf out",2022-05-25,"N/A",1207,1178,-9999
+"DPB-004","NE","Deinandra increscens",4,"flowers",2022-09-17,"unknown species",1562,1320,-9999
+"DPB-004","NW","Deinandra increscens",2,"flowers",2022-09-17,"unknown species",1562,1320,-9999
+"DPB-004","SE","Deinandra increscens",4,"flowers",2022-09-17,"unknown species",1562,1320,-9999
+"DPB-004","SW","Deinandra increscens",3,"flowers",2022-09-17,"unknown species",1562,1320,-9999
+"SRB-046","NE","Annual grass",5,"full senescence",2022-09-15,"N/A",1526,1631,-9999
+"SRB-046","NE","Brassica nigra - Black mustard",25,"full senescence",2022-09-15,"N/A",1526,1631,-9999
+"SRB-046","NE","Erodium sp.",9,"full senescence",2022-09-15,"N/A",1526,1631,-9999
+"SRB-046","NW","Annual grass",10,"full senescence",2022-09-15,"N/A",1526,1631,-9999
+"SRB-046","NW","Brassica nigra - Black mustard",26,"full senescence",2022-09-15,"N/A",1526,1631,-9999
+"SRB-046","SE","Annual grass",18,"full senescence",2022-09-15,"N/A",1526,1631,-9999
+"SRB-046","SE","Brassica nigra - Black mustard",21,"full senescence",2022-09-15,"N/A",1526,1631,-9999
+"SRB-046","SW","Annual grass",30,"full senescence",2022-09-15,"N/A",1526,1631,-9999
+"SRB-046","SW","Brassica nigra - Black mustard",8,"full senescence",2022-09-15,"N/A",1526,1631,-9999
+"SRB-046","SW","Carduus pycnocephalus - Italian thistle",1,"full senescence",2022-09-15,"N/A",1526,1631,-9999
+"SRB-010","NE","NPV",20,"N/A",2022-09-15,"N/A",1529,1632,-9999
+"SRB-010","NW","NPV",22,"N/A",2022-09-15,"N/A",1529,1632,-9999
+"SRB-010","SE","NPV",18,"N/A",2022-09-15,"N/A",1529,1632,-9999
+"SRB-010","SW","NPV",24,"N/A",2022-09-15,"N/A",1529,1632,-9999
+"CSM-003","NE","NPV",22,"N/A",2022-09-16,"N/A",1658,1646,-9999
+"CSM-003","NW","NPV",25,"N/A",2022-09-16,"N/A",1658,1646,-9999
+"CSM-003","SE","NPV",12,"N/A",2022-09-16,"N/A",1658,1646,-9999
+"CSM-003","SW","NPV",34,"N/A",2022-09-16,"N/A",1658,1646,-9999
+"DPB-004","NE","Bromus diandrus - Ripgut brome",27,"full senescence",2022-09-17,"N/A",1562,1647,-9999
+"DPB-004","NE","NPV",12,"N/A",2022-09-17,"N/A",1562,1647,-9999
+"DPB-004","NW","Bromus diandrus - Ripgut brome",45,"full senescence",2022-09-17,"N/A",1562,1647,-9999
+"DPB-004","NW","NPV",1,"N/A",2022-09-17,"N/A",1562,1647,-9999
+"DPB-004","SE","Bromus diandrus - Ripgut brome",10,"full senescence",2022-09-17,"N/A",1562,1647,-9999
+"DPB-004","SE","NPV",12,"N/A",2022-09-17,"N/A",1562,1647,-9999
+"DPB-004","SW","Bromus diandrus - Ripgut brome",32,"full senescence",2022-09-17,"N/A",1562,1647,-9999
+"DPB-004","SW","NPV",6,"N/A",2022-09-17,"N/A",1562,1647,-9999
+"DPB-003","NE","NPV",44,"N/A",2022-09-17,"N/A",1565,1650,-9999
+"DPB-003","NW","NPV",34,"N/A",2022-09-17,"N/A",1565,1650,-9999
+"DPB-003","SE","NPV",43,"N/A",2022-09-17,"N/A",1565,1650,-9999
+"DPB-003","SW","NPV",35,"N/A",2022-09-17,"N/A",1565,1650,-9999
+"SRB-100","NE","Annual grass",29,"full senescence",2022-09-15,"N/A",1439,1653,-9999
+"SRB-100","NW","Annual grass",29,"full senescence",2022-09-15,"N/A",1439,1653,-9999
+"SRB-100","SE","Annual grass",26,"full senescence",2022-09-15,"N/A",1439,1653,-9999
+"SRB-100","SW","Annual grass",31,"full senescence",2022-09-15,"N/A",1439,1653,-9999
+"SRB-100","NE","NPV",21,"N/A",2022-09-15,"annual grass previous years",1439,1654,-9999
+"SRB-100","NW","NPV",20,"N/A",2022-09-15,"annual grass previous years",1439,1654,-9999
+"SRB-100","SE","NPV",21,"N/A",2022-09-15,"annual grass previous years",1439,1654,-9999
+"SRB-100","SW","NPV",19,"N/A",2022-09-15,"annual grass previous years",1439,1654,-9999
+"SRA-007","NE","Annual grass",4,"full senescence",2022-09-16,"N/A",1472,1668,-9999
+"SRA-007","NE","Annual grass",12,"full senescence",2022-09-16,"Avena fatua - Wild oat",1472,1668,-9999
+"SRA-007","NE","Annual grass",14,"full senescence",2022-09-16,"Bromus diandrus - Ripgut brome",1472,1668,-9999
+"SRA-007","NW","Annual grass",9,"full senescence",2022-09-16,"N/A",1472,1668,-9999
+"SRA-007","NW","Annual grass",2,"full senescence",2022-09-16,"Avena fatua - Wild oat",1472,1668,-9999
+"SRA-007","NW","Annual grass",15,"full senescence",2022-09-16,"Bromus diandrus - Ripgut brome",1472,1668,-9999
+"SRA-007","SE","Annual grass",39,"full senescence",2022-09-16,"Bromus diandrus - Ripgut brome",1472,1668,-9999
+"SRA-007","SW","Annual grass",32,"full senescence",2022-09-16,"Bromus diandrus - Ripgut brome",1472,1668,-9999
+"SRB-200","NE","Annual grass",5,"full senescence",2022-09-16,"Avena fatua - Wild oat",1475,1681,-9999
+"SRB-200","NE","Annual grass",9,"full senescence",2022-09-16,"Bromus diandrus - Ripgut brome",1475,1681,-9999
+"SRB-200","NE","NPV",4,"N/A",2022-09-16,"N/A",1475,1681,-9999
+"SRB-200","NW","Annual grass",11,"full senescence",2022-09-16,"Avena fatua - Wild oat",1475,1681,-9999
+"SRB-200","NW","NPV",9,"N/A",2022-09-16,"N/A",1475,1681,-9999
+"SRB-200","SE","Annual grass",1,"full senescence",2022-09-16,"Bromus diandrus - Ripgut brome",1475,1681,-9999
+"SRB-200","SW","Annual grass",6,"full senescence",2022-09-16,"Bromus diandrus - Ripgut brome",1475,1681,-9999
+"SRB-200","SW","NPV",12,"N/A",2022-09-16,"N/A",1475,1681,-9999
+"SRA-056","NE","Annual grass",6,"full senescence",2022-09-16,"Avena fatua - Wild oat",1478,1682,-9999
+"SRA-056","NW","Annual grass",17,"full senescence",2022-09-16,"Avena fatua - Wild oat",1478,1682,-9999
+"SRA-056","SE","Annual grass",6,"full senescence",2022-09-16,"Avena fatua - Wild oat",1478,1682,-9999
+"SRA-056","SW","Annual grass",7,"full senescence",2022-09-16,"Avena fatua - Wild oat",1478,1682,-9999
+"SRB-050","NE","Avena fatua - Wild oat",26,"full senescence",2022-09-16,"sheet says SE but I think it's NE",1481,1683,-9999
+"SRB-050","NW","Avena fatua - Wild oat",26,"full senescence",2022-09-16,"N/A",1481,1683,-9999
+"SRB-050","SE","Avena fatua - Wild oat",14,"full senescence",2022-09-16,"N/A",1481,1683,-9999
+"SRB-050","SW","Avena fatua - Wild oat",25,"full senescence",2022-09-16,"N/A",1481,1683,-9999
+"SRB-071","NE","Avena fatua - Wild oat",1,"full senescence",2022-09-18,"N/A",1670,1690,-9999
+"SRB-071","NW","Avena fatua - Wild oat",7,"full senescence",2022-09-18,"N/A",1670,1690,-9999
+"SRB-071","SW","Avena fatua - Wild oat",13,"full senescence",2022-09-18,"N/A",1670,1690,-9999
+"SRB-071","NE","Eriogonum fasciculatum - California buckwheat",8,"early senescence",2022-09-18,"N/A",1670,1693,-9999
+"SRB-071","NW","Eriogonum fasciculatum - California buckwheat",7,"early senescence",2022-09-18,"N/A",1670,1693,-9999
+"SRB-071","SE","Eriogonum fasciculatum - California buckwheat",9,"early senescence",2022-09-18,"N/A",1670,1693,-9999
+"SRB-071","SW","Eriogonum fasciculatum - California buckwheat",1,"early senescence",2022-09-18,"N/A",1670,1693,-9999
+"DPB-001","NW","Croton setiger",7,"full leaf out",2022-09-17,"N/A",1520,1745,-9999
+"DPB-001","SW","Croton setiger",3,"full leaf out",2022-09-17,"N/A",1520,1745,-9999
+"CSM-001","NE","Jaumea carnosa - Jaumea",2,"full leaf out",2022-09-16,"N/A",1652,1750,-9999
+"CSM-001","NW","Jaumea carnosa - Jaumea",10,"full leaf out",2022-09-16,"N/A",1652,1750,-9999
+"CSM-001","SE","Jaumea carnosa - Jaumea",7,"full leaf out",2022-09-16,"N/A",1652,1750,-9999
+"CSM-001","SW","Jaumea carnosa - Jaumea",34,"full leaf out",2022-09-16,"N/A",1652,1750,-9999
+"CSM-001","NE","Salicornia pacifica - Pickleweed",11,"early senescence",2022-09-16,"N/A",1652,1751,-9999
+"CSM-001","NE","Salicornia pacifica - Pickleweed",17,"full leaf out",2022-09-16,"N/A",1652,1751,-9999
+"CSM-001","NW","Salicornia pacifica - Pickleweed",11,"full leaf out",2022-09-16,"N/A",1652,1751,-9999
+"CSM-001","SE","Salicornia pacifica - Pickleweed",2,"early senescence",2022-09-16,"N/A",1652,1751,-9999
+"CSM-001","SE","Salicornia pacifica - Pickleweed",15,"full leaf out",2022-09-16,"N/A",1652,1751,-9999
+"CSM-001","SW","Salicornia pacifica - Pickleweed",1,"early senescence",2022-09-16,"N/A",1652,1751,-9999
+"CSM-001","SW","Salicornia pacifica - Pickleweed",3,"full leaf out",2022-09-16,"N/A",1652,1751,-9999
+"CSM-003","NE","Arthrocnemum subterminale - Parish's glasswort",20,"full leaf out",2022-09-16,"N/A",1658,1754,-9999
+"CSM-003","NW","Arthrocnemum subterminale - Parish's glasswort",2,"early senescence",2022-09-16,"N/A",1658,1754,-9999
+"CSM-003","NW","Arthrocnemum subterminale - Parish's glasswort",23,"full leaf out",2022-09-16,"N/A",1658,1754,-9999
+"CSM-003","SE","Arthrocnemum subterminale - Parish's glasswort",20,"early senescence",2022-09-16,"N/A",1658,1754,-9999
+"CSM-003","SE","Arthrocnemum subterminale - Parish's glasswort",17,"full leaf out",2022-09-16,"N/A",1658,1754,-9999
+"CSM-003","SW","Arthrocnemum subterminale - Parish's glasswort",7,"early senescence",2022-09-16,"N/A",1658,1754,-9999
+"CSM-003","SW","Arthrocnemum subterminale - Parish's glasswort",9,"full leaf out",2022-09-16,"N/A",1658,1754,-9999
+"CSM-004","NE","Jaumea carnosa - Jaumea",39,"full leaf out ",2022-09-16,"N/A",1661,1755,-9999
+"CSM-004","NW","Jaumea carnosa - Jaumea",23,"full leaf out",2022-09-16,"N/A",1661,1755,-9999
+"CSM-004","SE","Jaumea carnosa - Jaumea",45,"full leaf out",2022-09-16,"N/A",1661,1755,-9999
+"CSM-004","SW","Jaumea carnosa - Jaumea",38,"full leaf out",2022-09-16,"N/A",1661,1755,-9999
+"CSM-005","NE","Salicornia pacifica - Pickleweed",9,"full leaf out",2022-09-16,"N/A",1664,1756,-9999
+"CSM-005","NW","Salicornia pacifica - Pickleweed",24,"full leaf out",2022-09-16,"N/A",1664,1756,-9999
+"CSM-005","SE","Salicornia pacifica - Pickleweed",5,"full leaf out",2022-09-16,"N/A",1664,1756,-9999
+"CSM-005","SW","Salicornia pacifica - Pickleweed",2,"early senescence",2022-09-16,"N/A",1664,1756,-9999
+"CSM-005","SW","Salicornia pacifica - Pickleweed",12,"full leaf out",2022-09-16,"N/A",1664,1756,-9999
+"CSM-005","NE","Jaumea carnosa - Jaumea",23,"full leaf out",2022-09-16,"N/A",1664,1757,-9999
+"CSM-005","NW","Jaumea carnosa - Jaumea",7,"full leaf out",2022-09-16,"N/A",1664,1757,-9999
+"CSM-005","SE","Jaumea carnosa - Jaumea",32,"full leaf out",2022-09-16,"N/A",1664,1757,-9999
+"CSM-005","SW","Jaumea carnosa - Jaumea",26,"full leaf out",2022-09-16,"N/A",1664,1757,-9999
+"DPB-005","NE","NPV",41,"N/A",2022-09-17,"N/A",1502,1822,-9999
+"DPB-005","NW","NPV",39,"N/A",2022-09-17,"N/A",1502,1822,-9999
+"DPB-005","SE","NPV",27,"N/A",2022-09-17,"N/A",1502,1822,-9999
+"DPB-005","SW","NPV",36,"N/A",2022-09-17,"N/A",1502,1822,-9999
+"DPB-001","NE","NPV",39,"N/A",2022-09-17,"N/A",1520,1825,-9999
+"DPB-001","NW","NPV",36,"N/A",2022-09-17,"N/A",1520,1825,-9999
+"DPB-001","SE","NPV",54,"N/A",2022-09-17,"N/A",1520,1825,-9999
+"DPB-001","SW","NPV",36,"N/A",2022-09-17,"N/A",1520,1825,-9999
+"SRB-004","NE","Annual grass",18,"full senescence",2022-09-16,"Avena fatua - Wild oat",1559,1853,-9999
+"SRB-004","NE","Annual grass",3,"full senescence",2022-09-16,"Bromus diandrus - Ripgut brome",1559,1853,-9999
+"SRB-004","NE","NPV",3,"N/A",2022-09-16,"N/A",1559,1853,-9999
+"SRB-004","NW","Annual grass",16,"full senescence",2022-09-16,"Avena fatua - Wild oat",1559,1853,-9999
+"SRB-004","NW","Annual grass",2,"full senescence",2022-09-16,"Bromus diandrus - Ripgut brome",1559,1853,-9999
+"SRB-004","NW","Annual grass",4,"full senescence",2022-09-16,"Bromus madritensis madritensis",1559,1853,-9999
+"SRB-004","NW","NPV",1,"N/A",2022-09-16,"N/A",1559,1853,-9999
+"SRB-004","SE","Annual grass",6,"full senescence",2022-09-16,"Avena fatua - Wild oat",1559,1853,-9999
+"SRB-004","SE","Annual grass",5,"full senescence",2022-09-16,"Bromus sp.",1559,1853,-9999
+"SRB-004","SW","Annual grass",21,"full senescence",2022-09-16,"Avena fatua - Wild oat",1559,1853,-9999
+"SRB-015","NE","Avena fatua - Wild oat",37,"full senescence",2022-09-18,"N/A",1673,1866,-9999
+"SRB-015","NW","Avena fatua - Wild oat",32,"full senescence",2022-09-18,"N/A",1673,1866,-9999
+"SRB-015","SE","Avena fatua - Wild oat",42,"full senescence",2022-09-18,"N/A",1673,1866,-9999
+"SRB-015","SW","Avena fatua - Wild oat",30,"full senescence",2022-09-18,"N/A",1673,1866,-9999
+"SRB-015","NE","NPV",13,"N/A",2022-09-18,"Avena fatua last year",1673,1898,-9999
+"SRB-015","NW","NPV",19,"N/A",2022-09-18,"Avena fatua last year",1673,1898,-9999
+"SRB-015","SE","NPV",8,"N/A",2022-09-18,"Avena fatua last year",1673,1898,-9999
+"SRB-015","SW","NPV",10,"N/A",2022-09-18,"Avena fatua last year",1673,1898,-9999
+"SRB-071","NE","NPV",41,"N/A",2022-09-18,"N/A",1670,1911,-9999
+"SRB-071","NW","NPV",29,"N/A",2022-09-18,"N/A",1670,1911,-9999
+"SRB-071","SE","NPV",31,"N/A",2022-09-18,"N/A",1670,1911,-9999
+"SRB-071","SW","NPV",32,"N/A",2022-09-18,"N/A",1670,1911,-9999
+"DPA-001","NE","Malva parviflora - Cheeseweed mallow",1,"full leaf out",2022-02-23,"N/A",19,-9999,-9999
+"DPA-001","NW","Malva parviflora - Cheeseweed mallow",1,"full leaf out",2022-02-23,"N/A",19,-9999,-9999
+"DPA-001","SE","NPV",5,"N/A",2022-02-23,"N/A",19,-9999,-9999
+"DPA-001","SE","Soil",4,"N/A",2022-02-23,"N/A",19,-9999,-9999
+"DPA-001","SW","Malva parviflora - Cheeseweed mallow",2,"full leaf out",2022-02-23,"N/A",19,-9999,-9999
+"DPB-001","NE","Annual grass",2,"last year senescence",2022-02-23,"N/A",16,-9999,-9999
+"DPB-001","NE","NPV",1,"N/A",2022-02-23,"N/A",16,-9999,-9999
+"DPB-001","NW","NPV",4,"N/A",2022-02-23,"N/A",16,-9999,-9999
+"DPB-001","NW","Soil",6,"N/A",2022-02-23,"N/A",16,-9999,-9999
+"DPB-001","SE","Medicago polymorpha - bur clover",1,"full leaf out",2022-02-23,"N/A",16,-9999,-9999
+"DPB-001","SE","NPV",3,"N/A",2022-02-23,"N/A",16,-9999,-9999
+"DPB-001","SE","Soil",4,"N/A",2022-02-23,"N/A",16,-9999,-9999
+"DPB-001","SW","Soil",1,"N/A",2022-02-23,"N/A",16,-9999,-9999
+"SRA-001","NE","Amsinckia menziesii - Fiddleneck",7,"full leaf out",2022-02-24,"N/A",31,-9999,-9999
+"SRA-001","NE","Erodium cicutarium",9,"full leaf out",2022-02-24,"N/A",31,-9999,-9999
+"SRA-001","NE","Bromus diandrus - Ripgut brome",4,"last year senescence",2022-02-24,"N/A",31,-9999,-9999
+"SRA-001","NE","Soil",3,"N/A",2022-02-24,"N/A",31,-9999,-9999
+"SRA-001","SE","Bromus diandrus - Ripgut brome",2,"last year senescence",2022-02-24,"N/A",31,-9999,-9999
+"SRA-005","NE","Soil",10,"N/A",2022-02-24,"N/A",67,-9999,-9999
+"SRA-005","NW","Soil",6,"N/A",2022-02-24,"N/A",67,-9999,-9999
+"SRA-005","SE","Soil",5,"N/A",2022-02-24,"N/A",67,-9999,-9999
+"SRA-005","SW","Soil",8,"N/A",2022-02-24,"N/A",67,-9999,-9999
+"SRB-001","NE","NPV",1,"N/A",2022-02-24,"N/A",40,-9999,-9999
+"SRB-001","NE","Soil",3,"N/A",2022-02-24,"N/A",40,-9999,-9999
+"SRB-001","NW","NPV",1,"N/A",2022-02-24,"N/A",40,-9999,-9999
+"SRB-001","SE","NPV",1,"N/A",2022-02-24,"N/A",40,-9999,-9999
+"SRB-001","SE","Soil",1,"N/A",2022-02-24,"N/A",40,-9999,-9999
+"SRB-001","SW","NPV",5,"N/A",2022-02-24,"N/A",40,-9999,-9999
+"SRA-007","NE","NPV",4,"N/A",2022-02-25,"N/A",58,-9999,-9999
+"SRA-007","NE","Rock",2,"N/A",2022-02-25,"N/A",58,-9999,-9999
+"SRA-007","NE","Soil",20,"N/A",2022-02-25,"N/A",58,-9999,-9999
+"SRA-007","NW","NPV",4,"N/A",2022-02-25,"N/A",58,-9999,-9999
+"SRA-007","NW","Rock",6,"N/A",2022-02-25,"N/A",58,-9999,-9999
+"SRA-007","NW","Soil",6,"N/A",2022-02-25,"N/A",58,-9999,-9999
+"SRA-007","SE","NPV",4,"N/A",2022-02-25,"N/A",58,-9999,-9999
+"SRA-007","SE","Rock",3,"N/A",2022-02-25,"N/A",58,-9999,-9999
+"SRA-007","SE","Soil",10,"N/A",2022-02-25,"N/A",58,-9999,-9999
+"SRA-007","SW","NPV",5,"N/A",2022-02-25,"N/A",58,-9999,-9999
+"SRA-007","SW","Rock",6,"N/A",2022-02-25,"N/A",58,-9999,-9999
+"SRA-007","SW","Soil",14,"N/A",2022-02-25,"N/A",58,-9999,-9999
+"SRB-004","NE","NPV",8,"N/A",2022-02-25,"N/A",61,-9999,-9999
+"SRB-004","NE","Soil",12,"N/A",2022-02-25,"N/A",61,-9999,-9999
+"SRB-004","NW","NPV",8,"N/A",2022-02-25,"N/A",61,-9999,-9999
+"SRB-004","NW","Soil",7,"N/A",2022-02-25,"N/A",61,-9999,-9999
+"SRB-004","SE","NPV",6,"N/A",2022-02-25,"N/A",61,-9999,-9999
+"SRB-004","SE","Soil",23,"N/A",2022-02-25,"N/A",61,-9999,-9999
+"SRB-004","SW","Annual grass",10,"last year senescence",2022-02-25,"N/A",61,-9999,-9999
+"SRB-004","SW","Eschscholzia californica - California poppy",2,"last year senescence",2022-02-25,"N/A",61,-9999,-9999
+"SRB-004","SW","NPV",23,"N/A",2022-02-25,"N/A",61,-9999,-9999
+"SRB-004","SW","Soil",15,"N/A",2022-02-25,"N/A",61,-9999,-9999
+"SRB-007","NE","NPV",27,"N/A",2022-03-01,"N/A",73,-9999,-9999
+"SRB-007","NE","Soil",5,"N/A",2022-03-01,"N/A",73,-9999,-9999
+"SRB-007","NW","NPV",27,"N/A",2022-03-01,"N/A",73,-9999,-9999
+"SRB-007","NW","soil",1,"N/A",2022-03-01,"N/A",73,-9999,-9999
+"SRB-007","SE","NPV",18,"N/A",2022-03-01,"N/A",73,-9999,-9999
+"SRB-007","SE","Soil",1,"N/A",2022-03-01,"N/A",73,-9999,-9999
+"SRB-007","SW","NPV",20,"N/A",2022-03-01,"N/A",73,-9999,-9999
+"SRB-008","NE","Soil",12,"N/A",2022-03-01,"N/A",79,-9999,-9999
+"SRB-008","NW","NPV",1,"N/A",2022-03-01,"N/A",79,-9999,-9999
+"SRB-008","NW","Soil",18,"N/A",2022-03-01,"N/A",79,-9999,-9999
+"SRB-008","SE","NPV",1,"N/A",2022-03-01,"N/A",79,-9999,-9999
+"SRB-008","SE","Soil",21,"N/A",2022-03-01,"N/A",79,-9999,-9999
+"SRB-008","SW","Soil",14,"N/A",2022-03-01,"N/A",79,-9999,-9999
+"SRB-009","NE","Lupinus sp. - unknown annual lupine",2,"full leaf out",2022-03-01,"N/A",82,-9999,-9999
+"SRB-009","NE","NPV",1,"N/A",2022-03-01,"N/A",82,-9999,-9999
+"SRB-009","NE","Soil",4,"N/A",2022-03-01,"N/A",82,-9999,-9999
+"SRB-009","NW","Soil",35,"N/A",2022-03-01,"N/A",82,-9999,-9999
+"SRB-009","SE","Erodium sp.",4,"full leaf out",2022-03-01,"N/A",82,-9999,-9999
+"SRB-009","SE","Medicago polymorpha - bur clover",1,"full leaf out",2022-03-01,"N/A",82,-9999,-9999
+"SRB-009","SE","NPV",3,"N/A",2022-03-01,"N/A",82,-9999,-9999
+"SRB-009","SE","Soil",18,"N/A",2022-03-01,"N/A",82,-9999,-9999
+"SRB-009","SW","NPV",1,"N/A",2022-03-01,"N/A",82,-9999,-9999
+"SRB-009","SW","Soil",11,"N/A",2022-03-01,"N/A",82,-9999,-9999
+"SRB-010","NE","Carduus pycnocephalus - Italian thistle",1,"full leaf out",2022-03-01,"N/A",85,-9999,-9999
+"SRB-010","NE","NPV",32,"N/A",2022-03-01,"N/A",85,-9999,-9999
+"SRB-010","NW","NPV",6,"full leaf out",2022-03-01,"N/A",85,-9999,-9999
+"SRB-010","NW","Carduus pycnocephalus - Italian thistle",1,"full leaf out",2022-03-01,"N/A",85,-9999,-9999
+"SRB-010","SE","NPV",29,"N/A",2022-03-01,"N/A",85,-9999,-9999
+"SRB-010","SW","NPV",30,"N/A",2022-03-01,"N/A",85,-9999,-9999
+"SRA-010","NE","NPV",32,"N/A",2022-03-02,"N/A",94,-9999,-9999
+"SRA-010","NW","NPV",41,"N/A",2022-03-02,"N/A",94,-9999,-9999
+"SRA-010","SE","NPV",31,"N/A",2022-03-02,"N/A",94,-9999,-9999
+"SRA-010","SW","NPV",33,"N/A",2022-03-02,"N/A",94,-9999,-9999
+"SRB-013","NE","NPV",28,"N/A",2022-03-02,"N/A",109,-9999,-9999
+"SRB-013","NW","NPV",28,"N/A",2022-03-02,"N/A",109,-9999,-9999
+"SRB-013","SE","NPV",28,"N/A",2022-03-02,"N/A",109,-9999,-9999
+"SRB-013","SW","Toxicoscordion fremontii - Common star lily",1,"full leaf out",2022-03-02,"N/A",109,-9999,-9999
+"SRB-013","SW","NPV",38,"N/A",2022-03-02,"N/A",109,-9999,-9999
+"SRB-015","NE","Hypochaeris glabra - Smooth cat's ear",1,"full leaf out",2022-03-02,"N/A",118,-9999,-9999
+"SRB-015","NE","NPV",25,"N/A",2022-03-02,"N/A",118,-9999,-9999
+"SRB-015","NW","NPV",27,"N/A",2022-03-02,"N/A",118,-9999,-9999
+"SRB-015","NW","Rock",1,"N/A",2022-03-02,"N/A",118,-9999,-9999
+"SRB-015","SE","NPV",20,"N/A",2022-03-02,"N/A",118,-9999,-9999
+"SRB-015","SE","Rock",1,"N/A",2022-03-02,"N/A",118,-9999,-9999
+"SRB-015","SW","Hypochaeris glabra - Smooth cat's ear",3,"full leaf out",2022-03-02,"N/A",118,-9999,-9999
+"SRB-015","SW","Medicago polymorpha - bur clover",2,"full leaf out",2022-03-02,"N/A",118,-9999,-9999
+"SRB-015","SW","NPV",27,"N/A",2022-03-02,"N/A",118,-9999,-9999
+"DPB-003","NE","Erodium sp.",1,"full leaf out",2022-03-03,"N/A",124,-9999,-9999
+"DPB-003","NW","Erodium moschatum",13,"full leaf out",2022-03-03,"N/A",124,-9999,-9999
+"DPB-003","NW","NPV",5,"N/A",2022-03-03,"N/A",124,-9999,-9999
+"DPB-003","SE","NPV",16,"N/A",2022-03-03,"N/A",124,-9999,-9999
+"DPB-003","SE","Soil",5,"N/A",2022-03-03,"N/A",124,-9999,-9999
+"DPB-003","SW","Erodium sp.",4,"full leaf out",2022-03-03,"N/A",124,-9999,-9999
+"DPB-003","SW","Lupinus bicolor - Bicolored lupine",1,"full leaf out",2022-03-03,"N/A",124,-9999,-9999
+"DPB-003","SW","NPV",9,"N/A",2022-03-03,"N/A",124,-9999,-9999
+"DPB-004","NE","Calandrinia menzieszii - Red maids",1,"full leaf out",2022-03-03,"N/A",133,-9999,-9999
+"DPB-004","NE","NPV",1,"N/A",2022-03-03,"N/A",133,-9999,-9999
+"DPB-004","NW","Calandrinia menzieszii - Red maids",1,"full leaf out",2022-03-03,"N/A",133,-9999,-9999
+"DPB-004","NW","NPV",3,"N/A",2022-03-03,"N/A",133,-9999,-9999
+"DPB-004","NW","Soil",6,"N/A",2022-03-03,"N/A",133,-9999,-9999
+"DPB-004","SE","NPV",4,"N/A",2022-03-03,"N/A",133,-9999,-9999
+"DPB-004","SE","Soil",11,"N/A",2022-03-03,"N/A",133,-9999,-9999
+"DPB-004","SW","Amsinckia menziesii - Fiddleneck",1,"full leaf out",2022-03-03,"N/A",133,-9999,-9999
+"DPB-004","SW","NPV",7,"N/A",2022-03-03,"N/A",133,-9999,-9999
+"DPB-004","SW","Soil",6,"N/A",2022-03-03,"N/A",133,-9999,-9999
+"DPB-005","NE","Calandrinia menzieszii - Red maids",2,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","NE","Erodium sp.",15,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","NE","Eschscholzia californica - California poppy",1,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","NE","Layia platyglossa - Coastal tidytips",1,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","NE","Stipa sp. - Needlegrass",1,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","NE","NPV",5,"N/A",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","NE","Soil",12,"N/A",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","NW","Erodium sp.",3,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","NW","Festuca perennis",2,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","NW","Lepidium nitidum",6,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","NW","NPV",2,"N/A",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","NW","Soil",21,"N/A",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","SE","Erodium sp.",9,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","SE","Eschscholzia californica - California poppy",2,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","SE","Layia platyglossa - Coastal tidytips",2,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","SE","NPV",11,"N/A",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","SE","Soil",5,"N/A",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","SW","Erodium sp.",3,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","SW","Hypochaeris glabra - Smooth cat's ear",1,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","SW","Layia platyglossa - Coastal tidytips",7,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","SW","Lepidium nitidum",7,"full leaf out",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","SW","NPV",14,"N/A",2022-03-03,"N/A",142,-9999,-9999
+"DPB-005","SW","Soil",5,"N/A",2022-03-03,"N/A",142,-9999,-9999
+"DPA-013","NE","NPV",14,"N/A",2022-03-09,"N/A",187,-9999,-9999
+"DPA-013","NW","NPV",16,"N/A",2022-03-09,"N/A",187,-9999,-9999
+"DPA-013","NW","Soil",5,"N/A",2022-03-09,"N/A",187,-9999,-9999
+"DPA-013","SE","NPV",22,"N/A",2022-03-09,"N/A",187,-9999,-9999
+"DPA-013","SW","NPV",11,"N/A",2022-03-09,"N/A",187,-9999,-9999
+"DPB-009","NE","NPV",39,"N/A",2022-03-09,"N/A",199,-9999,-9999
+"DPB-009","NW","NPV",1,"N/A",2022-03-09,"N/A",199,-9999,-9999
+"DPB-009","SE","NPV",1,"N/A",2022-03-09,"N/A",199,-9999,-9999
+"DPB-009","SW","NPV",7,"N/A",2022-03-09,"N/A",199,-9999,-9999
+"SRA-019","NE","NPV",43,"N/A",2022-03-10,"N/A",217,-9999,-9999
+"SRA-019","NE","Soil",3,"N/A",2022-03-10,"N/A",217,-9999,-9999
+"SRA-019","NW","NPV",6,"N/A",2022-03-10,"N/A",217,-9999,-9999
+"SRA-019","NW","Soil",8,"N/A",2022-03-10,"N/A",217,-9999,-9999
+"SRA-019","SE","Brassica nigra - Black mustard",1,"full leaf out",2022-03-10,"N/A",217,-9999,-9999
+"SRA-019","SE","NPV",6,"N/A",2022-03-10,"N/A",217,-9999,-9999
+"SRA-019","SE","Soil",13,"N/A",2022-03-10,"N/A",217,-9999,-9999
+"SRA-019","SW","NPV",17,"N/A",2022-03-10,"N/A",217,-9999,-9999
+"SRA-019","SW","Soil",2,"N/A",2022-03-10,"N/A",217,-9999,-9999
+"SRA-020","NE","NPV",18,"N/A",2022-03-10,"N/A",220,-9999,-9999
+"SRA-020","NE","Soil",5,"N/A",2022-03-10,"N/A",220,-9999,-9999
+"SRA-020","NW","NPV",16,"N/A",2022-03-10,"N/A",220,-9999,-9999
+"SRA-020","NW","Soil",3,"N/A",2022-03-10,"N/A",220,-9999,-9999
+"SRA-020","SE","NPV",7,"N/A",2022-03-10,"N/A",220,-9999,-9999
+"SRA-020","SE","Soil",14,"N/A",2022-03-10,"N/A",220,-9999,-9999
+"SRA-020","SW","NPV",9,"N/A",2022-03-10,"N/A",220,-9999,-9999
+"SRA-020","SW","Soil",16,"N/A",2022-03-10,"N/A",220,-9999,-9999
+"SRA-021","NE","NPV",31,"N/A",2022-03-10,"N/A",268,-9999,-9999
+"SRA-021","NW","Corethrogyne filaginifolia",2,"full leaf out",2022-03-10,"N/A",268,-9999,-9999
+"SRA-021","NW","Lupinus succulentus - Succulent lupine",1,"full leaf out",2022-03-10,"N/A",268,-9999,-9999
+"SRA-021","NW","NPV",29,"N/A",2022-03-10,"N/A",268,-9999,-9999
+"SRA-021","SE","NPV",42,"N/A",2022-03-10,"N/A",268,-9999,-9999
+"SRA-021","SW","Centaurea melitensis",1,"full leaf out",2022-03-10,"N/A",268,-9999,-9999
+"SRA-021","SW","NPV",21,"N/A",2022-03-10,"N/A",268,-9999,-9999
+"SRA-022","NE","NPV",1,"N/A",2022-03-10,"N/A",223,-9999,-9999
+"SRA-022","NE","Soil",1,"N/A",2022-03-10,"N/A",223,-9999,-9999
+"SRA-022","NW","Soil",5,"N/A",2022-03-10,"N/A",223,-9999,-9999
+"SRA-022","SE","Brassica nigra - Black mustard",2,"full leaf out",2022-03-10,"N/A",223,-9999,-9999
+"SRA-022","SE","NPV",8,"N/A",2022-03-10,"N/A",223,-9999,-9999
+"SRA-022","SW","Brassica nigra - Black mustard",10,"full leaf out",2022-03-10,"N/A",223,-9999,-9999
+"SRA-022","SW","NPV",1,"N/A",2022-03-10,"N/A",223,-9999,-9999
+"SRA-022","SW","Soil",11,"N/A",2022-03-10,"N/A",223,-9999,-9999
+"SRA-023","NE","NPV",8,"N/A",2022-03-10,"N/A",271,-9999,-9999
+"SRA-023","NE","Soil",2,"N/A",2022-03-10,"N/A",271,-9999,-9999
+"SRA-023","NW","Brassica nigra - Black mustard",1,"full leaf out",2022-03-10,"N/A",271,-9999,-9999
+"SRA-023","NW","NPV",7,"N/A",2022-03-10,"N/A",271,-9999,-9999
+"SRA-023","NW","Soil",16,"N/A",2022-03-10,"N/A",271,-9999,-9999
+"SRA-023","SE","NPV",29,"N/A",2022-03-10,"N/A",271,-9999,-9999
+"SRA-023","SW","NPV",15,"N/A",2022-03-10,"N/A",271,-9999,-9999
+"SRA-023","SW","Soil",4,"N/A",2022-03-10,"N/A",271,-9999,-9999
+"SRB-021","NE","NPV",4,"N/A",2022-03-10,"N/A",226,-9999,-9999
+"SRB-021","NW","NPV",10,"N/A",2022-03-10,"N/A",226,-9999,-9999
+"SRB-021","SE","NPV",14,"N/A",2022-03-10,"N/A",226,-9999,-9999
+"SRB-021","SW","NPV",5,"N/A",2022-03-10,"N/A",226,-9999,-9999
+"SRB-022","NE","Hazardia squarrosa - Sawtooth goldenbush",2,"full leaf out",2022-03-10,"N/A",229,-9999,-9999
+"SRB-022","NE","NPV",9,"N/A",2022-03-10,"N/A",229,-9999,-9999
+"SRB-022","NE","Soil",21,"N/A",2022-03-10,"N/A",229,-9999,-9999
+"SRB-022","NW","NPV",6,"N/A",2022-03-10,"N/A",229,-9999,-9999
+"SRB-022","NW","Soil",14,"N/A",2022-03-10,"N/A",229,-9999,-9999
+"SRB-022","SE","NPV",2,"N/A",2022-03-10,"N/A",229,-9999,-9999
+"SRB-022","SE","Soil",4,"N/A",2022-03-10,"N/A",229,-9999,-9999
+"SRB-022","SW","NPV",5,"N/A",2022-03-10,"N/A",229,-9999,-9999
+"SRB-022","SW","Soil",1,"N/A",2022-03-10,"N/A",229,-9999,-9999
+"SRB-025","NE","NPV",4,"N/A",2022-03-10,"N/A",238,-9999,-9999
+"SRB-025","NW","Hazardia squarrosa - Sawtooth goldenbush",11,"full leaf out",2022-03-10,"N/A",238,-9999,-9999
+"SRB-025","NW","NPV",4,"N/A",2022-03-10,"N/A",238,-9999,-9999
+"SRB-025","SE","NPV",4,"N/A",2022-03-10,"N/A",238,-9999,-9999
+"SRB-025","SE","Soil",19,"N/A",2022-03-10,"N/A",238,-9999,-9999
+"SRB-025","SW","Erodium sp.",1,"full leaf out",2022-03-10,"N/A",238,-9999,-9999
+"SRB-025","SW","NPV",3,"N/A",2022-03-10,"N/A",238,-9999,-9999
+"SRB-025","SW","Soil",19,"N/A",2022-03-10,"N/A",238,-9999,-9999
+"SRB-027","NE","NPV",15,"N/A",2022-03-11,"N/A",304,-9999,-9999
+"SRB-027","NE","Soil",1,"N/A",2022-03-11,"N/A",304,-9999,-9999
+"SRB-027","NW","Amsinckia menziesii - Fiddleneck",2,"full leaf out",2022-03-11,"N/A",304,-9999,-9999
+"SRB-027","NW","NPV",8,"N/A",2022-03-11,"N/A",304,-9999,-9999
+"SRB-027","NW","Soil",8,"N/A",2022-03-11,"N/A",304,-9999,-9999
+"SRB-027","SE","Amsinckia menziesii - Fiddleneck",1,"full leaf out",2022-03-11,"N/A",304,-9999,-9999
+"SRB-027","SE","NPV",15,"N/A",2022-03-11,"N/A",304,-9999,-9999
+"SRB-027","SE","Soil",8,"N/A",2022-03-11,"N/A",304,-9999,-9999
+"SRB-027","SW","Amsinckia menziesii - Fiddleneck",7,"full leaf out",2022-03-11,"N/A",304,-9999,-9999
+"SRB-027","SW","NPV",11,"N/A",2022-03-11,"N/A",304,-9999,-9999
+"SRB-027","SW","Soil",12,"N/A",2022-03-11,"N/A",304,-9999,-9999
+"SRB-029","NE","Amsinckia menziesii - Fiddleneck",1,"full leaf out",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","NE","Erodium sp.",3,"full leaf out",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","NE","NPV",19,"N/A",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","NE","Soil",15,"N/A",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","NW","Amsinckia menziesii - Fiddleneck",1,"full leaf out",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","NW","Erodium sp.",3,"full leaf out",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","NW","Lupinus bicolor - Bicolored lupine",2,"full leaf out",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","NW","NPV",17,"N/A",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","NW","Soil",17,"N/A",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","SE","Amsinckia menziesii - Fiddleneck",1,"full leaf out",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","SE","NPV",28,"N/A",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","SW","Amsinckia menziesii - Fiddleneck",1,"full leaf out",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","SW","Erodium sp.",1,"full leaf out",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","SW","Lupinus bicolor - Bicolored lupine",2,"full leaf out",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","SW","NPV",17,"N/A",2022-03-11,"N/A",310,-9999,-9999
+"SRB-029","SW","Soil",3,"N/A",2022-03-11,"N/A",310,-9999,-9999
+"DPA-019","NW","Annual grass",1,"flowers",2022-03-17,"N/A",370,-9999,-9999
+"DPA-019","NW","NPV",6,"N/A",2022-03-17,"N/A",370,-9999,-9999
+"DPA-019","NW","Soil",2,"N/A",2022-03-17,"N/A",370,-9999,-9999
+"DPA-019","NW","Lupinus bicolor - Bicolored lupine",1,"Seeds",2022-03-17,"N/A",370,-9999,-9999
+"DPA-019","SE","NPV",2,"N/A",2022-03-17,"N/A",370,-9999,-9999
+"DPA-019","SE","Soil",1,"N/A",2022-03-17,"N/A",370,-9999,-9999
+"DPA-019","SE","Lupinus bicolor - Bicolored lupine",1,"Seeds",2022-03-17,"N/A",370,-9999,-9999
+"DPA-019","SW","Festuca perennis",1,"full leaf out",2022-03-17,"N/A",370,-9999,-9999
+"DPA-019","SW","Medicago polymorpha - bur clover",4,"full leaf out",2022-03-17,"N/A",370,-9999,-9999
+"DPA-019","SW","Rumex crispus - Curly dock",2,"full leaf out",2022-03-17,"N/A",370,-9999,-9999
+"DPA-019","SW","Soil",1,"N/A",2022-03-17,"N/A",370,-9999,-9999
+"DPB-014","NE","NPV",4,"N/A",2022-03-17,"N/A",352,-9999,-9999
+"DPB-014","NW","Soil",2,"N/A",2022-03-17,"N/A",352,-9999,-9999
+"DPB-014","SE","NPV",1,"N/A",2022-03-17,"N/A",352,-9999,-9999
+"DPB-014","SE","Soil",4,"N/A",2022-03-17,"N/A",352,-9999,-9999
+"SRA-033","NE","Erodium cicutarium",5,"full leaf out",2022-03-18,"N/A",376,-9999,-9999
+"SRA-033","NE","NPV",19,"N/A",2022-03-18,"N/A",376,-9999,-9999
+"SRA-033","NE","Soil",8,"N/A",2022-03-18,"N/A",376,-9999,-9999
+"SRA-033","NW","NPV",29,"N/A",2022-03-18,"N/A",376,-9999,-9999
+"SRA-033","NW","Soil",8,"N/A",2022-03-18,"N/A",376,-9999,-9999
+"SRA-033","SE","Erodium cicutarium",3,"full leaf out",2022-03-18,"N/A",376,-9999,-9999
+"SRA-033","SE","NPV",24,"N/A",2022-03-18,"N/A",376,-9999,-9999
+"SRA-033","SE","Soil",6,"N/A",2022-03-18,"N/A",376,-9999,-9999
+"SRA-033","SW","NPV",24,"N/A",2022-03-18,"N/A",376,-9999,-9999
+"SRA-033","SW","Soil",6,"N/A",2022-03-18,"N/A",376,-9999,-9999
+"SRA-034","NE","NPV",13,"N/A",2022-03-18,"N/A",379,-9999,-9999
+"SRA-034","NE","Soil",1,"N/A",2022-03-18,"N/A",379,-9999,-9999
+"SRA-034","NW","Carduus pycnocephalus - Italian thistle",1,"full leaf out",2022-03-18,"N/A",379,-9999,-9999
+"SRA-034","NW","Erodium cicutarium",9,"full leaf out",2022-03-18,"N/A",379,-9999,-9999
+"SRA-034","NW","NPV",9,"N/A",2022-03-18,"N/A",379,-9999,-9999
+"SRA-034","NW","Soil",3,"N/A",2022-03-18,"N/A",379,-9999,-9999
+"SRA-034","SE","Brassica nigra - Black mustard",1,"full leaf out",2022-03-18,"N/A",379,-9999,-9999
+"SRA-034","SE","Erodium sp.",1,"full leaf out",2022-03-18,"N/A",379,-9999,-9999
+"SRA-034","SE","NPV",11,"N/A",2022-03-18,"N/A",379,-9999,-9999
+"SRA-034","SE","Soil",12,"N/A",2022-03-18,"N/A",379,-9999,-9999
+"SRA-034","SW","Erodium sp.",15,"full leaf out",2022-03-18,"N/A",379,-9999,-9999
+"SRA-034","SW","NPV",17,"N/A",2022-03-18,"N/A",379,-9999,-9999
+"SRA-034","SW","Soil",5,"N/A",2022-03-18,"N/A",379,-9999,-9999
+"SRB-030","NE","NPV",15,"N/A",2022-03-18,"N/A",361,-9999,-9999
+"SRB-030","NE","Soil",20,"N/A",2022-03-18,"N/A",361,-9999,-9999
+"SRB-030","NW","NPV",6,"N/A",2022-03-18,"N/A",361,-9999,-9999
+"SRB-030","NW","Soil",21,"N/A",2022-03-18,"N/A",361,-9999,-9999
+"SRB-030","SE","Brassica nigra - Black mustard",3,"full leaf out",2022-03-18,"N/A",361,-9999,-9999
+"SRB-030","SE","Lupinus succulentus - Succulent lupine",1,"full leaf out",2022-03-18,"N/A",361,-9999,-9999
+"SRB-030","SE","NPV",8,"N/A",2022-03-18,"N/A",361,-9999,-9999
+"SRB-030","SE","Rock",1,"N/A",2022-03-18,"N/A",361,-9999,-9999
+"SRB-030","SE","Soil",19,"N/A",2022-03-18,"N/A",361,-9999,-9999
+"SRB-030","SW","NPV",8,"N/A",2022-03-18,"N/A",361,-9999,-9999
+"SRB-030","SW","Soil",20,"N/A",2022-03-18,"N/A",361,-9999,-9999
+"DPA-028","NE","Lupinus bicolor - Bicolored lupine",1,"full leaf out",2022-03-23,"N/A",415,-9999,-9999
+"DPA-028","NE","NPV",2,"N/A",2022-03-23,"N/A",415,-9999,-9999
+"DPA-028","NW","Erodium cicutarium",1,"full leaf out",2022-03-23,"N/A",415,-9999,-9999
+"DPA-028","NW","NPV",16,"N/A",2022-03-23,"N/A",415,-9999,-9999
+"DPA-028","SE","Lupinus nanus - Sky lupine",5,"full leaf out",2022-03-23,"N/A",415,-9999,-9999
+"DPA-028","SE","NPV",16,"N/A",2022-03-23,"N/A",415,-9999,-9999
+"DPA-028","SE","Rock",2,"N/A",2022-03-23,"N/A",415,-9999,-9999
+"DPA-028","SW","Lupinus nanus - Sky lupine",2,"full leaf out",2022-03-23,"N/A",415,-9999,-9999
+"DPA-028","SW","NPV",11,"N/A",2022-03-23,"N/A",415,-9999,-9999
+"DPB-018","NE","Lupinus sp. - unknown annual lupine",7,"full leaf out",2022-03-23,"N/A",400,-9999,-9999
+"DPB-018","NE","NPV",1,"N/A",2022-03-23,"N/A",400,-9999,-9999
+"DPB-018","NW","NPV",6,"N/A",2022-03-23,"N/A",400,-9999,-9999
+"DPB-018","SE","Erodium moschatum",1,"full leaf out",2022-03-23,"N/A",400,-9999,-9999
+"DPB-018","SE","Lupinus sp. - unknown annual lupine",2,"full leaf out",2022-03-23,"N/A",400,-9999,-9999
+"DPB-018","SE","NPV",13,"N/A",2022-03-23,"N/A",400,-9999,-9999
+"DPB-018","SE","Soil",2,"N/A",2022-03-23,"N/A",400,-9999,-9999
+"DPA-030","NE","Erodium cicutarium",3,"full leaf out",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","NE","Vicia sativa - Spring vetch",1,"full leaf out",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","NE","NPV",9,"N/A",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","NW","Erodium cicutarium",5,"early leaf out",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","NW","Hazardia squarrosa - Sawtooth goldenbush",5,"early leaf out",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","NW","Vicia sativa - Spring vetch",2,"early leaf out",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","NW","NPV",12,"N/A",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","SE","Erodium botrys",14,"early leaf out",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","SE","Sonchus oleraceous - Sow thistle",1,"early leaf out",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","SE","Vicia sativa - Spring vetch",2,"early leaf out",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","SE","NPV",14,"N/A",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","SW","Erodium cicutarium",8,"early leaf out",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","SW","Hazardia squarrosa - Sawtooth goldenbush",1,"early leaf out",2022-03-24,"N/A",421,-9999,-9999
+"DPA-030","SW","NPV",13,"N/A",2022-03-24,"N/A",421,-9999,-9999
+"DPB-020","NE","Stipa pulchra - Purple needle grass",1,"flowers",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","NE","Geranium dissectum",6,"full leaf out",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","NE","NPV",9,"N/A",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","NE","Soil",6,"N/A",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","NW","Geranium dissectum",5,"full leaf out",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","NW","Hazardia squarrosa - Sawtooth goldenbush",7,"full leaf out",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","NW","Hedypnois rhagadioloides - Crete weed",1,"full leaf out",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","NW","Vicia sativa - Spring vetch",2,"full leaf out",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","NW","NPV",20,"N/A",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","SE","Stipa pulchra - Purple needle grass",2,"flowers",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","SE","Geranium dissectum",6,"full leaf out",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","SE","Hedypnois rhagadioloides - Crete weed",1,"full leaf out",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","SE","NPV",11,"N/A",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","SW","Vicia sativa - Spring vetch",2,"early leaf out",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","SW","Geranium dissectum",6,"full leaf out",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","SW","Hazardia squarrosa - Sawtooth goldenbush",3,"full leaf out",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","SW","Hedypnois rhagadioloides - Crete weed",1,"full leaf out",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","SW","NPV",3,"N/A",2022-03-24,"N/A",430,-9999,-9999
+"DPB-020","SW","Soil",11,"N/A",2022-03-24,"N/A",430,-9999,-9999
+"DPB-021","NE","Helminthotheca echinoides - Bristly ox-tongue",2,"full leaf out",2022-03-24,"N/A",436,-9999,-9999
+"DPB-021","NE","NPV",6,"N/A",2022-03-24,"N/A",436,-9999,-9999
+"DPB-021","NW","Brassica nigra - Black mustard",5,"full leaf out",2022-03-24,"N/A",436,-9999,-9999
+"DPB-021","NW","Helminthotheca echinoides - Bristly ox-tongue",2,"full leaf out",2022-03-24,"N/A",436,-9999,-9999
+"DPB-021","NW","NPV",1,"N/A",2022-03-24,"N/A",436,-9999,-9999
+"DPB-021","SE","Helminthotheca echinoides - Bristly ox-tongue",1,"full leaf out",2022-03-24,"N/A",436,-9999,-9999
+"DPB-021","SE","Vicia sativa - Spring vetch",4,"full leaf out",2022-03-24,"N/A",436,-9999,-9999
+"DPB-021","SE","NPV",18,"N/A",2022-03-24,"N/A",436,-9999,-9999
+"DPB-021","SW","Brassica nigra - Black mustard",2,"full leaf out",2022-03-24,"N/A",436,-9999,-9999
+"DPB-021","SW","Vicia sativa - Spring vetch",1,"full leaf out",2022-03-24,"N/A",436,-9999,-9999
+"DPB-021","SW","NPV",7,"N/A",2022-03-24,"N/A",436,-9999,-9999
+"SRA-036","NE","NPV",18,"N/A",2022-03-25,"N/A",484,-9999,-9999
+"SRA-036","NE","Soil",6,"N/A",2022-03-25,"N/A",484,-9999,-9999
+"SRA-036","NW","NPV",29,"N/A",2022-03-25,"N/A",484,-9999,-9999
+"SRA-036","NW","Soil",2,"N/A",2022-03-25,"N/A",484,-9999,-9999
+"SRA-036","SE","NPV",28,"N/A",2022-03-25,"N/A",484,-9999,-9999
+"SRA-036","SE","Soil",3,"N/A",2022-03-25,"N/A",484,-9999,-9999
+"SRA-036","SW","Lupinus bicolor - Bicolored lupine",4,"full leaf out",2022-03-25,"N/A",484,-9999,-9999
+"SRA-036","SW","NPV",20,"N/A",2022-03-25,"N/A",484,-9999,-9999
+"SRA-036","SW","Soil",6,"N/A",2022-03-25,"N/A",484,-9999,-9999
+"SRA-038","NE","Annual grass",8,"full leaf out",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","NE","Hazardia squarrosa - Sawtooth goldenbush",1,"full leaf out",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","NE","NPV",24,"N/A",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","NE","Soil",12,"N/A",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","NW","Annual grass",7,"full leaf out",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","NW","NPV",31,"N/A",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","NW","Soil",1,"N/A",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","SE","Amsinckia menziesii - Fiddleneck",1,"early leaf out",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","SE","Annual grass",2,"early leaf out",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","SE","Eschscholzia californica - California poppy",2,"early leaf out",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","SE","NPV",28,"N/A",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","SE","Soil",9,"N/A",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","SW","Annual grass",6,"full leaf out",2022-03-25,"N/A",490,-9999,-9999
+"SRA-038","SW","NPV",36,"N/A",2022-03-25,"N/A",490,-9999,-9999
+"SRB-033","NE","Annual grass",2,"full leaf out",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","NE","Lupinus bicolor - Bicolored lupine",10,"full leaf out",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","NE","NPV",14,"N/A",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","NE","Soil",5,"N/A",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","NW","Annual grass",1,"full leaf out",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","NW","Lupinus bicolor - Bicolored lupine",10,"full leaf out",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","NW","Trifolium sp. - Unknown clover",1,"full leaf out",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","NW","NPV",13,"N/A",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","NW","Soil",9,"N/A",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","SE","Annual grass",1,"full leaf out",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","SE","Lupinus bicolor - Bicolored lupine",4,"full leaf out",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","SE","Viola pedunculata - California golden violet",1,"full leaf out",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","SE","NPV",19,"N/A",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","SE","Soil",1,"N/A",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","SW","Annual grass",4,"full leaf out",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","SW","Lupinus bicolor - Bicolored lupine",13,"full leaf out",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","SW","Viola pedunculata - California golden violet",1,"full leaf out",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","SW","NPV",16,"N/A",2022-03-25,"N/A",493,-9999,-9999
+"SRB-033","SW","Soil",9,"N/A",2022-03-25,"N/A",493,-9999,-9999
+"SRB-034","NE","Corethrogyne filaginifolia",6,"full leaf out",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","NE","Fritillaria biflora - chocolate lily",1,"full leaf out",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","NE","Sisyrinchium bellum - Blue-eyed grass",5,"full leaf out",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","NE","NPV",33,"N/A",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","NE","Rock",1,"N/A",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","NE","Soil",1,"N/A",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","NW","Annual grass",3,"full leaf out",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","NW","Castilleja sp.",1,"full leaf out",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","NW","Corethrogyne filaginifolia",2,"full leaf out",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","NW","NPV",32,"N/A",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","NW","Rock",2,"N/A",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","SE","Annual grass",2,"full leaf out",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","SE","Corethrogyne filaginifolia",1,"full leaf out",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","SE","NPV",27,"N/A",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","SE","Rock",4,"N/A",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","SE","Soil",2,"N/A",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","SW","Annual grass",8,"full leaf out",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","SW","Corethrogyne filaginifolia",3,"full leaf out",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","SW","NPV",27,"N/A",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","SW","Rock",1,"N/A",2022-03-25,"N/A",496,-9999,-9999
+"SRB-034","SW","Soil",2,"N/A",2022-03-25,"N/A",496,-9999,-9999
+"DPA-033","NE","Erodium botrys",5,"early senescence",2022-04-06,"N/A",601,-9999,-9999
+"DPA-033","NE","Erodium botrys",4,"full leaf out",2022-04-06,"N/A",601,-9999,-9999
+"DPA-033","NE","Annual grass",8,"full leaf out",2022-04-06,"Festuca perennis",601,-9999,-9999
+"DPA-033","NE","NPV",23,"N/A",2022-04-06,"N/A",601,-9999,-9999
+"DPA-033","NE","Soil",3,"N/A",2022-04-06,"N/A",601,-9999,-9999
+"DPA-033","NE","Erodium botrys",4,"seeds",2022-04-06,"N/A",601,-9999,-9999
+"DPA-033","NW","Annual grass",5,"full leaf out",2022-04-06,"Festuca perennis",601,-9999,-9999
+"DPA-033","NW","NPV",14,"N/A",2022-04-06,"N/A",601,-9999,-9999
+"DPA-033","SE","Erodium botrys",7,"early senescence",2022-04-06,"N/A",601,-9999,-9999
+"DPA-033","SE","Erodium botrys",1,"full leaf out",2022-04-06,"N/A",601,-9999,-9999
+"DPA-033","SE","Annual grass",3,"full leaf out",2022-04-06,"Festuca perennis",601,-9999,-9999
+"DPA-033","SE","Annual grass",2,"full leaf out",2022-04-06,"Hordeum murinum ssp. leporinum",601,-9999,-9999
+"DPA-033","SE","NPV",15,"N/A",2022-04-06,"N/A",601,-9999,-9999
+"DPA-033","SE","Erodium botrys",1,"seeds",2022-04-06,"N/A",601,-9999,-9999
+"DPA-033","SW","Rumex crispus - Curly dock",1,"flowers",2022-04-06,"N/A",601,-9999,-9999
+"DPA-033","SW","Annual grass",3,"full leaf out",2022-04-06,"Festuca perennis",601,-9999,-9999
+"DPA-033","SW","Rumex crispus - Curly dock",2,"full leaf out",2022-04-06,"N/A",601,-9999,-9999
+"DPA-033","SW","NPV",16,"N/A",2022-04-06,"N/A",601,-9999,-9999
+"DPB-022","NE","Hordeum murinum ssp. leporinum",1,"flowers",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NE","Brassica nigra - Black mustard",3,"full leaf out",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NE","Erodium botrys",3,"full leaf out",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NE","Silene gallica - Windmill pink",1,"full leaf out",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NE","NPV",11,"N/A",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NE","Lepidium nitidum",7,"seeds",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NW","Hordeum murinum ssp. leporinum",4,"flowers",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NW","Erodium botrys",4,"full leaf out",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NW","Hordeum murinum ssp. leporinum",3,"full leaf out",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NW","Lysimachia arvensis - Scarlet pimpernel",1,"full leaf out",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NW","Medicago polymorpha - bur clover",1,"full leaf out",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NW","NPV",9,"N/A",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NW","Erodium botrys",1,"seeds",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","NW","Bromus diandrus - Ripgut brome",3,"full leaf out",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","SE","Erodium botrys",3,"full leaf out",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","SE","NPV",10,"N/A",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","SE","Soil",2,"N/A",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","SE","Festuca perennis",3,"seeds",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","SE","Hordeum murinum ssp. leporinum",15,"seeds",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","SW","Erodium botrys",1,"full leaf out",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","SW","Hordeum murinum ssp. leporinum",2,"full leaf out",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","SW","Medicago polymorpha - bur clover",3,"full leaf out",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","SW","NPV",13,"N/A",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","SW","Hordeum murinum ssp. leporinum",3,"seeds",2022-04-06,"N/A",610,-9999,-9999
+"DPB-022","SW","Lepidium nitidum",5,"seeds",2022-04-06,"N/A",610,-9999,-9999
+"SRA-050","NE","Erodium cicutarium",2,"full leaf out",2022-04-07,"N/A",613,-9999,-9999
+"SRA-050","NE","Soil",7,"N/A",2022-04-07,"N/A",613,-9999,-9999
+"SRA-050","NW","Bromus diandrus - Ripgut brome",1,"full leaf out",2022-04-07,"N/A",613,-9999,-9999
+"SRA-050","NW","Soil",9,"N/A",2022-04-07,"N/A",613,-9999,-9999
+"SRA-050","SE","Brassica nigra - Black mustard",1,"flowers",2022-04-07,"N/A",613,-9999,-9999
+"SRA-050","SE","Soil",1,"N/A",2022-04-07,"N/A",613,-9999,-9999
+"SRA-050","SW","Brassica nigra - Black mustard",1,"flowers",2022-04-07,"N/A",613,-9999,-9999
+"SRA-050","SW","Bromus diandrus - Ripgut brome",1,"full leaf out",2022-04-07,"N/A",613,-9999,-9999
+"SRA-050","SW","Soil",3,"N/A",2022-04-07,"N/A",613,-9999,-9999
+"SRA-051","NE","Erodium cicutarium",1,"full leaf out",2022-04-07,"N/A",619,-9999,-9999
+"SRA-051","NE","Soil",14,"N/A",2022-04-07,"N/A",619,-9999,-9999
+"SRA-051","NW","Soil",5,"N/A",2022-04-07,"N/A",619,-9999,-9999
+"SRA-051","SE","Brassica nigra - Black mustard",2,"full leaf out",2022-04-07,"N/A",619,-9999,-9999
+"SRA-051","SE","NPV",3,"N/A",2022-04-07,"N/A",619,-9999,-9999
+"SRA-051","SW","NPV",1,"N/A",2022-04-07,"N/A",619,-9999,-9999
+"SRB-045","NE","Brassica nigra - Black mustard",8,"full leaf out",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","NE","NPV",4,"N/A",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","NE","Soil",2,"N/A",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","NE","Avena fatua - Wild oat",36,"seeds",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","NW","Brassica nigra - Black mustard",1,"full leaf out",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","NW","NPV",2,"N/A",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","NW","Avena fatua - Wild oat",37,"seeds",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","SE","Brassica nigra - Black mustard",9,"flowers",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","SE","NPV",2,"N/A",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","SE","Rock",1,"N/A",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","SE","Soil",6,"N/A",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","SW","Brassica nigra - Black mustard",3,"full leaf out",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","SW","NPV",1,"N/A",2022-04-07,"N/A",625,-9999,-9999
+"SRB-045","SW","Soil",6,"N/A",2022-04-07,"N/A",625,-9999,-9999
+"SRB-046","NE","Brassica nigra - Black mustard",14,"full leaf out",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","NE","Soil",16,"N/A",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","NW","Avena fatua - Wild oat",9,"full leaf out",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","NW","Brassica nigra - Black mustard",10,"full leaf out",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","NW","Soil",16,"N/A",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","SE","Avena fatua - Wild oat",5,"full leaf out",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","SE","Brassica nigra - Black mustard",1,"full leaf out",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","SE","Bromus diandrus - Ripgut brome",1,"full leaf out",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","SE","Carduus pycnocephalus - Italian thistle",2,"full leaf out",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","SE","NPV",7,"N/A",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","SE","Soil",4,"N/A",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","SW","Avena fatua - Wild oat",1,"full leaf out",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","SW","Brassica nigra - Black mustard",2,"full leaf out",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","SW","Carduus pycnocephalus - Italian thistle",7,"full leaf out",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","SW","NPV",3,"N/A",2022-04-07,"N/A",628,-9999,-9999
+"SRB-046","SW","Soil",7,"N/A",2022-04-07,"N/A",628,-9999,-9999
+"SRB-047","NE","NPV",41,"N/A",2022-04-07,"N/A",631,-9999,-9999
+"SRB-047","NW","Asclepias fascicularis - Narrow-leaved milkweed",2,"full leaf out",2022-04-07,"N/A",631,-9999,-9999
+"SRB-047","NW","NPV",37,"N/A",2022-04-07,"N/A",631,-9999,-9999
+"SRB-047","SE","NPV",21,"N/A",2022-04-07,"N/A",631,-9999,-9999
+"SRB-047","SE","Soil",3,"N/A",2022-04-07,"N/A",631,-9999,-9999
+"SRB-047","SW","NPV",23,"N/A",2022-04-07,"N/A",631,-9999,-9999
+"SRB-048","NE","Clarkia purpurea",2,"flowers",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","NE","NPV",24,"N/A",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","NE","Soil",1,"N/A",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","NW","Avena fatua - Wild oat",2,"full leaf out",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","NW","Erodium cicutarium",1,"full leaf out",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","NW","NPV",29,"N/A",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","NW","Bromus diandrus - Ripgut brome",1,"seeds",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","NW","Bromus hordeaceus",2,"seeds",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","NW","Eschscholzia californica - California poppy",1,"seeds",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","SE","Avena fatua - Wild oat",20,"full leaf out",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","SE","Erodium cicutarium",1,"full leaf out",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","SE","NPV",6,"N/A",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","SE","Bromus hordeaceus",1,"seeds",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","SE","Eschscholzia californica - California poppy",2,"seeds",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","SW","Avena fatua - Wild oat",2,"full leaf out",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","SW","Erodium cicutarium",8,"full leaf out",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","SW","NPV",14,"N/A",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","SW","Rock",8,"N/A",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","SW","Soil",8,"N/A",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","SW","Bromus hordeaceus",3,"seeds",2022-04-07,"N/A",634,-9999,-9999
+"SRB-048","SW","Erodium cicutarium",1,"seeds",2022-04-07,"N/A",634,-9999,-9999
+"SRA-056","NE","Lupinus nanus - Sky lupine",5,"full leaf out",2022-04-08,"N/A",667,-9999,-9999
+"SRA-056","NE","NPV",2,"N/A",2022-04-08,"N/A",667,-9999,-9999
+"SRA-056","NE","Rock",29,"N/A",2022-04-08,"N/A",667,-9999,-9999
+"SRA-056","NE","Soil",2,"N/A",2022-04-08,"N/A",667,-9999,-9999
+"SRA-056","NW","Lupinus nanus - Sky lupine",3,"flowers",2022-04-08,"N/A",667,-9999,-9999
+"SRA-056","NW","Avena fatua - Wild oat",1,"full leaf out",2022-04-08,"N/A",667,-9999,-9999
+"SRA-056","NW","Lupinus nanus - Sky lupine",8,"full leaf out",2022-04-08,"N/A",667,-9999,-9999
+"SRA-056","NW","NPV",2,"N/A",2022-04-08,"N/A",667,-9999,-9999
+"SRA-056","NW","Rock",18,"N/A",2022-04-08,"N/A",667,-9999,-9999
+"SRA-056","NW","Soil",6,"N/A",2022-04-08,"N/A",667,-9999,-9999
+"SRA-056","NW","Lupinus nanus - Sky lupine",1,"seeds",2022-04-08,"N/A",667,-9999,-9999
+"SRA-056","SE","Avena fatua - Wild oat",1,"full leaf out",2022-04-08,"marked as sra-038",667,-9999,-9999
+"SRA-056","SE","Lupinus nanus - Sky lupine",1,"full leaf out",2022-04-08,"marked as sra-038",667,-9999,-9999
+"SRA-056","SE","Rock",19,"N/A",2022-04-08,"marked as sra-038",667,-9999,-9999
+"SRA-056","SE","Soil",4,"N/A",2022-04-08,"marked as sra-038",667,-9999,-9999
+"SRA-056","SE","Eschscholzia californica - California poppy",1,"seeds",2022-04-08,"marked as sra-038",667,-9999,-9999
+"SRA-056","SW","Lupinus nanus - Sky lupine",2,"full leaf out",2022-04-08,"marked as sra-038",667,-9999,-9999
+"SRA-056","SW","Rock",32,"N/A",2022-04-08,"marked as sra-038",667,-9999,-9999
+"SRA-056","SW","Soil",2,"N/A",2022-04-08,"marked as sra-038",667,-9999,-9999
+"SRA-057","NE","Eschscholzia californica - California poppy",1,"flowers",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","NE","NPV",7,"N/A",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","NE","Rock",8,"N/A",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","NE","Soil",6,"N/A",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","NW","NPV",7,"N/A",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","NW","Rock",5,"N/A",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","NW","Soil",1,"N/A",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","SE","Eschscholzia californica - California poppy",1,"flowers",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","SE","NPV",6,"N/A",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","SE","Rock",14,"N/A",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","SE","Soil",1,"N/A",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","SW","NPV",3,"N/A",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","SW","Rock",6,"N/A",2022-04-08,"N/A",679,-9999,-9999
+"SRA-057","SW","Lupinus nanus - Sky lupine",2,"seeds",2022-04-08,"N/A",679,-9999,-9999
+"SRB-050","NE","Eschscholzia californica - California poppy",4,"flowers",2022-04-08,"N/A",658,-9999,-9999
+"SRB-050","NE","NPV",6,"N/A",2022-04-08,"N/A",658,-9999,-9999
+"SRB-050","NE","Soil",10,"N/A",2022-04-08,"N/A",658,-9999,-9999
+"SRB-050","NW","Lupinus nanus - Sky lupine",2,"flowers",2022-04-08,"N/A",658,-9999,-9999
+"SRB-050","NW","Lupinus nanus - Sky lupine",1,"full leaf out",2022-04-08,"N/A",658,-9999,-9999
+"SRB-050","NW","NPV",4,"N/A",2022-04-08,"N/A",658,-9999,-9999
+"SRB-050","NW","Soil",11,"N/A",2022-04-08,"N/A",658,-9999,-9999
+"SRB-050","SE","Eschscholzia californica - California poppy",2,"flowers",2022-04-08,"N/A",658,-9999,-9999
+"SRB-050","SE","NPV",10,"N/A",2022-04-08,"N/A",658,-9999,-9999
+"SRB-050","SE","Soil",17,"N/A",2022-04-08,"N/A",658,-9999,-9999
+"SRB-050","SW","Eschscholzia californica - California poppy",4,"flowers",2022-04-08,"N/A",658,-9999,-9999
+"SRB-050","SW","NPV",3,"N/A",2022-04-08,"N/A",658,-9999,-9999
+"SRB-050","SW","Soil",13,"N/A",2022-04-08,"N/A",658,-9999,-9999
+"SRB-051","NE","NPV",8,"N/A",2022-04-13,"N/A",697,-9999,-9999
+"SRB-051","NW","Festuca perennis",7,"flowers",2022-04-13,"N/A",697,-9999,-9999
+"SRB-051","NW","NPV",12,"N/A",2022-04-13,"N/A",697,-9999,-9999
+"SRB-051","SE","NPV",14,"N/A",2022-04-13,"N/A",697,-9999,-9999
+"SRB-051","SW","Bromus madritensis madritensis",1,"flowers",2022-04-13,"N/A",697,-9999,-9999
+"SRB-051","SW","NPV",19,"N/A",2022-04-13,"N/A",697,-9999,-9999
+"SRA-063","NE","NPV",35,"N/A",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","NE","Soil",2,"N/A",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","NE","Annual grass",9,"seeds",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","NW","Hazardia squarrosa - Sawtooth goldenbush",4,"full leaf out",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","NW","NPV",35,"N/A",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","NW","Soil",3,"N/A",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","NW","Hazardia squarrosa - Sawtooth goldenbush",8,"seeds",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","SE","Annual grass",1,"full leaf out",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","SE","Erigeron foliosus",1,"full leaf out",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","SE","NPV",30,"N/A",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","SE","Soil",9,"N/A",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","SE","Annual grass",3,"seeds",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","SW","Moss",1,"early senescence",2022-04-15,"I'm skeptical",766,-9999,-9999
+"SRA-063","SW","Annual grass",5,"full leaf out",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","SW","NPV",34,"N/A",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","SW","Soil",6,"N/A",2022-04-15,"N/A",766,-9999,-9999
+"SRA-063","SW","Annual grass",4,"seeds",2022-04-15,"N/A",766,-9999,-9999
+"SRB-058","NE","Bromus madritensis rubens",1,"full leaf out",2022-04-15,"N/A",802,-9999,-9999
+"SRB-058","NE","NPV",20,"N/A",2022-04-15,"N/A",802,-9999,-9999
+"SRB-058","NW","NPV",21,"N/A",2022-04-15,"N/A",802,-9999,-9999
+"SRB-058","SE","Bromus madritensis rubens",4,"full leaf out",2022-04-15,"N/A",802,-9999,-9999
+"SRB-058","SE","Hazardia squarrosa - Sawtooth goldenbush",15,"full leaf out",2022-04-15,"N/A",802,-9999,-9999
+"SRB-058","SE","NPV",17,"N/A",2022-04-15,"N/A",802,-9999,-9999
+"SRB-058","SE","Soil",2,"N/A",2022-04-15,"N/A",802,-9999,-9999
+"SRB-058","SW","Chlorogalum pomeridianum",1,"full leaf out",2022-04-15,"N/A",802,-9999,-9999
+"SRB-058","SW","Hazardia squarrosa - Sawtooth goldenbush",7,"full leaf out",2022-04-15,"N/A",802,-9999,-9999
+"SRB-058","SW","NPV",15,"N/A",2022-04-15,"N/A",802,-9999,-9999
+"SRA-068","NE","Avena fatua - Wild oat",1,"full leaf out",2022-04-21,"N/A",817,-9999,-9999
+"SRA-068","NE","NPV",26,"N/A",2022-04-21,"N/A",817,-9999,-9999
+"SRA-068","NW","Avena fatua - Wild oat",1,"full leaf out ",2022-04-21,"N/A",817,-9999,-9999
+"SRA-068","NW","NPV",20,"N/A",2022-04-21,"N/A",817,-9999,-9999
+"SRA-068","SE","Eriogonum elonongatum - Longstem buckwheat",3,"full leaf out",2022-04-21,"N/A",817,-9999,-9999
+"SRA-068","SE","NPV",33,"N/A",2022-04-21,"N/A",817,-9999,-9999
+"SRA-068","SW","Eriogonum elonongatum - Longstem buckwheat",7,"full leaf out",2022-04-21,"N/A",817,-9999,-9999
+"SRA-068","SW","NPV",14,"N/A",2022-04-21,"N/A",817,-9999,-9999
+"SRA-069","NE","Calystegia collina ssp. venusta",3,"full leaf out",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","NE","Eriogonum elonongatum - Longstem buckwheat",1,"full leaf out",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","NE","Rock",2,"N/A",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","NW","Avena fatua - Wild oat",1,"full leaf out",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","NW","Calystegia collina ssp. venusta",1,"full leaf out",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","NW","Chlorogalum pomeridianum",2,"full leaf out",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","NW","Rock",4,"N/A",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","NW","Soil",7,"N/A",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","SE","Calystegia collina ssp. venusta",1,"full leaf out",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","SE","Stipa sp. - Needlegrass",6,"full leaf out",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","SE","Rock",1,"N/A",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","SE","Soil",22,"N/A",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","SW","Eriogonum elonongatum - Longstem buckwheat",6,"full leaf out",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","SW","Stipa sp. - Needlegrass",9,"full leaf out",2022-04-21,"N/A",829,-9999,-9999
+"SRA-069","SW","Soil",3,"N/A",2022-04-21,"N/A",829,-9999,-9999
+"SRA-081","NE","NPV",20,"N/A",2022-05-05,"N/A",919,-9999,-9999
+"SRA-081","NW","NPV",25,"N/A",2022-05-05,"N/A",919,-9999,-9999
+"SRA-081","SE","NPV",16,"N/A",2022-05-05,"N/A",919,-9999,-9999
+"SRA-081","SW","NPV",25,"N/A",2022-05-05,"N/A",919,-9999,-9999
+"SRA-082","NE","NPV",18,"N/A",2022-05-05,"N/A",925,-9999,-9999
+"SRA-082","NW","NPV",16,"N/A",2022-05-05,"N/A",925,-9999,-9999
+"SRA-082","NW","Bromus madritensis rubens",3,"seeds",2022-05-05,"N/A",925,-9999,-9999
+"SRA-082","SE","NPV",27,"N/A",2022-05-05,"N/A",925,-9999,-9999
+"SRA-082","SW","NPV",22,"N/A",2022-05-05,"N/A",925,-9999,-9999
+"SRB-084","SE","Soil",2,"N/A",2022-05-13,"N/A",1072,-9999,-9999
+"SRA-095","NE","NPV",23,"N/A",2022-05-18,"N/A",1105,-9999,-9999
+"SRA-095","NE","Soil",25,"N/A",2022-05-18,"N/A",1105,-9999,-9999
+"SRA-095","NW","NPV",41,"N/A",2022-05-18,"N/A",1105,-9999,-9999
+"SRA-095","NW","Soil",2,"N/A",2022-05-18,"N/A",1105,-9999,-9999
+"SRA-095","SE","NPV",32,"N/A",2022-05-18,"N/A",1105,-9999,-9999
+"SRA-095","SE","Soil",2,"N/A",2022-05-18,"N/A",1105,-9999,-9999
+"SRA-095","SW","NPV",36,"N/A",2022-05-18,"N/A",1105,-9999,-9999
+"SRA-095","SW","Soil",7,"N/A",2022-05-18,"N/A",1105,-9999,-9999
+"DPA-052","NE","Sonchus oleraceous - Sow thistle",1,"full leaf out",2022-05-19,"N/A",1144,-9999,-9999
+"DPA-052","NE","NPV",16,"N/A",2022-05-19,"N/A",1144,-9999,-9999
+"DPA-052","NW","NPV",40,"N/A",2022-05-19,"N/A",1144,-9999,-9999
+"DPA-052","SE","NPV",39,"N/A",2022-05-19,"N/A",1144,-9999,-9999
+"DPA-052","SW","NPV",24,"N/A",2022-05-19,"N/A",1144,-9999,-9999
+"DPA-053","NE","Plantago coronopus - Cut leaf plantain",2,"full leaf out",2022-05-19,"N/A",1150,-9999,-9999
+"DPA-053","NE","Soil",1,"N/A",2022-05-19,"N/A",1150,-9999,-9999
+"DPA-053","NW","Cynodon dactylon - Bermuda grass",1,"early senescence",2022-05-19,"N/A",1150,-9999,-9999
+"DPA-053","NW","Plantago coronopus - Cut leaf plantain",2,"full leaf out",2022-05-19,"N/A",1150,-9999,-9999
+"DPA-053","NW","NPV",4,"N/A",2022-05-19,"N/A",1150,-9999,-9999
+"DPA-053","NW","Soil",2,"N/A",2022-05-19,"N/A",1150,-9999,-9999
+"DPA-053","NW","Polypogon monspeliensis - Annual beard grass",1,"seeds",2022-05-19,"N/A",1150,-9999,-9999
+"DPA-053","SE","Cynodon dactylon - Bermuda grass",1,"full leaf out",2022-05-19,"N/A",1150,-9999,-9999
+"DPA-053","SE","Soil",5,"N/A",2022-05-19,"N/A",1150,-9999,-9999
+"DPA-053","SW","Plantago coronopus - Cut leaf plantain",1,"full leaf out",2022-05-19,"N/A",1150,-9999,-9999
+"DPA-053","SW","Soil",2,"N/A",2022-05-19,"N/A",1150,-9999,-9999
+"DPB-041","NE","Baccharis glutinosa - Saltmarsh baccharis",6,"full leaf out",2022-05-19,"N/A",1135,-9999,-9999
+"DPB-041","NE","NPV",7,"N/A",2022-05-19,"N/A",1135,-9999,-9999
+"DPB-041","NW","Baccharis glutinosa - Saltmarsh baccharis",4,"full leaf out",2022-05-19,"N/A",1135,-9999,-9999
+"DPB-041","NW","NPV",16,"N/A",2022-05-19,"N/A",1135,-9999,-9999
+"DPB-041","SE","Baccharis glutinosa - Saltmarsh baccharis",3,"early leaf out",2022-05-19,"N/A",1135,-9999,-9999
+"DPB-041","SE","NPV",9,"N/A",2022-05-19,"N/A",1135,-9999,-9999
+"DPB-041","SW","Baccharis glutinosa - Saltmarsh baccharis",1,"early leaf out",2022-05-19,"N/A",1135,-9999,-9999
+"DPB-041","SW","NPV",2,"N/A",2022-05-19,"N/A",1135,-9999,-9999
+"DPB-042","NE","Baccharis pilularis - Coyote brush",15,"full leaf out",2022-05-19,"N/A",1147,-9999,-9999
+"DPB-042","NE","Pseudognaphalium luteoalbum - Jersey cudweed",1,"full leaf out",2022-05-19,"N/A",1147,-9999,-9999
+"DPB-042","NE","NPV",19,"N/A",2022-05-19,"N/A",1147,-9999,-9999
+"DPB-042","NW","Baccharis pilularis - Coyote brush",10,"full leaf out",2022-05-19,"N/A",1147,-9999,-9999
+"DPB-042","NW","NPV",10,"N/A",2022-05-19,"N/A",1147,-9999,-9999
+"DPB-042","SE","Rosa californica - California wild rose",4,"full leaf out",2022-05-19,"N/A",1147,-9999,-9999
+"DPB-042","SE","NPV",17,"N/A",2022-05-19,"N/A",1147,-9999,-9999
+"DPB-042","SW","Carpobrotus edulis - Iceplant",1,"flowers",2022-05-19,"N/A",1147,-9999,-9999
+"DPB-042","SW","Rosa californica - California wild rose",6,"full leaf out",2022-05-19,"N/A",1147,-9999,-9999
+"DPB-042","SW","NPV",17,"N/A",2022-05-19,"N/A",1147,-9999,-9999
+"DPB-043","NE","Carpobrotus edulis - Iceplant",19,"full leaf out",2022-05-19,"N/A",1153,-9999,-9999
+"DPB-043","NE","NPV",7,"N/A",2022-05-19,"N/A",1153,-9999,-9999
+"DPB-043","NW","Carex pansa - Sand dune sedge",32,"full leaf out",2022-05-19,"N/A",1153,-9999,-9999
+"DPB-043","NW","NPV",18,"N/A",2022-05-19,"N/A",1153,-9999,-9999
+"DPB-043","SE","Rumex acetosella - Common sheep sorrel",1,"full leaf out",2022-05-19,"N/A",1153,-9999,-9999
+"DPB-043","SE","NPV",19,"N/A",2022-05-19,"N/A",1153,-9999,-9999
+"DPB-043","SW","Carpobrotus edulis - Iceplant",10,"full leaf out",2022-05-19,"N/A",1153,-9999,-9999
+"DPB-043","SW","NPV",14,"N/A",2022-05-19,"N/A",1153,-9999,-9999
+"SRB-095","NE","NPV",15,"N/A",2022-05-25,"N/A",1207,-9999,-9999
+"SRB-095","NW","Asclepias fascicularis - Narrow-leaved milkweed",3,"flowers",2022-05-25,"N/A",1207,-9999,-9999
+"SRB-095","NW","NPV",21,"N/A",2022-05-25,"N/A",1207,-9999,-9999
+"SRB-095","SE","NPV",22,"N/A",2022-05-25,"N/A",1207,-9999,-9999
+"SRB-095","SW","NPV",6,"N/A",2022-05-25,"N/A",1207,-9999,-9999
+"SRB-010","NE","Annual grass",10,"full senescence",2022-09-15,"N/A",1529,1632,-9999
+"SRB-010","NE","Bromus diandrus - Ripgut brome",18,"full senescence",2022-09-15,"N/A",1529,1632,-9999
+"SRB-010","NE","Carduus pycnocephalus - Italian thistle",2,"full senescence",2022-09-15,"N/A",1529,1632,-9999
+"SRB-010","NW","Annual grass",19,"full senescence",2022-09-15,"N/A",1529,1632,-9999
+"SRB-010","NW","Brassica nigra - Black mustard",1,"full senescence",2022-09-15,"N/A",1529,1632,-9999
+"SRB-010","NW","Bromus diandrus - Ripgut brome",7,"full senescence",2022-09-15,"N/A",1529,1632,-9999
+"SRB-010","SE","Annual grass",30,"full senescence",2022-09-15,"N/A",1529,1632,-9999
+"SRB-010","SE","Brassica nigra - Black mustard",2,"full senescence",2022-09-15,"N/A",1529,1632,-9999
+"SRB-010","SW","Annual grass",24,"full senescence",2022-09-15,"N/A",1529,1632,-9999
+"SRB-010","SW","Brassica nigra - Black mustard",2,"full senescence",2022-09-15,"N/A",1529,1632,-9999
+"SRB-045","NE","Annual grass",38,"full senescence",2022-09-15,"N/A",1436,-9999,-9999
+"SRB-045","NE","Soil",12,"N/A",2022-09-15,"N/A",1436,-9999,-9999
+"SRB-045","NW","Annual grass",46,"full senescence",2022-09-15,"N/A",1436,-9999,-9999
+"SRB-045","NW","Soil",4,"N/A",2022-09-15,"N/A",1436,-9999,-9999
+"SRB-045","SE","Hazardia squarrosa - Sawtooth goldenbush",5,"early senescence",2022-09-15,"N/A",1436,-9999,-9999
+"SRB-045","SE","Annual grass",37,"full senescence",2022-09-15,"N/A",1436,-9999,-9999
+"SRB-045","SE","Soil",7,"N/A",2022-09-15,"N/A",1436,-9999,-9999
+"SRB-045","SW","Annual grass",36,"full senescence",2022-09-15,"N/A",1436,-9999,-9999
+"SRB-045","SW","Brassica nigra - Black mustard",1,"full senescence",2022-09-15,"N/A",1436,-9999,-9999
+"SRB-045","SW","Soil",13,"N/A",2022-09-15,"N/A",1436,-9999,-9999
+"SRB-046","NE","Soil",11,"N/A",2022-09-15,"N/A",1526,-9999,-9999
+"SRB-046","NW","Soil",14,"N/A",2022-09-15,"N/A",1526,-9999,-9999
+"SRB-046","SE","Soil",10,"N/A",2022-09-15,"N/A",1526,-9999,-9999
+"SRB-046","SW","Annual grass",8,"early senescence",2022-09-15,"N/A",1526,-9999,-9999
+"SRB-046","SW","Soil",1,"N/A",2022-09-15,"N/A",1526,-9999,-9999
+"SRB-100","NW","Soil",1,"N/A",2022-09-15,"N/A",1439,-9999,-9999
+"SRB-100","SE","Soil",3,"N/A",2022-09-15,"N/A",1439,-9999,-9999
+"CSM-001","NE","Limonium sp. - Sea lavender",1,"full leaf out",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-001","NE","NPV",16,"N/A",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-001","NE","Soil",1,"N/A",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-001","NE","Limonium sp. - Sea lavender",2,"seeds",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-001","NW","Limonium sp. - Sea lavender",2,"early senescence",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-001","NW","Frankenia salina - Alkali heath",1,"full leaf out",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-001","NW","Limonium sp. - Sea lavender",4,"full leaf out",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-001","NW","NPV",14,"N/A",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-001","NW","Limonium sp. - Sea lavender",8,"seeds",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-001","SE","NPV",17,"N/A",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-001","SE","Soil",9,"N/A",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-001","SW","NPV",9,"N/A",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-001","SW","Soil",3,"N/A",2022-09-16,"N/A",1652,-9999,-9999
+"CSM-003","NE","Soil",3,"N/A",2022-09-16,"N/A",1658,-9999,-9999
+"CSM-003","SE","Soil",1,"N/A",2022-09-16,"N/A",1658,-9999,-9999
+"CSM-004","NE","NPV",1,"N/A",2022-09-16,"N/A",1661,-9999,-9999
+"CSM-004","NE","Soil",10,"N/A",2022-09-16,"N/A",1661,-9999,-9999
+"CSM-004","NW","NPV",10,"N/A",2022-09-16,"N/A",1661,-9999,-9999
+"CSM-004","NW","Soil",17,"N/A",2022-09-16,"N/A",1661,-9999,-9999
+"CSM-004","SE","Salicornia pacifica - Pickleweed",5,"full leaf out",2022-09-16,"N/A",1661,-9999,-9999
+"CSM-004","SW","Limonium sp. - Sea lavender",1,"flowers",2022-09-16,"N/A",1661,-9999,-9999
+"CSM-004","SW","Limonium sp. - Sea lavender",1,"full leaf out",2022-09-16,"N/A",1661,-9999,-9999
+"CSM-004","SW","Salicornia pacifica - Pickleweed",4,"full leaf out",2022-09-16,"N/A",1661,-9999,-9999
+"CSM-004","SW","NPV",6,"N/A",2022-09-16,"N/A",1661,-9999,-9999
+"CSM-005","NE","NPV",18,"N/A",2022-09-16,"N/A",1664,-9999,-9999
+"CSM-005","NW","NPV",17,"N/A",2022-09-16,"N/A",1664,-9999,-9999
+"CSM-005","NW","Soil",2,"N/A",2022-09-16,"N/A",1664,-9999,-9999
+"CSM-005","SE","NPV",9,"N/A",2022-09-16,"N/A",1664,-9999,-9999
+"CSM-005","SE","Water",3,"N/A",2022-09-16,"N/A",1664,-9999,-9999
+"CSM-005","SW","Frankenia salina - Alkali heath",1,"full leaf out",2022-09-16,"N/A",1664,-9999,-9999
+"CSM-005","SW","NPV",8,"N/A",2022-09-16,"N/A",1664,-9999,-9999
+"CSM-005","SW","Soil",1,"N/A",2022-09-16,"N/A",1664,-9999,-9999
+"SRA-007","NE","Soil",20,"N/A",2022-09-16,"N/A",1472,-9999,-9999
+"SRA-007","NW","Soil",24,"N/A",2022-09-16,"N/A",1472,-9999,-9999
+"SRA-007","SE","Soil",11,"N/A",2022-09-16,"N/A",1472,-9999,-9999
+"SRA-007","SW","Lupinus bicolor - Bicolored lupine",2,"full senescence",2022-09-16,"N/A",1472,-9999,-9999
+"SRA-007","SW","Soil",16,"N/A",2022-09-16,"N/A",1472,-9999,-9999
+"SRA-056","NE","Soil",44,"N/A",2022-09-16,"N/A",1478,-9999,-9999
+"SRA-056","NW","Soil",33,"N/A",2022-09-16,"N/A",1478,-9999,-9999
+"SRA-056","SE","Soil",44,"N/A",2022-09-16,"N/A",1478,-9999,-9999
+"SRA-056","SW","Soil",43,"na ",2022-09-16,"N/A",1478,-9999,-9999
+"SRB-004","NE","Rafinesquia californica - California chicory",1,"early senescence",2022-09-16,"N/A",1559,-9999,-9999
+"SRB-004","NE","Soil",24,"N/A",2022-09-16,"N/A",1559,-9999,-9999
+"SRB-004","NW","Soil",27,"N/A",2022-09-16,"N/A",1559,-9999,-9999
+"SRB-004","SE","Soil",39,"N/A",2022-09-16,"N/A",1559,-9999,-9999
+"SRB-004","SW","Soil",29,"N/A",2022-09-16,"N/A",1559,-9999,-9999
+"SRB-050","NE","Soil",24,"na ",2022-09-16,"sheet says SE but I think it's NE",1481,-9999,-9999
+"SRB-050","NW","Soil",24,"N/A",2022-09-16,"N/A",1481,-9999,-9999
+"SRB-050","SE","Soil",36,"N/A",2022-09-16,"N/A",1481,-9999,-9999
+"SRB-050","SW","Soil",25,"N/A",2022-09-16,"N/A",1481,-9999,-9999
+"SRB-200","NE","Soil",32,"N/A",2022-09-16,"N/A",1475,-9999,-9999
+"SRB-200","NW","Lupinus bicolor - Bicolored lupine",2,"full senescence",2022-09-16,"N/A",1475,-9999,-9999
+"SRB-200","NW","Soil",28,"N/A",2022-09-16,"N/A",1475,-9999,-9999
+"SRB-200","SE","Lupinus bicolor - Bicolored lupine",2,"full senescence",2022-09-16,"N/A",1475,-9999,-9999
+"SRB-200","SE","Soil",47,"N/A",2022-09-16,"N/A",1475,-9999,-9999
+"SRB-200","SW","Soil",32,"N/A",2022-09-16,"N/A",1475,-9999,-9999
+"DPB-001","NE","Soil",11,"N/A",2022-09-17,"N/A",1520,-9999,-9999
+"DPB-001","NW","Soil",7,"N/A",2022-09-17,"N/A",1520,-9999,-9999
+"DPB-001","SE","Soil",6,"N/A",2022-09-17,"N/A",1520,-9999,-9999
+"DPB-001","SW","Soil",11,"N/A",2022-09-17,"N/A",1520,-9999,-9999
+"DPB-003","NE","Soil",6,"N/A",2022-09-17,"N/A",1565,-9999,-9999
+"DPB-003","NW","Soil",16,"N/A",2022-09-17,"N/A",1565,-9999,-9999
+"DPB-003","SE","Soil",7,"N/A",2022-09-17,"N/A",1565,-9999,-9999
+"DPB-003","SW","Soil",15,"N/A",2022-09-17,"N/A",1565,-9999,-9999
+"DPB-004","NE","Deinandra increscens",7,"seeds",2022-09-17,"unknown species",1562,-9999,-9999
+"DPB-004","NW","Soil",2,"N/A",2022-09-17,"N/A",1562,-9999,-9999
+"DPB-004","SE","Soil",18,"N/A",2022-09-17,"N/A",1562,-9999,-9999
+"DPB-004","SE","Deinandra increscens",3,"seeds",2022-09-17,"unknown species",1562,-9999,-9999
+"DPB-004","SE","Deinandra increscens",3,"early senescence",2022-09-17,"unknown species",1562,-9999,-9999
+"DPB-004","SW","Soil",7,"N/A",2022-09-17,"N/A",1562,-9999,-9999
+"DPB-004","SW","Deinandra increscens",2,"seeds",2022-09-17,"unknown species",1562,-9999,-9999
+"DPB-005","NE","Deinandra increscens",3,"full senescence",2022-09-17,"unknown species",1502,-9999,-9999
+"DPB-005","NE","Soil",6,"N/A",2022-09-17,"N/A",1502,-9999,-9999
+"DPB-005","NW","Deinandra increscens",1,"full senescence",2022-09-17,"unknown species",1502,-9999,-9999
+"DPB-005","NW","Soil",10,"N/A",2022-09-17,"N/A",1502,-9999,-9999
+"DPB-005","SE","Deinandra increscens",1,"full senescence",2022-09-17,"unknown species",1502,-9999,-9999
+"DPB-005","SE","Soil",12,"N/A",2022-09-17,"N/A",1502,-9999,-9999
+"DPB-005","SW","Deinandra increscens",3,"full senescence",2022-09-17,"unknown species",1502,-9999,-9999
+"DPB-005","SW","Soil",11,"N/A",2022-09-17,"N/A",1502,-9999,-9999
+"SRB-071","NW","Soil",2,"N/A",2022-09-18,"N/A",1670,-9999,-9999
+"SRB-071","NW","Eriogonum fasciculatum - California buckwheat",5,"seeds",2022-09-18,"N/A",1670,-9999,-9999
+"SRB-071","SE","Eriogonum fasciculatum - California buckwheat",10,"seeds",2022-09-18,"N/A",1670,-9999,-9999
+"SRB-071","SW","Soil",4,"N/A",2022-09-18,"N/A",1670,-9999,-9999
