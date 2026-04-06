@@ -39,7 +39,7 @@ def run_fire_workflow(base_directory:str, dry_run, sensor, aoi):
         if user_input == 'C':
             run_figures(base_directory=base_directory, sensor=sensor, aoi=aoi)
 
-        elif user_input == "C":
+        elif user_input == "D":
             print("Returning to main menu.")
             break
         else:

@@ -16,7 +16,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 from isofit.core.sunposition import sunpos
 from datetime import datetime, timezone
 from tetracorder.aggregator import unique_file_fractions
-import tetracorder.tetracorder as tetracorder
+import tetracorder.tetracorder_engine as tetracorder
 from scipy.interpolate import interp1d
 import spectral.io.envi as envi
 from emit_utils.file_checks import envi_header
@@ -31,7 +31,6 @@ from matplotlib.ticker import MultipleLocator
 from utils.slpit_download import load_pickle, save_pickle
 from sklearn.metrics import confusion_matrix
 import matplotlib.patches as patches
-import tetracorder.tetracorder as tcs
 from functools import partial
 from matplotlib.ticker import MaxNLocator
 from matplotlib import colors, ticker

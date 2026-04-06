@@ -6,10 +6,12 @@ rfl_img=$1
 out_base=$2
 filebase_name=$(basename "$rfl_img")
 unmixing_library_global=$3
+unmixing_filebase_name=$(basename "$unmixing_library_global" .csv)
 
 echo $rfl_img
 echo $out_base
 echo $filebase_name
+echo $unmixing_filebase_name
 
 UNMIX=false
 
@@ -39,7 +41,7 @@ if [ "$UNMIX" = true ]; then
     echo "Created emc2 dir: ${emc_out_directory}"
     mkdir -p ${emc_out_directory}
     
-    julia -p 20 ../SpectralUnmixing/unmix.jl ${rfl_img} ${unmixing_library_global} level_1 "${emc_out_directory}/global_${filebase_name}_normalization_brightness_" --mode sma --normalization brightness --num_endmember 30 --n_mc 25 --spectral_starting_col 11
+    julia -p 20 ../SpectralUnmixing/unmix.jl ${rfl_img} ${unmixing_library_global} level_1 "${emc_out_directory}/${unmixing_filebase_name}_${filebase_name}_normalization_brightness_" --mode sma --normalization brightness --num_endmember 30 --n_mc 25 --spectral_starting_col 11
 
 else
   echo "Unmixing disabled!"
