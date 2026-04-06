@@ -15,7 +15,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 from utils.slpit_download import load_pickle, save_pickle
 import struct
-import tetracorder.tetracorder as tc
+import tetracorder.tetracorder_engine as tc
 import spectral.io.envi as envi
 from emit_utils.file_checks import envi_header
 from scipy.interpolate import interp1d
