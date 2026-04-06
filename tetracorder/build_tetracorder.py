@@ -27,28 +27,8 @@ def tetracorder_build_menu():
     print("Welcome to the Tetracorder build Mode....")
     print("A... Run Tetrecorder on endmember libraries")
     print("B... Generate synthetic reflectance")
-    print("C... Exit")
-
-
-def process_complete_fractions_row(row, unmix_library_array, wvls):
-
-    spectra_grid = np.ones((row.shape[0], len(wvls))) * -9999.
-
-    for _col, col in enumerate(row):
-        em_col = np.zeros((unmix_library_array.shape[0], len(wvls)))
-        frac_weights = np.zeros((unmix_library_array.shape[0]))
-
-        for _em, em in enumerate(unmix_library_array):
-            fraction = row[_col, _em]
-            em_col[_em, :] = unmix_library_array[_em, :]
-            frac_weights[_em] = fraction
-
-        if np.sum(frac_weights) == 0:
-            continue
-        else:
-            spectra_grid[_col, :] = np.average(em_col, weights=frac_weights, axis=0)
-
-    return spectra_grid
+    print("C... Run RECLAIMER workflows")
+    print("D... Exit")
 
 
 class Tetracorder:
@@ -214,36 +194,6 @@ class Tetracorder:
                 subprocess.run(sbatch_cmd, shell=True, text=True)
 
 
-    def reconstruct_em_sma(self, user_em):
-        cursor_print(f'reconstructing {user_em} from sma...')
-
-        for group in ['g1', 'g2']:
-            # reconstructed soil from fractions and unmix library
-            complete_fractions_array = envi_to_array(os.path.join(self.tetra_output_directory, 'fractions', f'tetracorder_{group}_simulation_spectra_complete_fractions'))
-            df_unmix = pd.read_csv(os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library.csv'))
-
-            min_em_index = np.min(df_unmix[df_unmix['level_1'] == user_em].index)
-            max_em_index = np.max(df_unmix[df_unmix['level_1'] == user_em].index)
-            unmix_library_array = envi_to_array(os.path.join(self.simulation_output_directory, 'endmember_libraries', 'convex_hull__n_dims_4_unmix_library'))
-            unmix_library_array = unmix_library_array[min_em_index:max_em_index + 1, 0, :]
-
-            complete_fractions_array = complete_fractions_array[:, :, min_em_index:max_em_index + 1]
-            spectra_grid = np.zeros((complete_fractions_array.shape[0], complete_fractions_array.shape[1], len(self.wvls)))
-
-            func = partial(process_complete_fractions_row, unmix_library_array=unmix_library_array, wvls=self.wvls)
-            results = p_map(func,
-                        [complete_fractions_array[_row, :, :] for _row in range(complete_fractions_array.shape[0])],
-                        **{"desc": f"\t\t rebuilding spectra ...", "ncols": 150})
-
-            for _row, row in enumerate(results):
-                spectra_grid[_row, :, :] = row
-
-            meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls, wvls=True)
-            output_raster = os.path.join(self.sim_spectra_dir, f"unmixing_{group}_{user_em}_emc2.hdr")
-            save_envi(output_raster, meta_spectra, spectra_grid)
-
-        print("\t- done")
-    
     def mineral_lib_refl_cont(self):
 
         for group in ['g1', 'g2']:
@@ -324,7 +274,49 @@ class Tetracorder:
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
         cursor_print("\t- done")
-    
+
+    def run_reclaimer_workflow(self):
+        rfl_files = sorted(list(glob(os.path.join(self.synthetic_dir, '*', '*_simulation_spectra.hdr'), recursive=True)))
+
+        global_unmixing_library = os.path.join(self.simulation_output_directory, 'endmember_libraries',
+                                               'convex_hull__n_dims_4_sensor_emit_geofilter_True_unmix_library.csv')
+        global_unmixing_library_with_rock = os.path.join(self.tetra_data_directory, 'unmix_with_rock.csv')
+
+        for unmixing_library in [global_unmixing_library, global_unmixing_library_with_rock]:
+            for _, rfl_img_hdr in enumerate(rfl_files):
+                out_dir = os.path.dirname(rfl_img_hdr)
+                rfl_basename = os.path.basename(rfl_img_hdr)
+                complete_veg_fractions = os.path.join(self.synthetic_dir, f'tetracorder_{os.path.basename(rfl_basename.split("_")[1])}', 'emc2', f'global_tetracorder_{os.path.basename(rfl_basename.split("_")[1])}_simulation_spectra_normalization_brightness__complete_fractions')
+                three_component_veg_fractions = os.path.join(self.synthetic_dir, f'tetracorder_{os.path.basename(rfl_basename.split("_")[1])}', 'emc2', f'global_tetracorder_{os.path.basename(rfl_basename.split("_")[1])}_simulation_spectra_normalization_brightness__fractional_cover')
+                rfl_img = os.path.splitext(rfl_img_hdr)[0]
+                unmixing_library_envi_file = os.path.splitext(unmixing_library)[0]
+                files_to_check = {
+                    "Output Directory": out_dir,
+                    "Vegetation Fractions": complete_veg_fractions,
+                    "Reflectance Image": rfl_img,
+                    "Unmixing Library (CSV)": unmixing_library,
+                    "Unmixing Library (ENVI)": unmixing_library_envi_file
+                }
+
+                missing_files = []
+
+                for label, path in files_to_check.items():
+                    if not os.path.exists(path):
+                        missing_files.append(f"{label}: {path}")
+
+                if missing_files:
+                    print("--- ERROR: Missing Required Files ---")
+                    for msg in missing_files:
+                        print(f"  [X] {msg}")
+                    print("--------------------------------------")
+                else:
+                    # All files exist, proceed with the call
+                    try:
+                        base_call = f'sh ./tetracorder/reclaimer_workflows.sh {out_dir} {self.sensor} {complete_veg_fractions} {rfl_img} {unmixing_library} {unmixing_library_envi_file} {three_component_veg_fractions}'
+                        print(f"Executing: {base_call}")
+                        subprocess.run(base_call, shell=True, text=True, check=True)
+                    except subprocess.CalledProcessError as e:
+                        print(f"Shell script failed for {rfl_img}")
 
     
 def run_tetracorder_build(base_directory, sensor, dry_run, spectral_bundles):
@@ -339,6 +331,8 @@ def run_tetracorder_build(base_directory, sensor, dry_run, spectral_bundles):
         elif user_input == 'B':
             tc.generate_tetracorder_reflectance(spectral_bundles=spectral_bundles)
         elif user_input == 'C':
+            tc.run_reclaimer_workflow()
+        elif user_input == 'D':
             print("Returning to Tetracorder main menu.")
             break
         else:
