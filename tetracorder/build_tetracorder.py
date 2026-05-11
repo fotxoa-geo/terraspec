@@ -18,6 +18,7 @@ from simulation.run_hypertrace import hypertrace_workflow
 import subprocess
 from spectral.io import envi
 import isofit.core.common as isc
+from collections import Counter
 
 def tetracorder_build_menu():
     msg = f"You have entered Tetracorder build mode! " \
@@ -81,25 +82,26 @@ class Tetracorder:
         df_minerals_indentified_g1 = df_minerals_indentified.loc[df_minerals_indentified['Group'] == 1].copy()
         df_minerals_indentified_g2 = df_minerals_indentified.loc[df_minerals_indentified['Group'] == 2].copy()
 
+        df_minerals_indentified_g2.to_csv(os.path.join(self.synthetic_dir, 'tetracorder_minerals_indentified_g2.csv'))
+
         valid_g1_indices = df_minerals_indentified_g1['Index'].values
         valid_g2_indices = df_minerals_indentified_g2['Index'].values
-        valid_g2_indices = valid_g2_indices[valid_g2_indices != 228] # this removes organic dry grass
+        valid_g2_indices = valid_g2_indices[valid_g2_indices != 228] # this removes organic dry grass mixture; why is this allowed?
 
         valid_g1_indices = sorted(list(valid_g1_indices))
         valid_g2_indices = sorted(list(valid_g2_indices))
-
         valid_g1_indices.append(0)
         valid_g2_indices.append(0)
 
         for df_index, df_row in df_soil.iterrows():
             g1_index = spectral_abundance_array[df_index, 1]
+            g2_index = spectral_abundance_array[df_index, 3]
 
-            if g1_index in valid_g1_indices:
+            if g1_index in valid_g1_indices and g2_index in valid_g2_indices:
                 valid_rows_g1.append(df_row)
                 indices_used_g1.append(g1_index)
 
-            g2_index = spectral_abundance_array[df_index, 3]
-            if g2_index in valid_g2_indices:
+            if g2_index in valid_g2_indices and g1_index in valid_g1_indices:
                 valid_rows_g2.append(df_row)
                 indices_used_g2.append(g2_index)
         
@@ -127,8 +129,13 @@ class Tetracorder:
         df_sim_rem = df_sim_rem.sort_values('level_1')
         df_sim_rem.to_csv(os.path.join(self.synthetic_dir, 'rem' ,'df_sim_rem.csv'))
 
-        print(f"Indices used G1: {sorted(list(set(indices_used_g1)))}")
-        print(f"Indices used G2: {sorted(list(set(indices_used_g2)))}")
+        # Count occurrences
+        counts_g1 = Counter(indices_used_g1)
+        counts_g2 = Counter(indices_used_g2)
+
+        # Print sorted keys with their counts
+        print(f"Indices used G1: { {k: counts_g1[k] for k in sorted(counts_g1)} }")
+        print(f"Indices used G2: { {k: counts_g2[k] for k in sorted(counts_g2)} }")
 
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim_g1,
                                       level='level_1', spectral_bundles=spectral_bundles, increment_size=0.05,
