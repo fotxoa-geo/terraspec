@@ -33,7 +33,7 @@ def tetracorder_build_menu():
 
 class Tetracorder:
 
-    def __init__(self, base_directory: str, sensor:str):
+    def __init__(self, base_directory: str, sensor:str, partition:str):
 
         self.base_directory = os.path.join(base_directory, 'tetracorder')
         self.tetra_data_directory = os.path.join(self.base_directory, 'data')
@@ -48,6 +48,7 @@ class Tetracorder:
         create_directory(os.path.join(self.tetra_output_directory, 'synthethic_rfls'))
         self.synthetic_dir = os.path.join(os.path.join(self.tetra_output_directory, 'synthethic_rfls'))
 
+        self.partition = partition
 
     def generate_tetracorder_reflectance(self, spectral_bundles):
         cursor_print('generating reflectance...')
@@ -93,40 +94,29 @@ class Tetracorder:
 
         for df_index, df_row in df_soil.iterrows():
             g1_index = spectral_abundance_array[df_index, 1]
-
-            if g1_index in valid_g1_indices:
+            g2_index = spectral_abundance_array[df_index, 3]
+            
+            if g1_index in valid_g1_indices and g2_index in valid_g2_indices:
                 valid_rows_g1.append(df_row)
                 indices_used_g1.append(g1_index)
 
-            g2_index = spectral_abundance_array[df_index, 3]
-            if g2_index in valid_g2_indices:
+            if g2_index in valid_g2_indices and g1_index in valid_g1_indices:
                 valid_rows_g2.append(df_row)
                 indices_used_g2.append(g2_index)
         
-        create_directory(os.path.join(self.synthetic_dir, 'tetracorder_g1'))
+        create_directory(os.path.join(self.synthetic_dir, 'tetracorder_g1'), clear_existing=True)
         df_soil_g1 = pd.DataFrame(valid_rows_g1)
         df_sim_g1 = pd.concat([df_veg, df_soil_g1], axis=0, ignore_index=True)
         df_sim_g1 = df_sim_g1.sort_values('level_1')
         
         df_sim_g1.to_csv(os.path.join(self.synthetic_dir, 'tetracorder_g1', 'df_sim_1.csv'))
         
-        create_directory(os.path.join(self.synthetic_dir, 'tetracorder_g2'))
+        create_directory(os.path.join(self.synthetic_dir, 'tetracorder_g2'), clear_existing=True)
         df_soil_g2 = pd.DataFrame(valid_rows_g2)
         df_sim_g2 = pd.concat([df_veg, df_soil_g2], axis=0, ignore_index=True)
         df_sim_g2 = df_sim_g2.sort_values('level_1')
         df_sim_g2.to_csv(os.path.join(self.synthetic_dir, 'tetracorder_g2' ,'df_sim_2.csv'))
         
-
-        create_directory(os.path.join(self.synthetic_dir, 'rem'))
-        rem_array = envi_to_array(os.path.join(self.tetra_data_directory, 'Esfordi_emit'))
-        rem_array = rem_array.reshape(rem_array.shape[0], rem_array.shape[2])
-        df_rem = pd.DataFrame(rem_array, columns=df_sim_g2.columns[-285:])
-        df_rem.insert(0, 'level_1', 'soil') 
-        
-        df_sim_rem = pd.concat([df_veg, df_rem], axis=0, ignore_index=True)
-        df_sim_rem = df_sim_rem.sort_values('level_1')
-        df_sim_rem.to_csv(os.path.join(self.synthetic_dir, 'rem' ,'df_sim_rem.csv'))
-
         print(f"Indices used G1: {sorted(list(set(indices_used_g1)))}")
         print(f"Indices used G2: {sorted(list(set(indices_used_g2)))}")
 
@@ -142,20 +132,12 @@ class Tetracorder:
                                       name='tetracorder_g2_simulation', spectra_starting_col=8, endmember='soil',
                                       spectral_bundle_project='tetracorder_g2', new_simulation_bundles=spectral_bundles)
         
-        spectra.increment_reflectance(class_names=sorted(list(df_sim_rem.level_1.unique())), simulation_table=df_sim_rem,
-                                      level='level_1', spectral_bundles=spectral_bundles, increment_size=0.05,
-                                      output_directory=os.path.join(self.synthetic_dir, 'rem'), wvls=self.wvls,
-                                      name='tetracorder_rem_simulation', spectra_starting_col=8, endmember='soil',
-                                      spectral_bundle_project='tetracorder_rem', new_simulation_bundles=spectral_bundles)
-        
-        
-        create_directory(os.path.join(self.synthetic_dir, 'outlogs'))
+        create_directory(os.path.join(self.synthetic_dir, 'outlogs'), clear_existing=True)
         log_file_dir = os.path.join(self.synthetic_dir, 'outlogs')
         
-        rfl_files = sorted(list(glob(os.path.join(self.synthetic_dir, '**',  '*_spectra'), recursive=True)))
+        rfl_files = sorted(list(glob(os.path.join(self.synthetic_dir, '**',  '*simulation_spectra'), recursive=True)))
 
-        global_unmixing_library = os.path.join(self.simulation_output_directory, 'endmember_libraries',
-                                      'convex_hull__n_dims_4_sensor_emit_geofilter_True_unmix_library.csv')
+        global_unmixing_library = os.path.join(self.tetra_data_directory, 'global_lib.csv')
         df_unmix = pd.read_csv(global_unmixing_library)
         df_rock = pd.read_csv(os.path.join('utils', 'tetracorder', 'rock.csv'))
         df_rock.insert(0, 'level_2', 'rock')
@@ -169,29 +151,40 @@ class Tetracorder:
         df_convolve = pd.DataFrame(results)
         df_convolve.columns = list(self.wvls)
         df_rock = pd.concat([df_rock.iloc[:, :2].reset_index(drop=True), df_convolve], axis=1)
+        
+        new_columns = list(df_unmix.columns)
+        new_columns[7:] = list(self.wvls)
+        df_unmix.columns = new_columns
 
         df_unmix_with_rock = pd.concat([df_unmix, df_rock], axis=0, ignore_index=True)
         df_unmix_with_rock = df_unmix_with_rock.fillna(-9999)
-        output_with_rock = os.path.join(self.tetra_data_directory, 'unmix_with_rock.csv')
-        df_unmix_with_rock.to_csv(output_with_rock)
+        output_with_rock = os.path.join(self.tetra_data_directory, 'global_rock.csv')
+        df_unmix_with_rock.to_csv(output_with_rock, index=False)
+        
+        output_rock_envi = os.path.join(self.tetra_data_directory, 'global_rock.hdr')
+        spectra.df_to_envi(df=df_unmix_with_rock, spectral_starting_column=7, wvls=self.wvls, output_raster=output_rock_envi)
 
-        for unmixing_library in [global_unmixing_library, output_with_rock]:
+        for __,unmixing_library in enumerate([global_unmixing_library, output_with_rock]):
             for _, rfl_img in enumerate(rfl_files):
-                outfile = os.path.join(log_file_dir, f'{os.path.basename(rfl_img)}.out')
+                outfile = os.path.join(log_file_dir, f'{os.path.basename(rfl_img)}_{os.path.basename(unmixing_library).split(".")[0]}.out')
                 lib_dir = os.path.dirname(rfl_img)
-
-                base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {rfl_img} {lib_dir} {unmixing_library} --unmix '
-                sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 20 --mem 40G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
+                
+                if __ == 0:
+                    base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {rfl_img} {lib_dir} {unmixing_library} --unmix --tetracorder '
+                else:
+                    base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {rfl_img} {lib_dir} {unmixing_library} --unmix '
+                
+                sbatch_cmd = f"sbatch --export=ALL -p {self.partition} -N 1 -c 20 --mem 40G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
                 subprocess.run(sbatch_cmd, shell=True, text=True)
 
-            soil_files = sorted(list(glob(os.path.join(self.synthetic_dir, '**',  '*_soils'), recursive=True)))
-            for _, soil_img in enumerate(soil_files):
-                outfile = os.path.join(log_file_dir, f'{os.path.basename(soil_img)}.out')
-                lib_dir = os.path.dirname(soil_img)
+        soil_files = sorted(list(glob(os.path.join(self.synthetic_dir, '**',  '*simulation_soils'), recursive=True)))
+        for _, soil_img in enumerate(soil_files):
+            outfile = os.path.join(log_file_dir, f'{os.path.basename(soil_img)}.out')
+            lib_dir = os.path.dirname(soil_img)
 
-                base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {soil_img} {lib_dir} {unmixing_library}'
-                sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 1 --mem 15G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
-                subprocess.run(sbatch_cmd, shell=True, text=True)
+            base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {soil_img} {lib_dir} {unmixing_library}'
+            sbatch_cmd = f"sbatch --export=ALL -p {self.partition} -N 1 -c 1 --mem 15G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
+            subprocess.run(sbatch_cmd, shell=True, text=True)
 
 
     def mineral_lib_refl_cont(self):
@@ -237,27 +230,7 @@ class Tetracorder:
         shutil.copy(unmix_lib_original, os.path.join(self.tetra_data_directory, 'unmix_lib'))
         shutil.copy(f'{unmix_lib_original}.hdr', os.path.join(self.tetra_data_directory, 'unmix_lib.hdr'))
         unmix_lib = os.path.join(self.tetra_data_directory, f'unmix_lib')
-
-        # create rare_earth lib
-        rem_lib = os.path.join('utils', 'tetracorder', 'Esfordi_speclib.img')
-        rem_hdr = envi.open(os.path.join('utils', 'tetracorder', 'Esfordi_speclib.hdr'))
-        rem_array = envi_to_array(rem_lib).transpose(1,0,2)
-        rem_wvls = rem_hdr.bands.centers
-
-        # convolve to emit
-        spectra_grid = np.ones((rem_array.shape[0], rem_array.shape[1], np.shape(self.wvls)[0])) * -9999
-
-        for _row, row in enumerate(rem_array):
-            spectra = row[0, :]
-            convolved_spectra = isc.resample_spectrum(x=spectra, wl=rem_wvls, wl2=self.wvls, fwhm2=self.fwhm, fill=False)
-            spectra_grid[_row, :, :] = convolved_spectra
-
-        meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=self.wvls,
-                                wvls=True)
-        output_raster = os.path.join(self.tetra_data_directory, f'Esfordi_{self.sensor}.hdr')
-        save_envi(output_raster, meta_spectra, spectra_grid)
-        rem_lib = os.path.join(self.tetra_data_directory, f'Esfordi_{self.sensor}')
-
+        
         # create output directories for libraries
         create_directory(os.path.join(self.tetra_output_directory, 'libraries'))
         lib_output_dir = os.path.join(self.tetra_output_directory, 'libraries')
@@ -270,24 +243,22 @@ class Tetracorder:
             lib_dir = os.path.join(lib_output_dir, os.path.basename(rfl_img))
 
             base_call = f'sh {os.path.join("tetracorder", "libraries_tetracorder.sh")} {rfl_img} {lib_dir} {self.sensor} '
-            sbatch_cmd = f"sbatch --export=ALL -p patient -N 1 -c 1 --mem 10G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
+            sbatch_cmd = f"sbatch --export=ALL -p {self.partition} -N 1 -c 1 --mem 10G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
             subprocess.run(sbatch_cmd, shell=True, text=True)
 
         cursor_print("\t- done")
 
     def run_reclaimer_workflow(self):
         rfl_files = sorted(list(glob(os.path.join(self.synthetic_dir, '*', '*_simulation_spectra.hdr'), recursive=True)))
-
-        global_unmixing_library = os.path.join(self.simulation_output_directory, 'endmember_libraries',
-                                               'convex_hull__n_dims_4_sensor_emit_geofilter_True_unmix_library.csv')
-        global_unmixing_library_with_rock = os.path.join(self.tetra_data_directory, 'unmix_with_rock.csv')
+        global_unmixing_library = os.path.join(self.tetra_data_directory, 'global_lib.csv')
+        global_unmixing_library_with_rock = os.path.join(self.tetra_data_directory, 'global_rock.csv')
 
         for unmixing_library in [global_unmixing_library, global_unmixing_library_with_rock]:
             for _, rfl_img_hdr in enumerate(rfl_files):
                 out_dir = os.path.dirname(rfl_img_hdr)
                 rfl_basename = os.path.basename(rfl_img_hdr)
-                complete_veg_fractions = os.path.join(self.synthetic_dir, f'tetracorder_{os.path.basename(rfl_basename.split("_")[1])}', 'emc2', f'global_tetracorder_{os.path.basename(rfl_basename.split("_")[1])}_simulation_spectra_normalization_brightness__complete_fractions')
-                three_component_veg_fractions = os.path.join(self.synthetic_dir, f'tetracorder_{os.path.basename(rfl_basename.split("_")[1])}', 'emc2', f'global_tetracorder_{os.path.basename(rfl_basename.split("_")[1])}_simulation_spectra_normalization_brightness__fractional_cover')
+                complete_veg_fractions = os.path.join(self.synthetic_dir, f'tetracorder_{os.path.basename(rfl_basename).split("_")[1]}', 'emc2', f'{os.path.basename(unmixing_library).split(".")[0]}_{os.path.basename(rfl_basename.split(".")[0])}_normalization_brightness__complete_fractions')
+                three_component_veg_fractions = os.path.join(self.synthetic_dir, f'tetracorder_{os.path.basename(rfl_basename).split("_")[1]}', 'emc2', f'{os.path.basename(unmixing_library).split(".")[0]}_{os.path.basename(rfl_basename.split(".")[0])}_normalization_brightness__fractional_cover')
                 rfl_img = os.path.splitext(rfl_img_hdr)[0]
                 unmixing_library_envi_file = os.path.splitext(unmixing_library)[0]
                 files_to_check = {
@@ -295,7 +266,8 @@ class Tetracorder:
                     "Vegetation Fractions": complete_veg_fractions,
                     "Reflectance Image": rfl_img,
                     "Unmixing Library (CSV)": unmixing_library,
-                    "Unmixing Library (ENVI)": unmixing_library_envi_file
+                    "Unmixing Library (ENVI)": unmixing_library_envi_file,
+                    "Three Component Fractions": three_component_veg_fractions,
                 }
 
                 missing_files = []
@@ -312,15 +284,19 @@ class Tetracorder:
                 else:
                     # All files exist, proceed with the call
                     try:
+                        create_directory(os.path.join(self.tetra_output_directory, 'synthethic_rfls', 'outlogs'))
+                        log_file_dir = os.path.join(self.tetra_output_directory, 'synthethic_rfls', 'outlogs')
+                        outfile = os.path.join(log_file_dir, f'RECLAIMER_{os.path.basename(rfl_img).split(".")[0]}_{os.path.basename(unmixing_library).split(".")[0]}.out')
+                        
                         base_call = f'sh ./tetracorder/reclaimer_workflows.sh {out_dir} {self.sensor} {complete_veg_fractions} {rfl_img} {unmixing_library} {unmixing_library_envi_file} {three_component_veg_fractions}'
-                        print(f"Executing: {base_call}")
-                        subprocess.run(base_call, shell=True, text=True, check=True)
+                        sbatch_cmd = f"sbatch --export=ALL -p {self.partition} -N 1 -c 1 --mem 10G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
+                        subprocess.run(sbatch_cmd, shell=True, text=True)
                     except subprocess.CalledProcessError as e:
                         print(f"Shell script failed for {rfl_img}")
 
     
-def run_tetracorder_build(base_directory, sensor, dry_run, spectral_bundles):
-    tc = Tetracorder(base_directory=base_directory, sensor=sensor)
+def run_tetracorder_build(base_directory, sensor, dry_run, spectral_bundles, partition):
+    tc = Tetracorder(base_directory=base_directory, sensor=sensor, partition=partition)
     while True:
         tetracorder_build_menu()
 
