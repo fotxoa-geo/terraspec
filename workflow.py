@@ -26,7 +26,7 @@ def main():
     parser.add_argument('-dry', '--dry_run', type=bool, help=' Set the dry run parameter to True to print unmix call', default=False)
     parser.add_argument('-lvl', '--level', type=str, help='level of classification to use', default='level_1')
     parser.add_argument('-sns', '--sensor', type=str, help='specify sensor to use', default='emit',
-                        choices=['emit', 'aviris_ng', 'modis', 'hlss30', 'neon', 'aviris-classic', 'mavic3m', 'av3'])
+                        choices=['emit', 'aviris_ng', 'modis', 'hlss30', 'neon', 'aviris-classic', 'mavic3m', 'AV3', 'EnMAP'])
     parser.add_argument('-bundles', '--number_of_bundles', type=str, help='number of spectral bundles to use', default='100000')
     parser.add_argument('-dis_geo', '--disable_geo_filter', action='store_false', help='Apply EMIT mask and selection from Ochoa et al 2025', default=True)
     parser.add_argument('-norm', '--normalization', type=bool, help='Brightness normalization enabled for PC!', default=True)
