@@ -1,17 +1,14 @@
 import os
-import time
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as font_manager
 from glob import glob
-from matplotlib.lines import Line2D
-import pytz
-from osgeo import gdal
 import matplotlib.gridspec as gridspec
 from sklearn.metrics import root_mean_squared_error, mean_absolute_error, r2_score
 import matplotlib.image as mpimg
+from sympy.abc import alpha
+from transformers.utils import add_start_docstrings_to_model_forward
+
 from utils.create_tree import create_directory
 from utils.spectra_utils import spectra
 from utils.envi import envi_to_array, load_band_names, read_metadata
@@ -24,13 +21,11 @@ from spectral.io import envi
 from matplotlib.ticker import MultipleLocator
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from rasterio.plot import show
 import geopandas as gpd
 import matplotlib.patches as mpatches
-import rasterio
-from rasterio.features import geometry_mask
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes, mark_inset
-from matplotlib_scalebar.scalebar import ScaleBar
+import matplotlib.lines as mlines
+from p_tqdm import p_map
+from scipy.spatial import ConvexHull
 
 def duplicate_check_fractions(array):
     seen = set()
@@ -72,6 +67,14 @@ def fraction_file_info(fraction_file):
     mean_sigma = []
     mean_use = []
 
+    distances = np.arange(fraction_array.shape[0]) * 2.5
+
+    # 2. Calculate the Normalized Radial Weighting Factors (Sum of weights equals 1.0)
+    radial_weights = distances / np.sum(distances)
+
+    # Initialize storage lists for your radial metrics
+    radial_weighted_means = []
+
     for _band, band in enumerate(range(0, fraction_array.shape[2])):
             
             if instrument == 'SLPIT':
@@ -101,7 +104,18 @@ def fraction_file_info(fraction_file):
             use = np.sqrt(sum_square_sstd)/sstd.shape[0]
             mean_use.append(use)
 
-    return [instrument, unmix_mode, plot, library_mode, int(num_cmb_em), int(num_mc), normalization, fraction_array.shape[0], fraction_array.shape[1], duplicate_flag] + mean_fractions + mean_se + mean_sigma + mean_use
+            # radial means
+            if instrument == 'SLPIT':
+                weighted_columns = selected_fractions * radial_weights[:, np.newaxis]
+                column_sums = np.nansum(weighted_columns, axis=0)
+                radial_weighted_sum = np.nanmean(column_sums)
+                radial_weighted_means.append(radial_weighted_sum)
+            else:
+                radial_weighted_means.append(np.nanmean(selected_fractions))
+
+
+
+    return [instrument, unmix_mode, plot, library_mode, int(num_cmb_em), int(num_mc), normalization, fraction_array.shape[0], fraction_array.shape[1], duplicate_flag] + mean_fractions + radial_weighted_means + mean_se + mean_sigma + mean_use
 
 class figures:
     def __init__(self, base_directory: str, sensor: str, major_axis_fontsize, minor_axis_fontsize, title_fontsize,
@@ -120,7 +134,6 @@ class figures:
         self.asd_wvls = spectra.load_asd_wavelenghts()
         self.good_asd_bands = spectra.get_good_bands_mask(self.asd_wvls, wavelength_pairs=None)
         self.asd_wvls[~self.good_asd_bands] = np.nan
-
         create_directory(os.path.join(base_directory, "figures"))
 
         # ems
@@ -544,7 +557,7 @@ class figures:
                 df_y = df_select[(df_select['instrument'] == 'RFL')].copy().reset_index(drop=True)
                 df_y = df_y.sort_values('plot')
                 # plot fractional cover values
-                x = df_x[col_map[col]].values
+                x = df_x[f'{col_map[col]}_r'].values
                 y = df_y[col_map[col]].values
 
                 abs_error = np.absolute(x-y)
@@ -571,6 +584,18 @@ class figures:
         df_all['plot_num'] = df_all['plot'].str.split('-').str[1].str.strip().astype(int)
         df_all = df_all[df_all['plot_num'] <= 60]
 
+        #plots_to_avoid_20_days = ['Spectral-001', 'Spectral-002', 'Spectral-003' , 'Spectral-023', 'Spectral-024', 'Spectral-026',
+        #                  'Spectral-038', 'Spectral-044', 'Spectral-059', 'Spectral-060']
+
+        plots_to_avoid_10_days = ['Spectral-001', 'Spectral-002', 'Spectral-003', 'Spectral-023', 'Spectral-024',
+                                  'Spectral-026',
+                                  'Spectral-038', 'Spectral-044', 'Spectral-059', 'Spectral-060', 'Spectral-053', 'Spectral-052',
+                                  'Spectral-037', 'Spectral-039', 'Spectral-040', 'Spectral-041', 'Spectral-032', 'Spectral-033',
+                                  'Spectral-034', 'Spectral-035', 'Spectral-036', 'Spectral-029', 'Spectral-030', 'Spectral-031',
+                                  'Spectral-022', 'Spectral-017', 'Spectral-018', 'Spectral-019', 'Spectral-020']
+
+        df_all = df_all[~df_all['plot'].isin(plots_to_avoid_10_days)]
+
         for lib_mode in df_all['lib_mode'].unique():
             # create figure
             fig = plt.figure(constrained_layout=True, figsize=(12, 8))
@@ -593,11 +618,11 @@ class figures:
                     ax.grid('on', linestyle='--')
 
                     if row == 0:
-                        ax.set_xlabel('SLPIT -emc2- Fractions')
-                        ax.set_ylabel("EMIT Fractions")
+                        ax.set_xlabel('SLPIT - E(MC)$^2$- Fractions')
+                        ax.set_ylabel("EMIT - E(MC)$^2$- Fractions")
                     if row ==1:
-                        ax.set_xlabel('SLPIT -mesma- Fractions')
-                        ax.set_ylabel("EMIT Fractions")
+                        ax.set_xlabel('SLPIT - MESMA - Fractions')
+                        ax.set_ylabel("EMIT - MESMA - Fractions")
 
                     ax.set_aspect(1. / ax.get_data_ratio())
                     ax.set_title(f'{self.ems[col]}')
@@ -612,7 +637,7 @@ class figures:
                     df_y = df_select[(df_select['instrument'] == 'RFL')].copy().reset_index(drop=True)
 
                     # plot fractional cover values
-                    x = df_x[col_map[col]]
+                    x = df_x[f'{col_map[col]}_r']
                     y = df_y[col_map[col]]
 
                     cmap = plt.get_cmap('viridis')
@@ -634,7 +659,7 @@ class figures:
                     ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=10,
                             verticalalignment='top', bbox=props)
 
-            fig.colorbar(scatter, label='Plot Number')
+            #fig.colorbar(scatter, label='Plot Number')
             plt.savefig(os.path.join(self.fig_directory, f'{lib_mode}_regression.png'), format="png", dpi=300, bbox_inches="tight")
             plt.clf()
             plt.close()
@@ -795,6 +820,417 @@ class figures:
         plt.close()
 
 
+
+
+
+    def methods_diagram(self):
+        import matplotlib.patches as patches
+        import matplotlib.patheffects as pe
+
+        """
+            Generates a 2x3 methods diagram comparing EMIT radial transects 
+            (180m scale) and SHIFT SLPIT transects (8m scale).
+            """
+        fig, axes = plt.subplots(2, 3, figsize=(10, 6.5), layout='constrained')
+
+        (ax_slpit_emit, ax_rfl_plot_emit, ax_slpit_photo_emit), \
+            (ax_slpit_shift, ax_rfl_plot_shift, ax_slpit_photo_shift) = axes
+
+        # Formatting helper to keep diagrams square
+        for ax in [ax_slpit_emit, ax_slpit_shift]:
+            ax.set_aspect('equal', adjustable='box')
+
+        for ax in [ax_rfl_plot_emit, ax_rfl_plot_shift]:
+            ax.set_aspect('auto')  # This lets the data fill the space
+            ax.set_box_aspect(1)  # This makes the actual plot box a square
+
+        # ---------------------------------------------------------
+        # 1. EMIT RADIAL DIAGRAM (Top Left - 180m x 180m)
+        # ---------------------------------------------------------
+        side_emit = 180
+        center_emit = side_emit / 2
+        spoke_length = 60
+
+        # Orientations (Cartesian)
+        angles_deg = [135, 15, 255]  # Leg 1 (NW), Leg 2 (ENE), Leg 3 (SSW)
+        angles_rad = np.radians(angles_deg)
+
+        ax_slpit_emit.set_title('SLPIT for EMIT Sites Diagram', fontweight='bold', fontsize=10)
+
+        for i, angle in enumerate(angles_rad):
+            x_end = center_emit + spoke_length * np.cos(angle)
+            y_end = center_emit + spoke_length * np.sin(angle)
+            ax_slpit_emit.plot([center_emit, x_end], [center_emit, y_end], color='black', lw=1.5, zorder=1)
+
+            # Plot ASD GIFOVs
+            distances = np.linspace(0, spoke_length, 25)
+            for d in distances:
+                px = center_emit + d * np.cos(angle)
+                py = center_emit + d * np.sin(angle)
+                circle = plt.Circle((px, py), 1, facecolor='red', alpha=0.4,
+                                    edgecolor='red', linewidth=0.5, zorder=2)
+                ax_slpit_emit.add_patch(circle)
+
+        # Grid Lines (EMIT Pixel boundaries)
+        for pos in [60, 120]:
+            ax_slpit_emit.axvline(pos, color='blue', linestyle='--', alpha=0.5, lw=0.8)
+            ax_slpit_emit.axhline(pos, color='blue', linestyle='--', alpha=0.5, lw=0.8)
+
+        offset_dist = 14
+        brace_angle = np.radians(15)
+        perp_angle = brace_angle - np.pi / 2  # Subtracting flips it to the "South-East" side
+
+        b_start_x = center_emit + offset_dist * np.cos(perp_angle)
+        b_start_y = center_emit + offset_dist * np.sin(perp_angle)
+        b_end_x = b_start_x + spoke_length * np.cos(brace_angle)
+        b_end_y = b_start_y + spoke_length * np.sin(brace_angle)
+
+        ax_slpit_emit.plot([b_start_x, b_end_x], [b_start_y, b_end_y], color='black', lw=1)
+
+        # Tick marks at ends
+        tick_size = 3
+        for tx, ty in [(b_start_x, b_start_y), (b_end_x, b_end_y)]:
+            ax_slpit_emit.plot([tx - tick_size * np.cos(perp_angle), tx + tick_size * np.cos(perp_angle)],
+                               [ty - tick_size * np.sin(perp_angle), ty + tick_size * np.sin(perp_angle)],
+                               color='black', lw=1)
+
+        # Label below the brace
+        ax_slpit_emit.text((b_start_x + b_end_x) / 2 + 4 * np.cos(perp_angle),
+                           (b_start_y + b_end_y) / 2 + 4 * np.sin(perp_angle),
+                           '60 m', fontsize=8, ha='center', va='top',
+                           rotation=15, fontweight='bold')
+
+        # Arc (120°)
+        arc = patches.Arc((center_emit, center_emit), 45, 45, theta1=135, theta2=255, edgecolor='black', ls='--')
+        ax_slpit_emit.add_patch(arc)
+        ax_slpit_emit.text(center_emit + 38 * np.cos(np.radians(195)),
+                           center_emit + 38 * np.sin(np.radians(195)),
+                           '120°', fontsize=9, ha='right', va='center', fontweight='bold')
+
+        sun_compass_deg = 45
+        leg1_compass_deg = 315
+
+        # Converting Compass to Cartesian for Matplotlib (0 deg is East)
+        # Formula: Cartesian = (90 - Compass) % 360
+        sun_cart = (90 - sun_compass_deg) % 360  # 45 deg
+        leg1_cart = (90 - leg1_compass_deg) % 360  # 135 deg
+
+        # Sun
+        # --- SUN ANNOTATION (Corrected) ---
+        # --- SUN: Yellow Star ---
+        sun_rad = np.radians(sun_cart)
+        sx = center_emit + 85 * np.cos(sun_rad)
+        sy = center_emit + 85 * np.sin(sun_rad)
+
+        # Yellow Star
+        ax_slpit_emit.plot(sx, sy, marker='*', markersize=22,
+                          color='yellow', markeredgecolor='orange',
+                          zorder=10, path_effects=[pe.withStroke(linewidth=3, foreground="white")])
+
+        # Yellow arrow pointing from Sun to Center
+        ax_slpit_emit.annotate('Sun', xy=(center_emit, center_emit),
+                               xytext=(center_emit + 95 * np.cos(sun_rad),
+                                       center_emit + 95 * np.sin(sun_rad)),
+                               arrowprops=dict(arrowstyle='->', color=(0, 0, 0, 0.5), lw=1, shrinkA=12),
+                               fontweight='bold',
+                               color=(0, 0, 0, 0.5),  # Black with 0.5 alpha
+                               fontsize=11,
+                               ha='left', va='bottom',
+                               annotation_clip=False)
+
+        # --- THE RIGHT ANGLE MARKER ---
+        # Placed between Leg 1 (135 Cartesian) and the Solar Vector (45 Cartesian)
+        ra_size = 7
+        leg1_rad = np.radians(leg1_cart)
+
+        x1 = center_emit + ra_size * np.cos(leg1_rad)
+        y1 = center_emit + ra_size * np.sin(leg1_rad)
+
+        # Point 2: On the Solar Path
+        x2 = center_emit + ra_size * np.cos(sun_rad)
+        y2 = center_emit + ra_size * np.sin(sun_rad)
+
+        # Point 3: The "Corner" of the square
+        # Since 45 and 135 are symmetric around North (90), the corner is directly above the center
+        xc = center_emit + (ra_size * np.cos(leg1_rad)) + (ra_size * np.cos(sun_rad))
+        yc = center_emit + (ra_size * np.sin(leg1_rad)) + (ra_size * np.sin(sun_rad))
+
+        # Plot the red square marker
+        ax_slpit_emit.plot([x1, xc, x2], [y1, yc, y2], color='black', lw=1, zorder=10, alpha=0.5)
+
+        # Legend for EMIT
+        circle_proxy = mlines.Line2D([], [], color='red', marker='o', ls='None', markersize=8,
+                                     mfc=(1, 0, 0, 0.4), mec='red', label='ASD GIFOV')
+        pixel_proxy = mlines.Line2D([], [], color='blue', ls='--', alpha=0.5, label='EMIT Pixel')
+        ax_slpit_emit.legend(handles=[circle_proxy, pixel_proxy], loc='lower right', fontsize=7, framealpha=0.75)
+
+        ax_slpit_emit.set_xlim(0, 180)
+        ax_slpit_emit.set_ylim(0, 180)
+        ax_slpit_emit.set_xlabel('180 m')
+        ax_slpit_emit.set_ylabel('180 m')
+        ax_slpit_emit.set_xticks([])
+        ax_slpit_emit.set_yticks([])
+
+        # ---------------------------------------------------------
+        # 2. SLPIT SHIFT DIAGRAM (Bottom Left - 8m)
+        # ---------------------------------------------------------
+        ax_slpit_shift.set_title('SLPIT for SHIFT Sites Diagram', fontweight='bold', fontsize=10)
+        grid_limit = 8
+        ax_slpit_shift.axvline(1.5, color='black', linestyle='--', alpha=0.5)
+        ax_slpit_shift.axvline(5+1.5, color='black', linestyle='--', alpha=0.5)
+        ax_slpit_shift.axhline(1.5, color='black', linestyle='--', alpha=0.5)
+        ax_slpit_shift.axhline(5+1.5, color='black', linestyle='--', alpha=0.5)
+
+        for x in [2, 6]:
+            for y in np.arange(0, 8.01, 0.33):
+                circle = plt.Circle((x + 0.25, y), 0.07, facecolor='red', alpha=0.3,
+                                    edgecolor='red', linewidth=0.5)
+                ax_slpit_shift.add_patch(circle)
+
+        # Legend for EMIT
+        circle_proxy = mlines.Line2D([], [], color='red', marker='o', ls='None', markersize=8,
+                                     mfc=(1, 0, 0, 0.4), mec='red', label='ASD GIFOV')
+        pixel_proxy = mlines.Line2D([], [], color='black', ls='--', alpha=0.5, label='AVIRIS-NG Pixel')
+        ax_slpit_shift.legend(handles=[circle_proxy, pixel_proxy], loc='lower center', fontsize=7, framealpha=0.75)
+
+        ax_slpit_shift.set_xlim(0, 8)
+        ax_slpit_shift.set_ylim(0, 8)
+        ax_slpit_shift.set_xlabel('8 m', fontsize=9)
+        ax_slpit_shift.set_ylabel('8 m', fontsize=9)
+        ax_slpit_shift.set_xticks([])
+        ax_slpit_shift.set_yticks([])
+
+        # North Arrow for BOTH diagrams (Top-Left of their axes)
+        for ax in [ax_slpit_emit, ax_slpit_shift]:
+            ax.annotate('N', xy=(-0.05, 0.98), xytext=(-0.05, 0.775),
+                        arrowprops=dict(facecolor='black', width=1, headwidth=5.5),
+                        ha='center', va='center', fontsize=10, color='black',
+                        xycoords='axes fraction', annotation_clip=False)
+
+
+
+        # ---------------------------------------------------------
+        # 3. REFLECTANCE PLOTS (Middle Column)
+        # ---------------------------------------------------------
+        rfl_axes = [ax_rfl_plot_emit, ax_rfl_plot_shift]
+        rfl_paths = [
+            os.path.join(self.output_directory, 'spectral_transects', 'Spectral-007', 'RFL',
+                         'Spectral-007_SLPIT_asd'),
+            os.path.join('terraspec_output', 'shift', 'output', 'spectral_transects', 'DPB-020_SPRING', 'RFL',
+                         'DPB-020_SPRING_SLPIT_asd')
+        ]
+        titles_rfl = ['SLPIT(EMIT) Reflectance', 'SLPIT(SHIFT) Reflectance']
+
+        for i, ax in enumerate(rfl_axes):
+            ax.set_title(titles_rfl[i], fontweight='bold', fontsize=10)
+            # Assuming envi_to_array and asd_wvls are defined class methods/attributes
+            slpit_rfl = envi_to_array(rfl_paths[i])
+            slpit_rfl[slpit_rfl == -9999] = np.nan
+            y_mean = np.nanmean(slpit_rfl, axis=(0, 1))
+            y_std = np.nanstd(slpit_rfl, axis=(0, 1))
+
+            ax.plot(self.asd_wvls, y_mean, color='red', lw=2, label='Mean')
+            ax.fill_between(self.asd_wvls, y_mean - y_std, y_mean + y_std, color='red', alpha=0.2, label='1σ')
+            ax.set_xlim(300, 2550)
+            ax.xaxis.set_major_locator(MultipleLocator(500))
+            ax.xaxis.set_minor_locator(MultipleLocator(100))
+            ax.set_ylim(0, 1)
+            ax.yaxis.set_major_locator(MultipleLocator(0.1))
+            ax.yaxis.set_minor_locator(MultipleLocator(0.05))
+            ax.set_xlabel('Wavelength (nm)', fontsize=8)
+            ax.set_ylabel('Reflectance (%)', fontsize=8)
+            ax.tick_params(axis='both', which='major', labelsize=8)
+            ax.legend(fontsize=8)
+
+        # ---------------------------------------------------------
+        # 4. PHOTOS (Right Column)
+        # ---------------------------------------------------------
+        photo_axes = [ax_slpit_photo_emit, ax_slpit_photo_shift]
+        photo_dir = os.path.join('objects', 'shift_photos')
+        landscape_paths = [os.path.join(self.output_directory, 'spectral_transects', 'Spectral-007',
+                         'Spectral-007_landscape_pic.jpg'), os.path.join(photo_dir, 'SLPIT.jpg')]
+        titles_photo = ["SLPIT for EMIT Sites", "SLPIT for SHIFT Sites"]
+
+        for i, ax in enumerate(photo_axes):
+            ax.set_title(titles_photo[i], fontweight='bold', fontsize=10)
+            try:
+                img = mpimg.imread(landscape_paths[i])
+                ax.imshow(img, aspect='equal')
+            except FileNotFoundError:
+                ax.text(0.5, 0.5, 'Photo Not Found', ha='center', va='center')
+            ax.axis('off')
+
+        # Save and Cleanup
+        plt.savefig(os.path.join(self.fig_directory, 'methods_diagram_paper2.png'), dpi=600)
+        plt.show()
+        plt.close()
+
+    def spectral_variance(self):
+        df_global = pd.read_csv(os.path.join('terraspec_output', 'simulation', 'output', 'endmember_libraries', 'convex_hull__n_dims_4_sensor_emit_geofilter_True_unmix_library.csv'))
+        df_global = df_global.sort_values('level_1')
+
+        df_all = pd.read_csv(os.path.join(self.fig_directory, 'fraction_output.csv'))
+        df_all['Team'] = df_all['plot'].str.split('-').str[0].str.strip()
+        df_all = df_all[df_all['Team'] != 'THERM']
+        df_all['plot_num'] = df_all['plot'].str.split('-').str[1].str.strip().astype(int)
+        df_all = df_all[df_all['plot_num'] <= 60]
+
+
+        col_map = {0: 'npv', 1: 'pv', 2: 'soil'}
+
+        df_select = df_all[(df_all['unmix_mode'] == 'emc2') & (df_all['lib_mode'] == 'local') & (
+                            df_all['normalization'] == 'brightness')].copy()
+
+        local_map = {'npv': ['005', '044'], 'pv': ['029', '014'], 'soil': ['036', '019']}
+
+        for col in range(3):
+            df_x = df_select[(df_select['instrument'] == 'SLPIT')].copy().reset_index(drop=True)
+            df_y = df_select[(df_select['instrument'] == 'RFL')].copy().reset_index(drop=True)
+
+            plots = df_x['plot'].values
+            x = df_x[f'{col_map[col]}_r'].values
+            y = df_y[col_map[col]].values
+
+            error = np.absolute(x-y)
+            df_new = pd.DataFrame({
+                'plots': plots,
+                'error': error
+            })
+            df_new = df_new.sort_values('error')
+
+        local_map = {'npv': ['005','044'], 'pv': ['029', '014'], 'soil': ['036', '019']}
+        fig, axes = plt.subplots(1, 3, figsize=(10, 6.5), layout='constrained')
+
+        for col in range(3):
+            current_em = col_map[col]
+
+            # 1. Isolate Global Target Data
+            df_global_em = df_global.loc[(df_global['level_1'] == col_map[col])].copy().reset_index(drop=True)
+            df_spectra_global = df_global_em.iloc[:, 7:].to_numpy()
+            df_global_em['dataset'] = 'global'
+            meta_global = df_global_em['dataset']
+
+            # 2. Isolate Local - Best Target Data
+            df_best_local = pd.read_csv(
+                os.path.join(self.output_directory, 'spectral_transects', f'Spectral-{local_map[current_em][0]}',
+                             f'unmix_Spectral-{local_map[current_em][0]}_EMS_emit.csv'))
+            df_best_local['level_1'] = df_best_local['level_1'].str.lower()
+            df_best_local = df_best_local.loc[(df_best_local['level_1'] == current_em)].copy().reset_index(drop=True)
+            df_spectra_local_best = df_best_local.iloc[:, 11:].to_numpy()
+            meta_best = df_best_local['plot_name']
+
+            # 3. Isolate Local - Worst Target Data
+            df_worst_local = pd.read_csv(
+                os.path.join(self.output_directory, 'spectral_transects', f'Spectral-{local_map[current_em][1]}',
+                             f'unmix_Spectral-{local_map[current_em][1]}_EMS_emit.csv'))
+            df_worst_local['level_1'] = df_worst_local['level_1'].str.lower()
+            df_worst_local = df_worst_local.loc[(df_worst_local['level_1'] == current_em)].copy().reset_index(drop=True)
+            df_spectra_local_worst = df_worst_local.iloc[:, 11:].to_numpy()
+            meta_worst = df_worst_local['plot_name']
+
+            meta_combined = pd.concat([meta_global, meta_best, meta_worst], axis=0).reset_index(drop=True)
+
+            # 4. Vertical Stack Concatenation & Normalization Execution
+            df_all_spectra = np.concatenate((df_spectra_global, df_spectra_local_best, df_spectra_local_worst), axis=0)
+
+            norm = p_map(spectra.vector_normalize_spectrum, df_all_spectra,
+                         **{"desc": f"\t\t\tnormalizing spectrum: d = {col_map[col]}...", "ncols": 150})
+
+            df_norm = pd.DataFrame(norm)
+            df_norm.columns = df_global_em.columns[7:]
+            df_norm.insert(0, 'info', meta_combined)
+            df_norm.insert(0, 'level_1', current_em)
+
+            # 5. Dimensionality Reduction (PCA Engine)
+            pc_components = spectra.pca_analysis(df_norm, spectra_starting_col=3, em=col_map[col])
+            pc_array = np.asarray(pc_components)[:, 3: 3 + 4]
+            pc_array_2d = pc_array[:, :2]
+
+            # 6. Map Coordinate Spatial Bounds to Build Uniform, Equal Square Footprints
+            x_vals = pc_array_2d[:, 0]
+            y_vals = pc_array_2d[:, 1]
+
+            x_center, y_center = (x_vals.max() + x_vals.min()) / 2, (y_vals.max() + y_vals.min()) / 2
+            max_range = max(x_vals.max() - x_vals.min(), y_vals.max() - y_vals.min()) / 2
+
+            # Include a 10% outer cushion padding to keep hulls cleanly in boundary view
+            half_side = max_range + (max_range * 0.1)
+
+            axes[col].set_xlim(x_center - half_side, x_center + half_side)
+            axes[col].set_ylim(y_center - half_side, y_center + half_side)
+            axes[col].set_aspect('equal', adjustable='box')
+
+            # 7. Generate Target Library Class Trackers
+            source_labels = (
+                    ['Global'] * len(df_spectra_global) +
+                    [f'SPEC-{local_map[current_em][0]}'] * len(df_spectra_local_best) +
+                    [f'SPEC-{local_map[current_em][1]}'] * len(df_spectra_local_worst)
+            )
+
+            df_plot_groups = pd.DataFrame({
+                'PC1': x_vals,
+                'PC2': y_vals,
+                'source': source_labels
+            })
+
+            style_map = {
+                'Global': {'color': '#d3d3d3', 'alpha': 0.5, 'zorder': 1},
+                f'SPEC-{local_map[current_em][0]}': {'color': '#1f77b4', 'alpha': 0.9, 'zorder': 3},
+                f'SPEC-{local_map[current_em][1]}': {'color': '#ff7f0e', 'alpha': 0.9, 'zorder': 2}
+            }
+
+            # 8. Render Plot Layers via Rigid Explicit Sequence Iteration
+            target_draw_order = [
+                'Global',
+                f'SPEC-{local_map[current_em][0]}',
+                f'SPEC-{local_map[current_em][1]}'
+            ]
+
+            for label in target_draw_order:
+                group = df_plot_groups[df_plot_groups['source'] == label]
+
+                if group.empty:
+                    continue
+
+                pts = group[['PC1', 'PC2']].to_numpy()
+                cfg = style_map[label]
+
+                # Draw categorical dispersion cluster
+                axes[col].scatter(
+                    pts[:, 0], pts[:, 1],
+                    color=cfg['color'], alpha=cfg['alpha'], s=15,
+                    label=label, zorder=cfg['zorder']
+                )
+
+                # Draw corresponding customized Convex Hull
+                if len(pts) >= 3:
+                    ch_sub = ConvexHull(pts)
+                    for simplex in ch_sub.simplices:
+                        axes[col].plot(
+                            pts[simplex, 0], pts[simplex, 1],
+                            color=cfg['color'], linestyle='-', lw=1.5,
+                            zorder=cfg['zorder']
+                        )
+
+            # 9. Format Labels and Annotations
+            if current_em == 'pv':
+                current_em = 'GV'
+
+            axes[col].set_title(f"{current_em.upper()}")
+            axes[col].set_ylim(-.35,.35)
+            axes[col].set_xlim(-.35,.35)
+            axes[col].set_xlabel("PC - 1")
+            if col == 0:
+                axes[col].set_ylabel("PC - 2")
+            if col != 0:
+                axes[col].set_yticklabels([])
+            axes[col].legend(loc='lower left', frameon=True, fontsize=8)
+
+        # Export and display visual layout output
+        plt.savefig(os.path.join(self.fig_directory, 'spectral_variance.png'), dpi=600)
+        plt.clf()
+        plt.close()
+
 def run_figures(base_directory, sensor):
     base_directory = base_directory
     major_axis_fontsize = 14
@@ -812,7 +1248,9 @@ def run_figures(base_directory, sensor):
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs)
 
-    fig.plot_summary()
+    #fig.plot_summary()
+    #fig.methods_diagram()
     fig.local_slpit()
-    fig.sza_plot(norm_option='brightness')
-    fig.map_detail_figure()
+    #fig.sza_plot(norm_option='brightness')
+    #fig.map_detail_figure()
+    fig.spectral_variance()
