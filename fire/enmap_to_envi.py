@@ -24,8 +24,7 @@ def main():
     parser = argparse.ArgumentParser(description='Run Vegetation Extraction')
 
     parser.add_argument('-out_dir', '--output_directory', type=str, help='Out directory')
-    parser.add_argument('-rfl', '--reflectance_image', type=str, help='Reflectance image that was unmixed')
-    parser.add_argument('-unmix_lib_csv', '--unmixing_library_csv', type=str, help='Unmixing library csv file')
+    parser.add_argument('-rfl', '--reflectance_image', type=str, help='Tif from enmap l2a')
     parser.add_argument('-scale', '--scale_factor', type=str, default='10000.0')
     args = parser.parse_args()
 
@@ -151,6 +150,8 @@ def main():
                     interleave='bsq', ext='')
 
     print(f"Successfully saved ENVI file to {output_hdr}")
+
+
 
 if __name__ == '__main__':
     main()
