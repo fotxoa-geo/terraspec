@@ -45,9 +45,9 @@ def main():
     parser.add_argument('--tetracorder', action='store_true', help='Run tetracorder after extraction of veg signal')
     args = parser.parse_args()
 
-    df_ems = pd.read_csv(args.unmixing_library_csv)
     wvls, fwhm = spectra.load_wavelengths(sensor=args.sensor)
     basename = os.path.basename(args.reflectance_image)
+    unmix_basename = os.path.basename(args.unmixing_library_envi)
 
     complete_fractions_array = envi_to_array(args.vegetation_complete_fractions)
     unmix_library_array = envi_to_array(args.unmixing_library_envi)
@@ -55,7 +55,8 @@ def main():
     three_component_fractions_array = envi_to_array(args.three_component_fractions)
 
     df_unmix = pd.read_csv(args.unmixing_library_csv)
-
+    rho_hat = np.zeros((complete_fractions_array.shape[0], complete_fractions_array.shape[1], len(wvls)))
+    
     for _em, em in enumerate(df_unmix.level_1.unique()):
         min_em_index = np.min(df_unmix[df_unmix['level_1'] == em].index)
         max_em_index = np.max(df_unmix[df_unmix['level_1'] == em].index)
@@ -66,25 +67,33 @@ def main():
         spectra_grid = np.zeros((complete_fractions_array.shape[0], complete_fractions_array.shape[1], len(wvls)))
 
         func = partial(process_complete_fractions_row, unmix_library_array=em_library_array, wvls=wvls)
-        results = p_map(func,
-                        [em_fractions_array[_row, :, :] for _row in range(em_fractions_array.shape[0])],
+        results = p_map(func, [em_fractions_array[_row, :, :] for _row in range(em_fractions_array.shape[0])],
                         **{"desc": f"\t\t rebuilding spectra ...", "ncols": 150})
-
+        
         for _row, row in enumerate(results):
             spectra_grid[_row, :, :] = row
 
         meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=wvls, wvls=True)
-        output_raster = os.path.join(args.output_directory, f"extracted_{basename}_{em}_signal.hdr")
+        output_raster = os.path.join(args.output_directory, f"extracted_{basename}_{em}_{unmix_basename}_signal.hdr")
         save_envi(output_raster, meta_spectra, spectra_grid)
         print(f'\t successfully saved: {output_raster}')
+        
+        rho_hat += spectra_grid * three_component_fractions_array[:,:, _em][:, :, np.newaxis]
 
         if args.tetracorder and em in ['npv', 'pv']:
             print('Extracting vegetation signal from rfl img for Tetracorder run...')
             rfl_mixed_array -= spectra_grid * three_component_fractions_array[:,:, _em][:, :, np.newaxis]
-
+    
+    # normalize reflectance by fraction of soil to retrieve rho_s
+    rfl_mixed_array = rfl_mixed_array / three_component_fractions_array[:, :, 2][:, :, np.newaxis]
+    
+    meta_spectra = get_meta(lines=rfl_mixed_array.shape[0], samples=rfl_mixed_array.shape[1], bands=wvls, wvls=True)
+    output_raster = os.path.join(args.output_directory, f"recon_rho_{basename}_{unmix_basename}.hdr")
+    save_envi(output_raster, meta_spectra, rho_hat)
+    
     if args.tetracorder:
         meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=wvls, wvls=True)
-        output_raster = os.path.join(args.output_directory, f"extracted_vegetation_{basename}.hdr")
+        output_raster = os.path.join(args.output_directory, f"ext_veg_{basename}_{unmix_basename}_tc.hdr")
         save_envi(output_raster, meta_spectra, rfl_mixed_array)
 
 if __name__ == '__main__':
