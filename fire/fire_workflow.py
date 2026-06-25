@@ -1,5 +1,5 @@
 from utils.text_guide import cursor_print, query_slpit_mode, query_yes_no
-from utils.slpit_download import download_scenes
+from utils.slpit_download import download_scenes, enmap_process
 from fire.time_series_build import run_build_workflow
 from fire.figures import run_figures
 
@@ -10,9 +10,10 @@ def display_fire_menu():
 
     print("Welcome to Fire Mode....")
     print("A... Download Imagery")
-    print("B... Build time series")
-    print("C... Figures")
-    print("D... Exit")
+    print("B... Process EnMAP")
+    print("C... Build time series")
+    print("D... Figures")
+    print("E... Exit")
 
 def display_result_menu():
     msg = f"You have entered SLPIT result mode! " \
@@ -34,12 +35,15 @@ def run_fire_workflow(base_directory:str, dry_run, sensor, aoi):
             download_scenes(base_directory, sensor, aoi=aoi)
 
         if user_input == 'B':
-            run_build_workflow(base_directory, sensor, aoi=aoi)
+            enmap_process(base_directory=base_directory, sensor='enmap', aoi=aoi)
 
         if user_input == 'C':
+            run_build_workflow(base_directory, sensor, aoi=aoi)
+
+        if user_input == 'D':
             run_figures(base_directory=base_directory, sensor=sensor, aoi=aoi)
 
-        elif user_input == "D":
+        elif user_input == "E":
             print("Returning to main menu.")
             break
         else:
