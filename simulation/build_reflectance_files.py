@@ -12,7 +12,6 @@ from utils.create_tree import create_directory
 import geopandas as gpd
 from shapely.geometry import Point
 
-
 def build_geographic(dimensions, output_directory, spectra_starting_col, normalize, sensor, level):
     df = spectra.load_global_library(output_directory=output_directory)
 
