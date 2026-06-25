@@ -647,7 +647,6 @@ class figures:
             ax.set_ylim(0, 2)
             ax.set_aspect('equal', adjustable='box')
 
-        plt.show()
         plt.savefig(os.path.join(self.figure_directory, 'methods_diagram.png'), dpi=600)
         plt.clf()
         plt.close()
