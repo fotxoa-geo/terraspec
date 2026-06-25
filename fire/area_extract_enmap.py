@@ -2,13 +2,9 @@ import argparse
 from osgeo import gdal, osr
 import os
 import numpy as np
-from utils.envi import get_meta, save_envi, envi_to_array
-from utils.spectra_utils import spectra
 from utils.create_tree import create_directory
 from spectral.io import envi
-import pandas as pd
 import geopandas as gp
-import netCDF4 as nc
 
 envi_typemap = {
     'uint8': 1,
