@@ -58,7 +58,7 @@ def deaugment_envi(file, augmented_file, out_envi_file):
     meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=list(range(spectra_grid.shape[2])), wvls=False)
     meta_spectra['data ignore value'] = -9999
     save_envi(out_envi_file, meta_spectra, spectra_grid)
-    print(f'saved augmented envi file to {out_envi_file}')
+    print(f'saved de-augmented envi file to {out_envi_file}')
 
 
 def main():
@@ -74,13 +74,13 @@ def main():
     wvls, fwhm = spectra.load_wavelengths(sensor=args.sensor)
     
     if args.augment:
-        augmented_envi_file = os.path.join(args.out_directory, f'{os.path.basename(args.reflectance_image)}_augmented.hdr')
+        augmented_envi_file = os.path.join(args.out_directory, f'{os.path.basename(args.reflectance_image)}_aug.hdr')
         augment_envi(file=args.reflectance_image, out_envi_file=augmented_envi_file, wvls=wvls, vertical_average=False,
                      em_index_min=None, em_index_max=None, bad_bands=None)
 
     if args.deaugment:
         
-        for i in ["_augmented", "_augmented_min", "_augmented_minunc"]:
+        for i in ["_aug", "_aug_min", "_aug_minunc"]:
             augmented_file = os.path.join(args.out_directory, f'{os.path.basename(args.reflectance_image)}{i}')
             deaugment_envi(file=args.reflectance_image, augmented_file=augmented_file, out_envi_file=f'{augmented_file}.hdr')
 
