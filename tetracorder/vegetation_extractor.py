@@ -1,14 +1,10 @@
 import argparse
 import os
 import time
-
 import pandas as pd
 import numpy as np
 from p_tqdm import p_map
 from functools import partial
-
-from sympy.solvers.diophantine.diophantine import reconstruct
-
 from utils.envi import save_envi, get_meta, envi_to_array
 from utils.spectra_utils import spectra
 
@@ -90,14 +86,15 @@ def main():
 
     # normalize reflectance by fraction of soil to retrieve rho_s
     rfl_mixed_array = rfl_mixed_array / three_component_fractions_array[:, :, 2][:, :, np.newaxis]
+    meta_spectra = get_meta(lines=rfl_mixed_array.shape[0], samples=rfl_mixed_array.shape[1], bands=wvls, wvls=True)
+    output_raster = os.path.join(args.output_directory, f"recon_rho_{basename}.hdr")
+    save_envi(output_raster, meta_spectra, rho_hat)
 
     if args.tetracorder:
         meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=wvls, wvls=True)
         output_raster = os.path.join(args.output_directory, f"ext_rho_s_{basename}.hdr")
         save_envi(output_raster, meta_spectra, rfl_mixed_array)
 
-        output_raster = os.path.join(args.output_directory, f"recon_rho_{basename}.hdr")
-        save_envi(output_raster, meta_spectra, rho_hat)
 
 if __name__ == '__main__':
     main()
