@@ -1,5 +1,7 @@
 import argparse
 import os
+
+import pandas as pd
 from osgeo import gdal
 from utils.envi import save_envi, get_meta, envi_to_array
 import numpy as np
@@ -68,15 +70,28 @@ def main():
     parser.add_argument('out_directory', type=str, help="Specify output destination")
     parser.add_argument('--augment', action='store_true', help="augment data")
     parser.add_argument('--deaugment', action='store_true', help="deaugment data")
+    parser.add_argument('--vertical_avg', action='store_true', help="average all spectra to one measurement")
     parser.add_argument('--sensor', type=str, help="sensor", default='emit')
+    parser.add_argument('--em_file', type=str, help="EM file for index usages", default='emit')
     args = parser.parse_args()
 
     wvls, fwhm = spectra.load_wavelengths(sensor=args.sensor)
     
     if args.augment:
         augmented_envi_file = os.path.join(args.out_directory, f'{os.path.basename(args.reflectance_image)}_augmented.hdr')
-        augment_envi(file=args.reflectance_image, out_envi_file=augmented_envi_file, wvls=wvls, vertical_average=False,
-                     em_index_min=None, em_index_max=None, bad_bands=None)
+
+        if args.vertical_avg:
+            df_em = pd.read_csv(args.em_file)
+            df_em = df_em.sort_values('level_1')
+            min_em = df_em[df_em['level_1'] == 'Soil'].index.min()
+            max_em = df_em[df_em['level_1'] == 'Soil'].index.max()
+
+            augment_envi(file=args.reflectance_image, out_envi_file=augmented_envi_file, wvls=wvls,
+                         vertical_average=args.vertical_avg, em_index_min=min_em, em_index_max=max_em, bad_bands=None)
+
+        else:
+            augment_envi(file=args.reflectance_image, out_envi_file=augmented_envi_file, wvls=wvls,
+                         vertical_average=args.vertical_avg, em_index_min=None, em_index_max=None, bad_bands=None)
 
     if args.deaugment:
         
