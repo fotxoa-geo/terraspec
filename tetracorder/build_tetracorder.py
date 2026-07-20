@@ -1,6 +1,5 @@
 import os
 import shutil
-import time
 from utils.create_tree import create_directory
 from utils.spectra_utils import spectra
 from utils.envi import envi_to_array, get_meta, save_envi, load_band_names, augment_envi
@@ -10,11 +9,6 @@ import pandas as pd
 from p_tqdm import p_map
 from functools import partial
 from glob import glob
-import itertools
-import geopandas as gp
-from datetime import datetime
-from utils.unmix_utils import call_unmix, call_hypertrace_unmix, hypertrace_meta, create_uncertainty
-from simulation.run_hypertrace import hypertrace_workflow
 import subprocess
 from spectral.io import envi
 import isofit.core.common as isc
