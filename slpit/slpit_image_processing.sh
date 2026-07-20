@@ -118,16 +118,19 @@ mkdir -p ${tetracorder_out_directory}
 echo "Created tetracorder dir: ${tetracorder_out_directory}"
 
 # augment rfl data
-python ./utils/augment_file.py ${rfl_img} ${tetracorder_out_directory} --augment # slpit data
+python ./utils/augment_file.py ${rfl_img} ${tetracorder_out_directory} --augment --vertical_avg # slpit data
 em_filebase_name=$(basename "$em_rfl_file")
-python ./utils/augment_file.py ${em_rfl_file} ${tetracorder_out_directory} --augment # em data
+python ./utils/augment_file.py ${em_rfl_file} ${tetracorder_out_directory} --augment  --em_file ${rfl_img}.csv --vertical_avg # em data
+python ./utils/augment_file.py ${sensor_rfl_ext_file} ${tetracorder_out_directory} --augment --vertical_avg # em data
 
 ./tetracorder/tetracorder.sh "${tetracorder_out_directory}/${filebase_name}_augmented" ${tetracorder_out_directory} emit --delete_tc_output
 ./tetracorder/tetracorder.sh "${tetracorder_out_directory}/${em_filebase_name}_augmented" ${tetracorder_out_directory} emit --delete_tc_output
+./tetracorder/tetracorder.sh "${tetracorder_out_directory}/${ext_filebase_name}_augmented" ${tetracorder_out_directory} emit --delete_tc_output
 
 # deaugment data in tetracorder output directory
 python ./utils/augment_file.py ${rfl_img} ${tetracorder_out_directory} --deaugment
 python ./utils/augment_file.py ${em_rfl_file} ${tetracorder_out_directory} --deaugment
+python ./utils/augment_file.py ${sensor_rfl_ext_file} ${tetracorder_out_directory} --deaugment
 
 # push data to drive
 out_base_name=$(basename "${out_base}")
