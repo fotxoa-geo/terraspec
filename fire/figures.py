@@ -746,6 +746,6 @@ class InteractiveMatplotlibDashboard:
 def run_figures(base_directory, sensor, aoi):
     base_directory = base_directory
     fig = figures(base_directory=base_directory, sensor=sensor, aoi=aoi)
-    fig.fractional_cover_distributions()
+    #fig.fractional_cover_distributions()
     #fig.pixel_example_ts()
     #fig.start_plot()
