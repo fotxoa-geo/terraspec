@@ -12,6 +12,8 @@ from scipy import stats
 from osgeo import gdal
 from utils.spectra_utils import spectra
 import isofit.core.common as isc
+from scipy.special import softmax
+
 
 envi_typemap = {
     'uint8': 1,
@@ -149,6 +151,16 @@ def z_shift(time_series_values, time_points, perturbation_date):
 
     return z_post_average
 
+def spectral_attention(spectrum):
+    S = np.array(spectrum, dtype=float).reshape(-1, 1)
+    N = len(S)
+
+    interaction_matrix = np.dot(S, S.T)
+    scaled_matrix = interaction_matrix / np.sqrt(N)
+    attention_matrix = softmax(scaled_matrix, axis=1)
+
+    return attention_matrix
+
 def welch_test(time_series_values, time_points, perturbation_date):
     time_series_values[time_series_values == -9999.] = np.nan
     non_nan_mask = ~np.isnan(time_series_values)
@@ -236,7 +248,7 @@ def sam(time_series_values, time_points, perturbation_date, row, col):
     r_valid = r[mask]
 
     if t_valid.size == 0:
-        return -9999.
+        return -9999., -9999.
 
     dot_product = np.dot(t_valid, r_valid)
 
@@ -244,21 +256,29 @@ def sam(time_series_values, time_points, perturbation_date, row, col):
     norm_r = np.linalg.norm(r_valid)
 
     if norm_t == 0 or norm_r == 0:
-        return -9999.
+        return -9999., -9999.
 
     cos_alpha = np.clip(dot_product / (norm_t * norm_r), -1.0, 1.0)
 
-    return np.degrees(np.arccos(cos_alpha))
+    # calculate attention matrix
+    A1 = spectral_attention(r_valid)
+    A2 = spectral_attention(t_valid)
+
+    # Compare the two maps using the Frobenius Norm (matrix Euclidean distance)
+    distance = np.linalg.norm(A1 - A2, ord='fro')
+
+    return np.degrees(np.arccos(cos_alpha)), distance
 
 def row_parallel_processing(row, _row, time_points, perturbation_date):
-    score_row = np.ones((row.shape[0], 3)) * -9999.
+    score_row = np.ones((row.shape[0], 4)) * -9999.
 
     for _col, col in enumerate(row):
         score_row[_col, 0] = z_shift(time_series_values=col, time_points=time_points, perturbation_date=perturbation_date)
         score_row[_col, 1] = welch_test(time_series_values=col, time_points=time_points,
                                      perturbation_date=perturbation_date)
-        score_row[_col, 2] = sam(time_series_values=col, time_points=time_points,
+        score_row[_col, 2],  score_row[_col, 3] = sam(time_series_values=col, time_points=time_points,
                                         perturbation_date=perturbation_date, row=_row, col=_col)
+
     return score_row
 
 class time_series:
@@ -517,7 +537,7 @@ class time_series:
             print(f"The largest dimensions are: {frac_array.shape[0]} x {frac_array.shape[1]}")
             meta = envi.read_envi_header(f'{fractional_cover}.hdr')
 
-            scores_grid = np.ones((frac_array.shape[0], frac_array.shape[1], 4)) * -9999.
+            scores_grid = np.ones((frac_array.shape[0], frac_array.shape[1], 5)) * -9999.
             fire_date = datetime(2024, 7, 4)  # Lakefire date
 
             time_points = meta['band names']
@@ -528,13 +548,13 @@ class time_series:
                             **{"desc": f"\t\t calculating perturbation statistics...", "ncols": 150})
 
             for _row, row in enumerate(results):
-                scores_grid[_row, :, 0:3] = row
+                scores_grid[_row, :, 0:4] = row
 
             scores_grid[:,:, -1] = scores_grid[:,:, 2] / scores_grid[:,:, 0] # sam/z-score ratio
 
             metadata = {'lines': scores_grid.shape[0],
                         'samples': scores_grid.shape[1],
-                        'bands': 4,
+                        'bands': 5,
                         'interleave': 'BIL',
                         'header offset': 0,
                         'file type': 'ENVI Standard',
@@ -542,7 +562,7 @@ class time_series:
                         'byte order': 0,
                         'map info': meta['map info'],
                         'coordinate system string': meta['coordinate system string'],
-                        'band names': ['z_score_shift', 'welch-t_test', 'sam', 'sam_to_z_score_ratio'],
+                        'band names': ['z_score_shift', 'welch-t_test', 'sam', 'attention', 'sam_to_z_score_ratio'],
                         'data ignore value': -9999.}
 
             output_raster = os.path.join(self.time_series_directory,
@@ -555,7 +575,7 @@ class time_series:
 def run_build_workflow(base_directory, sensor, aoi):
     ts = time_series(base_directory=base_directory, sensor=sensor, aoi=aoi)
     #ts.resample_EnMAP_to_EMIT()
-    ts.build_time_series()
+    #ts.build_time_series()
     #ts.build_merged_time_series()
     #ts.spatial_resample_EnMAP_to_EMIT()
     #ts.spectral_resample_emit_to_EnMAP()
