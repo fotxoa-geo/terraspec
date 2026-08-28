@@ -1,16 +1,76 @@
+import time
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from utils.envi import envi_to_array, load_band_names
 import os
 from matplotlib.ticker import FormatStrFormatter
-from scipy.interpolate import interp1d
-import spectral.io.envi as envi
-from emit_utils.file_checks import envi_header
 from utils.spectra_utils import spectra
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 from sklearn.preprocessing import MultiLabelBinarizer
+from glob import glob
+import subprocess
+from utils.results_utils import r2_calculations
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+import ast
+from sklearn.metrics import f1_score, precision_score, recall_score
+import matplotlib.ticker as ticker
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
 
+
+def calc_clean_metrics(x, y):
+    """Safely calculates R2 and MAE after masking NaN values out of paired arrays."""
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+    valid_mask = ~np.isnan(x) & ~np.isnan(y)
+    x_clean, y_clean = x[valid_mask], y[valid_mask]
+
+    if len(x_clean) < 2:
+        return np.nan, np.nan
+
+    try:
+        r2, _ = r2_calculations(x_clean, y_clean)
+        mae = mean_absolute_error(x_clean, y_clean)
+        return r2, mae
+    except Exception:
+        return np.nan, np.nan
+
+
+def evaluate_single_class(y_true_raw, y_pred_raw, target_class):
+    """Evaluates binary metrics and correct prediction fraction for a target class."""
+
+    def contains_target(item, target):
+        if isinstance(item, str):
+            try:
+                item = ast.literal_eval(item)
+            except (ValueError, SyntaxError):
+                item = [item]
+        return 1 if target in item else 0
+
+    y_true_binary = [contains_target(row, target_class) for row in y_true_raw]
+    y_pred_binary = [contains_target(row, target_class) for row in y_pred_raw]
+
+    # True Positives (correctly predicted presence)
+    tp = sum(1 for t, p in zip(y_true_binary, y_pred_binary) if t == 1 and p == 1)
+
+    # Total True Instances in Ground Truth
+    n_true = sum(y_true_binary)
+
+    f1 = f1_score(y_true_binary, y_pred_binary, zero_division=0)
+    precision = precision_score(y_true_binary, y_pred_binary, zero_division=0)
+    recall = recall_score(y_true_binary, y_pred_binary, zero_division=0)
+
+    return {
+        'target_class': target_class,
+        'f1_score': round(f1, 4),
+        'precision': round(precision, 4),
+        'recall': round(recall, 4),
+        'tp': tp,
+        'n_true': n_true,
+        'fraction_str': f"{tp}/{n_true}"  # Formatted string "4/7"
+    }
 
 
 class tetracorder_figures:
@@ -699,6 +759,530 @@ class tetracorder_figures:
         plt.clf()
         plt.close()
 
+    def field_table(self):
+        group_dict = {'g1': 1, 'g2': 3}
+        bd_dict = {'g1': 0, 'g2': 2}
+
+        tc_contact_probe = sorted(list(glob(os.path.join(self.output_directory, 'field', '**', '*_EMS_emit_augmented_min'), recursive=True)))
+
+        rows = []
+
+        for group in ['g1', 'g2']:
+
+            for cp in tc_contact_probe:
+
+                # these are the base for truth
+                plot_num = os.path.basename(cp).split('_')[0]
+                try:
+                    # this is contact probe data
+                    cp_mineral_class, cp_df_minerals_sim = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'tc_contact',
+                                                                  f'{plot_num}_EMS_emit_augmented_minerals'))
+                    cp_mineral = envi_to_array(cp)[0, 0, group_dict[group]]
+                    cp_bd =  envi_to_array(cp)[0, 0, bd_dict[group]]
+
+                    cp_class = cp_mineral_class.get(cp_mineral, ['other'])
+
+                    # uncorrected slpit
+                    slpit_uncorrected_mineral_class, slpit_unc_df_minerals_sim = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_unc',
+                                                                  f'{plot_num}_SLPIT_emit_augmented_minerals'))
+                    slpit_unc_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_unc', f'{plot_num}_SLPIT_emit_augmented_min'))[0, 0, group_dict[group]]
+                    slpit_unc_bd = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_unc', f'{plot_num}_SLPIT_emit_augmented_min'))[0, 0, bd_dict[group]]
+                    slpit_unc_class = slpit_uncorrected_mineral_class.get(slpit_unc_mineral, ['other'])
+
+                    # # corrected slpit - pre tetracorder ; global library
+                    slpit_corrected_global_mineral_class, slpit_corrected_df_minerals = spectra.get_mineral_reclassification(
+                    path_to_tetracorder_minerals = os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_global',
+                                                                f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_lib_tc_minerals'))
+
+                    slpit_corrected_global_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_global', f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_lib_tc_min'))[0, 0, group_dict[group]]
+                    slpit_corrected_global_bd =  envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_global', f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_lib_tc_min'))[0, 0, bd_dict[group]]
+                    slpit_corrected_global_class = slpit_corrected_global_mineral_class.get(slpit_corrected_global_mineral, ['other'])
+
+                    # corrected slpit - rho s ; global library
+                    slpit_rho_s_global_mineral_class,  df_slpit_rho_s_global_mineral_class = spectra.get_mineral_reclassification(
+                         path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_global',
+                                                                   f'recon_rho_{plot_num}_SLPIT_emit_augmented_global_lib_minerals'))
+
+                    slpit_rho_s_global_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_global', f'recon_rho_{plot_num}_SLPIT_emit_augmented_global_lib_min'))[0, 0, group_dict[group]]
+                    slpit_rho_s_global_bd = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_global', f'recon_rho_{plot_num}_SLPIT_emit_augmented_global_lib_min'))[0, 0, bd_dict[group]]
+                    slpit_rho_s_corrected_global_class = slpit_rho_s_global_mineral_class.get(slpit_rho_s_global_mineral, ['other'])
+
+                    # reclaimr slpit - post tetracorder; global library
+                    base_call = (f'python ./tetracorder/reclaimer.py '
+                                 f'-out_dir {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_global')} '
+                                 f'-tc_out {os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_global', f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_lib_tc_min.hdr')} '
+                                 f'-rfl {os.path.join(self.output_directory, 'field', plot_num, f'{plot_num}_SLPIT_emit_augmented.hdr')} '
+                                 f'-um_out {os.path.join(self.output_directory, 'field', plot_num, 'emc2_SLPIT', f'global_lib_{plot_num}_SLPIT_emit_fractional_cover.hdr')} -g_num {int(group[-1:])} '
+                                 f'-rho_gv {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_global', f'extracted_{plot_num}_SLPIT_emit_augmented_pv_global_lib_signal.hdr')} '
+                                 f'-rho_npv {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_global' ,f'extracted_{plot_num}_SLPIT_emit_augmented_npv_global_lib_signal.hdr')}')
+                    subprocess.call(base_call, shell=True)
+                    reclaimer_slpit_global_lib = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_global', f'RECLAIMER_{group}_global_lib_{plot_num}_SLPIT_emit_fractional_cover'))[0, 0, :]
+
+                    # # corrected slpit - pre tetracorder ; rock library
+                    slpit_corrected_rock_mineral_class, df_slpit_corrected_rock_mineral_class = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_rock',
+                                                                  f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_rock_tc_minerals'))
+
+                    slpit_corrected_rock_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_rock', f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_rock_tc_min'))[0, 0, group_dict[group]]
+                    slpit_corrected_rock_bd = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_rock', f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_rock_tc_min'))[0, 0, bd_dict[group]]
+                    slpit_corrected_rock_class = slpit_corrected_rock_mineral_class.get(slpit_corrected_rock_mineral, ['other'])
+
+                    # # corrected slpit - rho s ; rock library
+                    slpit_rho_s_rock_mineral_class, df_slpit_rho_s_rock_mineral_class = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_rock',
+                                                                  f'recon_rho_{plot_num}_SLPIT_emit_augmented_global_rock_minerals'))
+
+                    slpit_rho_s_rock_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_rock', f'recon_rho_{plot_num}_SLPIT_emit_augmented_global_rock_min'))[0, 0, group_dict[group]]
+                    slpit_rho_s_rock_bd = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_rock', f'recon_rho_{plot_num}_SLPIT_emit_augmented_global_rock_min'))[0, 0, bd_dict[group]]
+                    slpit_rho_s_corrected_mineral_class = slpit_rho_s_rock_mineral_class.get(slpit_rho_s_rock_mineral, ['other'])
+
+                    # reclaimr slpit - post tetracorder; rock library
+                    base_call = (
+                        f'python ./tetracorder/reclaimer.py '
+                        f'-out_dir {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_rock')} '
+                        f'-tc_out {os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_rock', f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_rock_tc_min.hdr')} '
+                        f'-rfl {os.path.join(self.output_directory, 'field', plot_num, f'{plot_num}_SLPIT_emit_augmented.hdr')} '
+                        f'-um_out {os.path.join(self.output_directory, 'field', plot_num, 'emc2_SLPIT', f'global_rock_{plot_num}_SLPIT_emit_fractional_cover.hdr')} -g_num {int(group[-1:])} '
+                        f'-rho_gv {os.path.join(self.output_directory, 'field', plot_num,'SLPIT_rock' , f'extracted_{plot_num}_SLPIT_emit_augmented_pv_global_rock_signal.hdr')} '
+                        f'-rho_npv {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_rock', f'extracted_{plot_num}_SLPIT_emit_augmented_npv_global_rock_signal.hdr')}')
+
+                    subprocess.call(base_call, shell=True)
+                    reclaimer_slpit_global_rock = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_rock', f'RECLAIMER_{group}_global_rock_{plot_num}_SLPIT_emit_fractional_cover'))[0, 0, :]
+
+                    if int(plot_num[-3:]) not in [14, 15, 16]:
+                        # # corrected slpit - pre tetracorder ; local library
+                        slpit_corrected_local_mineral_class, df_slpit_corrected_local_mineral_class = spectra.get_mineral_reclassification(
+                            path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_lcl',
+                                                                      f'ext_veg_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_emi_minerals'))
+
+                        slpit_corrected_local_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_lcl', f'ext_veg_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_emi_min'))[0, 0, group_dict[group]]
+                        slpit_corrected_local_bd = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_lcl', f'ext_veg_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_emi_min'))[0, 0, bd_dict[group]]
+                        slpit_corrected_local_class = slpit_corrected_local_mineral_class.get(slpit_corrected_local_mineral, ['other'])
+
+                        # # corrected slpit - rho s ; local library
+                        slpit_rho_s_rock_local_class, df_slpit_rho_s_rock_local_class = spectra.get_mineral_reclassification(
+                            path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_lcl',
+                                                                      f'recon_rho_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_e_minerals'))
+
+                        slpit_rho_s_local_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_lcl', f'recon_rho_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_e_min'))[0, 0, group_dict[group]]
+                        slpit_rho_s_local_bd = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_lcl', f'recon_rho_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_e_min'))[0, 0, bd_dict[group]]
+                        slpit_rho_s_corrected_local_class = slpit_rho_s_rock_local_class.get(slpit_rho_s_local_mineral, ['other'])
+
+                        # reclaimr slpit - post tetracorder; local library
+                        base_call = (
+                            f'python ./tetracorder/reclaimer.py '
+                            f'-out_dir {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_lcl')} '
+                            f'-tc_out {os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_lcl', f'ext_veg_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_emi_min.hdr')} '
+                            f'-rfl {os.path.join(self.output_directory, 'field', plot_num, f'{plot_num}_SLPIT_emit_augmented.hdr')} '
+                            f'-um_out {os.path.join(self.output_directory, 'field', plot_num, 'emc2_SLPIT', f'local_{plot_num}_SLPIT_emit_fractional_cover.hdr')} -g_num {int(group[-1:])} '
+                            f'-rho_gv {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_lcl', f'extracted_{plot_num}_SLPIT_emit_augmented_PV_{plot_num}_EMS_emit_signal.hdr')} '
+                            f'-rho_npv {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_lcl', f'extracted_{plot_num}_SLPIT_emit_augmented_NPV_{plot_num}_EMS_emit_signal.hdr')}')
+                        subprocess.call(base_call, shell=True)
+                        reclaimer_slpit_local = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_lcl',
+                                                                           f'RECLAIMER_{group}_local_{plot_num}_SLPIT_emit_fractional_cover'))[0, 0, :]
+                    else:
+                        print(f"Skipping local instance for plot: {plot_num}")
+                        slpit_corrected_local_bd = -9999
+                        slpit_corrected_local_class = -9999
+                        slpit_rho_s_local_bd = -9999
+                        slpit_rho_s_corrected_local_class = -9999
+                        reclaimer_slpit_local = np.array([-9999, -9999])
+
+                    # uncorrected EMIT
+                    emit_uncorrected_mineral_class, emit_unc_df_minerals_sim = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_unc', f'*_EXT_augmented_minerals'))[0])
+
+                    emit_unc_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_unc', f'*_EXT_augmented_min'))[0])[0, 0, group_dict[group]]
+                    emit_unc_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_unc', f'*_EXT_augmented_min'))[0])[0, 0, bd_dict[group]]
+                    emit_unc_class = emit_uncorrected_mineral_class.get(emit_unc_mineral, ['other'])
+
+                    # # corrected emit - pre tetracorder ; global library
+                    emit_corrected_global_mineral_class, emit_corrected_df_minerals = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_global',
+                                                                       f'*_EXT_augmented_global__minerals'))[0])
+
+                    emit_corrected_global_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_global', f'*_EXT_augmented_global__min'))[0])[0, 0, group_dict[group]]
+                    emit_corrected_global_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_global', f'*_EXT_augmented_global__min'))[0])[0, 0, bd_dict[group]]
+                    emit_corrected_global_class = emit_corrected_global_mineral_class.get(emit_corrected_global_mineral, ['other'])
+
+                    # # corrected emit - rho s ; global library
+                    emit_rho_s_global_mineral_class, df_emit_rho_s_global_mineral_class = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_global',
+                                                                       f'*_EXT_augmented_globa_minerals'))[0])
+
+                    emit_rho_s_global_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_global', f'*_EXT_augmented_globa_min'))[0])[0, 0, group_dict[group]]
+                    emit_rho_s_global_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_global', f'*_EXT_augmented_globa_min'))[0])[0, 0, bd_dict[group]]
+                    emit_rho_s_corrected_global_class = emit_rho_s_global_mineral_class.get(emit_rho_s_global_mineral, ['other'])
+
+                    # reclaimr emit - post tetracorder; global library
+                    base_call = (f'python ./tetracorder/reclaimer.py '
+                                 f'-out_dir {os.path.join(self.output_directory, 'field', plot_num, 'RFL_global')} '
+                                 f'-tc_out {glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_global', f'*ext_veg_{plot_num}_RFL_*EXT_augmented_global__min.hdr'))[0]} '
+                                 f'-rfl {glob(os.path.join(self.output_directory, 'field', plot_num, f'*_EXT_augmented.hdr'))[0]} '
+                                 f'-um_out {glob(os.path.join(self.output_directory, 'field', plot_num, 'emc2_RFL', f'*global_lib_{plot_num}_RFL*_EXT_fractional_cover.hdr'))[0]} -g_num {int(group[-1:])} '
+                                 f'-rho_gv {glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_global', f'*extracted_{plot_num}_RFL_*_EXT_augmented_pv_global_lib_signal.hdr'))[0]} '
+                                 f'-rho_npv {glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_global', f'*extracted_{plot_num}_RFL_*_EXT_augmented_npv_global_lib_signal.hdr'))[0]}')
+
+                    subprocess.call(base_call, shell=True)
+                    reclaimer_emit_global_lib = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_global',
+                                                                            f'*RECLAIMER_{group}_global_lib_{plot_num}_RFL_*_EXT_fractional_cover'))[0])[0, 0, :]
+
+                    # # corrected emit - pre tetracorder ; rock library
+                    emit_corrected_rock_mineral_class, df_emit_corrected_rock_mineral_class = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_rock',
+                                          f'*_EXT_augmented_global__minerals'))[0])
+
+                    emit_corrected_rock_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_rock', f'*_EXT_augmented_global__min'))[0])[0, 0, group_dict[group]]
+                    emit_corrected_rock_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_global', f'*_EXT_augmented_global__min'))[0])[0, 0, bd_dict[group]]
+                    emit_corrected_rock_class = emit_corrected_rock_mineral_class.get(emit_corrected_rock_mineral, ['other'])
+
+                    # # corrected emit - rho s ; rock library
+                    emit_rho_s_rock_mineral_class, df_emit_rho_s_rock_mineral_class = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_rock',
+                                          f'*_EXT_augmented_globa_minerals'))[0])
+
+                    emit_rho_s_rock_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_rock', f'*_EXT_augmented_globa_min'))[0])[0, 0, group_dict[group]]
+                    emit_rho_s_rock_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_rock', f'*_EXT_augmented_globa_min'))[0])[0, 0, bd_dict[group]]
+                    emit_rho_s_corrected_rock_class = emit_rho_s_rock_mineral_class.get(emit_rho_s_rock_mineral, ['other'])
+
+                    # reclaimr emit - post tetracorder; rock library
+                    base_call = (f'python ./tetracorder/reclaimer.py '
+                                 f'-out_dir {os.path.join(self.output_directory, 'field', plot_num, 'RFL_rock')} '
+                                 f'-tc_out {glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_rock', f'*ext_veg_{plot_num}_RFL_*EXT_augmented_global__min.hdr'))[0]} '
+                                 f'-rfl {glob(os.path.join(self.output_directory, 'field', plot_num, f'*_EXT_augmented.hdr'))[0]} '
+                                 f'-um_out {glob(os.path.join(self.output_directory, 'field', plot_num, 'emc2_RFL', f'*global_rock_{plot_num}_RFL*_EXT_fractional_cover.hdr'))[0]} -g_num {int(group[-1:])} '
+                                 f'-rho_gv {glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_rock', f'*extracted_{plot_num}_RFL_*_EXT_augmented_pv_global_rock_signal.hdr'))[0]} '
+                                 f'-rho_npv {glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_rock', f'*extracted_{plot_num}_RFL_*_EXT_augmented_npv_global_rock_signal.hdr'))[0]}')
+
+                    subprocess.call(base_call, shell=True)
+                    reclaimer_emit_rock_lib = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_rock',f'*RECLAIMER_{group}_global_rock_{plot_num}_RFL_*_EXT_fractional_cover'))[0])[0, 0, :]
+
+                    if int(plot_num[-3:]) not in [14, 15, 16]:
+                        # corrected emit - pre tetracorder ; local library
+                        emit_corrected_local_mineral_class, df_emit_corrected_local_mineral_class = spectra.get_mineral_reclassification(
+                            path_to_tetracorder_minerals= glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_lcl',
+                                              f'*_EXT_augmented_Spectra_minerals'))[0])
+
+                        emit_corrected_local_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_lcl', f'*_EXT_augmented_Spectra_min'))[0])[0, 0, group_dict[group]]
+                        emit_corrected_local_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_lcl', f'*_EXT_augmented_Spectra_min'))[0])[0, 0, bd_dict[group]]
+                        emit_corrected_local_class = emit_corrected_local_mineral_class.get(emit_corrected_local_mineral, ['other'])
+
+                        # # corrected emit - rho s ; local library
+                        emit_rho_s_local_mineral_class, df_emit_rho_s_local_mineral_class = spectra.get_mineral_reclassification(
+                            path_to_tetracorder_minerals= glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_lcl',
+                                              f'*_EXT_augmented_Spect_minerals'))[0])
+
+                        emit_rho_s_local_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_lcl', f'*_EXT_augmented_Spect_min'))[0])[0, 0, group_dict[group]]
+                        emit_rho_s_local_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_lcl', f'*_EXT_augmented_Spect_min'))[0])[0, 0, bd_dict[group]]
+                        emit_rho_s_corrected_local_class = emit_rho_s_local_mineral_class.get(emit_rho_s_local_mineral, ['other'])
+
+                        # reclaimr emit - post tetracorder; local library
+                        base_call = (
+                            f'python ./tetracorder/reclaimer.py '
+                            f'-out_dir {os.path.join(self.output_directory, 'field', plot_num, 'RFL_lcl')} '
+                            f'-tc_out {glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_lcl', f'*ext_veg_{plot_num}_RFL_*_EXT_augmented_Spectra_min.hdr'))[0]} '
+                            f'-rfl {glob(os.path.join(self.output_directory, 'field', plot_num, f'*{plot_num}_RFL_*_EXT_augmented.hdr'))[0]} '
+                            f'-um_out {glob(os.path.join(self.output_directory, 'field', plot_num, 'emc2_RFL', f'*local_{plot_num}_RFL_*_EXT_fractional_cover.hdr'))[0]} -g_num {int(group[-1:])} '
+                            f'-rho_gv {glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_lcl', f'*extracted_{plot_num}_RFL_*_EXT_augmented_PV_{plot_num}_EMS_emit_signal.hdr'))[0]} '
+                            f'-rho_npv {glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_lcl', f'*extracted_{plot_num}_RFL_*_EXT_augmented_NPV_{plot_num}_EMS_emit_signal.hdr'))[0]}')
+                        subprocess.call(base_call, shell=True)
+                        reclaimer_emit_local = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_lcl',
+                                                   f'*RECLAIMER_{group}_local_{plot_num}_RFL_*_EXT_fractional_cover'))[0])[0, 0, :]
+
+                    else:
+                        print(f"Skipping local instance for plot: {plot_num}")
+                        emit_corrected_local_bd = -9999
+                        emit_corrected_local_class = -9999
+                        emit_rho_s_local_bd = -9999
+                        emit_rho_s_corrected_local_class = -9999
+                        reclaimer_emit_local = np.array([-9999, -9999])
+
+
+                    # get fractional cover data
+                    slpit_local_fractional_cover = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, 'emc2_SLPIT', f'local_{plot_num}_SLPIT_emit_fractional_cover'))[0, 0, :]
+                    slpit_global_fractional_cover = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, 'emc2_SLPIT', f'global_lib_{plot_num}_SLPIT_emit_fractional_cover'))[0, 0, :]
+                    slpit_rock_fractional_cover = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, 'emc2_SLPIT', f'global_rock_{plot_num}_SLPIT_emit_fractional_cover'))[0, 0, :]
+
+                    emit_local_fractional_cover = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, 'emc2_RFL', f'*local_{plot_num}_RFL_*_EXT_fractional_cover'))[0])[0, 0, :]
+                    emit_global_fractional_cover = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, 'emc2_RFL', f'*global_lib_{plot_num}_RFL_*_EXT_fractional_cover'))[0])[0, 0, :]
+                    emit_rock_fractional_cover = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, 'emc2_RFL', f'*global_rock_{plot_num}_RFL_*_EXT_fractional_cover'))[0])[0, 0, :]
+
+                    row = ([plot_num, group,
+                            cp_bd, cp_class,
+                            slpit_unc_bd, slpit_unc_class,
+                            slpit_corrected_global_bd, slpit_corrected_global_class,
+                            slpit_rho_s_global_bd, slpit_rho_s_corrected_global_class]
+                           + reclaimer_slpit_global_lib.tolist() + [slpit_corrected_rock_bd, slpit_corrected_rock_class, slpit_rho_s_rock_bd, slpit_rho_s_corrected_mineral_class]
+                           + reclaimer_slpit_global_rock.tolist() + [slpit_corrected_local_bd, slpit_corrected_local_class, slpit_rho_s_local_bd, slpit_rho_s_corrected_local_class] +
+                           reclaimer_slpit_local.tolist() + [emit_unc_bd, emit_unc_class, emit_corrected_global_bd, emit_corrected_global_class, emit_rho_s_global_bd, emit_rho_s_corrected_global_class] +
+                           reclaimer_emit_global_lib.tolist() + [emit_corrected_rock_bd, emit_corrected_rock_class, emit_rho_s_rock_bd, emit_rho_s_corrected_rock_class] +
+                           reclaimer_emit_rock_lib.tolist() + [emit_corrected_local_bd, emit_corrected_local_class, emit_rho_s_local_bd, emit_rho_s_corrected_local_class] +
+                           reclaimer_emit_local.tolist() + slpit_local_fractional_cover.tolist() + slpit_global_fractional_cover.tolist() + slpit_rock_fractional_cover.tolist() +
+                           emit_local_fractional_cover.tolist() + emit_global_fractional_cover.tolist() + emit_rock_fractional_cover.tolist() )
+
+                    rows.append(row)
+
+                except Exception as e:
+                    print(f'{plot_num} {group} failed to load!')
+                    raise e
+
+        column_names = ['plot_num', 'group',
+                        'cp_bd', 'cp_class',
+                        'slpit_unc_bd', 'slpit_unc_class',
+                        'slpit_global_bd', 'slpit_global_class',
+                        'slpit_rho_s_global_bd',  'slpit_rho_s_global_class',
+                        'reclaimer_slpit_global_bd', 'reclaimer_slpit_global_bd_prime',
+                        'slpit_rock_bd', 'slpit_rock_class',
+                        'slpit_rho_s_rock_bd', 'slpit_rho_s_rock_class',
+                        'reclaimer_slpit_rock_bd', 'reclaimer_slpit_rock_bd_prime',
+                        'slpit_local_bd', 'slpit_local_class',
+                        'slpit_rho_s_local_bd', 'slpit_rho_s_local_class',
+                        'reclaimer_slpit_local_bd', 'reclaimer_slpit_local_bd_prime',
+                        'emit_unc_bd', 'emit_unc_class',
+                        'emit_global_bd', 'emit_global_class',
+                        'emit_rho_s_global_bd', 'emit_rho_s_global_class',
+                        'reclaimer_emit_global_bd', 'reclaimer_emit_global_bd_prime',
+                        'emit_rock_bd', 'emit_rock_class',
+                        'emit_rho_s_rock_bd', 'emit_rho_s_rock_class',
+                        'reclaimer_emit_rock_bd', 'reclaimer_emit_rock_bd_prime',
+                        'emit_local_bd', 'emit_local_class',
+                        'emit_rho_s_local_bd', 'emit_rho_s_local_class',
+                        'reclaimer_emit_local_bd', 'reclaimer_emit_local_bd_prime',
+                        'slpit_local_npv', 'slpit_local_pv', 'slpit_local_soil', 'slpit_local_shade',
+                        'slpit_global_npv', 'slpit_global_pv', 'slpit_global_soil', 'slpit_global_shade',
+                        'slpit_rock_npv', 'slpit_rock_pv', 'slpit_rock_soil', 'slpit_rock_shade',
+                        'emit_local_npv', 'emit_local_pv', 'emit_local_soil', 'emit_local_shade',
+                        'emit_global_npv', 'emit_global_pv', 'emit_global_soil', 'emit_global_shade',
+                        'emit_rock_npv', 'emit_rock_pv', 'emit_rock_soil', 'emit_rock_shade',
+                        ]
+
+        df_rows = pd.DataFrame(rows)
+        df_rows.columns = column_names
+        df_rows.to_csv(os.path.join(self.fig_directory, 'field_results.csv'), index=False)
+
+
+    def field_results(self):
+        target_classes_dict = {'g1': sorted(['hematite', 'goethite']),
+                               'g2': sorted(['kaolinite', 'calcite', 'montmorillonite', 'illite+muscovite'])}
+
+        df_field = pd.read_csv(os.path.join(self.fig_directory, 'field_results.csv'))
+        df_field = df_field.replace([-9999, '-9999', -9999.0], np.nan)
+
+        analysis_type = ['global', 'rock']
+        markers = ['s', 'o', '^']
+
+        bounds = np.arange(0.0, 1.1, 0.10)
+
+        # Option A: Get 10 discrete colors from 'viridis'
+        cmap = cm.get_cmap('viridis', len(bounds) - 1)
+
+        for plot_type in ['slpit', 'emit']:
+            # Set global publication styling
+            plt.rcParams['font.family'] = 'sans-serif'
+            plt.rcParams['font.size'] = 8
+
+            fig, axes = plt.subplots(4, 6, figsize=(9, 5.75))
+
+            col_idx = 0
+
+            for group in ['g1', 'g2']:
+                df_select = df_field[df_field['group'] == group]
+                target_classes = target_classes_dict[group]
+
+                for target_class in target_classes:
+                    df_target = df_select[df_select['cp_class'].astype(str).str.contains(target_class, regex=False)]
+
+                    if df_target.empty:
+                        col_idx += 1
+                        continue
+
+                    # Set tick locators
+                    major_locator = ticker.MultipleLocator(0.10)
+                    minor_locator = ticker.MultipleLocator(0.05)
+
+                    # Add shared 1:1 reference line & common axis limits across all rows for this column
+                    for r in range(4):
+                        ax = axes[r, col_idx]
+                        ax.plot([0, 0.5], [0, 0.5], color='gray', linestyle='--', linewidth=0.8,
+                                alpha=0.7, zorder=1)
+                        ax.set_xlim(0, 0.5)
+                        ax.set_ylim(0, 0.5)
+
+                        # Apply major (0.10) and minor (0.05) tick spacing
+                        ax.xaxis.set_major_locator(major_locator)
+                        ax.xaxis.set_minor_locator(minor_locator)
+                        ax.yaxis.set_major_locator(major_locator)
+                        ax.yaxis.set_minor_locator(minor_locator)
+
+                        # Ensure minor ticks are visible visually
+                        ax.tick_params(which='minor', length=2, color='gray', labelsize=6)
+                        ax.tick_params(which='major', length=4, labelsize=6)
+                        ax.set_aspect('equal', adjustable='box')
+
+                        #ax.spines['top'].set_visible(False)
+                        #ax.spines['right'].set_visible(False)
+
+                    legend_kwargs = dict(
+                        loc='upper right',
+                        fontsize=4,  # Smaller font to avoid overlapping data points
+                        frameon=True,
+                        facecolor='white',
+                        edgecolor='grey',  # Borderless legend looks cleaner in small boxes
+                        framealpha=0.7,
+                        #handletextpad=0.1,
+                        #borderpad=0.2,
+                        #labelspacing=0.2
+                    )
+
+                    # -------------------------------------------------------------
+                    # ROW 0: Uncorrected Data
+                    # -------------------------------------------------------------
+                    ax_row0 = axes[0, col_idx]
+                    ax_row0.set_title(target_class.capitalize(), fontsize=10, fontweight='bold')
+
+                    if col_idx == 0:
+                        ax_row0.set_ylabel(f"{plot_type.upper()}\n(Uncorrected)", fontsize=8)
+                    else:
+                        ax_row0.set_yticklabels([])
+
+                    ax_row0.set_xticklabels([])
+                    metrics = evaluate_single_class(
+                        y_true_raw=df_target['cp_class'],
+                        y_pred_raw=df_target[f'{plot_type}_unc_class'],
+                        target_class=target_class
+                    )
+
+                    df_tp = df_target[
+                        df_target[f'{plot_type}_unc_class'].astype(str).str.contains(target_class, regex=False)]
+
+                    if not df_tp.empty:
+                        r2, mae = calc_clean_metrics(df_tp['cp_bd'].values, df_tp[f'{plot_type}_unc_bd'].values)
+                        frac = metrics['fraction_str']  # e.g., "4/7"
+                        lbl = f"(Global) F1: {metrics['f1_score']:.2f} ({frac})\nR²: {r2:.2f}\nMAE: {mae:.2f}"
+
+                        soil_fraction = df_tp[f'{plot_type}_global_soil']
+                        ax_row0.scatter(df_tp['cp_bd'], df_tp[f'{plot_type}_unc_bd'],
+                                        label=lbl, c=soil_fraction, cmap=cmap,
+                                vmin=0, vmax=1, marker='o', s=8, alpha=0.8, zorder=2
+                            )
+
+                        ax_row0.legend(**legend_kwargs)
+                    # -------------------------------------------------------------
+                    # ROW 1: Corrected Data (Pre-Tetracorder)
+                    # -------------------------------------------------------------
+                    ax_row1 = axes[1, col_idx]
+                    if col_idx == 0:
+                        ax_row1.set_ylabel(f"{plot_type.upper()}\n(Pre-Tetracorder)", fontsize=8)
+                    else:
+                        ax_row1.set_yticklabels([])
+                    ax_row1.set_xticklabels([])
+                    for _i, i in enumerate(analysis_type):
+                        metrics = evaluate_single_class(
+                            y_true_raw=df_target['cp_class'],
+                            y_pred_raw=df_target[f'{plot_type}_{i}_class'],
+                            target_class=target_class
+                        )
+
+                        df_tp_corr = df_target[df_target[f'{plot_type}_{i}_class'].astype(str).str.contains(target_class, regex=False)]
+
+                        if not df_tp_corr.empty:
+                            r2, mae = calc_clean_metrics(df_tp_corr['cp_bd'].values,
+                                                         df_tp_corr[f'{plot_type}_{i}_bd'].values)
+                            frac = metrics['fraction_str']  # e.g., "4/7"
+                            lbl = f"{i}: F1: {metrics['f1_score']:.2f} ({frac})\nR²: {r2:.2f}\nMAE: {mae:.2f}"
+
+                            soil_fraction = df_tp_corr[f'{plot_type}_{i}_soil'].values
+                            ax_row1.scatter(
+                                df_tp_corr['cp_bd'], df_tp_corr[f'{plot_type}_{i}_bd'],
+                                label=lbl, c=soil_fraction, cmap=cmap,
+                                vmin=0, vmax=1, marker=markers[_i], s=8, alpha=0.8, zorder=2
+                            )
+
+                    ax_row1.legend(**legend_kwargs)
+                    # -------------------------------------------------------------
+                    # ROW 2: Corrected Data (rho_s)
+                    # -------------------------------------------------------------
+                    ax_row2 = axes[2, col_idx]
+                    if col_idx == 0:
+                        ax_row2.set_ylabel(f"{plot_type.upper()}\n(ρ$_s$)", fontsize=8)
+                    else:
+                        ax_row2.set_yticklabels([])
+
+                    ax_row2.set_xticklabels([])
+                    for _i, i in enumerate(analysis_type):
+                        metrics = evaluate_single_class(
+                            y_true_raw=df_target['cp_class'],
+                            y_pred_raw=df_target[f'{plot_type}_rho_s_{i}_class'],
+                            target_class=target_class
+                        )
+
+                        df_tp_corr = df_target[df_target[f'{plot_type}_{i}_class'].astype(str).str.contains(target_class, regex=False)]
+
+                        if not df_tp_corr.empty:
+                            r2, mae = calc_clean_metrics(df_tp_corr['cp_bd'].values,
+                                                         df_tp_corr[f'{plot_type}_rho_s_{i}_bd'].values)
+                            frac = metrics['fraction_str']  # e.g., "4/7"
+                            lbl = (f"{i}: F1: {metrics['f1_score']:.2f} ({frac})\n"
+                                   f"R²: {r2:.2f}\n"
+                                   f"MAE: {mae:.2f}")
+                            soil_fraction = df_tp_corr[f'{plot_type}_{i}_soil'].values
+                            ax_row2.scatter(
+                                df_tp_corr['cp_bd'], df_tp_corr[f'{plot_type}_rho_s_{i}_bd'],
+                                label=lbl, c=soil_fraction, cmap=cmap,
+                                vmin=0, vmax=1, marker=markers[_i], s=8, alpha=0.8, zorder=2
+                            )
+
+                    ax_row2.legend(**legend_kwargs)
+                    # -------------------------------------------------------------
+                    # ROW 3: Corrected Data (RECLAIMER post-Tetracorder)
+                    # -------------------------------------------------------------
+                    ax_row3 = axes[3, col_idx]
+                    if col_idx == 0:
+                        ax_row3.set_ylabel(f"{plot_type.upper()}\n(RECLAIMER)", fontsize=8)
+                    else:
+                        ax_row3.set_yticklabels([])
+
+                    for _i, i in enumerate(analysis_type):
+                        metrics = evaluate_single_class(
+                            y_true_raw=df_target['cp_class'],
+                            y_pred_raw=df_target[f'{plot_type}_{i}_class'],
+                            target_class=target_class
+                        )
+
+                        df_tp_corr = df_target[
+                            df_target[f'{plot_type}_{i}_class'].astype(str).str.contains(target_class, regex=False)]
+
+                        if not df_tp_corr.empty:
+                            r2, mae = calc_clean_metrics(df_tp_corr['cp_bd'].values,
+                                                         df_tp_corr[f'reclaimer_{plot_type}_{i}_bd_prime'].values)
+                            frac = metrics['fraction_str']  # e.g., "4/7"
+                            lbl = f"{i}: F1: {metrics['f1_score']:.2f} ({frac})\nR²: {r2:.2f}\nMAE: {mae:.2f}"
+                            soil_fraction = df_tp_corr[f'{plot_type}_{i}_soil'].values
+                            mappable = ax_row3.scatter(
+                                df_tp_corr['cp_bd'], df_tp_corr[f'reclaimer_{plot_type}_{i}_bd_prime'],
+                                label=lbl, c=soil_fraction, cmap=cmap,
+                                vmin=0, vmax=1, marker=markers[_i], s=8, alpha=0.8, zorder=2
+                            )
+
+                    ax_row3.set_xlabel("Contact Probe (Bd)", fontsize=8, labelpad=4)
+                    ax_row3.legend(**legend_kwargs)
+
+                    col_idx += 1
+
+            cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.70])
+            cbar = fig.colorbar(mappable, cax=cbar_ax, ticks=bounds)
+            cbar.set_label('Soil Fraction', fontsize=8)
+            cbar.ax.tick_params(labelsize=6)
+
+            # Adjust layout so the figure margins leave room for the colorbar
+            fig.subplots_adjust(right=0.90)
+
+            plt.savefig(os.path.join(self.fig_directory, f'{plot_type}_field_regression.png'), dpi=300, bbox_inches='tight')
+            plt.clf()
+            plt.close()
+
 def run_figure_workflow(base_directory):
     ems = ['soil']
     major_axis_fontsize = 22
@@ -716,6 +1300,8 @@ def run_figure_workflow(base_directory):
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs, legend_text=legend_text)
 
-    tc.classification_rates()
-    tc.f1_score_matrix_detailed()
-    tc.band_depth_mae()
+    #tc.classification_rates()
+   # tc.f1_score_matrix_detailed()
+    #tc.band_depth_mae()
+    #tc.field_table()
+    tc.field_results()
