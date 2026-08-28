@@ -58,7 +58,7 @@ def process_line(args_tuple, spectral_reference_library, output_file_path, num_o
 
     # OPTIMIZATION: Use NumPy to find indices of non-background pixels instantly.
     # This completely bypasses slow Python iterations over '0' pixels.
-    active_cols = np.flatnonzero(line != 0)
+    active_cols = np.flatnonzero((line != 0) & (line != -9999))
 
     output_row_data = np.ones((line.shape[0], num_out_bands), dtype=np.float32) * -9999
 
@@ -200,10 +200,10 @@ def cont_removal(df_mineral_matrix, spectral_reference_library, tetracorder_expe
 
     # correct data for -9999.
     integrals_array[integrals_array == -9999] = np.nan
-    bd_return_array = np.ones(4) * -9999
+    bd_return_array = np.ones(2) * -9999
 
     # calculate weighted band depths
-    for _i, i in enumerate([bd_library_array, bd_array, bd_prime_array]):
+    for _i, i in enumerate([bd_array, bd_prime_array]):
         i[i == -9999] = np.nan
         relative_area = integrals_array / np.nansum(integrals_array)
         band_depth_w = np.nansum(relative_area * i)
@@ -251,7 +251,7 @@ def main():
     # ---------- Create Output files to write directly to ---------
     num_lines = tetracorder_array.shape[0]
     num_cols = tetracorder_array.shape[1]
-    num_out_bands = 4  # Change depending on how many spectral bands your output has
+    num_out_bands = 2  # bd, bd'
 
     output_hdr_path = os.path.join(args.output_directory, f'RECLAIMER_g{int(args.group_number)}_{os.path.basename(args.unmixing_fraction_out_file)}')
 
