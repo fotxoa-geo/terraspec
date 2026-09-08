@@ -8,25 +8,28 @@ from functools import partial
 from utils.envi import save_envi, get_meta, envi_to_array
 from utils.spectra_utils import spectra
 
-
 def process_complete_fractions_row(row, unmix_library_array, wvls):
-
-    spectra_grid = np.ones((row.shape[0], len(wvls))) * -9999.
-
-    for _col, col in enumerate(row):
-        em_col = np.zeros((unmix_library_array.shape[0], len(wvls)))
-        frac_weights = np.zeros((unmix_library_array.shape[0]))
-
-        for _em, em in enumerate(unmix_library_array):
-            fraction = row[_col, _em]
-            em_col[_em, :] = unmix_library_array[_em, :]
-            frac_weights[_em] = fraction
-
-        if np.sum(frac_weights) == 0:
-            continue
-        else:
-            spectra_grid[_col, :] = np.average(em_col, weights=frac_weights, axis=0)
-
+    """
+    row shape: (num_cols, num_endmembers)
+    unmix_library_array shape: (num_endmembers, num_bands)
+    wvls shape: (num_bands,)
+    """
+    # 1. Calculate sum of fraction weights for each column/pixel: shape (num_cols,)
+    weight_sums = np.sum(row, axis=1)
+    
+    # 2. Compute weighted linear combination via matrix multiplication: shape (num_cols, num_bands)
+    #    (num_cols x num_endmembers) @ (num_endmembers x num_bands) -> (num_cols x num_bands)
+    weighted_spectra = row @ unmix_library_array
+    
+    # 3. Create output grid initialized to fill value (-9999.0)
+    spectra_grid = np.full((row.shape[0], len(wvls)), -9999.0)
+    
+    # 4. Identify pixels with valid non-zero weight sums
+    valid_mask = weight_sums > 0
+    
+    # 5. Normalize weighted sum by total weight for valid pixels
+    spectra_grid[valid_mask] = weighted_spectra[valid_mask] / weight_sums[valid_mask, np.newaxis]
+    
     return spectra_grid
 
 
@@ -35,26 +38,28 @@ def main():
 
     parser.add_argument('-out_dir', '--output_directory', type=str, help='Out directory')
     parser.add_argument('-sns', '--sensor', type=str, help='specify sensor to use')
-    parser.add_argument('-veg_fracs', '--vegetation_complete_fractions', type=str, help='Vegetation complete fractions file from SpectralUnmixing.jl',
-                        default=True)
+    parser.add_argument('-veg_fracs', '--vegetation_complete_fractions', type=str,
+                        help='Vegetation complete fractions file from SpectralUnmixing.jl', default=None) # Fixed default
     parser.add_argument('-rfl', '--reflectance_image', type=str, help='Reflectance image that was unmixed')
     parser.add_argument('-unmix_lib_csv', '--unmixing_library_csv', type=str, help='Unmixing library csv file')
     parser.add_argument('-unmix_lib_envi', '--unmixing_library_envi', type=str, help='Unmixing library envi file')
-    parser.add_argument('-3_comp_frac', '--three_component_fractions', type=str, help='Unmixing library envi file')
+    parser.add_argument('-three_comp_frac', '--three_component_fractions', type=str, help='Three component fractions file') # Renamed flag
     parser.add_argument('--tetracorder', action='store_true', help='Run tetracorder after extraction of veg signal')
     args = parser.parse_args()
 
     wvls, fwhm = spectra.load_wavelengths(sensor=args.sensor)
     basename = os.path.basename(args.reflectance_image)
+    unmix_basename = os.path.basename(args.unmixing_library_envi)
 
     complete_fractions_array = envi_to_array(args.vegetation_complete_fractions)
     unmix_library_array = envi_to_array(args.unmixing_library_envi)
-    rfl_mixed_array = envi_to_array(args.reflectance_image)
-    three_component_fractions_array = envi_to_array(args.three_component_fractions)
+    rho = envi_to_array(args.reflectance_image)
+    f_hat = envi_to_array(args.three_component_fractions)
 
     df_unmix = pd.read_csv(args.unmixing_library_csv)
 
-    rho_hat = np.zeros((complete_fractions_array.shape[0], complete_fractions_array.shape[1], len(wvls)))
+    # Initialize rho_hat_vf to starting reflectance array
+    rho_hat_vf = rho.copy()
 
     for _em, em in enumerate(df_unmix.level_1.unique()):
         min_em_index = np.min(df_unmix[df_unmix['level_1'] == em].index)
@@ -63,26 +68,34 @@ def main():
         em_library_array = unmix_library_array[min_em_index:max_em_index + 1, 0, :]
         em_fractions_array = complete_fractions_array[:, :, min_em_index:max_em_index + 1]
 
-        spectra_grid = np.ones((complete_fractions_array.shape[0], complete_fractions_array.shape[1], len(wvls))) * -9999
+        rho_em_spectra_grid = np.zeros((complete_fractions_array.shape[0], complete_fractions_array.shape[1], len(wvls)))
 
         func = partial(process_complete_fractions_row, unmix_library_array=em_library_array, wvls=wvls)
-        results = p_map(func,[em_fractions_array[_row, :, :] for _row in range(em_fractions_array.shape[0])],
+        results = p_map(func, [em_fractions_array[_row, :, :] for _row in range(em_fractions_array.shape[0])],
                         **{"desc": f"\t\t rebuilding spectra ...", "ncols": 150})
 
         for _row, row in enumerate(results):
-            spectra_grid[_row, :, :] = row
+            rho_em_spectra_grid[_row, :, :] = row
 
-        meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=wvls, wvls=True)
-        output_raster = os.path.join(args.output_directory, f"extracted_{basename}_{em}_signal.hdr")
-        save_envi(output_raster, meta_spectra, spectra_grid)
+        # Fixed variable reference: spectra_grid -> rho_em_spectra_grid
+        meta_spectra = get_meta(lines=rho_em_spectra_grid.shape[0], samples=rho_em_spectra_grid.shape[1], bands=wvls, wvls=True)
+        output_raster = os.path.join(args.output_directory, f"extracted_{basename}_{em}_{unmix_basename}_signal.hdr")
+        save_envi(output_raster, meta_spectra, rho_em_spectra_grid)
         print(f'\t successfully saved: {output_raster}')
 
         # append rho hat
         rho_hat += spectra_grid * three_component_fractions_array[:,:, _em][:, :, np.newaxis]
 
         if args.tetracorder and em in ['npv', 'pv']:
-            print('Extracting vegetation signal from rfl img for Tetracorder run...')
-            rfl_mixed_array -= spectra_grid * three_component_fractions_array[:,:, _em][:, :, np.newaxis]
+            rho_hat_vf -= (rho_em_spectra_grid * f_hat[:, :, _em][:, :, np.newaxis])
+
+    # Normalize reflectance by fraction of soil (index 2) to retrieve rho_s
+    rho_hat_vfs = rho_hat_vf / f_hat[:, :, 2][:, :, np.newaxis]
+
+    meta_spectra = get_meta(lines=rho.shape[0], samples=rho.shape[1], bands=wvls, wvls=True)
+    output_raster = os.path.join(args.output_directory, f"recon_rho_{basename}_{unmix_basename}.hdr")
+    save_envi(output_raster, meta_spectra, rho_hat_vf)
+    print(f'\t successfully saved: {output_raster}')
 
     # normalize reflectance by fraction of soil to retrieve rho_s
     rfl_mixed_array = rfl_mixed_array / three_component_fractions_array[:, :, 2][:, :, np.newaxis]
@@ -91,9 +104,10 @@ def main():
     save_envi(output_raster, meta_spectra, rho_hat)
 
     if args.tetracorder:
-        meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=wvls, wvls=True)
-        output_raster = os.path.join(args.output_directory, f"ext_rho_s_{basename}.hdr")
-        save_envi(output_raster, meta_spectra, rfl_mixed_array)
+        meta_spectra = get_meta(lines=rho.shape[0], samples=rho.shape[1], bands=wvls, wvls=True)
+        output_raster = os.path.join(args.output_directory, f"ext_veg_{basename}_{unmix_basename}_tc.hdr")
+        save_envi(output_raster, meta_spectra, rho_hat_vfs)
+        print(f'\t successfully saved: {output_raster}')
 
 
 if __name__ == '__main__':

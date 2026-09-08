@@ -33,6 +33,7 @@ def main():
     parser.add_argument('-spec_start_col', '--spectra_start_col', type=str, help='Spectra starting column', default='7')
     parser.add_argument('-n_cores', '--number_of_cores', type=str, help='Number of cores to use', default='40')
     parser.add_argument('-aoi', '--area_of_interest', type=str, help='Area of interest for fire spectra', default='sedgwick_boundary_approx.geojson')
+    parser.add_argument('-part', '--partition', type=str, help='Partition for HPC', default='patient')
 
     args = parser.parse_args()
     
@@ -60,7 +61,7 @@ def main():
 
         elif choice == 'C':
             run_tetracorder_workflow(base_directory, sensor=args.sensor, dry_run=args.dry_run,
-                                     spectral_bundles=int(args.number_of_bundles))
+                                     spectral_bundles=int(args.number_of_bundles), partition=args.partition)
 
         elif choice == 'D':
             run_shift_workflow(os.path.join(base_directory, 'shift'), sensor='aviris_ng', dry_run=args.dry_run)

@@ -95,24 +95,25 @@ def main():
                 'bands': window.shape[2],
                 'wavelength': wavelengths,
                 'fwhm': fwhm,
-                'interleave': 'bsq',
+                'interleave': 'bil',
                 'header offset': 0,
                 'file type': 'ENVI Standard',
                 'data type': envi_typemap[str(window.dtype)],
                 'byte order': 0,
                 'map_info': f"{{Geographic Lat/Lon, 1, 1, {lower_left_lon}, {upper_right_lat}, {pw}, {ph * -1}, WGS-84}}",
-                'data ignore value': -9999.}
+                'data ignore value': -9999.,
+                'wavelength units': 'nm'}
 
     # create output directory
     create_directory(os.path.join(args.output_directory, 'EXT'))
     out_dest = os.path.join(args.output_directory, 'EXT')
     output_hdr = os.path.join(out_dest,
-                               f'{os.path.basename(args.area_of_interest).split(".")[0]}_{date_acquisition}_EXT.hdr')
+                               f'{os.path.basename(args.area_of_interest).split(".")[0]}_{os.path.basename(args.reflectance_image)}_EXT.hdr')
 
     envi.save_image(output_hdr, window,
                     metadata=metadata,
                     force=True,
-                    interleave='bsq', ext='')
+                    interleave='bil', ext='')
 
     print(f"\t {date_acquisition} successfully saved: {output_hdr}")
 
@@ -120,3 +121,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

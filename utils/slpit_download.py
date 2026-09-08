@@ -108,18 +108,20 @@ def enmap_process(base_directory, sensor, aoi):
     out_logs = os.path.join(base_directory, 'gis', f'{sensor}-data', 'products', 'logs')
 
     em_file = os.path.join('terraspec_output', 'simulation', 'output', 'endmember_libraries',
-                           f'convex_hull__n_dims_4_sensor_{sensor}_geofilter_True_unmix_library.csv')
+                           f'convex_hull__n_dims_4_sensor_EnMAP_geofilter_True_unmix_library.csv')
 
-    files = glob(os.path.join(base_directory, 'gis', f'{sensor}-data', 'tif_files', '*.TIF'))
+    files = list(sorted(glob(os.path.join(base_directory, 'gis', f'{sensor}-data', 'tif_files', '*SPECTRAL_IMAGE_COG.TIF'))))
+    print(os.path.join(base_directory, 'gis', f'{sensor}-data', 'tif_files', '*.TIF'))
     print(f'found {len(files)} TIF files!')
 
     # run tif downloads
     for tif_file in files:
         basename = os.path.basename(tif_file).split('.')[0]
-        base_call = f'sh {os.path.join("fire", "emit_aoi_process.sh")} {tif_file} {em_file} {out_base} {aoi}'
+        base_call = f'sh {os.path.join("fire", "enmap_aoi_process.sh")} {tif_file} {em_file} {out_base} {aoi}'
         outfile = os.path.join(f"{os.path.join(out_logs, basename)}.out")
         sbatch_cmd = f"sbatch -p patient -N 1 -c 10 --mem 25G --output {outfile} --job-name lake-fire --wrap='{base_call}'"
         subprocess.call(sbatch_cmd, shell=True)
+
 
 def download_emit(base_directory, sensor):
     auth = earthaccess.login(strategy="netrc")

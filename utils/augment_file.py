@@ -7,6 +7,7 @@ from utils.envi import save_envi, get_meta, envi_to_array
 import numpy as np
 from utils.spectra_utils import spectra
 from glob import glob
+import pandas as pd
 
 def augment_envi(file, out_envi_file, wvls, vertical_average=False, em_index_min=None, em_index_max=None, bad_bands=None):
 
@@ -60,7 +61,7 @@ def deaugment_envi(file, augmented_file, out_envi_file):
     meta_spectra = get_meta(lines=spectra_grid.shape[0], samples=spectra_grid.shape[1], bands=list(range(spectra_grid.shape[2])), wvls=False)
     meta_spectra['data ignore value'] = -9999
     save_envi(out_envi_file, meta_spectra, spectra_grid)
-    print(f'saved augmented envi file to {out_envi_file}')
+    print(f'saved de-augmented envi file to {out_envi_file}')
 
 
 def main():
@@ -80,7 +81,7 @@ def main():
     if args.augment:
         augmented_envi_file = os.path.join(args.out_directory, f'{os.path.basename(args.reflectance_image)}_augmented.hdr')
 
-        if args.vertical_avg:
+        if args.vertical_avg and args.em_file != 'emit':
             df_em = pd.read_csv(args.em_file)
             df_em = df_em.sort_values('level_1')
             min_em = df_em[df_em['level_1'] == 'Soil'].index.min()

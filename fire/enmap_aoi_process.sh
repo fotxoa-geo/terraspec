@@ -47,7 +47,7 @@ python ./fire/area_extract_enmap.py -rfl_img ${img_name} -aoi ${aoi} -out ${ext_
 echo "Geoprocess complete!"
 
 #### Run unmixing on image with global library using Ochoa et al. (2025) EMC^2
-aoi_img=${ext_out_dir_img}/EXT/${aoi_basename}_${fid}_EXT
+aoi_img=${ext_out_dir_img}/EXT/${aoi_basename}_${filebase_name}_EXT
 
 if [ -f ${aoi_img} ]; then
     echo "$aoi_img File exists."
@@ -66,3 +66,4 @@ fi
 
 DURATION=$(( $SECONDS - $START_TIME ))
 echo "processing time: $DURATION seconds."
+

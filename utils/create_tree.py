@@ -1,11 +1,21 @@
 import os
 import argparse
+import shutil
 
-def create_directory(directory: str):
+def create_directory(directory: str, clear_existing: bool = False):
     if os.path.isdir(directory):
-        pass
+        if clear_existing:
+            # Remove the directory and everything inside it
+            shutil.rmtree(directory)
+            os.mkdir(directory)
+        else:
+            # Do nothing if it exists and we aren't clearing it
+            pass
     else:
+        # Create it if it doesn't exist at all
         os.mkdir(directory)
+
+
 
 def main():
     parser = argparse.ArgumentParser(description='Run spectra clean workflow')
