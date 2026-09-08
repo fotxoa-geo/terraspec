@@ -633,7 +633,7 @@ class figures:
                 df_y_shift = df_row_shift[df_row_shift['instrument'] == 'RFL'].reset_index(drop=True)
 
                 col_name = col_map[col]
-                x = list(df_x_emit[col_name]) + list(df_x_shift[col_name])
+                x = list(df_x_emit[f'{col_map[col]}_r']) + list(df_x_shift[col_name])
                 y = list(df_y_emit[col_name]) + list(df_y_shift[col_name])
                 x_u = list(df_x_emit[f'{col_name}_sigma']) + list(df_x_shift[f'{col_name}_sigma'])
                 y_u = list(df_y_emit[f'{col_name}_sigma']) + list(df_y_shift[f'{col_name}_sigma'])
@@ -739,7 +739,7 @@ class figures:
                 drop=True)
 
             target_col = col_map[col]
-            x = list(x_emit_df[target_col]) + list(x_shift_df[target_col])
+            x = list(x_emit_df[f'{col_map[col]}_r']) + list(x_shift_df[target_col])
             y = list(y_emit_df[target_col]) + list(y_shift_df[target_col])
             x_u = list(x_emit_df[f'{target_col}_sigma']) + list(x_shift_df[f'{target_col}_sigma'])
             y_u = list(y_emit_df[f'{target_col}_sigma']) + list(y_shift_df[f'{target_col}_sigma'])
@@ -752,7 +752,7 @@ class figures:
                 m, b = np.polyfit(x, y, 1)
                 ax.plot(one_line, m * one_line + b, color='black', zorder=2)
                 ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='none', ecolor='gray', zorder=9, alpha=0.4)
-                ax.scatter(x_emit_df[target_col], y_emit_df[target_col], marker='s', color='blue', edgecolor='black',
+                ax.scatter(x_emit_df[f'{col_map[col]}_r'], y_emit_df[target_col], marker='s', color='blue', edgecolor='black',
                            label='EMIT', zorder=10)
                 ax.scatter(x_shift_df[target_col], y_shift_df[target_col], marker='^', color='orange',
                            edgecolor='black', label='AVIRIS$_{NG}$', zorder=10)
@@ -861,7 +861,7 @@ class figures:
                 ax.set_yticklabels([])
 
             # plot fractional cover values
-            x_emit = df_x_emit[col_map[col]]
+            x_emit = df_x_emit[f'{col_map[col]}_r']
             y_emit = df_y_emit[col_map[col]]
             emit_days = df_x_emit['Day Difference3']
             emit_error = np.absolute(x_emit - y_emit)
@@ -999,7 +999,7 @@ class figures:
                                 df_base_shift['normalization'] == norm_y)].reset_index(drop=True)
 
                 target = col_map[col]
-                x = list(df_x_emit[target]) + list(df_x_shift[target])
+                x = list(df_x_emit[f'{col_map[col]}_r']) + list(df_x_shift[target])
                 y = list(df_y_emit[target]) + list(df_y_shift[target])
                 x_u = list(df_x_emit[f'{target}_sigma']) + list(df_x_shift[f'{target}_sigma'])
                 y_u = list(df_y_emit[f'{target}_sigma']) + list(df_y_shift[f'{target}_sigma'])
@@ -1011,7 +1011,7 @@ class figures:
                     m, b = np.polyfit(x, y, 1)
                     ax.plot(one_line, m * one_line + b, color='black', zorder=2)
                     ax.errorbar(x, y, yerr=y_u, xerr=x_u, fmt='none', ecolor='gray', alpha=0.4, zorder=9)
-                    ax.scatter(df_x_emit[target], df_y_emit[target], marker='s', color='blue', edgecolor='black',
+                    ax.scatter(df_x_emit[f'{col_map[col]}_r'], df_y_emit[target], marker='s', color='blue', edgecolor='black',
                                label='EMIT', zorder=10, s=25)
                     ax.scatter(df_x_shift[target], df_y_shift[target], marker='^', color='orange', edgecolor='black',
                                label='AVIRIS$_{NG}$', zorder=10, s=25)
@@ -1066,7 +1066,7 @@ class figures:
                     df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'RFL') & (df_select_shift['normalization'] == 'brightness')].copy().reset_index(drop=True)
 
                     # plot fractional cover values
-                    x_emit = df_x_emit[em]
+                    x_emit = df_x_emit[f'{em}_r']
                     y_emit = df_y_emit[em]
                     x_u_emit = df_x_emit[f'{em}_sigma']
                     y_u_emit = df_y_emit[f'{em}_sigma']
@@ -1198,7 +1198,7 @@ class figures:
                 df_y_shift = df_select_shift[(df_select_shift['instrument'] == 'RFL')].copy().reset_index(drop=True)
 
                 # plot fractional cover values
-                x_emit = df_x_emit[col_map[col]]
+                x_emit = df_x_emit[f'{col_map[col]}_r']
                 y_emit = df_y_emit[col_map[col]]
                 x_u_emit = df_x_emit[f'{col_map[col]}_sigma']
                 y_u_emit = df_y_emit[f'{col_map[col]}_sigma']

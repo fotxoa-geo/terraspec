@@ -1,179 +1,192 @@
 import time
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from matplotlib import cm
 import pandas as pd
 import numpy as np
 from utils.envi import envi_to_array, load_band_names
-from utils.create_tree import create_directory
 import os
 from matplotlib.ticker import FormatStrFormatter
-import matplotlib.ticker as ticker
-import geopandas as gp
-from glob import glob
-from utils.results_utils import r2_calculations, band_depth_group_aggregate
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-from isofit.core.sunposition import sunpos
-from datetime import datetime, timezone
-from tetracorder.aggregator import unique_file_fractions
-import tetracorder.tetracorder_engine as tetracorder
-from scipy.interpolate import interp1d
-import spectral.io.envi as envi
-from emit_utils.file_checks import envi_header
-import logging
 from utils.spectra_utils import spectra
-import matplotlib.image as mpimg
-from sklearn.preprocessing import LabelEncoder
-import seaborn as sns
-#from mpl_toolkits.basemap import Basemap
-from p_tqdm import p_map
-from matplotlib.ticker import MultipleLocator
-from utils.slpit_download import load_pickle, save_pickle
-from sklearn.metrics import confusion_matrix
-import matplotlib.patches as patches
-from functools import partial
-from matplotlib.ticker import MaxNLocator
-from matplotlib import colors, ticker
-from matplotlib.collections import LineCollection
-from scipy.stats import gaussian_kde
-from itertools import product
-
-mineral_groups = {'Calcite': 'Carbonates',
-                  'Chlorite': 'Chlorite',
-                  'Dolomite': 'Carbonates',
-                  'Goethite-Nano': 'Fe Oxides',
-                  'Goethite-Fine': 'Fe Oxides',
-                  'Goethite-Med' : 'Fe Oxides',
-                  'Goethite-Large': 'Fe Oxides',
-                  'Gypsum-Fine': 'Carbonates',
-                  'Gypsum-Coarse': 'Carbonates',
-                  'Hematite-Nano': 'Fe Oxides',
-                  'Hematite-Fine': 'Fe Oxides',
-                  'Hematite-Med': 'Fe Oxides',
-                  'Hematite-Large': 'Fe Oxides',
-                  'Illite+Muscovite': 'Clays',
-                  'Kaolinite': 'Clays',
-                  'Montmorillonite': 'Clays',
-                  'Vermiculite': 'Clays',
-                  'Quartz+Feldspar': 'Quartz+Feldspar'}
+from matplotlib.ticker import MultipleLocator, FuncFormatter
+from sklearn.preprocessing import MultiLabelBinarizer
+from glob import glob
+import subprocess
+from utils.results_utils import r2_calculations
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+import ast
+from sklearn.metrics import f1_score, precision_score, recall_score
+import matplotlib.ticker as ticker
+import matplotlib.cm as cm
+from matplotlib.gridspec import GridSpec
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.colors import Normalize, BoundaryNorm
 
 
-minerals_to_exclude = [0, 1, 13, 15, 20, 21, 22, 25, 28, 29, 37, 38, 40, 41, 49, 56, 57, 60, 82, 83, 94,
-                       96, 97, 98, 99, 100, 105, 106, 135, 136, 182, 144, 148, 152, 194, 196, 228, 234,
-                       238, 270, 271]
+def apply_mask(img, bad_mask):
+    """Broadcasting helper to assign NaNs across 2D/3D arrays."""
+    img_masked = img.copy().astype(np.float32)
+    if img_masked.ndim == 3:
+        img_masked[bad_mask, :] = np.nan
+    else:
+        img_masked[bad_mask] = np.nan
+    return img_masked
 
 
-def tetracorder_library(mineral_index, fig_directory, group):
+def get_target_ids_for_dataset(scene_path_pattern, mineral_name):
+    """
+    Finds the reflectance_minerals file recursively, parses reclassification,
+    and returns integer IDs for a target mineral string.
+    """
+    matches = glob(scene_path_pattern, recursive=True)
+    if not matches:
+        return []
 
-    if int(mineral_index) not in [0, -9999]:
-        decoded_expert = tcs.decode_expert_system(os.path.join('utils', 'tetracorder', 'cmd.lib.setup.t5.27c1'),
-                                                              log_file=None, log_level='INFO')
+    mineral_class_dict, _ = spectra.get_mineral_reclassification(
+        path_to_tetracorder_minerals=matches[0]
+    )
 
-        SPECTRAL_REFERENCE_LIBRARY = {'splib06': os.path.join('utils', 'tetracorder', 's06emitd_envi'),
-                                      'sprlb06': os.path.join('utils', 'tetracorder', 'r06emitd_envi')}
+    mineral_to_ids = {}
+    for mineral_id, min_list in mineral_class_dict.items():
+        for name in min_list:
+            mineral_to_ids.setdefault(name.lower().strip(), []).append(mineral_id)
 
-        df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
-        df_mineral_matrix = df_mineral_matrix.fillna(-9999)
-        record = df_mineral_matrix.loc[df_mineral_matrix['Index'] == int(mineral_index), 'Record'].iloc[0]
-        filename = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Filename'].iloc[0]
-        ref_library = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Library'].iloc[0]
-        name = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Name'].iloc[0]
-
-        # load library
-        item = SPECTRAL_REFERENCE_LIBRARY[ref_library]
-        library = envi.open(envi_header(item), item)
-        library_reflectance = library.spectra.copy()
-        library_records = [int(q) for q in library.metadata['record']]
-
-        mineral_reflectance = library_reflectance[library_records.index(record), :]
-
-        normalized_group_name = os.path.normpath(filename.split('.depth.gz')[0])
-        expert_file_selection = decoded_expert[normalized_group_name]['features']
-        hdr = envi.read_envi_header(envi_header(item))
-
-        wavelengths = np.array([float(q) for q in hdr['wavelength']])
-
-        plt.plot(wavelengths, mineral_reflectance)
-
-        # plot the features
-        for _cont_feat, cont_feat in enumerate(expert_file_selection):
-            feature = cont_feat['continuum']
-
-            left_inds = np.where(np.logical_and(wavelengths >= feature[0], wavelengths <= feature[1]))[0]
-            left_x = wavelengths[int(left_inds.mean())]
-            left_y_obs = mineral_reflectance[left_inds].mean()
-
-            right_inds = np.where(np.logical_and(wavelengths >= feature[2], wavelengths <= feature[3]))[0]
-
-            if right_inds.size == 0:
-                right_inds = spectra.nearest_index_to_wavelength(wavelengths=wavelengths, target_wavelength=(feature[2] + feature[3]) / 2)  # this takes the mean of right bounds
-            else:
-                pass
-
-            right_x = wavelengths[int(right_inds.mean())]
-            right_y_obs = mineral_reflectance[right_inds].mean()
-
-            feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
-            continuum_obs = interp1d([left_x, right_x], [left_y_obs, right_y_obs], bounds_error=False,
-                                     fill_value='extrapolate')(wavelengths)
-
-            h_x = continuum_obs - mineral_reflectance
-
-            # Fill the areas where g(x) > f(x) and f(x) > g(x)
-            abs_integral = np.trapz(h_x[feature_inds], wavelengths[feature_inds])
-
-            plt.plot(wavelengths[feature_inds], continuum_obs[feature_inds], label=f'Area: {abs_integral:.3f}; Wvl: {left_x:.2f},{right_x:.2f}')
-            plt.fill_between(wavelengths, continuum_obs, mineral_reflectance, where=feature_inds, color='green', alpha=0.3)
-
-        plt.ylim(0,1)
-        plt.title(name)
-        plt.legend()
-        plt.savefig(os.path.join(fig_directory, f'{int(mineral_index)}.png'))
-        plt.clf()
-        plt.close()
+    return mineral_to_ids.get(mineral_name.lower().strip(), [])
 
 
-def simplify_legend(handles, labels):
-    unique_labels = {}
-    for i, label in enumerate(labels):
-        if label not in unique_labels:
-            unique_labels[label] = handles[i]
+def plot_mineral_overlay(ax, img_array, group_idx, bd_idx, target_ids, title, is_bad_pixel, cmap, norm, levels=15):
+    """
+    Plots smooth colored contours for band depths strictly over valid positive detections.
+    """
+    bad_mask = is_bad_pixel.astype(bool)
+    img_masked = apply_mask(img_array, bad_mask)
 
-    return unique_labels
+    band_a = img_masked[:, :, group_idx]
+    band_b = img_masked[:, :, bd_idx]
+
+    samples_a = band_a[~np.isnan(band_a)]
+    samples_b = band_b[~np.isnan(band_b)]
+
+    if len(samples_a) > 0 and np.all(np.mod(samples_a, 1) == 0):
+        mineral_index_img = band_a
+        bd_data = band_b.copy()
+    elif len(samples_b) > 0 and np.all(np.mod(samples_b, 1) == 0):
+        mineral_index_img = band_b
+        bd_data = band_a.copy()
+    else:
+        mineral_index_img = band_a
+        bd_data = band_b.copy()
+
+    if target_ids:
+        clean_index_img = np.nan_to_num(mineral_index_img, nan=-9999).astype(np.int32)
+        target_ids_int = [int(i) for i in target_ids]
+        mineral_detected_mask = np.isin(clean_index_img, target_ids_int)
+    else:
+        mineral_detected_mask = np.zeros(mineral_index_img.shape, dtype=bool)
+
+    valid_detections_mask = mineral_detected_mask & ~bad_mask
+    n_detections = int(np.sum(valid_detections_mask))
+
+    bd_data_contour = np.where(valid_detections_mask, bd_data, np.nan)
+
+    h, w = bd_data.shape
+    x = np.arange(w)
+    y = np.arange(h)
+
+    cs = None
+    if n_detections > 0:
+        cs = ax.contourf(
+            x, y, bd_data_contour,
+            levels=levels,
+            cmap=cmap,
+            norm=norm,
+            extend='neither'
+        )
+
+    ax.invert_yaxis()
+    ax.set_title(f"{title}", fontsize=9)
+
+    # Crucial: Allow the image box to match the grid boundaries exactly
+    ax.set_aspect('auto')
+
+    return cs, valid_detections_mask, n_detections
+
+def prep_emit_rgb(rgb_img, red_idx=43, green_idx=24, blue_idx=11, stretch_percentile=(2, 98)):
+    """
+    Selects RGB bands and applies a percentile stretch.
+    Default band indices roughly correspond to:
+    Red ~ 650nm, Green ~ 560nm, Blue ~ 470nm (adjust based on your dataset's band list).
+    """
+    # Extract specific wavelength bands if image is 3D (Height, Width, Bands)
+    if rgb_img.ndim == 3 and rgb_img.shape[2] > 3:
+        rgb_data = rgb_img[:, :, [red_idx, green_idx, blue_idx]].astype(np.float32)
+    else:
+        rgb_data = rgb_img.astype(np.float32)
+
+    # Handle bad values / fill values (EMIT data often uses -9999 for background)
+    rgb_data[rgb_data < 0] = np.nan
+
+    # Calculate 2% and 98% percentiles across valid data for contrast stretch
+    p_low, p_high = np.nanpercentile(rgb_data, stretch_percentile)
+
+    # Clip values to percentile boundaries and scale to [0, 1] range for imshow
+    rgb_stretched = np.clip((rgb_data - p_low) / (p_high - p_low + 1e-8), 0, 1)
+
+    # Replace remaining NaNs (background) with 0 or 1 for rendering
+    rgb_stretched = np.nan_to_num(rgb_stretched, nan=0.0)
+
+    return rgb_stretched
+
+def calc_clean_metrics(x, y):
+    """Safely calculates R2 and MAE after masking NaN values out of paired arrays."""
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+    valid_mask = ~np.isnan(x) & ~np.isnan(y)
+    x_clean, y_clean = x[valid_mask], y[valid_mask]
+
+    if len(x_clean) < 2:
+        return np.nan, np.nan
+
+    try:
+        r2, _ = r2_calculations(x_clean, y_clean)
+        mae = mean_absolute_error(x_clean, y_clean)
+        return r2, mae
+    except Exception:
+        return np.nan, np.nan
 
 
-def cont_rem(wavelengths, reflectance, feature):
-    left_inds = np.where(np.logical_and(wavelengths >= feature[0], wavelengths <= feature[1]))[0]
-    left_x = wavelengths[int(left_inds.mean())]
-    left_y = reflectance[left_inds].mean()
+def evaluate_single_class(y_true_raw, y_pred_raw, target_class):
+    """Evaluates binary metrics and correct prediction fraction for a target class."""
 
-    right_inds = np.where(np.logical_and(wavelengths >= feature[2], wavelengths <= feature[3]))[0]
-    right_x = wavelengths[int(right_inds.mean())]
-    right_y = reflectance[right_inds].mean()
+    def contains_target(item, target):
+        if isinstance(item, str):
+            try:
+                item = ast.literal_eval(item)
+            except (ValueError, SyntaxError):
+                item = [item]
+        return 1 if target in item else 0
 
-    feature_inds = np.logical_and(wavelengths >= feature[0], wavelengths <= feature[3])
+    y_true_binary = [contains_target(row, target_class) for row in y_true_raw]
+    y_pred_binary = [contains_target(row, target_class) for row in y_pred_raw]
 
-    continuum = interp1d([left_x, right_x], [left_y, right_y],
-                         bounds_error=False, fill_value='extrapolate')(wavelengths)
-    depths = reflectance[feature_inds] / continuum[feature_inds]
-    return depths, wavelengths[feature_inds]
+    # True Positives (correctly predicted presence)
+    tp = sum(1 for t, p in zip(y_true_binary, y_pred_binary) if t == 1 and p == 1)
 
+    # Total True Instances in Ground Truth
+    n_true = sum(y_true_binary)
 
+    f1 = f1_score(y_true_binary, y_pred_binary, zero_division=0)
+    precision = precision_score(y_true_binary, y_pred_binary, zero_division=0)
+    recall = recall_score(y_true_binary, y_pred_binary, zero_division=0)
 
-def standardize_cont_feature(pure_signal, mixed_singal):
-    min_pure = np.min(pure_signal)
-    max_pure = np.max(pure_signal)
-
-    min_mixed = np.min(mixed_singal)
-    max_mixed = np.max(mixed_singal)
-
-    pure_normalized = (pure_signal - min_pure) / (max_pure - min_pure)
-    pure_scaled = pure_normalized * (max_mixed - min_mixed) + min_mixed
-
-    return pure_scaled
-
-
-
+    return {
+        'target_class': target_class,
+        'f1_score': round(f1, 4),
+        'precision': round(precision, 4),
+        'recall': round(recall, 4),
+        'tp': tp,
+        'n_true': n_true,
+        'fraction_str': f"{tp}/{n_true}"  # Formatted string "4/7"
+    }
 
 
 class tetracorder_figures:
@@ -189,10 +202,6 @@ class tetracorder_figures:
         self.libraries_output = os.path.join(self.output_directory, 'libraries')
         self.fig_directory = os.path.join(base_directory, 'tetracorder', 'figures')
 
-        #create_directory(os.path.join(self.fig_directory, 'plot_minerals'))
-        #create_directory(os.path.join(self.fig_directory, 'field_continuum'))
-        #self.cont_field_figs_directory = os.path.join(self.fig_directory, 'field_continuum')
-
         self.major_axis_fontsize = major_axis_fontsize
         self.minor_axis_fontsize = minor_axis_fontsize
         self.title_fontsize = title_fontsize
@@ -205,1557 +214,1544 @@ class tetracorder_figures:
 
         self.wvls, self.fwhms = spectra.load_wavelengths(sensor='emit')
 
-    def mineral_threshold(self):
-        # import csvs with abundance estimates
-        df_contact = pd.read_csv(os.path.join(self.fig_directory, f'slpit-emit_contact_estimated_abundance.csv'))
-        df_contact['mode'] = 'contact'
 
-        df_transect = pd.read_csv(os.path.join(self.fig_directory, f'slpit-emit_transect_estimated_abundance.csv'))
-        df_transect['mode'] = 'transect'
-
-        # # create figure
-        fig = plt.figure(figsize=(12, 6))
-        ncols = 3
-        nrows = 2
-        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.4, figure=fig)
-        minor_tick_spacing = 0.1
-        major_tick_spacing = 0.2
-
-        plot_titles = {
-            0: 'Iron Oxides',
-            1: 'Carbonates',
-            2: 'Clays',
-            3: 'Chlorite',
-            4: 'Quartz+Feldspar',
-            5: 'Grain Size'}
-        plot_lims = {
-            0: (0, 0.1),
-            1: (0, 0.35),
-            2: (0, 0.75),
-            3: (0, 0.35),
-            4: (0, 0.75),
-            5: (0, 50)}
-        plot_ticks = {
-            0: (0.005, 0.01),
-            1: (0.05, 0.1),
-            2: (minor_tick_spacing, major_tick_spacing),
-            3: (minor_tick_spacing, major_tick_spacing),
-            4: (minor_tick_spacing, major_tick_spacing),
-            5: (2.5, 5)}
-        counter = 0
-
-        for row in range(nrows):
-            for col in range(ncols):
-                ax = fig.add_subplot(gs[row, col])
-                ax.set_title(plot_titles[counter])
-                if row == 1:
-                    ax.set_xlabel(f'Soil Fractions\n (SLPIT)')
-                ax.grid('on', linestyle='--')
-                #ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.1))
-                #ax.xaxis.set_major_locator(ticker.MultipleLocator(0.2))
-                #ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
-
-                #ax.yaxis.set_minor_locator(ticker.MultipleLocator(plot_ticks[counter][0]))
-                #ax.yaxis.set_major_locator(ticker.MultipleLocator(plot_ticks[counter][1]))
-                #ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{2}f'))
-                ax.set_xlim(0, 1)
-                ax.set_ylim(plot_lims[counter][0], plot_lims[counter][1])
-
-                if col == 0:
-                    ax.set_ylabel('Absolute Abundance Error\n (SLPIT- EMIT)')
-
-                # if col != 0:
-                #     ax.set_yticklabels([])
-
-                for df in [df_contact, df_transect]:
-                    x = df[f'{plot_titles[counter]}_slpit'].values
-                    y = df[f'{plot_titles[counter]}_emit'].values
-
-                    frac = df[f'soil_frac'].values
-
-                    df_no_detect = pd.DataFrame({'x': x, 'y': y, 'soil_frac': frac})
-                    df_no_detect = df_no_detect[(df_no_detect['x'] != 0) | (df_no_detect['y'] != 0)]
-
-                    df_no_detect['error'] = df_no_detect['x'] - df_no_detect['y']
-                    df_no_detect['error'] = df_no_detect['error'].abs()
-                    df_no_detect = df_no_detect.sort_values('soil_frac')
-
-                    mode = list(df['mode'].unique())[0]
-
-                    if mode == 'contact':
-                        marker='s'
-                        label = 'Contact Probe'
-                    else:
-                        marker='^'
-                        label = 'Bare Fiber'
-
-                    ax.scatter(df_no_detect['soil_frac'], df_no_detect['error'], edgecolors='black', marker=marker, s=8, label=label)
-                # ax.set_aspect('equal', adjustable='box')
-                counter += 1
-
-                if col == 2:
-                    ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
-
-        plt.savefig(os.path.join(self.fig_directory, f'mineral_threshold.png'), dpi=300, bbox_inches='tight')
-        plt.clf()
-        plt.close()
-
-
-    def confusion_matrices(self):
+    def classification_rates(self):
         group_dict = {'g1': 1, 'g2': 3}
-        from sklearn.metrics import multilabel_confusion_matrix
-        from sklearn.preprocessing import MultiLabelBinarizer
+        target_classes_dict = {'g1': sorted(['hematite', 'goethite']), 'g2': sorted(['kaolinite', 'illite', 'calcite', 'dolomite', 'montmorillonite', 'illite+muscovite'])}
 
         for group in ['g1', 'g2']:
-            soil_fractions = \
-            envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}', f'tetracorder_{group}_simulation_fractions'))[:, :, 2]
+            soil_fractions = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}', f'tetracorder_{group}_simulation_fractions'))[:, :, 2]
             soil_fractions = np.round(soil_fractions, 2)
 
             # # mineral detection from tetracorder on soil only
-            soil_mineral_id_from_tetracorder = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}', f'tetracorder_tetracorder_{group}_simulation_soils', f'tetracorder_{group}_simulation_soils_augmented_min'))[:, -1, group_dict[group]].astype(int)
+            soil_mineral_id_from_tetracorder = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                          f'tetracorder_{group}_simulation_spectra_global_lib',
+                                                                          f'tetracorder_{group}_simulation_spectra_aug_min'))[:, -1, group_dict[group]].astype(int)
 
-            # # this is sim spectra from tetracorder output w/out corrections
-            simulated_mineral_id_from_tetracorder = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}', f'tetracorder_tetracorder_{group}_simulation_spectra', f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, :, group_dict[group]].astype(int)
+            # this is sim spectra from tetracorder output (mixed reflectance)
+            simulated_mineral_id_from_tetracorder = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                               f'tetracorder_{group}_simulation_spectra_global_lib',
+                                                                               f'tetracorder_{group}_simulation_spectra_aug_min'))[:, :, group_dict[group]].astype(int)
+
+            # this is sim spectra - vegetation removed (veg derived with emc2)
+            veg_extracted_mineral_id = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                  f'tetracorder_{group}_simulation_spectra_global_lib_veg_ext',
+                                                                  f'ext_veg_tetracorder_{group}_simulation_spectra_global_lib_tc_aug_min'))[:, :, group_dict[group]].astype(int)
+
+            # this is sim spectra - veg removed with rock fractions
+            veg_extracted_rock_mineral_id = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                  f'tetracorder_{group}_simulation_spectra_global_rock_veg_ext',
+                                                                  f'ext_veg_tetracorder_{group}_simulation_spectra_global_rock_tc_aug_min'))[:, :21, group_dict[group]].astype(int)
+
 
             # aggregated confusion matrix
-            mineral_class, df_minerals_sim = spectra.get_mineral_reclassification(path_to_tetracorder_minerals=os.path.join(self.synthetic_rfls, f'tetracorder_{group}', f'tetracorder_tetracorder_{group}_simulation_soils', f'tetracorder_{group}_simulation_soils_augmented_minerals'))
+            mineral_class, df_minerals_sim = spectra.get_mineral_reclassification(path_to_tetracorder_minerals=os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                                                                            f'tetracorder_{group}_simulation_spectra_global_lib',
+                                                                                                                            f'tetracorder_{group}_simulation_spectra_aug_minerals'))
 
-            truth_array = np.zeros((soil_fractions.shape[0], soil_fractions.shape[1])).astype(int)
+            truth_array = np.ones((soil_fractions.shape[0], soil_fractions.shape[1])).astype(int) * -9999
             truth_array[:] = soil_mineral_id_from_tetracorder[:, np.newaxis]
-            truth_array[:, 0] = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}', f'tetracorder_tetracorder_{group}_simulation_soils', f'tetracorder_{group}_simulation_soils_augmented_min'))[:, 0, group_dict[group]]
-            # Flatten your arrays for processing
+            truth_array[:, 0] = simulated_mineral_id_from_tetracorder[:, 0]
             flat_truth = truth_array.flatten()
-            flat_sim = simulated_mineral_id_from_tetracorder.flatten()
             flat_fractions = soil_fractions.flatten()
 
-            y_true_labels = [mineral_class.get(i, ['other']) for i in flat_truth]
-            y_pred_labels = [mineral_class.get(i, ['other']) for i in flat_sim]
-
-            mlb = MultiLabelBinarizer()
-            y_true_bin = mlb.fit_transform(y_true_labels)
-            y_pred_bin = mlb.transform(y_pred_labels)
-            classes = mlb.classes_
-
-            # 2. Get Unique Fraction Values
-            unique_fractions = np.unique(flat_fractions)
-            unique_fractions.sort()
-
-            # 3. Setup Plotting Grid
-            cols = 2
-            rows = (len(classes) + cols - 1) // cols
-            fig, axes = plt.subplots(rows, cols, figsize=(14, rows * 4 + 1), sharex=True)
-            axes = axes.flatten()
+            target_classes = target_classes_dict[group]
+            rows = 3  # One row per simulation iteration
+            cols = len(target_classes)  # One col per target class
+            fig, axes = plt.subplots(rows, cols, figsize=(8.5, 6.5), sharex=True, constrained_layout=True)
 
             colors = ['#2ca02c', '#d62728', '#ff7f0e', '#1f77b4']  # TP, FP, FN, TN
             labels = ['True Positive (TP)', 'False Positive (FP)', 'False Negative (FN)', 'True Negative (TN)']
 
-            # 4. Loop through Classes
-            for i, class_name in enumerate(classes):
-                ax = axes[i]
-                tp_v, fp_v, fn_v, tn_v = [], [], [], []
+            simulations = [simulated_mineral_id_from_tetracorder, veg_extracted_mineral_id,
+                           veg_extracted_rock_mineral_id]
 
-                for val in unique_fractions:
-                    mask = (flat_fractions == val)
-                    yt, yp = y_true_bin[mask, i], y_pred_bin[mask, i]
+            # --- 2. Loop through Rows (Simulations) ---
+            for row_idx, sim in enumerate(simulations):
 
-                    tp_v.append(np.sum((yt == 1) & (yp == 1)))
-                    fp_v.append(np.sum((yt == 0) & (yp == 1)))
-                    fn_v.append(np.sum((yt == 1) & (yp == 0)))
-                    tn_v.append(np.sum((yt == 0) & (yp == 0)))
+                # Flatten your arrays for processing
+                flat_sim = sim.flatten()
 
-                bottom = np.zeros(len(unique_fractions))
-                x_ticks = [f"{v:.2f}" for v in unique_fractions]
+                y_true_labels = [mineral_class.get(i, ['other']) for i in flat_truth]
+                y_pred_labels = [mineral_class.get(i, ['other']) for i in flat_sim]
 
-                # Store the bars so we can pull the handles for the legend
-                bars = []
-                for data, color, label in zip([tp_v, fp_v, fn_v, tn_v], colors, labels):
-                    b = ax.bar(x_ticks, data, bottom=bottom, color=color, label=label, width=0.8)
-                    bars.append(b)
-                    bottom += data
+                mlb = MultiLabelBinarizer()
+                y_true_bin = mlb.fit_transform(y_true_labels)
+                y_pred_bin = mlb.transform(y_pred_labels)
+                classes = list(mlb.classes_)
 
-                ax.set_title(f"Class: {class_name}", fontweight='bold')
-                ax.set_ylabel("Count")
+                # Unique Fraction Values
+                unique_fractions = np.unique(flat_fractions)
+                unique_fractions.sort()
 
-            # 5. Legend Fix: Move everything down and put legend in the clear space
-            for j in range(i + 1, len(axes)):
-                axes[j].axis('off')
+                for col_idx, class_name in enumerate(target_classes):
+                    ax = axes[row_idx, col_idx]
 
-            # subplots_adjust creates a 15% gap at the top of the figure
-            fig.subplots_adjust(top=0.85, hspace=0.4)
+                    # Security check: skip if the target class wasn't found in the data at all
+                    if class_name not in classes:
+                        ax.text(0.5, 0.5, f"Missing:\n{class_name}", ha='center', va='center')
+                        continue
 
-            # We grab the labels/handles from the very last active axis
+                    class_idx = classes.index(class_name)
+                    tp_v, fp_v, fn_v, tn_v = [], [], [], []
+
+                    for val in unique_fractions:
+                        mask = (flat_fractions == val)
+                        yt, yp = y_true_bin[mask, class_idx], y_pred_bin[mask, class_idx]
+
+                        tp_v.append(np.sum((yt == 1) & (yp == 1)))
+                        fp_v.append(np.sum((yt == 0) & (yp == 1)))
+                        fn_v.append(np.sum((yt == 1) & (yp == 0)))
+                        tn_v.append(np.sum((yt == 0) & (yp == 0)))
+
+                    bottom = np.zeros(len(unique_fractions))
+
+                    for data, color, label in zip([tp_v, fp_v, fn_v, tn_v], colors, labels):
+                        ax.bar(unique_fractions, data, bottom=bottom, color=color, label=label,
+                               width=0.05)  # narrower width for float spacing
+                        bottom += data
+
+                    if row_idx == 0:
+                        ax.set_title(f"{class_name.capitalize()}", fontsize=12)
+
+                    if group == 'g1':
+                        if col_idx == 0:
+                            ax.set_ylim(0, 8000)  # Zoomed-in range for column 2
+                        else:
+                            ax.set_ylim(0, 55000)  # Original range for column 1
+
+                    # Set your limits to match the fraction range (0 to 1)
+                    ax.set_xlim(-0.05, 1.05)
+                    ax.tick_params(axis='y', labelsize=8)
+
+                    if col_idx == 0:
+                        if row_idx == 0:
+                            ax.set_ylabel(f"{r'$\rho$'}\nCount", fontsize=10)
+                        elif row_idx == 1:
+                            ax.set_ylabel(r"$\hat{\rho}_{vf}$" + "\nCount", fontsize=10)
+                        else:
+                            ax.set_ylabel(r"$\hat{\rho}_{vf}$'" + "\nCount", fontsize=10)
+
+                    if group == 'g1':
+                        if col_idx == 0:
+                            # d controls the size of the diagonal lines
+                            d = .015
+                            kwargs = dict(transform=ax.transAxes, color='black', clip_on=False, lw=1)
+
+                            # Draw two diagonal lines at the top-left and top-right of the subplot frame
+                            # Top-left break marks
+                            ax.plot((-d, +d), (.9 - d, .9 + d), **kwargs)  # First diagonal line
+                            ax.plot((-d, +d), (.9 - d - 0.03, .9 + d - 0.03), **kwargs)  # Second parallel line
+
+                            ticks = list(ax.get_yticks())
+                            # Generate standard labels for everything below the top tick
+                            tick_labels = [f'{int(val * 1e-3)}K' if val > 0 else '0' for val in ticks]
+                            # Explicitly force the very last (top) label to be 60K
+                            tick_labels[-1] = '55K'
+
+                            ax.yaxis.set_major_locator(MultipleLocator(5000))
+                            ax.yaxis.set_minor_locator(MultipleLocator(1000))
+
+                            ax.set_yticks(ticks)
+                            ax.set_yticklabels(tick_labels)
+                        else:
+                            ax.yaxis.set_major_locator(MultipleLocator(10000))
+                            ax.yaxis.set_minor_locator(MultipleLocator(5000))
+                            ticks = list(ax.get_yticks())
+                            # Generate standard labels for everything below the top tick
+                            tick_labels = [f'{int(val * 1e-3)}K' if val > 0 else '0' for val in ticks]
+                            tick_labels[-1] = '55K'
+                            ax.set_yticklabels(tick_labels)
+
+
+                    if group == 'g2':
+                        if col_idx in [1, 2, 0]:
+                            if col_idx == 0:
+                                ax.set_ylim(0, 14000)
+                                ax.yaxis.set_major_locator(MultipleLocator(2000))
+                                ax.yaxis.set_minor_locator(MultipleLocator(1000))
+                            elif col_idx == 1:
+                                ax.set_ylim(0, 8000)
+                                ax.yaxis.set_major_locator(MultipleLocator(1000))
+                                ax.yaxis.set_minor_locator(MultipleLocator(500))
+                            else:
+                                ax.set_ylim(0, 1000)
+                                ax.yaxis.set_major_locator(MultipleLocator(100))
+                                ax.yaxis.set_minor_locator(MultipleLocator(50))
+
+                            ymin, ymax = ax.get_ylim()
+
+                            # --- 5. Custom Label Formatter ---
+                            def dynamic_formatter(val, pos, ymax=ymax):
+                                if np.isclose(val, ymax):
+                                    return '55K'
+                                elif val >= 1000:
+                                    return f'{int(val * 1e-3)}K'
+                                elif val > 0:
+                                    return f'{int(val)}'
+                                else:
+                                    return '0'
+
+                            ax.yaxis.set_major_formatter(FuncFormatter(dynamic_formatter))
+
+                            # Explicitly turn on minor tick mark visibility
+                            ax.tick_params(axis='y', which='both', left=True, labelsize=8)
+
+                            # --- 6. Position Diagonals Exactly Over the Highest Minor Tick ---
+                            if col_idx == 0:
+                                highest_minor_tick = ymax - 1000
+                            elif col_idx == 1:
+                                highest_minor_tick = ymax - 500
+                            else:
+                                highest_minor_tick = ymax - 50
+
+                            break_height = highest_minor_tick / ymax
+
+                            # Draw the custom double slash break lines
+                            d = .015
+                            kwargs = dict(transform=ax.transAxes, color='black', clip_on=False, lw=1.5)
+                            ax.plot((-d, +d), (break_height - d, break_height + d), **kwargs)
+                            ax.plot((-d, +d), (break_height - d - 0.03, break_height + d - 0.03), **kwargs)
+
+                            # Secure baseline locking
+                            ax.set_ylim(bottom=0, top=ymax)
+
+                        else:
+                            ax.set_ylim(0, 55000)
+                            ax.yaxis.set_major_locator(MultipleLocator(10000))
+                            ax.yaxis.set_minor_locator(MultipleLocator(5000))
+                            ticks = list(ax.get_yticks())
+                            # Generate standard labels for everything below the top tick
+                            tick_labels = [f'{int(val * 1e-3)}K' if val > 0 else '0' for val in ticks]
+                            tick_labels[-1] = '55K'
+                            ax.set_yticklabels(tick_labels)
+
+                    # 3. Apply the locators to ALL subplots (since sharex=True relies on a unified scale)
+                    ax.xaxis.set_major_locator(MultipleLocator(0.25))
+                    ax.xaxis.set_minor_locator(MultipleLocator(0.05))
+
+                    # Format the major ticks to show 2 decimal places (0.00, 0.25, etc.)
+                    ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+
+                    # 4. Only display labels and axis titles on the bottom row
+                    if row_idx == rows - 1:
+                        if group == 'g1':
+                            ax.tick_params(axis='x', labelsize=8)
+                        else:
+                            ax.tick_params(axis='x', labelrotation=45 ,labelsize=8)
+
+                        ax.set_xlabel('Fractional Cover\n(Soil)', fontsize=10)
+
+            # Grab handles from the last active axis
             handles, labels = ax.get_legend_handles_labels()
 
-            # Place legend in the middle of that 15% gap
+            # Place the single legend at the bottom center
             fig.legend(handles, labels,
-                       loc='upper center',
-                       bbox_to_anchor=(0.5, 0.95),
-                       ncol=4,
-                       fontsize=12,
+                       loc='lower center',
+                       bbox_to_anchor=(0.5, -0.08),  # Anchored right above the figure bottom margin
+                       ncol=4,  # 2x2 layout is perfect for a 6.5" width
+                       fontsize=10,
                        frameon=True,
                        facecolor='white',
                        edgecolor='gray')
 
-            plt.xticks(rotation=45)
-            plt.savefig(os.path.join(self.fig_directory, f"{group}_identification_rate.png"),
+            # Save the final 3x2 figure
+            plt.savefig(os.path.join(self.fig_directory, f"combined_{group}_identification_rate.png"),
                         bbox_inches='tight')
             plt.clf()
             plt.close()
 
 
-    def veg_correction_fig(self):
-        group_dict = {'g1': 0, 'g2': 2}
-        bd_group_dict = {
-            'g1': 1,
-            'g2': 3}
-
-        for group in ['g1', 'g2']:
-            fractions = envi_to_array(os.path.join(self.sim_spectra_directory, f'tetracorder_{group}_simulation_fractions'))[:, :, 2]
-
-            # this is simulated spectra corrections
-            bds = envi_to_array(os.path.join(self.veg_correction_dir, f'tetracorder_{group}_simulated_spectra'))
-            bds[bds == -9999.] = np.nan
-
-            bd_library = bds[:, :, 2]
-            bd = bds[:, :, 3]
-            bd_prime = bds[:, :, 4]
-            bd_prime_prime = bds[:, :, 5]
-
-            # this is for unmixed simulated spectra - Bd '
-            bd_emc2 = envi_to_array(os.path.join(self.veg_correction_dir, f'tetracorder_{group}_emc2_spectra'))
-            bd_emc2[bd_emc2 == -9999.] = np.nan
-            bd_emc2_prime = bd_emc2[:, :, 4]
-
-            # this is for unmixed simulated spectra - Bd''
-            bd_emc2_prime_prime = bd_emc2[:, :, 5]
-
-            # load correct mineral IDs @ 100 % soil
-            true_mineral_id = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_soils_augmented_min'))[:, 20, bd_group_dict[group]]
-            true_mineral_ids = np.zeros((fractions.shape[0], fractions.shape[1]))
-            true_mineral_ids[:] = true_mineral_id[:, np.newaxis]
-            true_mineral_ids[:, 0] = 0
-
-            # load simulated spectra mineral IDs
-            sim_mineral_detections = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, :21, bd_group_dict[group]]
-            bd_from_tetracorder = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, :21, group_dict[group]]
-
-            true_bd = bd[:, 20] # bd_from_tetracorder[:, 20]
-            truth_array = np.zeros((fractions.shape[0], fractions.shape[1]))
-            truth_array[:] = true_bd[:, np.newaxis]
-            truth_array[:, 0] = 0
-
-            # aggregated ids
-            mineral_class, df_minerals = spectra.get_mineral_reclassification(path_to_tetracorder_minerals=os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_minerals'))
-            truth_category_array = np.full(fractions.shape, 'Other', dtype=object)
-
-            for value, category in mineral_class.items():
-                truth_category_array[true_mineral_ids == value] = category
-
-            simulated_category_array = np.full(fractions.shape, 'Other', dtype=object)
-
-            for value, category in mineral_class.items():
-                simulated_category_array[sim_mineral_detections == value] = category
-
-            # flatten arrays
-            a_flat = truth_category_array.flatten()
-            b_flat = simulated_category_array.flatten()
-            fractions_flat = fractions.flatten()
-            bd_flat = bd.flatten()
-            bd_prime_flat = bd_prime.flatten()
-            bd_prime_prime_flat = bd_prime_prime.flatten()
-            bd_emc2_prime_flat = bd_emc2_prime.flatten()
-            bd_emc2_prime_prime_flat = bd_emc2_prime_prime.flatten()
-            bd_from_tetracorder_flat = bd_from_tetracorder.flatten()
-            truth_array_flat = truth_array.flatten()
-
-            # Generate confusion matrix
-            labels = sorted(set(a_flat) | set(b_flat))  # Ensures all labels appear
-
-            # create figure
-            fig, axes = plt.subplots(nrows=1, ncols=len(labels), figsize=(2 * len(labels), 4), constrained_layout=True)
-
-            for ax, label in zip(axes, labels):
-                if label in ['Other', 'No Detection', 'Vegetation']:
-                    continue
-
-                mask = (a_flat == label) & (b_flat == label)
-                fractions_in_mask = fractions_flat[mask]
-
-                bd_in_mask = bd_flat[mask]
-                bd_prime_in_mask = bd_prime_flat[mask]
-                bd_prime_prime_in_mask = bd_prime_prime_flat[mask]
-                bd_emc2_prime_in_mask = bd_emc2_prime_flat[mask]
-                bd_emc2_prime_prime_in_mask = bd_emc2_prime_prime_flat[mask]
-                bd_from_tetracorder_in_mask = bd_from_tetracorder_flat[mask]
-                truth_in_mask = truth_array_flat[mask]
-
-                n = len(fractions_in_mask)
-
-                box_data = []
-                unique_fractions = np.sort(np.unique(fractions_in_mask))
-                mae_bd = []
-                mae_bd_prime = []
-                mae_bd_prime_prime = []
-                mae_bd_emc2_prime = []
-                mae_bd_emc2_prime_prime = []
-                mae_bd_from_tetracorder = []
-
-                for fraction_bin in unique_fractions:
-                    fraction_bin_mask = fractions_in_mask == fraction_bin
-                    error_bd_bin = truth_in_mask[fraction_bin_mask] - bd_in_mask[fraction_bin_mask]
-                    error_bd_prime_bin = truth_in_mask[fraction_bin_mask] - bd_prime_in_mask[fraction_bin_mask]
-                    error_bd_prime_prime = truth_in_mask[fraction_bin_mask] - bd_prime_prime_in_mask[fraction_bin_mask]
-                    error_bd_emc2_prime = truth_in_mask[fraction_bin_mask] - bd_emc2_prime_in_mask[fraction_bin_mask]
-                    error_bd_emc2_prime_prime = truth_in_mask[fraction_bin_mask] - bd_emc2_prime_prime_in_mask[fraction_bin_mask]
-                    error_bd_from_tetracorder = truth_in_mask[fraction_bin_mask] - bd_from_tetracorder_in_mask[fraction_bin_mask]
-
-                    mae_bd_bin = np.nanmean(np.abs(error_bd_bin))
-                    mae_bd_prime_bin = np.nanmean(np.abs(error_bd_prime_bin))
-                    mae_bd_prime_prime_bin = np.nanmean(np.abs(error_bd_prime_prime))
-                    mae_bd_emc2_prime_bin = np.nanmean(np.abs(error_bd_emc2_prime))
-                    mae_bd_emc2_prime_prime_bin = np.nanmean(np.abs(error_bd_emc2_prime_prime))
-                    mae_bd_from_tetracorder_bin = np.nanmean(np.abs(error_bd_from_tetracorder))
-
-                    mae_bd.append(mae_bd_bin)
-                    mae_bd_prime.append(mae_bd_prime_bin)
-                    mae_bd_prime_prime.append(mae_bd_prime_prime_bin)
-                    mae_bd_emc2_prime.append(mae_bd_emc2_prime_bin)
-                    mae_bd_emc2_prime_prime.append(mae_bd_emc2_prime_prime_bin)
-                    mae_bd_from_tetracorder.append(mae_bd_from_tetracorder_bin)
-
-                    # if error_bin.size > 0:
-                    #     box_data.append(error_bin)
-                    #     #mae.append(mae_bin)
-                    # else:
-                    #     box_data.append([np.nan])  # Keep alignment even if empty (unlikely)
-                    #     #mae.append([np.nan])
-
-                # ax.boxplot(
-                #     box_data,
-                #     positions=unique_fractions,
-                #     widths=0.025,
-                #     showfliers=True,
-                #     patch_artist=True,
-                #     boxprops=dict(facecolor='lightgray', color='black'),
-                #     medianprops=dict(color='red'),
-                #     whiskerprops=dict(color='black'),
-                #     capprops=dict(color='black'),
-                #     flierprops=dict(marker='o', markersize=3, linestyle='none', markerfacecolor='black')
-                # )
-
-                ax.plot(unique_fractions, mae_bd, color='red', linewidth=1.5, label='Bd')
-                ax.plot(unique_fractions, mae_bd_prime, color='green', linewidth=1.5, label="Bd'")
-                ax.plot(unique_fractions, mae_bd_prime_prime, color='green', linewidth=3.5, label="Bd''", linestyle='dashed')
-                ax.plot(unique_fractions, mae_bd_emc2_prime, color='blue', linewidth=1.5, label="E(MC)$^2$ - Bd'")
-                ax.plot(unique_fractions, mae_bd_emc2_prime_prime, color='orange', linewidth=1.5, label="E(MC)$^2$ - BD''")
-                ax.plot(unique_fractions, mae_bd_from_tetracorder, color='blue', linewidth=1.5, label="Tetracorder", linestyle='dashed')
-
-                # ✅ Labels and limits
-                ax.set_xlim(0, 1)
-                ax.set_ylim(0, 0.2)
-                ax.set_xlabel('Soil Fraction')
-                ax.set_ylabel('Mean Absolute Error')
-                ax.set_title(f'Truth = Pred = {label}\nn = {n}')
-                ax.legend()
-
-                # ✅ Format x-ticks with two decimals
-                ax.set_xticks(unique_fractions)
-                ax.set_xticklabels([f'{x:.2f}' for x in unique_fractions], rotation=90)
-
-           # plt.tight_layout()
-            plt.savefig(os.path.join(self.fig_directory, f"{group}_mae_band_depths.png"),
-                        bbox_inches='tight')
-            plt.clf()
-            plt.close()
-
-
-    def mineral_ref_figure(self):
-
-        try:
-            spectrum = load_pickle('soil_test_tc')
-        except:
-            spectrum = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_g1_simulation_spectra'))[0, 17, :]
-            save_pickle(spectrum, 'soil_test_tc')
-
-        fractions = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_g1_simulation_fractions'))[0, 17, :]
-        gv_spectra = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_g1_simulation_gv'))[0, 17, :]
-        npv_spectra = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_g1_simulation_npv'))[0, 17, :]
-        psoil = envi_to_array(os.path.join(self.sim_spectra_directory, 'tetracorder_g1_simulation_soils'))[0, 20, :]
-
-        data = spectra.mineral_group_retrival(mineral_index=47, spectra_observed=spectrum, npv_fraction=fractions[0],
-                                              gv_fraction=fractions[1], pnpv=npv_spectra, pgv=gv_spectra,
-                                              soil_fraction=fractions[2], psoil=psoil, plot=True, output_directory = r'G:\My Drive\terraspec\tetracorder\figures\g1_veg_correction_mineral\\',
-                                              plot_info='test_')
-
-
-    def mineral_sim_library_reference(self):
+    def f1_score_matrix_detailed(self):
         group_dict = {'g1': 1, 'g2': 3}
-        df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
-        df_sim = pd.read_csv(os.path.join(self.simulation_output_directory, 'simulation_libraries',
-                                          'convex_hull__n_dims_4_simulation_library.csv'))
-        min_em_index = np.min(df_sim[df_sim['level_1'] == 'soil'].index)
-        max_em_index = np.max(df_sim[df_sim['level_1'] == 'soil'].index)
+        target_classes_dict = {
+            'g1': sorted(['hematite', 'goethite']),
+            'g2': sorted(['kaolinite', 'illite', 'calcite', 'dolomite', 'montmorillonite', 'illite+muscovite'])
+        }
 
-        sim_library = envi_to_array(os.path.join(self.sa_outputs, 'convex_hull__n_dims_4_simulation_library_augmented_min'))[min_em_index:max_em_index + 1, 0, :]
-        for group in ['g1', 'g2']:
-            create_directory(os.path.join(self.fig_directory, f'{group}_tetracorder_library'))
-            fig_directory_tetracorder = os.path.join(self.fig_directory, f'{group}_tetracorder_library')
+        # Setup a unified 3x3 figure canvas
+        rows, cols = 3, 3
+        fig, axes = plt.subplots(rows, cols, figsize=(11, 10), constrained_layout=True)
 
-            mineral_indices = sim_library[:, group_dict[group]]
-            unique_values, counts = np.unique(mineral_indices, return_counts=True)
+        # Flatten axes array for simple sequential indexing (0 to 8)
+        axes_flat = axes.flatten()
 
-            p_map(partial(tetracorder_library, fig_directory=fig_directory_tetracorder, group=group),
-                  unique_values, **{"desc": "\t\t processing tetracorder library...", "ncols": 150})
+        # Visual configuration variables
+        sim_labels = [f"{r'$\rho$'}", r"$\hat{\rho}_{vf}$", r"$\hat{\rho}_{vf}$'"]
 
-            fig, ax = plt.subplots(figsize=(25, 25))
+        sim_colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
 
-            # get label keys for minerals
-            filtered_minerals_df = df_mineral_matrix[df_mineral_matrix['Index'].isin(unique_values)]
-            filtered_minerals_df['name_index'] = filtered_minerals_df['Index'].astype(str) + ' - ' + filtered_minerals_df['Name']
-            mineral_mapping = dict(zip(filtered_minerals_df['Index'], filtered_minerals_df['name_index']))
-            present_minerals_result = [mineral_mapping[value] for value in unique_values if value in mineral_mapping]
-            present_minerals_result.insert(0, 'No Data')
-
-            indices = np.arange(len(unique_values))
-
-            bars = ax.bar(indices, counts, tick_label=present_minerals_result,align='center')
-
-            # Set the custom string labels for the x-axis
-            ax.set_xticklabels(present_minerals_result, rotation=90, fontsize=12)
-
-            # Add counts on top of each bar
-            for bar in bars:
-                height = bar.get_height()
-                ax.text(bar.get_x() + bar.get_width() / 2, height, str(int(height)),
-                        ha='center', va='bottom', fontsize=20)  # Adjust fontsize as needed
-
-            ax.set_xlabel('Unique Values',  fontsize=20)
-            ax.set_ylabel('Counts',  fontsize=20)
-            ax.set_title('Tetracorder minerals identified in simulation library',  fontsize=20)
-
-            plt.tight_layout()
-            plt.savefig(os.path.join(self.fig_directory, f'sim_library_minerals_{group}.png'))
-            plt.clf()
-            plt.close()
-
-    def mineral_sim_spectra_reference(self):
-
-        group_dict = {'g1': 1, 'g2': 3}
-        df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
+        plot_idx = 0  # Global tracker to index subplots across both groups
 
         for group in ['g1', 'g2']:
-            sim_library = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, 20, group_dict[group]]
+            soil_fractions = envi_to_array(
+                os.path.join(self.synthetic_rfls, f'tetracorder_{group}', f'tetracorder_{group}_simulation_fractions'))[
+                :, :, 2]
+            soil_fractions = np.round(soil_fractions, 2)
 
-            create_directory(os.path.join(self.fig_directory, f'{group}_tetracorder_simulated_spectra'))
-            fig_directory_tetracorder = os.path.join(self.fig_directory, f'{group}_tetracorder_simulated_spectra')
+            soil_mineral_id_from_tetracorder = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                          f'tetracorder_{group}_simulation_spectra_global_lib',
+                                                                          f'tetracorder_{group}_simulation_spectra_aug_min'))[
+                :, -1, group_dict[group]].astype(int)
 
-            mineral_indices = sim_library
-            unique_values, counts = np.unique(mineral_indices, return_counts=True)
+            simulated_mineral_id_from_tetracorder = \
+            envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                       f'tetracorder_{group}_simulation_spectra_global_lib',
+                                       f'tetracorder_{group}_simulation_spectra_aug_min'))[
+                :, :, group_dict[group]].astype(int)
 
-            p_map(partial(tetracorder_library, fig_directory=fig_directory_tetracorder, group=group),
-                  unique_values, **{"desc": "\t\t processing tetracorder library...", "ncols": 150})
+            veg_extracted_mineral_id = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                  f'tetracorder_{group}_simulation_spectra_global_lib_veg_ext',
+                                                                  f'ext_veg_tetracorder_{group}_simulation_spectra_global_lib_tc_aug_min'))[
+                :, :, group_dict[group]].astype(int)
 
-            fig, ax = plt.subplots(figsize=(25, 25))
+            veg_extracted_rock_mineral_id = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                       f'tetracorder_{group}_simulation_spectra_global_rock_veg_ext',
+                                                                       f'ext_veg_tetracorder_{group}_simulation_spectra_global_rock_tc_aug_min'))[
+                :, :21, group_dict[group]].astype(int)
 
-            # get label keys for minerals
-            filtered_minerals_df = df_mineral_matrix[df_mineral_matrix['Index'].isin(unique_values)]
-            filtered_minerals_df['name_index'] = filtered_minerals_df['Index'].astype(str) + ' - ' + filtered_minerals_df['Name']
-            mineral_mapping = dict(zip(filtered_minerals_df['Index'], filtered_minerals_df['name_index']))
-            present_minerals_result = [mineral_mapping[value] for value in unique_values if value in mineral_mapping]
-            #present_minerals_result.insert(0, 'No Data')
-            #present_minerals_result.insert(-9999, 'No Data')
+            mineral_class, df_minerals_sim = spectra.get_mineral_reclassification(
+                path_to_tetracorder_minerals=os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                          f'tetracorder_{group}_simulation_spectra_global_lib',
+                                                          f'tetracorder_{group}_simulation_spectra_aug_minerals'))
 
-            indices = np.arange(len(unique_values))
+            truth_array = np.ones((soil_fractions.shape[0], soil_fractions.shape[1])).astype(int) * -9999
+            truth_array[:] = soil_mineral_id_from_tetracorder[:, np.newaxis]
+            truth_array[:, 0] = simulated_mineral_id_from_tetracorder[:, 0]
+            flat_truth = truth_array.flatten()
+            flat_fractions = soil_fractions.flatten()
 
-            bars = ax.bar(indices, counts, tick_label=present_minerals_result, align='center')
+            target_classes = target_classes_dict[group]
+            simulations = [simulated_mineral_id_from_tetracorder, veg_extracted_mineral_id,
+                           veg_extracted_rock_mineral_id]
 
-            # Set the custom string labels for the x-axis
-            ax.set_xticklabels(present_minerals_result, rotation=90, fontsize=12)
+            unique_fractions = np.unique(flat_fractions)
+            unique_fractions.sort()
 
-            # Add counts on top of each bar
-            for bar in bars:
-                height = bar.get_height()
-                ax.text(bar.get_x() + bar.get_width() / 2, height, str(int(height)),
-                        ha='center', va='bottom', fontsize=10)  # Adjust fontsize as needed
+            # Step 1: Pre-calculate F1 metrics for all simulation pipelines in this group
+            group_f1_data = {class_name: {i: [] for i in range(len(simulations))} for class_name in target_classes}
 
-            ax.set_xlabel('Unique Values')
-            ax.set_ylabel('Counts')
-            ax.set_title('Bar Graph of Unique Values and Their Counts')
+            for sim_idx, sim in enumerate(simulations):
+                flat_sim = sim.flatten()
+                y_true_labels = [mineral_class.get(i, ['other']) for i in flat_truth]
+                y_pred_labels = [mineral_class.get(i, ['other']) for i in flat_sim]
 
-            plt.tight_layout()
-            plt.savefig(os.path.join(self.fig_directory, f'sim_spectra_minerals_{group}.png'))
-            plt.clf()
-            plt.close()
+                mlb = MultiLabelBinarizer()
+                y_true_bin = mlb.fit_transform(y_true_labels)
+                y_pred_bin = mlb.transform(y_pred_labels)
+                classes = list(mlb.classes_)
 
-    def veg_correction_by_mineral(self):
-        group_dict = {'g1': 0, 'g2': 2}
+                for class_name in target_classes:
+                    if class_name not in classes:
+                        group_f1_data[class_name][sim_idx] = None
+                        continue
 
-        df_mineral_matrix = pd.read_csv(os.path.join('utils', 'tetracorder', 'mineral_grouping_matrix_20230503.csv'))
-        df_mineral_matrix = df_mineral_matrix.fillna(-9999)
+                    class_idx = classes.index(class_name)
+                    for val in unique_fractions:
+                        mask = (flat_fractions == val)
+                        yt, yp = y_true_bin[mask, class_idx], y_pred_bin[mask, class_idx]
 
-        for group in ['g1', 'g2']:
-            fractions = envi_to_array(os.path.join(self.sim_spectra_directory,
-                                                   f'tetracorder_{group}_simulation_fractions'))
+                        tp = np.sum((yt == 1) & (yp == 1))
+                        fp = np.sum((yt == 0) & (yp == 1))
+                        fn = np.sum((yt == 1) & (yp == 0))
 
-            create_directory(os.path.join(self.fig_directory, f'{group}_veg_correction_mineral'))
-            fig_directory_tetracorder = os.path.join(self.fig_directory, f'{group}_veg_correction_mineral')
+                        f1 = (2 * tp) / (2 * tp + fp + fn) if (2 * tp + fp + fn) > 0 else 0.0
+                        group_f1_data[class_name][sim_idx].append(f1)
 
-            unique_x_val = np.unique(fractions[0, :, 2]) * 100
+            # Step 2: Plot the calculated mineral datasets sequentially into the grid
+            for class_name in target_classes:
+                ax = axes_flat[plot_idx]
 
-            # this is soil from tetracorder output
-            bd_tetra = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_soils_augmented_min'))[:, :21, group_dict[group]]
-            bd_tetra[bd_tetra == 0] = np.nan
+                # Draw the lines for each simulation
+                for sim_idx in range(len(simulations)):
+                    scores = group_f1_data[class_name][sim_idx]
+                    if scores is not None:
+                        ax.plot(unique_fractions, scores,
+                                color=sim_colors[sim_idx],
+                                linewidth=1.5,
+                                alpha=0.85,
+                                label=sim_labels[sim_idx])
+                    else:
+                        ax.text(0.5, 0.5, f"Missing Data:\n{class_name}", ha='center', va='center')
 
-            bd_tetra_minerals = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_soils_augmented_min'))[:,:21, group_dict[group] + 1]
+                # Subplot Customization & Formatting
+                ax.set_title(f"{class_name.capitalize()}", fontsize=12, fontweight='semibold')
+                ax.set_ylim(-0.05, 1.05)
+                ax.set_xlim(-0.05, 1.05)
+                ax.tick_params(axis='both', labelsize=8)
 
-            bad_minerals = np.array(minerals_to_exclude)
-            bd_tetra_minerals[np.isin(bd_tetra_minerals, bad_minerals)] = np.nan
-            bd_tetra_minerals[np.isnan(bd_tetra)] = np.nan
+                # High density tick-marks
+                ax.yaxis.set_major_locator(MultipleLocator(0.20))
+                ax.yaxis.set_minor_locator(MultipleLocator(0.10))
+                ax.xaxis.set_major_locator(MultipleLocator(0.25))
+                ax.xaxis.set_minor_locator(MultipleLocator(0.05))
+                #ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 
-            unique_minerals = np.unique(bd_tetra_minerals)
-            unique_minerals = unique_minerals[~np.isnan(unique_minerals)]
-
-            # this is the simulated spectra w/ corrections
-            bd_hat = envi_to_array(os.path.join(self.veg_correction_dir, f'tetracorder_{group}_vegetation_correction'))
-            bd_hat[bd_hat == -9999.] = np.nan
-
-            # this is sim spectra from tetracorder output w/out corrections
-            bd_tetra_sim = envi_to_array(os.path.join(self.sa_outputs,
-                                                      f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, :21,
-                           group_dict[group]]
-            bd_tetra_sim[bd_tetra_sim == 0] = np.nan
-
-            bd_tetra_sim_minerals = envi_to_array(os.path.join(self.sa_outputs,
-                                                               f'tetracorder_{group}_simulation_spectra_augmented_min'))[
-                                    :, :21, group_dict[group] + 1]
-            bd_tetra_sim_minerals[np.isin(bd_tetra_sim_minerals, bad_minerals)] = np.nan
-            bd_tetra_sim_minerals[np.isnan(bd_tetra_sim)] = np.nan
-
-            # this is the sma vegetation reconstructed signal!
-            bd_sma = envi_to_array(
-                os.path.join(self.veg_correction_dir, f'tetracorder_{group}_vegetation_correction_sma'))
-            bd_sma[bd_sma == -9999.] = np.nan
-
-            for mineral in unique_minerals:
-                mineral_mask = (bd_tetra_minerals == mineral)
-
-                tetra_soil = bd_tetra.copy()
-                tetra_soil[mineral_mask] = np.nan
-
-                tetra_sim = bd_tetra_sim.copy()
-                tetra_sim[mineral_mask] = np.nan
-
-                tetra_veg_correction = bd_hat.copy()
-                tetra_veg_correction[mineral_mask] = np.nan
-
-                tetra_sma = bd_sma.copy()
-                tetra_sma[mineral_mask] = np.nan
-
-                # create lists to store the means
-                mean_y_tetra = []
-                mean_y_tetra_sim = []
-                mean_y_hat = []
-                mean_y_sma = []
-
-                # create lists to store standard deviations
-                std_y_tetra = []
-                std_y_tetra_sim = []
-                std_y_hat = []
-                std_y_sma = []
-
-                for _col in range(tetra_soil.shape[1]):
-                    mean_y_tetra.append(np.nanmean(tetra_soil[:, _col] - tetra_soil[:, _col]))
-                    std_y_tetra.append(np.nanstd(tetra_soil[:, _col] - tetra_soil[:, _col]))
-
-                    mean_y_tetra_sim.append(np.nanmean(tetra_soil[:, _col] - tetra_sim[:, _col]))
-                    std_y_tetra_sim.append(np.nanstd(tetra_soil[:, _col] - tetra_sim[:, _col]))
-
-                    mean_y_hat.append(np.nanmean(tetra_soil[:, _col] - tetra_veg_correction[:, _col, 6]))
-                    std_y_hat.append(np.nanstd(tetra_soil[:, _col] - tetra_veg_correction[:, _col, 6]))
-
-                    mean_y_sma.append(np.nanmean(tetra_soil[:, _col] - tetra_sma[:, _col, 6]))
-                    std_y_sma.append(np.nanstd(tetra_soil[:, _col] - tetra_sma[:, _col, 6]))
-
-                record = df_mineral_matrix.loc[df_mineral_matrix['Index'] == int(mineral), 'Record'].iloc[0]
-                name = df_mineral_matrix.loc[df_mineral_matrix['Record'] == record, 'Name'].iloc[0]
-
-                # make figure
-                fig, ax = plt.subplots(1, 1, figsize=(15, 5))
-                ax.plot(unique_x_val, np.absolute(mean_y_tetra),
-                        label='Tetracorder$_{soil}$', linestyle='solid', color='red')
-
-                ax.errorbar(unique_x_val, np.absolute(mean_y_tetra_sim), yerr=std_y_tetra_sim, fmt='o',
-                            label='Tetracorder$_{mixed}$', linestyle='solid', color='purple', capsize=8,
-                            ecolor='purple')
-
-                ax.errorbar(unique_x_val, np.absolute(mean_y_hat), yerr=std_y_hat, fmt='o',
-                            label='Tetracorder$_{vegetation corrected}$', linestyle='solid', color='green', capsize=6,
-                            ecolor='green')
-
-                ax.errorbar(unique_x_val, np.absolute(mean_y_sma), yerr=std_y_sma, fmt='o',
-                            label='Tetracorder$_{sma vegetation corrected}$', linestyle='solid', color='blue',
-                            capsize=4, ecolor='blue')
-
-                ax.set_xlabel('% Soil Cover')
-                ax.set_ylabel('Bd - Band Depth')
-                ax.legend(loc='upper right')
-                ax.set_title(name)
-
-                ax.set_aspect('auto')
-
-                # major ticks every 10 units
-                major_ticks = range(0, 101, 10)
-                ax.set_xticks(major_ticks)
-
-                # Minor ticks every 5 units
-                minor_ticks = range(0, 101, 5)
-                ax.set_xticks(minor_ticks, minor=True)
-
-                # set tick labels for x-axis
-                ax.set_xticklabels(major_ticks)
-
-                # major ticks every 10 units - y-axis
-                major_ticks = np.arange(0, 0.25, 0.05)
-                ax.set_yticks(major_ticks)
-
-                # Minor ticks every 5 units
-                minor_ticks = np.arange(0, 0.25, 0.01)
-                ax.set_yticks(minor_ticks, minor=True)
-
-                ax.set_yticklabels(major_ticks)
-                ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-
-                plt.tight_layout()
-                plt.savefig(os.path.join(fig_directory_tetracorder, f'{int(mineral)}-bd-veg-corrections.png'))
-                plt.clf()
-                plt.close()
-
-
-    def slpit_bd(self):
-        def signal_reconstruct(complete_fractions_array, user_em, df_unmix, spectra_start):
-            unmix_library_array = df_unmix.iloc[:, spectra_start:].to_numpy()
-
-            df_unmix['level_1'] = df_unmix['level_1'].str.lower()
-            min_em_index = np.min(df_unmix[df_unmix['level_1'] == user_em].index)
-            max_em_index = np.max(df_unmix[df_unmix['level_1'] == user_em].index)
-
-            unmix_library_array = unmix_library_array[min_em_index:max_em_index + 1, :]
-            complete_fractions_array = complete_fractions_array[0, 0, min_em_index:max_em_index + 1]
-            spectra_grid = np.zeros((len(self.wvls)))
-
-            if np.sum(complete_fractions_array) == 0:
-                return spectra_grid
-            else:
-                spectra_grid = np.average(unmix_library_array, weights=complete_fractions_array, axis=0)
-                return spectra_grid
-
-        def band_depth_row(row, output_directory):
-            plot = row['Name']
-
-            emit_filetime = row['EMIT DATE']
-
-            df_parallel_rows = []
-
-            for em_lib_type in ['local', 'global']:
-                if em_lib_type in ['local']:
-                    df_unmix = pd.read_csv(os.path.join(self.slpit_output_directory, 'spectral_transects', 'endmembers',
-                                                        f'{plot.replace("SPEC", "Spectral").replace(" ", "")}-emit.csv'))
-                    spectra_start = 10
+                # Only label the vertical axis on leftmost subplots (columns 0, 3, 6)
+                if plot_idx % 3 == 0:
+                    ax.set_ylabel("F1 Score", fontsize=10)
                 else:
-                    # construct rho of ems
-                    df_unmix = pd.read_csv(os.path.join(self.simulation_output_directory, 'endmember_libraries',
-                                                        'convex_hull__n_dims_4_unmix_library.csv'))
-                    spectra_start = 7
+                    ax.set_yticks([])
 
-                # load reflectances
-                emit_rfl = envi_to_array(os.path.join(self.aug_directory, f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented'))[0, 0, :]
-                slpit_rfl = envi_to_array(os.path.join(self.aug_directory,f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented'))[0, 0, :]
-                contact_rfl = envi_to_array(os.path.join(self.aug_directory, f'{plot.replace(" ", "").replace("SPEC", "Spectral")}-emit_ems_augmented'))[0, 0, :]
+                # Only label horizontal axis on bottom positions or when wrapping up a group
+                if plot_idx >= 5:
+                    ax.set_xlabel('Soil Fractional Cover', fontsize=10)
 
-                # rebuild vegetation signals
-                emit_fractions_complete = envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
-                                                                     f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_{em_lib_type}_complete_fractions'))
-                slpit_fractions_complete = envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
-                                                                      f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented_{em_lib_type}_complete_fractions'))
+                plot_idx += 1
 
-                emit_pgv = signal_reconstruct(emit_fractions_complete, user_em='pv', df_unmix=df_unmix,
-                                              spectra_start=spectra_start)
-                slipt_pgv = signal_reconstruct(slpit_fractions_complete, user_em='pv', df_unmix=df_unmix,
-                                               spectra_start=spectra_start)
-                emit_pnpv = signal_reconstruct(emit_fractions_complete, user_em='npv', df_unmix=df_unmix,
-                                               spectra_start=spectra_start)
-                slipt_pnpv = signal_reconstruct(slpit_fractions_complete, user_em='npv', df_unmix=df_unmix,
-                                                spectra_start=spectra_start)
+        # --- Step 3: Handle the remaining 9th empty subplot (index 8) ---
+        extra_ax = axes_flat[-1]
+        extra_ax.axis('off')  # Completely hide the empty grid boundaries
 
-                # load transect fractions
-                emit_fractions = envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
-                                                            f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_{em_lib_type}_fractional_cover'))[0, 0, :]
-                slpit_fractions = envi_to_array(os.path.join(self.output_directory, 'fractions', 'sma',
-                                                             f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented_{em_lib_type}_fractional_cover'))[0, 0, :]
-                # load the mineral indices
-                emit_mineral_indexs = envi_to_array(os.path.join(self.output_directory, 'spectral_abundance',
-                                                                 f'{plot.replace(" ", "")}_RFL_{emit_filetime}_pixels_augmented_min'))[0, 0, :]
-                slpit_mineral_indexs = envi_to_array(os.path.join(self.output_directory, 'spectral_abundance',
-                                                                  f'{plot.replace(" ", "").replace("SPEC", "Spectral")}_transect_augmented_min'))[0, 0, :]
-                contact_probe_indices = envi_to_array(os.path.join(self.output_directory, 'spectral_abundance',
-                                                                   f'{plot.replace(" ", "").replace("SPEC", "Spectral")}-emit_ems_augmented_min'))[0, 0, :]
+        # Insert the unified legend neatly inside the vacant 9th grid spot
+        handles, labels = axes_flat[0].get_legend_handles_labels()
+        extra_ax.legend(handles, labels,
+                        loc='center',
+                        fontsize=10,
+                        frameon=True,
+                        facecolor='white',
+                        edgecolor='gray',
+                        title="Mixed Reflectances",
+                        title_fontsize=11)
 
-                for _group, group in enumerate(['g1', 'g2']):
-                    index_dict = {0: 1, 1: 3}
-                    slpit_mineral_index = slpit_mineral_indexs[index_dict[_group]]
-                    emit_mineral_index = emit_mineral_indexs[index_dict[_group]]
-                    contact_probe_index = contact_probe_indices[index_dict[_group]]
+        # Save out the combined grid image asset
+        plt.savefig(os.path.join(self.fig_directory, "unified_3x3_mineral_f1_scores.png"),
+                    bbox_inches='tight', dpi=300)
+        plt.clf()
+        plt.close()
 
-                    index_src = ['Contact']
-                    for _index, index in enumerate([contact_probe_index]):  # emit_mineral_index, slpit_mineral_index]):
-                        # # contact probe
-                        contact_probe_bd = spectra.mineral_group_retrival(mineral_index=index,
-                                                                          spectra_observed=contact_rfl,
-                                                                          npv_fraction=slpit_fractions[0],
-                                                                          gv_fraction=slpit_fractions[1],
-                                                                          pnpv=slipt_pnpv, pgv=slipt_pgv,
-                                                                          soil_fraction=slpit_fractions[2], psoil=None,
-                                                                          exclude_minerals=False, plot=True, output_directory=output_directory, plot_info=f'{em_lib_type}-{group}-{plot}-contact_')
+    def band_depth_mae(self):
+        group_dict = {'g1': 1, 'g2': 3}
+        bd_dict = {'g1': 0, 'g2': 2}
 
-                        # # slpit data
-                        slpit_bd = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=slpit_rfl,
-                                                                  npv_fraction=slpit_fractions[0],
-                                                                  gv_fraction=slpit_fractions[1], pnpv=slipt_pnpv,
-                                                                  pgv=slipt_pgv, soil_fraction=slpit_fractions[2],
-                                                                  psoil=None, exclude_minerals=False, plot=True, output_directory=output_directory, plot_info=f'{em_lib_type}-{group}-{plot}-slpit_')
+        target_classes_dict = {
+            'g1': sorted(['hematite', 'goethite']),
+            'g2': sorted(['kaolinite', 'illite', 'calcite', 'dolomite', 'montmorillonite', 'illite+muscovite'])
+        }
 
-                        # emit data
-                        emit_band_bd = spectra.mineral_group_retrival(mineral_index=index, spectra_observed=emit_rfl,
-                                                                      npv_fraction=emit_fractions[0],
-                                                                      gv_fraction=emit_fractions[1],
-                                                                      pnpv=emit_pnpv, pgv=emit_pgv,
-                                                                      soil_fraction=emit_fractions[2], psoil=None,
-                                                                      exclude_minerals=False, plot=True, output_directory=output_directory, plot_info=f'{em_lib_type}-{group}-{plot}-emit_')
-                        # append results
-                        df_row = ([plot, group, em_lib_type, index_src[_index], np.int64(index)]
-                                  + list(contact_probe_bd[2:]) + list(emit_band_bd[2:]) + list(slpit_bd[2:])
-                                  + list(emit_fractions) + list(slpit_fractions))
-                        df_parallel_rows.append(df_row)
+        # Setup a unified 3x3 figure canvas
+        rows, cols = 3, 3
+        fig, axes = plt.subplots(rows, cols, figsize=(11, 10), constrained_layout=True)
 
-            df_parallel = pd.DataFrame(df_parallel_rows)
+        # Flatten axes array for simple sequential indexing (0 to 8)
+        axes_flat = axes.flatten()
 
-            return df_parallel
+        # Visual configuration variables
+        sim_labels = [f"{r'$\rho$'}", r"$\hat{\rho}_{vf}$ ($a\ priori$)",  r"$\hat{\rho}_{vf}$' ($a\ priori$)", f"RECLAIMER (posterior)", f"RECLAIMER' (posterior)", r'$\rho_k$ (known fractions)']
+        sim_colors = ['black', 'magenta', 'orange', 'red', 'blue', 'green']
 
-        df = pd.DataFrame(gp.read_file(os.path.join('gis', "Observation.json")))
-        df = df.sort_values('Name')
-        df['Team'] = df['Name'].str.split('-').str[0].str.strip()
-        df = df[df['Team'] != 'THERM']
-        df['Plot_num'] = df['Name'].str.split('-').str[1].str.strip().astype(int)
-        df = df[df['Plot_num'] <= 60]
+        plot_idx = 0  # Global tracker to index subplots across both groups
 
-        results = p_map(partial(band_depth_row, output_directory=self.cont_field_figs_directory), [row for _, row in df.iterrows()],
-                        **{"desc": "\t\t\tcalculating band depths on field data", "ncols": 150})
+        for group in ['g1', 'g2']:
+            soil_fractions = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}', f'tetracorder_{group}_simulation_fractions'))[:, :, 2]
+            soil_fractions = np.round(soil_fractions, 2)
 
+            # this is detection data
+            soil_mineral_id_from_tetracorder = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                          f'tetracorder_{group}_simulation_spectra_global_lib',
+                                                                          f'tetracorder_{group}_simulation_spectra_aug_min'))[:, -1, group_dict[group]].astype(int)
 
+            simulated_mineral_id_from_tetracorder = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                               f'tetracorder_{group}_simulation_spectra_global_lib',
+                                                                               f'tetracorder_{group}_simulation_spectra_aug_min'))[:, :, group_dict[group]].astype(int)
 
-        # these are labels for the csv
-        data_src_label = ['Contact', "EMIT", 'SLPIT']
-        bd_labels = ['Lc', 'Bd', "Bd'", "Bd''",]
-        combined_labels = [f"{src}_{bd}" for src in data_src_label for bd in bd_labels]
-        ems = ['npv', 'pv', 'soil', 'shade']
-        frac_src = ["EMIT", "SLPIT"]
-        combined_frac_labels = [f"{em}_{src}" for src in frac_src for em in ems]
+            veg_extracted_mineral_id = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                  f'tetracorder_{group}_simulation_spectra_global_lib_veg_ext',
+                                                                  f'ext_veg_tetracorder_{group}_simulation_spectra_global_lib_tc_aug_min'))[:, :, group_dict[group]].astype(int)
 
-        df_results = pd.concat(results, axis=0, ignore_index=True)
-        df_results.columns = ['plot', 'group', 'em_library', 'index_src', 'index'] + combined_labels + combined_frac_labels
-        df_results.to_csv(os.path.join(self.fig_directory, 'slpit_band_depths.csv'), index=False)
+            veg_extracted_rock_mineral_id = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                       f'tetracorder_{group}_simulation_spectra_global_rock_veg_ext',
+                                                                       f'ext_veg_tetracorder_{group}_simulation_spectra_global_rock_tc_aug_min'))[:, :, group_dict[group]].astype(int)
 
-    def slpit_figure(self):
-        df_results = pd.read_csv(os.path.join(self.fig_directory, 'slpit_band_depths.csv'))
-        df_results = df_results.replace(-9999, np.nan)
-        df_results['Plot_num'] = df_results['plot'].str.split('-').str[1].str.strip().astype(int)
-        #df_results = df_results[df_results['Plot_num'] > 2]
+            # load band depth data
+            soil_mineral_bd_from_tetracorder = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                          f'tetracorder_{group}_simulation_spectra_global_lib',
+                                                                          f'tetracorder_{group}_simulation_spectra_aug_min'))[:, -1, bd_dict[group]].astype(float)
 
-        global_min = df_results.soil_SLPIT.min()
-        global_max = df_results.soil_SLPIT.max()
+            simulated_mineral_bd_from_tetracorder = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                       f'tetracorder_{group}_simulation_spectra_global_lib',
+                                       f'tetracorder_{group}_simulation_spectra_aug_min'))[:, :, bd_dict[group]].astype(float)
 
-        col_map = {
-            0: 'Iron Oxides',
-            1: 'Clays/Carbonates'}
+            veg_extracted_mineral_bd = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                  f'tetracorder_{group}_simulation_spectra_global_lib_veg_ext',
+                                                                  f'ext_veg_tetracorder_{group}_simulation_spectra_global_lib_tc_aug_min'))[:, :, bd_dict[group]].astype(float)
 
-        for em_lib in ['local', 'global']:
-            for data_type in ['SLPIT', 'EMIT']:
+            veg_extracted_rock_mineral_bd = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                       f'tetracorder_{group}_simulation_spectra_global_rock_veg_ext',
+                                                                       f'ext_veg_tetracorder_{group}_simulation_spectra_global_rock_tc_aug_min'))[:, :, bd_dict[group]].astype(float)
+            # load post mae corrections
+            post_veg_extracted_mineral_bd = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                 f'RECLAIMER_{group}_global_lib_tetracorder_{group}_simulation_spectra_normalization_brightness__fractional_cover'))[:, :, 2].astype(float)
+            post_veg_extracted_mineral_bd[post_veg_extracted_mineral_bd == -9999 ] = np.nan
+            post_veg_extracted_mineral_bd_soil = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                 f'RECLAIMER_{group}_global_lib_tetracorder_{group}_simulation_spectra_normalization_brightness__fractional_cover'))[:, -1, 1].astype(float)
+            post_veg_extracted_mineral_bd_soil[post_veg_extracted_mineral_bd_soil == -9999] = np.nan
 
-                # # create figure
-                fig = plt.figure(figsize=(self.fig_width, self.fig_height))
-                ncols = 2
-                nrows = 2
-                gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.25, width_ratios=[1] * ncols,
-                                       height_ratios=[1] * nrows)
+            # load rock band depths
+            post_veg_extracted_rock_mineral_bd = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                       f'RECLAIMER_{group}_global_rock_tetracorder_{group}_simulation_spectra_normalization_brightness__fractional_cover'))[:, :, 2].astype(float)
+            post_veg_extracted_rock_mineral_bd[post_veg_extracted_rock_mineral_bd == -9999 ] = np.nan
 
-                # loop through figure columns
-                for row in range(nrows):
-                    for col in range(ncols):
-                        ax = fig.add_subplot(gs[row, col])
-                        ax.set_ylim(0, 0.3)
-                        ax.set_xlim(0, 0.3)
-                        ax.set_aspect('auto')
+            post_veg_extracted_rock_mineral_bd_soil = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                            f'RECLAIMER_{group}_global_rock_tetracorder_{group}_simulation_spectra_normalization_brightness__fractional_cover'))[:, -1, 1].astype(float)
+            post_veg_extracted_rock_mineral_bd_soil[post_veg_extracted_rock_mineral_bd_soil == -9999] = np.nan
 
-                        ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
-                        ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+            # load best case scenario
+            known_bd = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                       f'RECLAIMER_{group}_tetracorder_{group}_simulation_fractions'))[:, :, 2].astype(float)
+            known_bd[known_bd == -9999] = np.nan
 
-                        if col == 0:
-                            df_select = df_results[(df_results['group'] == 'g1') & (df_results['index_src'] == 'Contact')].copy()
-                            if row == 0:
-                                ax.set_title(col_map[col], fontsize=self.title_fontsize)
+            known_bd_soil = envi_to_array(os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                                       f'RECLAIMER_{group}_tetracorder_{group}_simulation_fractions'))[:, -1, 1].astype(float)
+            known_bd_soil[known_bd_soil == -9999] = np.nan
 
-                        if col == 1:
-                            df_select = df_results[(df_results['group'] == 'g2') & (df_results['index_src'] == 'Contact')].copy()
-                            if row == 0:
-                                ax.set_title(col_map[col], fontsize=self.title_fontsize)
+            # load mineral classifications
+            mineral_class, df_minerals_sim = spectra.get_mineral_reclassification(
+                path_to_tetracorder_minerals=os.path.join(self.synthetic_rfls, f'tetracorder_{group}',
+                                                          f'tetracorder_{group}_simulation_spectra_global_lib',
+                                                          f'tetracorder_{group}_simulation_spectra_aug_minerals'))
 
-                        # filter out low plots of soil fraction
-                        df_select_val = df_select[(df_select['em_library'] == em_lib) & (df_select[f'soil_{data_type}'] >= 0.60)].copy()
+            # _________ This is for simulation ids _____________
+            truth_array = np.ones((soil_fractions.shape[0], soil_fractions.shape[1])).astype(int) * -9999
+            truth_array[:] = soil_mineral_id_from_tetracorder[:, np.newaxis]
+            truth_array[:, 0] = simulated_mineral_id_from_tetracorder[:, 0]
+            flat_truth = truth_array.flatten()
+            flat_fractions = soil_fractions.flatten()
 
-                        if row == 0:
-                            x = df_select_val["Contact_Bd"]
-                            y = df_select_val[f"{data_type}_Bd"]
-                            ax.set_ylabel(f"{data_type}_Bd", fontsize=self.axis_label_fontsize)
-                            ax.set_xlabel("Contact_Bd", fontsize=self.axis_label_fontsize)
+            # ________ Load true band depths _________________
+            truth_bd_array = np.ones((soil_fractions.shape[0], soil_fractions.shape[1])).astype(float) * -9999
+            truth_bd_array[:] = soil_mineral_bd_from_tetracorder[:, np.newaxis]
+            truth_bd_array[:, 0] = simulated_mineral_bd_from_tetracorder[:, 0]
+            flat_truth_bd = truth_bd_array.flatten()
 
+            truth_bd_array_post = np.ones((soil_fractions.shape[0], soil_fractions.shape[1])).astype(float) * -9999
+            truth_bd_array_post[:] = post_veg_extracted_mineral_bd_soil[:, np.newaxis]
+            truth_bd_array_post[:, 0] = simulated_mineral_bd_from_tetracorder[:, 0]
+            flat_truth_bd_post = truth_bd_array_post.flatten()
+
+            truth_bd_array_post_rock = np.ones((soil_fractions.shape[0], soil_fractions.shape[1])).astype(float) * -9999
+            truth_bd_array_post_rock[:] = post_veg_extracted_rock_mineral_bd_soil[:, np.newaxis]
+            truth_bd_array_post_rock[:, 0] = simulated_mineral_bd_from_tetracorder[:, 0]
+            flat_truth_bd_post_rock = truth_bd_array_post_rock.flatten()
+
+            truth_bd_array_known = np.ones((soil_fractions.shape[0], soil_fractions.shape[1])).astype(float) * -9999
+            truth_bd_array_known[:] = known_bd_soil[:, np.newaxis]
+            truth_bd_array_known[:, 0] = simulated_mineral_bd_from_tetracorder[:, 0]
+            flat_truth_bd_known = truth_bd_array_known.flatten()
+
+            target_classes = target_classes_dict[group]
+            simulations = [simulated_mineral_id_from_tetracorder, veg_extracted_mineral_id,
+                           veg_extracted_rock_mineral_id, veg_extracted_mineral_id,
+                           veg_extracted_rock_mineral_id, simulated_mineral_id_from_tetracorder]
+
+            band_depths_simulations = [simulated_mineral_bd_from_tetracorder, veg_extracted_mineral_bd,
+                                       veg_extracted_rock_mineral_bd, post_veg_extracted_mineral_bd,
+                                       post_veg_extracted_rock_mineral_bd, known_bd]
+
+            unique_fractions = np.unique(flat_fractions)
+            unique_fractions.sort()
+
+            group_mae_data = {class_name: {i: [] for i in range(len(simulations))} for class_name in target_classes}
+
+            for sim_idx, sim in enumerate(simulations):
+                flat_sim = sim.flatten()
+                flat_sim_bd = band_depths_simulations[sim_idx].flatten()
+
+                y_true_labels = [mineral_class.get(i, ['other']) for i in flat_truth]
+                y_pred_labels = [mineral_class.get(i, ['other']) for i in flat_sim]
+
+                mlb = MultiLabelBinarizer()
+                y_true_bin = mlb.fit_transform(y_true_labels)
+                classes = list(mlb.classes_)
+
+                for class_name in target_classes:
+                    if class_name not in classes:
+                        group_mae_data[class_name][sim_idx] = None
+                        continue
+
+                    class_idx = classes.index(class_name)
+                    for val in unique_fractions:
+                        # Isolate observations belonging to the current fraction value bin
+                        fraction_mask = (flat_fractions == val)
+
+                        # Target specific mineral index
+                        yt = y_true_bin[:, class_idx]
+
+                        # Intersect fraction bin with ground truth presence of this specific mineral
+                        mae_mask = fraction_mask & (yt == 1)
+
+                        if np.sum(mae_mask) == 0:
+                            mae = 0.0  # Safe handling if target mineral isn't present in this fraction slice
                         else:
-                            # if soil fractions are more than 0.9; do not use correction
 
-                            x = df_select_val["Contact_Bd"]
-                            y = df_select_val[f"{data_type}_Bd'"]
-                            ax.set_ylabel(f"{data_type}_Bd'", fontsize=self.axis_label_fontsize)
-                            ax.set_xlabel("Contact_Bd", fontsize=self.axis_label_fontsize)
+                            if sim_idx in [0,1,2]:
+                                actuals = flat_truth_bd[mae_mask]
+                            elif sim_idx in [3]:
+                                actuals = flat_truth_bd_post[mae_mask]
+                            elif sim_idx in [4]:
+                                actuals = flat_truth_bd_post_rock[mae_mask]
+                            else:
+                               actuals = flat_truth_bd_known[mae_mask]
 
-                        # Create a mask to filter out rows where either x or y is NaN
-                        mask = ~np.isnan(x) & ~np.isnan(y)
+                            predictions = flat_sim_bd[mae_mask]
 
-                        # plot fractional cover values
-                        m, b = np.polyfit(x[mask], y[mask], 1)
-                        one_line = np.linspace(0, 1, 101)
+                            # Calculate absolute differences (will contain NaN if either actual or prediction is NaN)
+                            abs_diffs = np.abs(actuals - predictions)
 
-                        # plot 1 to 1 line
-                        ax.plot(one_line, one_line, color='black')
-                        ax.plot(one_line, m * one_line + b, color='red')
+                            # Extract only the non-NaN values
+                            valid_diffs = abs_diffs[~np.isnan(abs_diffs)]
 
-                        # Extract values
-                        soil_values = df_select_val['soil_SLPIT'].values
-                        plot_names = df_select_val['plot'].values
+                            if len(valid_diffs) == 0:
+                                mae = 0.0  # Fallback if the entire masked region consisted of NaN values
+                            else:
+                                mae = np.mean(valid_diffs)
 
-                        # Normalize to range [0, 1]
-                        soil_norm = (soil_values[mask] - global_min) / (global_max - global_min)
+                        group_mae_data[class_name][sim_idx].append(mae)
 
-                        scatter = ax.scatter(x[mask], y[mask], marker='^', edgecolor='black', label='SLPIT point', zorder=10, s=150,
-                                   c=soil_norm, cmap='viridis', vmin=0,
-                                             vmax=1)
+            # Step 2: Plot the calculated mineral datasets sequentially into the grid
+            for class_name in target_classes:
+                ax = axes_flat[plot_idx]
+                max_mae_val = 0.01  # baseline reference tracking boundary limit
 
-                        # Plot the values as text labels
-                        # for xi, yi, val, plot in zip(x[mask], y[mask], soil_values, plot_names):
-                        #     ax.text(xi, yi + 0.01, f'{plot}-{val:.2f}', ha='center', va='center', fontsize=8, color='black')
+                # Draw the lines for each simulation
+                for sim_idx in range(len(simulations)):
+                    scores = group_mae_data[class_name][sim_idx]
+                    if scores is not None:
+                        ax.plot(unique_fractions, scores,
+                                color=sim_colors[sim_idx],
+                                linewidth=1.5,
+                                alpha=0.85,
+                                label=sim_labels[sim_idx])
+                        max_mae_val = max(max_mae_val, np.max(scores))
+                    else:
+                        ax.text(0.5, 0.5, f"Missing Data:\n{class_name}", ha='center', va='center')
 
-                        ax.tick_params(axis='both', labelsize=self.legend_text)
+                # Subplot Customization & Formatting
+                ax.set_title(f"{class_name.capitalize()}", fontsize=10, fontweight='semibold')
+                ax.set_xlim(0.05, 1.05)
 
-                        # Add error metrics
-                        rmse = mean_squared_error(x[mask], y[mask])
-                        mae = mean_absolute_error(x[mask], y[mask])
-
-                        r2 = r2_calculations(x[mask], y[mask])
-
-                        txtstr = '\n'.join((
-                            r'MAE(RMSE): %.2f(%.2f)' % (mae, rmse),
-                            r'R$^2$: %.2f' % (r2[0],),
-                            r'n = ' + str(len(x[mask])),
-                        ))
-
-                        props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
-                        ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=self.legend_text,
-                                verticalalignment='top', bbox=props)
-                        cbar = fig.colorbar(scatter, ax=ax, orientation='vertical')
-                        cbar.set_label('SLPIT Soil Fraction (%)', fontsize=self.axis_label_fontsize)
-                        cbar.ax.tick_params(labelsize=self.legend_text)
-
-                plt.savefig(os.path.join(self.fig_directory, f'field_data_regressions_{em_lib}_{data_type}.png'), format="png", dpi=400,
-                        bbox_inches="tight")
-                plt.clf()
-                plt.close()
+                # Dynamic scaling wrapper to optimize chart vertical distribution spacing
+                ax.set_ylim(0, 0.12)
+                ax.tick_params(axis='both', labelsize=8)
 
 
-    def slpit_figure_combined(self):
-        df_results = pd.read_csv(os.path.join(self.fig_directory, 'slpit_band_depths.csv'))
-        df_results = df_results.replace(-9999, np.nan)
-        df_results['Plot_num'] = df_results['plot'].str.split('-').str[1].str.strip().astype(int)
-        df_results = df_results[df_results['Plot_num'] > 2]
-        # df_results = df_results[df_results['Plot_num'] != 37]
-        # df_results = df_results[df_results['Plot_num'] != 35]
-        # df_results = df_results[df_results['Plot_num'] != 34]
-        # df_results = df_results[df_results['Plot_num'] != 29]
-        # df_results = df_results[df_results['Plot_num'] != 28]
 
-        global_min = df_results.soil_SLPIT.min()
-        global_max = df_results.soil_SLPIT.max()
+                # High density tick-marks configuration
+                ax.xaxis.set_major_locator(MultipleLocator(0.25))
+                ax.xaxis.set_minor_locator(MultipleLocator(0.05))
+                ax.yaxis.set_major_locator(MultipleLocator(0.02))
+                ax.yaxis.set_minor_locator(MultipleLocator(0.01))
 
-        col_map = {
-            0: 'Combined',
-            1: 'Clays/Carbonates'}
+                # Only label the vertical axis on leftmost subplots (columns 0, 3, 6)
+                if plot_idx % 3 == 0:
+                    ax.set_ylabel("Band Depth MAE", fontsize=9)
+                else:
+                    ax.set_yticks([])
 
-        for em_lib in ['local', 'global']:
-            for data_type in ['SLPIT', 'EMIT']:
+                # Only label horizontal axis on bottom positions or when wrapping up a group
+                if plot_idx >= 5:
+                    ax.set_xlabel('Soil Fractional Cover', fontsize=9)
 
-                # # create figure
-                fig = plt.figure(figsize=(self.fig_width, self.fig_height))
-                ncols = 1
-                nrows = 2
-                gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.25, width_ratios=[1] * ncols,
-                                       height_ratios=[1] * nrows)
+                plot_idx += 1
 
-                # loop through figure columns
-                for row in range(nrows):
-                    for col in range(ncols):
-                        ax = fig.add_subplot(gs[row, col])
-                        ax.set_ylim(0, 0.3)
-                        ax.set_xlim(0, 0.3)
-                        ax.set_aspect('auto')
+            # --- Step 3: Handle the remaining 9th empty subplot (index 8) ---
+        extra_ax = axes_flat[-1]
+        extra_ax.axis('off')  # Completely hide the empty grid boundaries
 
-                        ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
-                        ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
+        # Insert the unified legend neatly inside the vacant 9th grid spot
+        handles, labels = axes_flat[0].get_legend_handles_labels()
+        extra_ax.legend(handles, labels,
+                        loc='center',
+                        fontsize=10,
+                        frameon=True,
+                        facecolor='white',
+                        edgecolor='gray',
+                        title="Mixed Reflectances",
+                        title_fontsize=11)
 
-                        df_select = df_results[(df_results['index_src'] == 'Contact')].copy()
-                        #if col == 0:
+        # Save out the combined grid image asset
+        plt.savefig(os.path.join(self.fig_directory, "unified_3x3_mineral_mae_scores.png"),
+                    bbox_inches='tight', dpi=300)
+        plt.clf()
+        plt.close()
 
-                            #if row == 0:
-                            #   ax.set_title(col_map[col], fontsize=self.title_fontsize)
+    def field_table(self):
+        group_dict = {'g1': 1, 'g2': 3}
+        bd_dict = {'g1': 0, 'g2': 2}
 
-                        if col == 1:
-                            if row == 0:
-                                ax.set_title(col_map[col], fontsize=self.title_fontsize)
+        tc_contact_probe = sorted(list(glob(os.path.join(self.output_directory, 'field', '**', '*_EMS_emit_augmented_min'), recursive=True)))
 
-                        # filter out low plots of soil fraction
-                        df_select_val = df_select[(df_select['em_library'] == em_lib) & (df_select[f'soil_{data_type}'] >= 0.60)].copy()
+        rows = []
 
-                        if row == 0:
-                            x = df_select_val["Contact_Bd"]
-                            y = df_select_val[f"{data_type}_Bd"]
-                            ax.set_ylabel(f"{data_type} Bd$_w$", fontsize=self.axis_label_fontsize)
-                            #ax.set_xlabel("Contact Probe Bd$_w$", fontsize=self.axis_label_fontsize)
+        for group in ['g1', 'g2']:
 
-                        else:
-                            x = df_select_val["Contact_Bd"]
-                            y = df_select_val[f"{data_type}_Bd'"]
-                            ax.set_ylabel(f"{data_type} Bd$_w$'", fontsize=self.axis_label_fontsize)
-                            ax.set_xlabel("Contact Probe Bd$_w$", fontsize=self.axis_label_fontsize)
+            for cp in tc_contact_probe:
 
-                        # if col != 0:
-                        #     ax.set_yticklabels([])
-                        #
-                        # if row == 0:
-                        #     ax.set_xticklabels([])
+                # these are the base for truth
+                plot_num = os.path.basename(cp).split('_')[0]
+                try:
+                    # this is contact probe data
+                    cp_mineral_class, cp_df_minerals_sim = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'tc_contact',
+                                                                  f'{plot_num}_EMS_emit_augmented_minerals'))
+                    cp_mineral = envi_to_array(cp)[0, 0, group_dict[group]]
+                    cp_bd =  envi_to_array(cp)[0, 0, bd_dict[group]]
 
-                        # Create a mask to filter out rows where either x or y is NaN
-                        mask = ~np.isnan(x) & ~np.isnan(y)
+                    cp_class = cp_mineral_class.get(cp_mineral, ['other'])
 
-                        # plot fractional cover values
-                        m, b = np.polyfit(x[mask], y[mask], 1)
-                        one_line = np.linspace(0, 1, 101)
+                    # uncorrected slpit
+                    slpit_uncorrected_mineral_class, slpit_unc_df_minerals_sim = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_unc',
+                                                                  f'{plot_num}_SLPIT_emit_augmented_minerals'))
+                    slpit_unc_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_unc', f'{plot_num}_SLPIT_emit_augmented_min'))[0, 0, group_dict[group]]
+                    slpit_unc_bd = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_unc', f'{plot_num}_SLPIT_emit_augmented_min'))[0, 0, bd_dict[group]]
+                    slpit_unc_class = slpit_uncorrected_mineral_class.get(slpit_unc_mineral, ['other'])
 
-                        # plot 1 to 1 line
-                        ax.plot(one_line, one_line, color='black')
-                        ax.plot(one_line, m * one_line + b, color='red')
+                    # # corrected slpit - pre tetracorder ; global library
+                    slpit_corrected_global_mineral_class, slpit_corrected_df_minerals = spectra.get_mineral_reclassification(
+                    path_to_tetracorder_minerals = os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_global',
+                                                                f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_lib_tc_minerals'))
 
-                        # Extract values
-                        soil_values = df_select_val['soil_SLPIT'].values
-                        plot_names = df_select_val['plot'].values
+                    slpit_corrected_global_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_global', f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_lib_tc_min'))[0, 0, group_dict[group]]
+                    slpit_corrected_global_bd =  envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_global', f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_lib_tc_min'))[0, 0, bd_dict[group]]
+                    slpit_corrected_global_class = slpit_corrected_global_mineral_class.get(slpit_corrected_global_mineral, ['other'])
 
-                        # Normalize to range [0, 1]
-                        soil_norm = (soil_values[mask] - global_min) / (global_max - global_min)
+                    # corrected slpit - rho s ; global library
+                    slpit_rho_s_global_mineral_class,  df_slpit_rho_s_global_mineral_class = spectra.get_mineral_reclassification(
+                         path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_global',
+                                                                   f'recon_rho_{plot_num}_SLPIT_emit_augmented_global_lib_minerals'))
 
-                        groups = df_select_val['group'].values[mask]
-                        g1_mask = groups == 'g1'
-                        g2_mask = groups == 'g2'
+                    slpit_rho_s_global_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_global', f'recon_rho_{plot_num}_SLPIT_emit_augmented_global_lib_min'))[0, 0, group_dict[group]]
+                    slpit_rho_s_global_bd = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_global', f'recon_rho_{plot_num}_SLPIT_emit_augmented_global_lib_min'))[0, 0, bd_dict[group]]
+                    slpit_rho_s_corrected_global_class = slpit_rho_s_global_mineral_class.get(slpit_rho_s_global_mineral, ['other'])
 
-                        scatter = ax.scatter(x[mask], y[mask], marker='^', edgecolor='black', zorder=10, s=150,
-                                   c=soil_norm, cmap='viridis', vmin=0,
-                                             vmax=1)
+                    # reclaimr slpit - post tetracorder; global library
+                    base_call = (f'python ./tetracorder/reclaimer.py '
+                                 f'-out_dir {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_global')} '
+                                 f'-tc_out {os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_global', f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_lib_tc_min.hdr')} '
+                                 f'-rfl {os.path.join(self.output_directory, 'field', plot_num, f'{plot_num}_SLPIT_emit_augmented.hdr')} '
+                                 f'-um_out {os.path.join(self.output_directory, 'field', plot_num, 'emc2_SLPIT', f'global_lib_{plot_num}_SLPIT_emit_fractional_cover.hdr')} -g_num {int(group[-1:])} '
+                                 f'-rho_gv {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_global', f'extracted_{plot_num}_SLPIT_emit_augmented_pv_global_lib_signal.hdr')} '
+                                 f'-rho_npv {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_global' ,f'extracted_{plot_num}_SLPIT_emit_augmented_npv_global_lib_signal.hdr')}')
+                    subprocess.call(base_call, shell=True)
+                    reclaimer_slpit_global_lib = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_global', f'RECLAIMER_{group}_global_lib_{plot_num}_SLPIT_emit_fractional_cover'))[0, 0, :]
 
-                        ax.scatter(x[mask][g1_mask], y[mask][g1_mask], marker='^', edgecolor='black', zorder=10,
-                                   s=150, c=soil_norm[g1_mask], cmap='viridis', vmin=0, vmax=1)
+                    # # corrected slpit - pre tetracorder ; rock library
+                    slpit_corrected_rock_mineral_class, df_slpit_corrected_rock_mineral_class = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_rock',
+                                                                  f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_rock_tc_minerals'))
 
-                        ax.scatter(x[mask][g2_mask], y[mask][g2_mask], marker='o', edgecolor='black', zorder=10,
-                                   s=150, c=soil_norm[g2_mask], cmap='viridis', vmin=0, vmax=1)
+                    slpit_corrected_rock_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_rock', f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_rock_tc_min'))[0, 0, group_dict[group]]
+                    slpit_corrected_rock_bd = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_rock', f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_rock_tc_min'))[0, 0, bd_dict[group]]
+                    slpit_corrected_rock_class = slpit_corrected_rock_mineral_class.get(slpit_corrected_rock_mineral, ['other'])
+
+                    # # corrected slpit - rho s ; rock library
+                    slpit_rho_s_rock_mineral_class, df_slpit_rho_s_rock_mineral_class = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_rock',
+                                                                  f'recon_rho_{plot_num}_SLPIT_emit_augmented_global_rock_minerals'))
+
+                    slpit_rho_s_rock_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_rock', f'recon_rho_{plot_num}_SLPIT_emit_augmented_global_rock_min'))[0, 0, group_dict[group]]
+                    slpit_rho_s_rock_bd = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_rock', f'recon_rho_{plot_num}_SLPIT_emit_augmented_global_rock_min'))[0, 0, bd_dict[group]]
+                    slpit_rho_s_corrected_mineral_class = slpit_rho_s_rock_mineral_class.get(slpit_rho_s_rock_mineral, ['other'])
+
+                    # reclaimr slpit - post tetracorder; rock library
+                    base_call = (
+                        f'python ./tetracorder/reclaimer.py '
+                        f'-out_dir {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_rock')} '
+                        f'-tc_out {os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_rock', f'ext_veg_{plot_num}_SLPIT_emit_augmented_global_rock_tc_min.hdr')} '
+                        f'-rfl {os.path.join(self.output_directory, 'field', plot_num, f'{plot_num}_SLPIT_emit_augmented.hdr')} '
+                        f'-um_out {os.path.join(self.output_directory, 'field', plot_num, 'emc2_SLPIT', f'global_rock_{plot_num}_SLPIT_emit_fractional_cover.hdr')} -g_num {int(group[-1:])} '
+                        f'-rho_gv {os.path.join(self.output_directory, 'field', plot_num,'SLPIT_rock' , f'extracted_{plot_num}_SLPIT_emit_augmented_pv_global_rock_signal.hdr')} '
+                        f'-rho_npv {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_rock', f'extracted_{plot_num}_SLPIT_emit_augmented_npv_global_rock_signal.hdr')}')
+
+                    subprocess.call(base_call, shell=True)
+                    reclaimer_slpit_global_rock = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_rock', f'RECLAIMER_{group}_global_rock_{plot_num}_SLPIT_emit_fractional_cover'))[0, 0, :]
+
+                    if int(plot_num[-3:]) not in [14, 15, 16]:
+                        # # corrected slpit - pre tetracorder ; local library
+                        slpit_corrected_local_mineral_class, df_slpit_corrected_local_mineral_class = spectra.get_mineral_reclassification(
+                            path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_lcl',
+                                                                      f'ext_veg_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_emi_minerals'))
+
+                        slpit_corrected_local_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_lcl', f'ext_veg_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_emi_min'))[0, 0, group_dict[group]]
+                        slpit_corrected_local_bd = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_lcl', f'ext_veg_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_emi_min'))[0, 0, bd_dict[group]]
+                        slpit_corrected_local_class = slpit_corrected_local_mineral_class.get(slpit_corrected_local_mineral, ['other'])
+
+                        # # corrected slpit - rho s ; local library
+                        slpit_rho_s_rock_local_class, df_slpit_rho_s_rock_local_class = spectra.get_mineral_reclassification(
+                            path_to_tetracorder_minerals=os.path.join(self.output_directory, f'field', plot_num, 'SLPIT_lcl',
+                                                                      f'recon_rho_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_e_minerals'))
+
+                        slpit_rho_s_local_mineral = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_lcl', f'recon_rho_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_e_min'))[0, 0, group_dict[group]]
+                        slpit_rho_s_local_bd = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_lcl', f'recon_rho_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_e_min'))[0, 0, bd_dict[group]]
+                        slpit_rho_s_corrected_local_class = slpit_rho_s_rock_local_class.get(slpit_rho_s_local_mineral, ['other'])
+
+                        # reclaimr slpit - post tetracorder; local library
+                        base_call = (
+                            f'python ./tetracorder/reclaimer.py '
+                            f'-out_dir {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_lcl')} '
+                            f'-tc_out {os.path.join(self.output_directory, 'field', plot_num, f'SLPIT_lcl', f'ext_veg_{plot_num}_SLPIT_emit_augmented_{plot_num}_EMS_emi_min.hdr')} '
+                            f'-rfl {os.path.join(self.output_directory, 'field', plot_num, f'{plot_num}_SLPIT_emit_augmented.hdr')} '
+                            f'-um_out {os.path.join(self.output_directory, 'field', plot_num, 'emc2_SLPIT', f'local_{plot_num}_SLPIT_emit_fractional_cover.hdr')} -g_num {int(group[-1:])} '
+                            f'-rho_gv {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_lcl', f'extracted_{plot_num}_SLPIT_emit_augmented_PV_{plot_num}_EMS_emit_signal.hdr')} '
+                            f'-rho_npv {os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_lcl', f'extracted_{plot_num}_SLPIT_emit_augmented_NPV_{plot_num}_EMS_emit_signal.hdr')}')
+                        subprocess.call(base_call, shell=True)
+                        reclaimer_slpit_local = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, 'SLPIT_lcl',
+                                                                           f'RECLAIMER_{group}_local_{plot_num}_SLPIT_emit_fractional_cover'))[0, 0, :]
+                    else:
+                        print(f"Skipping local instance for plot: {plot_num}")
+                        slpit_corrected_local_bd = -9999
+                        slpit_corrected_local_class = -9999
+                        slpit_rho_s_local_bd = -9999
+                        slpit_rho_s_corrected_local_class = -9999
+                        reclaimer_slpit_local = np.array([-9999, -9999])
+
+                    # uncorrected EMIT
+                    emit_uncorrected_mineral_class, emit_unc_df_minerals_sim = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_unc', f'*_EXT_augmented_minerals'))[0])
+
+                    emit_unc_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_unc', f'*_EXT_augmented_min'))[0])[0, 0, group_dict[group]]
+                    emit_unc_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_unc', f'*_EXT_augmented_min'))[0])[0, 0, bd_dict[group]]
+                    emit_unc_class = emit_uncorrected_mineral_class.get(emit_unc_mineral, ['other'])
+
+                    # # corrected emit - pre tetracorder ; global library
+                    emit_corrected_global_mineral_class, emit_corrected_df_minerals = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_global',
+                                                                       f'*_EXT_augmented_global__minerals'))[0])
+
+                    emit_corrected_global_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_global', f'*_EXT_augmented_global__min'))[0])[0, 0, group_dict[group]]
+                    emit_corrected_global_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_global', f'*_EXT_augmented_global__min'))[0])[0, 0, bd_dict[group]]
+                    emit_corrected_global_class = emit_corrected_global_mineral_class.get(emit_corrected_global_mineral, ['other'])
+
+                    # # corrected emit - rho s ; global library
+                    emit_rho_s_global_mineral_class, df_emit_rho_s_global_mineral_class = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_global',
+                                                                       f'*_EXT_augmented_globa_minerals'))[0])
+
+                    emit_rho_s_global_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_global', f'*_EXT_augmented_globa_min'))[0])[0, 0, group_dict[group]]
+                    emit_rho_s_global_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_global', f'*_EXT_augmented_globa_min'))[0])[0, 0, bd_dict[group]]
+                    emit_rho_s_corrected_global_class = emit_rho_s_global_mineral_class.get(emit_rho_s_global_mineral, ['other'])
+
+                    # reclaimr emit - post tetracorder; global library
+                    base_call = (f'python ./tetracorder/reclaimer.py '
+                                 f'-out_dir {os.path.join(self.output_directory, 'field', plot_num, 'RFL_global')} '
+                                 f'-tc_out {glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_global', f'*ext_veg_{plot_num}_RFL_*EXT_augmented_global__min.hdr'))[0]} '
+                                 f'-rfl {glob(os.path.join(self.output_directory, 'field', plot_num, f'*_EXT_augmented.hdr'))[0]} '
+                                 f'-um_out {glob(os.path.join(self.output_directory, 'field', plot_num, 'emc2_RFL', f'*global_lib_{plot_num}_RFL*_EXT_fractional_cover.hdr'))[0]} -g_num {int(group[-1:])} '
+                                 f'-rho_gv {glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_global', f'*extracted_{plot_num}_RFL_*_EXT_augmented_pv_global_lib_signal.hdr'))[0]} '
+                                 f'-rho_npv {glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_global', f'*extracted_{plot_num}_RFL_*_EXT_augmented_npv_global_lib_signal.hdr'))[0]}')
+
+                    subprocess.call(base_call, shell=True)
+                    reclaimer_emit_global_lib = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_global',
+                                                                            f'*RECLAIMER_{group}_global_lib_{plot_num}_RFL_*_EXT_fractional_cover'))[0])[0, 0, :]
+
+                    # # corrected emit - pre tetracorder ; rock library
+                    emit_corrected_rock_mineral_class, df_emit_corrected_rock_mineral_class = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_rock',
+                                          f'*_EXT_augmented_global__minerals'))[0])
+
+                    emit_corrected_rock_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_rock', f'*_EXT_augmented_global__min'))[0])[0, 0, group_dict[group]]
+                    emit_corrected_rock_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_global', f'*_EXT_augmented_global__min'))[0])[0, 0, bd_dict[group]]
+                    emit_corrected_rock_class = emit_corrected_rock_mineral_class.get(emit_corrected_rock_mineral, ['other'])
+
+                    # # corrected emit - rho s ; rock library
+                    emit_rho_s_rock_mineral_class, df_emit_rho_s_rock_mineral_class = spectra.get_mineral_reclassification(
+                        path_to_tetracorder_minerals=glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_rock',
+                                          f'*_EXT_augmented_globa_minerals'))[0])
+
+                    emit_rho_s_rock_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_rock', f'*_EXT_augmented_globa_min'))[0])[0, 0, group_dict[group]]
+                    emit_rho_s_rock_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_rock', f'*_EXT_augmented_globa_min'))[0])[0, 0, bd_dict[group]]
+                    emit_rho_s_corrected_rock_class = emit_rho_s_rock_mineral_class.get(emit_rho_s_rock_mineral, ['other'])
+
+                    # reclaimr emit - post tetracorder; rock library
+                    base_call = (f'python ./tetracorder/reclaimer.py '
+                                 f'-out_dir {os.path.join(self.output_directory, 'field', plot_num, 'RFL_rock')} '
+                                 f'-tc_out {glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_rock', f'*ext_veg_{plot_num}_RFL_*EXT_augmented_global__min.hdr'))[0]} '
+                                 f'-rfl {glob(os.path.join(self.output_directory, 'field', plot_num, f'*_EXT_augmented.hdr'))[0]} '
+                                 f'-um_out {glob(os.path.join(self.output_directory, 'field', plot_num, 'emc2_RFL', f'*global_rock_{plot_num}_RFL*_EXT_fractional_cover.hdr'))[0]} -g_num {int(group[-1:])} '
+                                 f'-rho_gv {glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_rock', f'*extracted_{plot_num}_RFL_*_EXT_augmented_pv_global_rock_signal.hdr'))[0]} '
+                                 f'-rho_npv {glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_rock', f'*extracted_{plot_num}_RFL_*_EXT_augmented_npv_global_rock_signal.hdr'))[0]}')
+
+                    subprocess.call(base_call, shell=True)
+                    reclaimer_emit_rock_lib = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_rock',f'*RECLAIMER_{group}_global_rock_{plot_num}_RFL_*_EXT_fractional_cover'))[0])[0, 0, :]
+
+                    if int(plot_num[-3:]) not in [14, 15, 16]:
+                        # corrected emit - pre tetracorder ; local library
+                        emit_corrected_local_mineral_class, df_emit_corrected_local_mineral_class = spectra.get_mineral_reclassification(
+                            path_to_tetracorder_minerals= glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_lcl',
+                                              f'*_EXT_augmented_Spectra_minerals'))[0])
+
+                        emit_corrected_local_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_lcl', f'*_EXT_augmented_Spectra_min'))[0])[0, 0, group_dict[group]]
+                        emit_corrected_local_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_lcl', f'*_EXT_augmented_Spectra_min'))[0])[0, 0, bd_dict[group]]
+                        emit_corrected_local_class = emit_corrected_local_mineral_class.get(emit_corrected_local_mineral, ['other'])
+
+                        # # corrected emit - rho s ; local library
+                        emit_rho_s_local_mineral_class, df_emit_rho_s_local_mineral_class = spectra.get_mineral_reclassification(
+                            path_to_tetracorder_minerals= glob(os.path.join(self.output_directory, f'field', plot_num, 'RFL_lcl',
+                                              f'*_EXT_augmented_Spect_minerals'))[0])
+
+                        emit_rho_s_local_mineral = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_lcl', f'*_EXT_augmented_Spect_min'))[0])[0, 0, group_dict[group]]
+                        emit_rho_s_local_bd = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_lcl', f'*_EXT_augmented_Spect_min'))[0])[0, 0, bd_dict[group]]
+                        emit_rho_s_corrected_local_class = emit_rho_s_local_mineral_class.get(emit_rho_s_local_mineral, ['other'])
+
+                        # reclaimr emit - post tetracorder; local library
+                        base_call = (
+                            f'python ./tetracorder/reclaimer.py '
+                            f'-out_dir {os.path.join(self.output_directory, 'field', plot_num, 'RFL_lcl')} '
+                            f'-tc_out {glob(os.path.join(self.output_directory, 'field', plot_num, f'RFL_lcl', f'*ext_veg_{plot_num}_RFL_*_EXT_augmented_Spectra_min.hdr'))[0]} '
+                            f'-rfl {glob(os.path.join(self.output_directory, 'field', plot_num, f'*{plot_num}_RFL_*_EXT_augmented.hdr'))[0]} '
+                            f'-um_out {glob(os.path.join(self.output_directory, 'field', plot_num, 'emc2_RFL', f'*local_{plot_num}_RFL_*_EXT_fractional_cover.hdr'))[0]} -g_num {int(group[-1:])} '
+                            f'-rho_gv {glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_lcl', f'*extracted_{plot_num}_RFL_*_EXT_augmented_PV_{plot_num}_EMS_emit_signal.hdr'))[0]} '
+                            f'-rho_npv {glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_lcl', f'*extracted_{plot_num}_RFL_*_EXT_augmented_NPV_{plot_num}_EMS_emit_signal.hdr'))[0]}')
+                        subprocess.call(base_call, shell=True)
+                        reclaimer_emit_local = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, 'RFL_lcl',
+                                                   f'*RECLAIMER_{group}_local_{plot_num}_RFL_*_EXT_fractional_cover'))[0])[0, 0, :]
+
+                    else:
+                        print(f"Skipping local instance for plot: {plot_num}")
+                        emit_corrected_local_bd = -9999
+                        emit_corrected_local_class = -9999
+                        emit_rho_s_local_bd = -9999
+                        emit_rho_s_corrected_local_class = -9999
+                        reclaimer_emit_local = np.array([-9999, -9999])
 
 
-                        # Plot the values as text labels
-                        # for xi, yi, val, plot in zip(x[mask], y[mask], soil_values[mask], plot_names[mask]):
-                        #     ax.text(xi, yi + 0.01, f'{plot}-{val:.2f}', ha='center', va='center', fontsize=8, color='black')
+                    # get fractional cover data
+                    slpit_local_fractional_cover = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, 'emc2_SLPIT', f'local_{plot_num}_SLPIT_emit_fractional_cover'))[0, 0, :]
+                    slpit_global_fractional_cover = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, 'emc2_SLPIT', f'global_lib_{plot_num}_SLPIT_emit_fractional_cover'))[0, 0, :]
+                    slpit_rock_fractional_cover = envi_to_array(os.path.join(self.output_directory, 'field', plot_num, 'emc2_SLPIT', f'global_rock_{plot_num}_SLPIT_emit_fractional_cover'))[0, 0, :]
 
-                        ax.tick_params(axis='both', labelsize=self.legend_text)
+                    emit_local_fractional_cover = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, 'emc2_RFL', f'*local_{plot_num}_RFL_*_EXT_fractional_cover'))[0])[0, 0, :]
+                    emit_global_fractional_cover = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, 'emc2_RFL', f'*global_lib_{plot_num}_RFL_*_EXT_fractional_cover'))[0])[0, 0, :]
+                    emit_rock_fractional_cover = envi_to_array(glob(os.path.join(self.output_directory, 'field', plot_num, 'emc2_RFL', f'*global_rock_{plot_num}_RFL_*_EXT_fractional_cover'))[0])[0, 0, :]
 
-                        # Add error metrics
-                        rmse = np.sqrt(np.mean((x[mask] - y[mask]) ** 2))
-                        mae = mean_absolute_error(x[mask], y[mask])
-                        r2 = r2_calculations(x[mask], y[mask])
+                    row = ([plot_num, group,
+                            cp_bd, cp_class,
+                            slpit_unc_bd, slpit_unc_class,
+                            slpit_corrected_global_bd, slpit_corrected_global_class,
+                            slpit_rho_s_global_bd, slpit_rho_s_corrected_global_class]
+                           + reclaimer_slpit_global_lib.tolist() + [slpit_corrected_rock_bd, slpit_corrected_rock_class, slpit_rho_s_rock_bd, slpit_rho_s_corrected_mineral_class]
+                           + reclaimer_slpit_global_rock.tolist() + [slpit_corrected_local_bd, slpit_corrected_local_class, slpit_rho_s_local_bd, slpit_rho_s_corrected_local_class] +
+                           reclaimer_slpit_local.tolist() + [emit_unc_bd, emit_unc_class, emit_corrected_global_bd, emit_corrected_global_class, emit_rho_s_global_bd, emit_rho_s_corrected_global_class] +
+                           reclaimer_emit_global_lib.tolist() + [emit_corrected_rock_bd, emit_corrected_rock_class, emit_rho_s_rock_bd, emit_rho_s_corrected_rock_class] +
+                           reclaimer_emit_rock_lib.tolist() + [emit_corrected_local_bd, emit_corrected_local_class, emit_rho_s_local_bd, emit_rho_s_corrected_local_class] +
+                           reclaimer_emit_local.tolist() + slpit_local_fractional_cover.tolist() + slpit_global_fractional_cover.tolist() + slpit_rock_fractional_cover.tolist() +
+                           emit_local_fractional_cover.tolist() + emit_global_fractional_cover.tolist() + emit_rock_fractional_cover.tolist() )
+
+                    rows.append(row)
+
+                except Exception as e:
+                    print(f'{plot_num} {group} failed to load!')
+                    raise e
+
+        column_names = ['plot_num', 'group',
+                        'cp_bd', 'cp_class',
+                        'slpit_unc_bd', 'slpit_unc_class',
+                        'slpit_global_bd', 'slpit_global_class',
+                        'slpit_rho_s_global_bd',  'slpit_rho_s_global_class',
+                        'reclaimer_slpit_global_bd', 'reclaimer_slpit_global_bd_prime',
+                        'slpit_rock_bd', 'slpit_rock_class',
+                        'slpit_rho_s_rock_bd', 'slpit_rho_s_rock_class',
+                        'reclaimer_slpit_rock_bd', 'reclaimer_slpit_rock_bd_prime',
+                        'slpit_local_bd', 'slpit_local_class',
+                        'slpit_rho_s_local_bd', 'slpit_rho_s_local_class',
+                        'reclaimer_slpit_local_bd', 'reclaimer_slpit_local_bd_prime',
+                        'emit_unc_bd', 'emit_unc_class',
+                        'emit_global_bd', 'emit_global_class',
+                        'emit_rho_s_global_bd', 'emit_rho_s_global_class',
+                        'reclaimer_emit_global_bd', 'reclaimer_emit_global_bd_prime',
+                        'emit_rock_bd', 'emit_rock_class',
+                        'emit_rho_s_rock_bd', 'emit_rho_s_rock_class',
+                        'reclaimer_emit_rock_bd', 'reclaimer_emit_rock_bd_prime',
+                        'emit_local_bd', 'emit_local_class',
+                        'emit_rho_s_local_bd', 'emit_rho_s_local_class',
+                        'reclaimer_emit_local_bd', 'reclaimer_emit_local_bd_prime',
+                        'slpit_local_npv', 'slpit_local_pv', 'slpit_local_soil', 'slpit_local_shade',
+                        'slpit_global_npv', 'slpit_global_pv', 'slpit_global_soil', 'slpit_global_shade',
+                        'slpit_rock_npv', 'slpit_rock_pv', 'slpit_rock_soil', 'slpit_rock_shade',
+                        'emit_local_npv', 'emit_local_pv', 'emit_local_soil', 'emit_local_shade',
+                        'emit_global_npv', 'emit_global_pv', 'emit_global_soil', 'emit_global_shade',
+                        'emit_rock_npv', 'emit_rock_pv', 'emit_rock_soil', 'emit_rock_shade',
+                        ]
+
+        df_rows = pd.DataFrame(rows)
+        df_rows.columns = column_names
+        df_rows.to_csv(os.path.join(self.fig_directory, 'field_results.csv'), index=False)
 
 
-                        txtstr = '\n'.join((
-                            r'MAE(RMSE): %.3f(%.3f)' % (mae, rmse),
-                            r'R$^2$: %.2f' % (r2[0],),
-                            r'n = ' + str(len(x[mask])),
-                        ))
+    def field_results(self):
+        target_classes_dict = {'g1': sorted(['hematite',]),
+                               'g2': sorted(['kaolinite', 'calcite', 'montmorillonite', 'illite+muscovite'])}
 
-                        props = dict(boxstyle='round', facecolor='wheat', alpha=0.75)
-                        ax.text(0.05, 0.95, txtstr, transform=ax.transAxes, fontsize=self.legend_text,
-                                verticalalignment='top', bbox=props)
-                        cbar = fig.colorbar(scatter, ax=ax, orientation='vertical')
-                        cbar.set_label('SLPIT Soil Fraction (%)', fontsize=self.axis_label_fontsize)
-                        cbar.ax.tick_params(labelsize=self.legend_text)
+        df_field = pd.read_csv(os.path.join(self.fig_directory, 'field_results.csv'))
+        df_field = df_field.replace([-9999, '-9999', -9999.0], np.nan)
 
-                        from matplotlib.lines import Line2D
+        analysis_type = ['global', 'rock']
+        markers = ['s', 'o', '^']
 
-                        legend_element = Line2D(
-                            [0], [0],
-                            marker='o',
-                            color='w',  # no line
-                            label='Group 2 Minerals',
-                            markerfacecolor='black',
-                            markersize=6
+        bounds = np.arange(0.0, 1.1, 0.10)
+
+        # Option A: Get 10 discrete colors from 'viridis'
+        cmap = cm.get_cmap('viridis', len(bounds) - 1)
+
+        for plot_type in ['slpit', 'emit']:
+            # Set global publication styling
+            plt.rcParams['font.family'] = 'sans-serif'
+            plt.rcParams['font.size'] = 8
+
+            fig, axes = plt.subplots(4, 5, figsize=(9, 5.75))
+
+            col_idx = 0
+
+            for group in ['g1', 'g2']:
+                df_select = df_field[df_field['group'] == group]
+                target_classes = target_classes_dict[group]
+
+                for target_class in target_classes:
+                    df_target = df_select[df_select['cp_class'].astype(str).str.contains(target_class, regex=False)]
+
+                    if df_target.empty:
+                        col_idx += 1
+                        continue
+
+                    # Set tick locators
+                    major_locator = ticker.MultipleLocator(0.10)
+                    minor_locator = ticker.MultipleLocator(0.05)
+
+                    # Add shared 1:1 reference line & common axis limits across all rows for this column
+                    for r in range(4):
+                        ax = axes[r, col_idx]
+                        ax.plot([0, 0.5], [0, 0.5], color='gray', linestyle='--', linewidth=0.8,
+                                alpha=0.7, zorder=1)
+                        ax.set_xlim(0, 0.5)
+                        ax.set_ylim(0, 0.5)
+
+                        # Apply major (0.10) and minor (0.05) tick spacing
+                        ax.xaxis.set_major_locator(major_locator)
+                        ax.xaxis.set_minor_locator(minor_locator)
+                        ax.yaxis.set_major_locator(major_locator)
+                        ax.yaxis.set_minor_locator(minor_locator)
+
+                        # Ensure minor ticks are visible visually
+                        ax.tick_params(which='minor', length=2, color='gray', labelsize=6)
+                        ax.tick_params(which='major', length=4, labelsize=6)
+                        ax.set_aspect('equal', adjustable='box')
+
+                        #ax.spines['top'].set_visible(False)
+                        #ax.spines['right'].set_visible(False)
+
+                    legend_kwargs = dict(
+                        loc='upper right',
+                        fontsize=4,  # Smaller font to avoid overlapping data points
+                        frameon=True,
+                        facecolor='white',
+                        edgecolor='grey',  # Borderless legend looks cleaner in small boxes
+                        framealpha=0.7,
+                        #handletextpad=0.1,
+                        #borderpad=0.2,
+                        #labelspacing=0.2
+                    )
+
+                    # -------------------------------------------------------------
+                    # ROW 0: Uncorrected Data
+                    # -------------------------------------------------------------
+                    ax_row0 = axes[0, col_idx]
+                    ax_row0.set_title(target_class.capitalize(), fontsize=10, fontweight='bold')
+
+                    if col_idx == 0:
+                        ax_row0.set_ylabel(f"{plot_type.upper()}\n(Uncorrected)", fontsize=8)
+                    else:
+                        ax_row0.set_yticklabels([])
+
+                    ax_row0.set_xticklabels([])
+                    metrics = evaluate_single_class(
+                        y_true_raw=df_target['cp_class'],
+                        y_pred_raw=df_target[f'{plot_type}_unc_class'],
+                        target_class=target_class
+                    )
+
+                    df_tp = df_target[
+                        df_target[f'{plot_type}_unc_class'].astype(str).str.contains(target_class, regex=False)]
+
+                    if not df_tp.empty:
+                        r2, mae = calc_clean_metrics(df_tp['cp_bd'].values, df_tp[f'{plot_type}_unc_bd'].values)
+                        frac = metrics['fraction_str']  # e.g., "4/7"
+                        ## lbl = f"(Global) F1: {metrics['f1_score']:.2f} ({frac})\nR²: {r2:.2f}\nMAE: {mae:.2f}"
+                        lbl = f"(U) R²: {r2:.2f} | MAE: {mae:.2f}"
+                        soil_fraction = df_tp[f'{plot_type}_global_soil']
+                        ax_row0.scatter(df_tp['cp_bd'], df_tp[f'{plot_type}_unc_bd'],
+                                        label=lbl, c=soil_fraction, cmap=cmap,
+                                vmin=0, vmax=1, marker='o', s=8, alpha=0.8, zorder=2
+                            )
+
+                        ax_row0.legend(**legend_kwargs)
+                    # -------------------------------------------------------------
+                    # ROW 1: Corrected Data (Pre-Tetracorder); pvfs
+                    # -------------------------------------------------------------
+                    ax_row1 = axes[2, col_idx]
+                    if col_idx == 0:
+                        ax_row1.set_ylabel(f"{plot_type.upper()}\n(ρ$_vfs$)", fontsize=8)
+                    else:
+                        ax_row1.set_yticklabels([])
+                    ax_row1.set_xticklabels([])
+                    for _i, i in enumerate(analysis_type):
+                        metrics = evaluate_single_class(
+                            y_true_raw=df_target['cp_class'],
+                            y_pred_raw=df_target[f'{plot_type}_{i}_class'],
+                            target_class=target_class
                         )
 
-                        legend_element_1 = Line2D(
-                            [0], [0],
-                            marker='^',
-                            color='w',  # no line
-                            label='Group 1 Minerals',
-                            markerfacecolor='black',
-                            markersize=6
+                        df_tp_corr = df_target[df_target[f'{plot_type}_{i}_class'].astype(str).str.contains(target_class, regex=False)]
+
+                        if not df_tp_corr.empty:
+                            r2, mae = calc_clean_metrics(df_tp_corr['cp_bd'].values,
+                                                         df_tp_corr[f'{plot_type}_{i}_bd'].values)
+                            frac = metrics['fraction_str']  # e.g., "4/7"
+                            #lbl = f"{i}: F1: {metrics['f1_score']:.2f} ({frac})\nR²: {r2:.2f}\nMAE: {mae:.2f}"
+
+                            if i == 'rock':
+                                lbl_type = "U'"
+                            else:
+                                lbl_type = 'U'
+
+                            lbl = f"({lbl_type}) R²: {r2:.2f} | MAE: {mae:.2f}"
+                            soil_fraction = df_tp_corr[f'{plot_type}_{i}_soil'].values
+                            ax_row1.scatter(
+                                df_tp_corr['cp_bd'], df_tp_corr[f'{plot_type}_{i}_bd'],
+                                label=lbl, c=soil_fraction, cmap=cmap,
+                                vmin=0, vmax=1, marker=markers[_i], s=8, alpha=0.8, zorder=2
+                            )
+
+                    ax_row1.legend(**legend_kwargs)
+                    # -------------------------------------------------------------
+                    # ROW 2: Corrected Data (rho_s) ; this pvf
+                    # -------------------------------------------------------------
+                    ax_row2 = axes[1, col_idx]
+                    if col_idx == 0:
+                        ax_row2.set_ylabel(f"{plot_type.upper()}\n(ρ$_vf$)", fontsize=8)
+                    else:
+                        ax_row2.set_yticklabels([])
+
+                    ax_row2.set_xticklabels([])
+                    for _i, i in enumerate(analysis_type):
+                        metrics = evaluate_single_class(
+                            y_true_raw=df_target['cp_class'],
+                            y_pred_raw=df_target[f'{plot_type}_rho_s_{i}_class'],
+                            target_class=target_class
                         )
 
-                        ax.legend(handles=[legend_element_1,legend_element], loc='lower right')
+                        df_tp_corr = df_target[df_target[f'{plot_type}_{i}_class'].astype(str).str.contains(target_class, regex=False)]
 
-                plt.savefig(os.path.join(self.fig_directory, f'field_data_regressions_{em_lib}_{data_type}_combined.png'), format="png", dpi=400,
-                        bbox_inches="tight")
-                plt.clf()
-                plt.close()
+                        if not df_tp_corr.empty:
+                            r2, mae = calc_clean_metrics(df_tp_corr['cp_bd'].values,
+                                                         df_tp_corr[f'{plot_type}_rho_s_{i}_bd'].values)
+                            frac = metrics['fraction_str']  # e.g., "4/7"
+                            #lbl = (f"{i}: F1: {metrics['f1_score']:.2f} ({frac})\n" f"R²: {r2:.2f}\n" f"MAE: {mae:.2f}")
+                            if i == 'rock':
+                                lbl_type = "U'"
+                            else:
+                                lbl_type = 'U'
 
-    def fraction_soil_vs_bd(self):
-        bd_band = {'g1': 0, 'g2': 2}
-        minerals = {'g1': 1, 'g2': 3}
+                            lbl = f"({lbl_type}) R²: {r2:.2f} | MAE: {mae:.2f}"
+                            soil_fraction = df_tp_corr[f'{plot_type}_{i}_soil'].values
+                            ax_row2.scatter(
+                                df_tp_corr['cp_bd'], df_tp_corr[f'{plot_type}_rho_s_{i}_bd'],
+                                label=lbl, c=soil_fraction, cmap=cmap,
+                                vmin=0, vmax=1, marker=markers[_i], s=8, alpha=0.8, zorder=2
+                            )
 
-        create_directory(os.path.join(self.fig_directory, 'fraction_vs_bd'))
+                    ax_row2.legend(**legend_kwargs)
+                    # -------------------------------------------------------------
+                    # ROW 3: Corrected Data (RECLAIMER post-Tetracorder)
+                    # -------------------------------------------------------------
+                    ax_row3 = axes[3, col_idx]
+                    if col_idx == 0:
+                        ax_row3.set_ylabel(f"{plot_type.upper()}\n(RECLAIMER)", fontsize=8)
+                    else:
+                        ax_row3.set_yticklabels([])
 
-        for group in ['g1', 'g2']:
-            create_directory(os.path.join(self.fig_directory, 'fraction_vs_bd', group))
+                    for _i, i in enumerate(analysis_type):
+                        metrics = evaluate_single_class(
+                            y_true_raw=df_target['cp_class'],
+                            y_pred_raw=df_target[f'{plot_type}_{i}_class'],
+                            target_class=target_class
+                        )
 
-            soil_fractions = envi_to_array(os.path.join(self.sim_spectra_directory, f'tetracorder_{group}_simulation_fractions'))[:,:, 2]
-            soil_index = envi_to_array(os.path.join(self.sim_spectra_directory, f'tetracorder_{group}_simulation_index'))[:,:, 2]
-            sim_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, 0:21, :]
-            sim_soils_sa_arrary = envi_to_array(os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_soils_augmented_min'))[:, 0:21, :]
+                        df_tp_corr = df_target[
+                            df_target[f'{plot_type}_{i}_class'].astype(str).str.contains(target_class, regex=False)]
 
-            minerals_detected = np.unique(sim_soils_sa_arrary[:, :, minerals[group]])
+                        if not df_tp_corr.empty:
+                            r2, mae = calc_clean_metrics(df_tp_corr['cp_bd'].values,
+                                                         df_tp_corr[f'reclaimer_{plot_type}_{i}_bd_prime'].values)
+                            frac = metrics['fraction_str']  # e.g., "4/7"
+                            #lbl = f"{i}: F1: {metrics['f1_score']:.2f} ({frac})\nR²: {r2:.2f}\nMAE: {mae:.2f}"
+                            if i == 'rock':
+                                lbl_type = "U'"
+                            else:
+                                lbl_type = 'U'
 
-            for mineral in minerals_detected:
-                if int(mineral) in [0]:
-                    pass
-                else:
-                    plt.figure(figsize=(12, 12))
+                            lbl = f"({lbl_type}) R²: {r2:.2f} | MAE: {mae:.2f}"
 
-                    mask = ((sim_soils_sa_arrary[:, :, minerals[group]] == mineral) & (sim_sa_arrary[:, :, minerals[group]] == mineral))
+                            soil_fraction = df_tp_corr[f'{plot_type}_{i}_soil'].values
+                            mappable = ax_row3.scatter(
+                                df_tp_corr['cp_bd'], df_tp_corr[f'reclaimer_{plot_type}_{i}_bd_prime'],
+                                label=lbl, c=soil_fraction, cmap=cmap,
+                                vmin=0, vmax=1, marker=markers[_i], s=8, alpha=0.8, zorder=2
+                            )
 
-                    soil_used = np.unique(soil_index[mask])
+                    ax_row3.set_xlabel("Contact Probe (Bd)", fontsize=8, labelpad=4)
+                    ax_row3.legend(**legend_kwargs)
 
-                    for soil in soil_used:
-                        group_sa = sim_sa_arrary[:, :, bd_band[group]]
-                        group_soil = sim_soils_sa_arrary[:, :, bd_band[group]]
+                    col_idx += 1
 
-                        mask = ((sim_soils_sa_arrary[:, :, minerals[group]] == mineral) & (soil_index == soil))
+            cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.70])
+            cbar = fig.colorbar(mappable, cax=cbar_ax, ticks=bounds)
+            cbar.set_label('Soil Fraction', fontsize=8)
+            cbar.ax.tick_params(labelsize=6)
 
-                        plt.scatter(soil_fractions[mask], group_sa[mask], s=5, alpha=0.6, label="Simulated Spectra")
-                        plt.scatter(soil_fractions[mask] + 0.02, group_soil[mask], s=5, alpha=0.6, label="Soil")
-                        plt.xlabel('Fractions')
-                        plt.ylabel('Band Depth')
-                        plt.legend()
-                        plt.grid(True)
-                        plt.savefig(os.path.join(self.fig_directory, 'fraction_vs_bd', group, f'{int(mineral)}_{int(soil)}_fraction_vs_band_depth_{group}.png'), dpi=300)
+            # Adjust layout so the figure margins leave room for the colorbar
+            fig.subplots_adjust(right=0.90)
+
+            plt.savefig(os.path.join(self.fig_directory, f'{plot_type}_field_regression.png'), dpi=300, bbox_inches='tight')
+            plt.clf()
+            plt.close()
+
+    def scene_figures(self):
+        scence_directories = sorted(list(glob(os.path.join(self.output_directory, 'scenes', '**'))))
+        target_classes_dict = {
+            'g1': sorted(['hematite', 'goethite']),
+            'g2': sorted(['kaolinite', 'illite', 'calcite', 'dolomite', 'montmorillonite', 'illite+muscovite'])
+        }
+        group_dict = {'g1': 1, 'g2': 3}
+        bd_dict = {'g1': 0, 'g2': 2}
+        wvls, fwhm = spectra.load_wavelengths(sensor='emit')
+
+        dataset_types = [
+            {
+                'type': 'global',
+                'suffix': 'global',
+                'frc_key': 'glb',
+                'title_suffix': '(U)',
+                'datasets': [
+                    {"pattern": "recon_rho_*_min", "title": r"$\hat{\rho}_{vf}$", 'index_pattern': '*reflect*minerals*',
+                     'type': 'global'},
+                    {"pattern": "ext_veg_*_min", "title": r"$\hat{\rho}_{vfs}$", 'index_pattern': '*reflect*minerals*',
+                     'type': 'global'},
+                ]
+            },
+            {
+                'type': 'rock',
+                'suffix': 'rock',
+                'frc_key': 'rock',
+                'title_suffix': "(U')",
+                'datasets': [
+                    {"pattern": "recon_rho_*_min", "title": r"$\hat{\rho}'_{vf}$",
+                     'index_pattern': '*reflect*minerals*', 'type': 'rock'},
+                    {"pattern": "ext_veg_*_min", "title": r"$\hat{\rho}'_{vfs}$", 'index_pattern': '*reflect*minerals*',
+                     'type': 'rock'},
+                ]
+            }
+        ]
+
+        for scene_directory in scence_directories:
+            date = os.path.basename(scene_directory)
+            if date == 'outlogs':
+                continue
+
+            # 1. Load Bad Pixel Mask
+            mask_file = sorted(list(glob(os.path.join(self.slpit_output_directory, '..', 'gis', 'emit-data',
+                                                      'products', date, 'L2A', f'EMIT_L2A_*_mask'))))[-1]
+            mask = envi_to_array(mask_file)[:, :, -1]
+            is_bad_pixel = (mask == 1)
+
+            # 2. Load Raw Image Arrays
+            unc_img = envi_to_array(glob(os.path.join(scene_directory, 'tc_unc', '*_min'))[0])
+            rgb_file = glob(os.path.join(self.slpit_output_directory, '..', 'gis', 'emit-data',
+                                         'products', date, 'L2A', f'EMIT_L2A_*_reflectance'))[0]
+            rgb_img = envi_to_array(rgb_file)
+
+            frc_dict = {
+                'glb': envi_to_array(glob(os.path.join(scene_directory, 'emc2', f'*global_lib_*_fractional_cover'))[0]),
+                'rock': envi_to_array(
+                    glob(os.path.join(scene_directory, 'emc2', f'*global_rock_*_fractional_cover'))[0])
+            }
+
+            # 3. Apply Mask Across RGB and FRC Arrays
+            rgb_img_masked = apply_mask(rgb_img, is_bad_pixel)
+            rgb_display = prep_emit_rgb(rgb_img_masked)
+            rgb_display[is_bad_pixel] = 1.0
+
+            frc_plots = {}
+            for k, arr in frc_dict.items():
+                plot_arr = arr[:, :, :3].copy()
+                plot_arr[is_bad_pixel] = 1.0
+                frc_plots[k] = plot_arr
+
+            # 4. Load Mineral Classification for Uncorrected Data
+            mineral_class_unc, _ = spectra.get_mineral_reclassification(
+                path_to_tetracorder_minerals=glob(os.path.join(scene_directory, '**', '*_reflectance_minerals'))[0]
+            )
+
+            mineral_to_ids = {}
+            for mineral_id, min_list in mineral_class_unc.items():
+                for name in min_list:
+                    clean_name = name.lower().strip()
+                    mineral_to_ids.setdefault(clean_name, []).append(mineral_id)
+
+            # 5. Iterate Over Mineral Groups & Target Classes
+            for group in ['g1', 'g2']:
+                minerals_to_map = target_classes_dict[group]
+
+                for mineral in minerals_to_map:
+                    target_ids = mineral_to_ids.get(mineral.lower().strip())
+
+                    if not target_ids:
+                        print(f"Skipping {mineral}: No detections found in scene {date}.")
+                        continue
+
+                    current_cmap = plt.cm.viridis.copy()
+                    current_cmap.set_bad(color='white')
+
+                    for cfg in dataset_types:
+                        run_datasets = cfg['datasets']
+
+                        # --- COMPUTE GLOBAL VMIN/VMAX ---
+                        all_bd_values = []
+
+                        unc_bd = unc_img[:, :, bd_dict[group]]
+                        valid_unc_bd = unc_bd[~is_bad_pixel & ~np.isnan(unc_bd) & (unc_bd > 0)]
+                        if len(valid_unc_bd) > 0:
+                            all_bd_values.append(valid_unc_bd)
+
+                        for ds in run_datasets:
+                            f_match = glob(os.path.join(scene_directory, f'tc_{ds["type"]}', ds["pattern"]))
+                            if f_match:
+                                raw_arr = envi_to_array(f_match[0])
+                                band_a = raw_arr[:, :, group_dict[group]]
+                                band_b = raw_arr[:, :, bd_dict[group]]
+
+                                samples_a = band_a[~np.isnan(band_a)]
+                                if len(samples_a) > 0 and np.all(np.mod(samples_a, 1) == 0):
+                                    bd_img = band_b
+                                else:
+                                    bd_img = band_a
+
+                                valid_ds_bd = bd_img[~is_bad_pixel & ~np.isnan(bd_img) & (bd_img > 0)]
+                                if len(valid_ds_bd) > 0:
+                                    all_bd_values.append(valid_ds_bd)
+
+                        if len(all_bd_values) > 0:
+                            concat_vals = np.concatenate(all_bd_values)
+                            vmin = float(np.nanmin(concat_vals))
+                            vmax = float(np.nanmax(concat_vals))
+                        else:
+                            vmin, vmax = 0.0, 1.0
+
+                        shared_norm = Normalize(vmin=vmin, vmax=vmax, clip=False)
+
+                        # --- CONSTRUCT 2x4 DASHBOARD WITH INCREASED HORIZONTAL SPACING ---
+                        fig = plt.figure(figsize=(15.5, 6.5))
+                        gs = GridSpec(nrows=2, ncols=4, figure=fig, hspace=0.28, wspace=0.38)
+
+                        active_cs = None
+
+                        # ==========================================
+                        # TOP ROW: RGB & FRACTIONAL COVER (Cols 1 & 2)
+                        # ==========================================
+                        ax_rgb = fig.add_subplot(gs[0, 1])
+                        ax_rgb.imshow(rgb_display, aspect='auto')
+                        ax_rgb.set_box_aspect(1)
+                        ax_rgb.set_title(f"EMIT RGB Overview: {date}", fontsize=8, fontweight='bold', pad=4)
+
+                        ax_frc = fig.add_subplot(gs[0, 2])
+                        ax_frc.imshow(frc_plots[cfg['frc_key']], aspect='auto')
+                        ax_frc.set_box_aspect(1)
+                        ax_frc.set_title(f"Fractional Cover {cfg['title_suffix']}", fontsize=8, pad=4)
+
+                        # ==========================================
+                        # BOTTOM ROW: UNCORRECTED, CORRECTED, SPECTRA
+                        # ==========================================
+                        # 1. Uncorrected Scene (Col 0)
+                        ax_unc = fig.add_subplot(gs[1, 0])
+
+                        cs_unc, unc_detection_mask, unc_detects = plot_mineral_overlay(
+                            ax=ax_unc,
+                            img_array=unc_img,
+                            group_idx=group_dict[group],
+                            bd_idx=bd_dict[group],
+                            target_ids=target_ids,
+                            title=f"Uncorrected: {mineral.capitalize()}",
+                            is_bad_pixel=is_bad_pixel,
+                            cmap=current_cmap,
+                            norm=shared_norm,
+                            levels=15,
+                        )
+                        ax_unc.set_aspect('auto')
+                        ax_unc.set_box_aspect(1)
+                        ax_unc.set_title(f"Uncorrected: {mineral.capitalize()}", fontsize=8, pad=4)
+
+                        if cs_unc is not None:
+                            active_cs = cs_unc
+
+                        non_corrected_rfl = (
+                            rgb_img[unc_detection_mask, :]
+                            if np.any(unc_detection_mask)
+                            else None
+                        )
+
+                        # 2. Corrected Scenes (Cols 1 & 2)
+                        ds_spectrum_data = []
+
+                        for idx, ds in enumerate(run_datasets):
+                            mineral_reclass_pattern = os.path.join(scene_directory, f'tc_{ds["type"]}', '**',
+                                                                   ds["index_pattern"])
+                            target_ids_mineral = get_target_ids_for_dataset(mineral_reclass_pattern, mineral)
+                            file_match = glob(os.path.join(scene_directory, f'tc_{ds["type"]}', ds["pattern"]))
+
+                            ax_sub_map = fig.add_subplot(gs[1, idx + 1])
+
+                            if file_match:
+                                raw_array = envi_to_array(file_match[0])
+                                cs_sub, valid_detection_mask, n_detects = plot_mineral_overlay(
+                                    ax=ax_sub_map,
+                                    img_array=raw_array,
+                                    group_idx=group_dict[group],
+                                    bd_idx=bd_dict[group],
+                                    target_ids=target_ids_mineral,
+                                    title=f"{ds['title']}",
+                                    is_bad_pixel=is_bad_pixel,
+                                    cmap=current_cmap,
+                                    norm=shared_norm,
+                                    levels=15,
+                                )
+                                if cs_sub is not None:
+                                    active_cs = cs_sub
+
+                                if np.any(valid_detection_mask):
+                                    ds_spectrum_data.append({
+                                        "title": ds["title"],
+                                        "mask": valid_detection_mask,
+                                        "n": n_detects
+                                    })
+                            else:
+                                ax_sub_map.text(0.5, 0.5, "File Missing", ha="center", va="center", fontsize=6)
+
+                            ax_sub_map.set_aspect('auto')
+                            ax_sub_map.set_box_aspect(1)
+                            ax_sub_map.set_title(f"{ds['title']}", fontsize=7.5, pad=3)
+
+                        # Colorbar attached to the Uncorrected Map with tighter padding & specific label positioning
+                        divider = make_axes_locatable(ax_sub_map)
+                        cax = divider.append_axes("right", size="4%", pad=0.03)
+
+                        if active_cs is not None:
+                            cbar = fig.colorbar(
+                                active_cs,
+                                cax=cax,
+                                orientation='vertical',
+                                ticks=np.linspace(vmin, vmax, 5)
+                            )
+                        else:
+                            sm = plt.cm.ScalarMappable(norm=shared_norm, cmap=current_cmap)
+                            sm.set_array([])
+                            cbar = fig.colorbar(
+                                sm,
+                                cax=cax,
+                                orientation='vertical',
+                                ticks=np.linspace(vmin, vmax, 5)
+                            )
+
+                        cbar.set_label("Band Depth", fontsize=6.5, labelpad=2)
+                        cbar.ax.tick_params(labelsize=5.5, pad=2)
+                        cbar.ax.yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+
+                        # 3. Reflectance Spectrum Subplot (Col 3)
+                        ax_spec = fig.add_subplot(gs[1, 3])
+                        line_colors = ['#1f77b4', '#2ca02c']
+
+                        if non_corrected_rfl is not None and len(non_corrected_rfl) > 0:
+                            non_mean_rfl = np.nanmean(non_corrected_rfl, axis=0)
+                            non_mean_rfl[non_mean_rfl < 0] = np.nan
+                            non_std_rfl = np.nanstd(non_corrected_rfl, axis=0)
+
+                            ax_spec.plot(
+                                wvls,
+                                non_mean_rfl,
+                                color="red",
+                                linewidth=1.0,
+                                linestyle="--",
+                                label=f"Uncorrected (n={unc_detects})",
+                            )
+                            ax_spec.fill_between(
+                                wvls,
+                                non_mean_rfl - non_std_rfl,
+                                non_mean_rfl + non_std_rfl,
+                                color="red",
+                                alpha=0.15,
+                            )
+
+                        for idx, spec_info in enumerate(ds_spectrum_data):
+                            if idx == 0:
+                                rfl_corrected_array = envi_to_array(glob(os.path.join(self.output_directory, 'scenes', date, f'tc_{cfg['type']}', f'*ext_veg_EMIT_L2A_RFL_*_tc'))[0])
+                            else:
+                                rfl_corrected_array = envi_to_array(sorted(glob(os.path.join(self.output_directory, 'scenes', date, f'tc_{cfg['type']}', f'*recon_rho_EMIT_L2A_RFL_*_reflectance_global_*')))[0])
+
+                            detected_rfl = rfl_corrected_array[spec_info["mask"], :]
+                            mean_rfl = np.nanmean(detected_rfl, axis=0)
+                            mean_rfl[mean_rfl < 0] = np.nan
+                            std_rfl = np.nanstd(detected_rfl, axis=0)
+
+                            color = line_colors[idx % len(line_colors)]
+                            ax_spec.plot(
+                                wvls,
+                                mean_rfl,
+                                color=color,
+                                linewidth=1.0,
+                                label=f"{spec_info['title']} (n={spec_info['n']})",
+                            )
+                            ax_spec.fill_between(
+                                wvls,
+                                mean_rfl - std_rfl,
+                                mean_rfl + std_rfl,
+                                color=color,
+                                alpha=0.15,
+                            )
+
+                        ax_spec.set_xlabel("Wavelength (nm)", fontsize=7, labelpad=3)
+                        ax_spec.set_ylabel("Reflectance (%)", fontsize=7, labelpad=3)
+                        ax_spec.set_ylim(0, 1)
+                        ax_spec.grid(True, linestyle="--", alpha=0.4)
+                        ax_spec.tick_params(axis="both", labelsize=6, pad=2)
+
+                        ax_spec.legend(
+                            loc="upper right",
+                            fontsize=5.0,
+                            ncol=1,
+                            frameon=True,
+                            handlelength=1.0,
+                            borderpad=0.2,
+                        )
+
+                        # --- CLEANUP AXES TICKS & SPINES ---
+                        for ax in fig.get_axes():
+                            if ax != ax_spec and ax != cbar.ax:
+                                ax.set_xticks([])
+                                ax.set_yticks([])
+                                for spine in ax.spines.values():
+                                    spine.set_visible(True)
+                                    spine.set_color('black')
+                                    spine.set_linewidth(0.8)
+
+                        plt.savefig(
+                            os.path.join(self.fig_directory, 'scenes', f'{mineral}_{cfg["suffix"]}_{date}.png'),
+                            dpi=300,
+                            bbox_inches='tight',
+                            pad_inches=0.1
+                        )
+
                         plt.clf()
                         plt.close()
 
-
-    def fraction_threshold(self):
-        df_results = pd.read_csv(os.path.join(self.fig_directory, 'slpit_band_depths.csv'))
-        df_results = df_results.replace(-9999, np.nan).dropna()
-
-        # # create figure
-        fig = plt.figure(figsize=(self.fig_width, self.fig_height))
-        ncols = 2
-        nrows = 1
-        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.25, hspace=0.25, width_ratios=[1] * ncols,
-                               height_ratios=[1] * nrows)
-
-        col_map = {
-            0: 'Iron Oxides',
-            1: 'Clays/Carbonates'}
-
-        # loop through figure columns
-        for row in range(nrows):
-            for col in range(ncols):
-                ax = fig.add_subplot(gs[row, col])
-                ax.set_aspect('auto')
-
-                ax.yaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
-                ax.xaxis.set_major_formatter(FormatStrFormatter(f'%.{str(self.sig_figs)}f'))
-
-                if col == 0:
-                    df_select = df_results[
-                        (df_results['group'] == 'g1') & (df_results['index_src'] == 'Contact')].copy()
-
-                    ax.set_title(col_map[col], fontsize=self.title_fontsize)
-
-                if col == 1:
-                    df_select = df_results[
-                        (df_results['group'] == 'g2') & (df_results['index_src'] == 'Contact')].copy()
-
-                    ax.set_title(col_map[col], fontsize=self.title_fontsize)
-
-                # filter out low plots of soil fraction
-                for em_lib in ['global', 'local']:
-                    values = np.arange(0, 1.00, 0.05)
-                    mae_slpit_bd, mae_slpit_bd_prime, mae_emit_bd, mae_emit_bd_prime = [], [], [], []
-                    r2_slpit_bd, r2_slpit_bd_prime, r2_emit_bd, r2_emit_bd_prime = [], [], [], []
-
-                    for val in values:
-                        df_select_val = df_select[(df_select['em_library'] == em_lib) & (df_select['soil_SLPIT'] >= val) & (df_select['soil_EMIT'] >= val)].copy()
-
-                        if df_select_val.empty:
-                            mae_slpit_bd.append(np.nan)
-                            r2_slpit_bd.append(np.nan)
-
-                            mae_slpit_bd_prime.append(np.nan)
-                            r2_slpit_bd_prime.append(np.nan)
-
-                            mae_emit_bd.append(np.nan)
-                            r2_emit_bd.append(np.nan)
-
-                            mae_emit_bd_prime.append(np.nan)
-                            r2_emit_bd_prime.append(np.nan)
-                            continue
-
-                        x = df_select_val["Contact_Bd"]
-
-                        mae_slpit_bd.append(mean_absolute_error(x, df_select_val["SLPIT_Bd"]))
-                        r2_slpit_bd.append(r2_calculations(x, df_select_val["SLPIT_Bd"])[0])
-
-                        mae_slpit_bd_prime.append(mean_absolute_error(x, df_select_val["SLPIT_Bd'"]))
-                        r2_slpit_bd_prime.append(r2_calculations(x, df_select_val["SLPIT_Bd'"])[0])
-
-                        mae_emit_bd.append(mean_absolute_error(x, df_select_val["EMIT_Bd"]))
-                        r2_emit_bd.append(r2_calculations(x, df_select_val["EMIT_Bd"])[0])
-
-                        mae_emit_bd_prime.append(mean_absolute_error(x, df_select_val["EMIT_Bd'"]))
-                        r2_emit_bd_prime.append(r2_calculations(x, df_select_val["EMIT_Bd'"])[0])
-
-                    # plot error
-                    # ax.plot(values, mae_slpit_bd, label="SLPIT_Bd", color='red')
-                    # ax.plot(values, mae_slpit_bd_prime, label="SLPIT_Bd'", color='green')
-                    # ax.plot(values, mae_emit_bd, label="EMIT_Bd", color='blue')
-                    # ax.plot(values, mae_emit_bd_prime, label="EMIT_Bd'", color='orange')
-
-                    # plot r2
-                    if em_lib == 'local':
-                        linestyle = 'solid'
-                        lw = 2
-                    else:
-                        linestyle = '--'
-                        lw=1
-
-                    ax.plot(values, mae_slpit_bd, label=f"SLPIT_Bd - {em_lib}", color='red', linestyle=linestyle,
-                            linewidth=lw)
-                    ax.plot(values, mae_slpit_bd_prime, label=f"SLPIT_Bd' - {em_lib}", color='green',
-                            linestyle=linestyle, linewidth=lw)
-                    ax.plot(values, mae_emit_bd, label=f"EMIT_Bd - {em_lib}", color='blue', linestyle=linestyle,
-                            linewidth=lw)
-                    ax.plot(values, mae_emit_bd_prime, label=f"EMIT_Bd' - {em_lib}", color='orange',
-                            linestyle=linestyle, linewidth=lw)
-
-                # Combine and deduplicate legend labels
-                handles_1, labels_1 = ax.get_legend_handles_labels()
-
-                # Use dict to remove duplicates
-                unique = dict(zip(labels_1, handles_1))
-
-                if col == 1:
-                   ax.legend(unique.values(), unique.keys(),loc='upper left', bbox_to_anchor=(1.05, 1), borderaxespad=0., frameon=False)
-
-                ax.set_ylabel("MAE")
-                #ax.set_ylabel("R²")
-                ax.set_xlabel('Fraction of soil')
-
-        plt.savefig(os.path.join(self.fig_directory, f'field_thresholds.png'), format="png", dpi=400, bbox_inches="tight")
-        plt.clf()
-        plt.close()
-
-    def mineral_test(self):
-        df=self.get_mineral_reclassification(group='g1')
-
-    def bd_prime_map(self):
-        bd_map = {0: 3, 1:4}
-
-        fig = plt.figure(figsize=(self.fig_width, self.fig_height))
-        ncols = 3
-        nrows = 2
-        gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.20, hspace=0.20, width_ratios=[1] * ncols,
-                               height_ratios=[1] * nrows)
-
-        # loop through figure columns
-        for row, i in zip(range(nrows), ['g1', 'g2']):
-            veg_correction = envi_to_array(
-                os.path.join(self.veg_correction_dir, f'EMIT_L2A_RFL_001_20230831T152735_veg_correction_{i}'))
-
-            bd_mask = veg_correction[:, :, 3] != -9999.
-            bd_prime_mask = veg_correction[:, :, 4] != -9999.
-            combined_mask = bd_mask & bd_prime_mask
-            veg_correction[veg_correction == -9999] = np.nan
-
-            global_min = min(np.nanmin(veg_correction[:, :, 3]), np.nanmin(veg_correction[:, :, 4]))
-            global_max = max(np.nanmax(veg_correction[:, :, 3]), np.nanmax(veg_correction[:, :, 4]))
-
-            for col in range(ncols):
-                if col == 2:
-                    import mpl_scatter_density
-                    from matplotlib.colors import LinearSegmentedColormap
-
-                    # "Viridis-like" colormap with white background
-                    white_viridis = LinearSegmentedColormap.from_list('white_viridis', [
-                        (0, '#ffffff'),
-                        (1e-20, '#440053'),
-                        (0.2, '#404388'),
-                        (0.4, '#2a788e'),
-                        (0.6, '#21a784'),
-                        (0.8, '#78d151'),
-                        (1, '#fde624'),
-                    ], N=256)
-
-                    ax = fig.add_subplot(gs[row, col], projection='scatter_density')
-
-                    x = veg_correction[:, :, 3].flatten()
-                    y = veg_correction[:, :, 4].flatten()
-                    flat_mask = combined_mask.flatten()
-
-                    x_valid = x[flat_mask]
-                    y_valid = y[flat_mask]
-                    density = ax.scatter_density(x_valid, y_valid, cmap=white_viridis)
-                    ax.set_ylabel("Bd$_w$'")
-                    ax.set_xlabel("Bd$_w$")
-                    ax.set_ylim(0, 0.4)
-                    ax.set_xlim(0, 0.4)
-                    #fig.colorbar(density, label='Number of points per pixel')
-
-
-                else:
-                    ax = fig.add_subplot(gs[row, col])
-                    array = veg_correction[:, :, bd_map[col]].copy()
-                    array[~combined_mask] = np.nan
-                    array_norm = (array - global_min) / (global_max - global_min)
-                    cmap = plt.get_cmap('viridis', 10)
-                    im = ax.imshow(array_norm, cmap=cmap, vmin=global_min, vmax=global_max)
-
-                    if col == 0:
-                        ax.set_title(f'{i.capitalize()} - Bd: 20230831T152735')
-                    else:
-                        ax.set_title(f"{i.capitalize()} - Bd': 20230831T152735")
-
-                    cbar = fig.colorbar(im, ax=ax, orientation='vertical', extend='both')
-                    cbar.set_label('Band Depth')
-
-                    if col == 0:
-                        ax.set_ylabel("Latitude")
-
-                    if row == 1:
-                        ax.set_xlabel('Longitude')
-
-        plt.savefig(os.path.join(self.fig_directory, f'bd_map.png'), format="png", dpi=400,
-                    bbox_inches="tight")
-        plt.clf()
-        plt.close()
-
-    def f1_score_matrix_detailed(self):
-        from sklearn.metrics import f1_score
-        group_dict = {
-            'g1': 1,
-            'g2': 3}
-        bd_group_dict = {
-            'g1': 0,
-            'g2': 2}
-
-        # create figure
-        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(12, 12), constrained_layout=True)
-        axes_flat = axes.flatten()
-        counter = 0
-
-        for group in ['g1', 'g2']:
-            fractions = envi_to_array(
-                os.path.join(self.sim_spectra_directory, f'tetracorder_{group}_simulation_fractions'))[:, :, 2]
-            fractions = np.round(fractions, 2)
-
-            # this is soil from tetracorder output - this is the absolute truth
-            bd_tetra = envi_to_array(
-                os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, 20,
-                       group_dict[group]].astype(int)
-
-            # this is sim spectra from tetracorder output w/out corrections
-            bd_tetra_sim = envi_to_array(
-                os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, :21,
-                           group_dict[group]].astype(int)
-
-            truth_array = np.zeros((fractions.shape[0], fractions.shape[1])).astype(int)
-            truth_array[:] = bd_tetra[:, np.newaxis]
-            truth_array[:, 0] = envi_to_array(
-                os.path.join(self.sa_outputs, f'tetracorder_{group}_simulation_spectra_augmented_min'))[:, 0,
-                                group_dict[group]]
-
-            # aggregated confusion matrix
-            mineral_class, df_minerals_sim = spectra.get_mineral_reclassification(
-                path_to_tetracorder_minerals=os.path.join(self.sa_outputs,
-                                                          f'tetracorder_{group}_simulation_spectra_augmented_minerals'))
-            truth_category_array = np.full(truth_array.shape, 'other', dtype=object)
-
-            # this is our aggregated ararys
-            for value, category in mineral_class.items():
-                truth_category_array[truth_array == value] = category
-
-            simulated_category_array = np.full(bd_tetra_sim.shape, 'other', dtype=object)
-            for value, category in mineral_class.items():
-                simulated_category_array[bd_tetra_sim == value] = category
-
-            # Flatten arrays to use in confusion_matrix
-            a_flat = truth_category_array.flatten()
-            b_flat = simulated_category_array.flatten()
-            fractions_flat = fractions.flatten()
-
-            # Generate confusion matrix
-            labels = sorted(set(a_flat) | set(b_flat))  # Ensures all labels appear
-            labels_to_remove = ['other', 'no detection', "vegetation", 'gypsum', 'vermiculite']
-            labels = [x for x in labels if x not in labels_to_remove]
-
-            # bins
-            bins = np.round(np.arange(0.00, 1.1, 0.05), 2)
-
-            if group == 'g1':
-                labels.remove('montmorillonite')
-
-            # Loop through each class and create a subplot
-            for idx, class_label in enumerate(labels):
-
-                f1_scores_cumulative = []
-                bin_left = []
-                f1_scores = []
-
-                for left, right in zip(bins[:-1], bins[1:]):
-                    if left == 0:
-                        continue
-
-                    cummulative_in_bin = (fractions_flat >= left) & (fractions_flat <= 1)
-                    y_true_bin = (a_flat[cummulative_in_bin] == class_label).astype(int)
-                    y_pred_bin = (b_flat[cummulative_in_bin] == class_label).astype(int)
-
-                    if len(y_true_bin) > 0 and (np.any(y_true_bin) or np.any(y_pred_bin)):
-                        score = f1_score(y_true_bin, y_pred_bin)
-                    else:
-                        score = np.nan  # or 0
-
-                    f1_scores_cumulative.append(score)
-
-                    in_bin = (fractions_flat >= left) & (fractions_flat < right)
-                    y_true_bin = (a_flat[in_bin] == class_label).astype(int)
-                    y_pred_bin = (b_flat[in_bin] == class_label).astype(int)
-
-                    if len(y_true_bin) > 0 and (np.any(y_true_bin) or np.any(y_pred_bin)):
-                        score = f1_score(y_true_bin, y_pred_bin)
-                    else:
-                        score = np.nan  # or 0
-
-                    f1_scores.append(score)
-                    bin_left.append(left)
-
-                ax = axes_flat[counter]
-                ax.plot(bin_left, f1_scores_cumulative, linestyle='-', color='blue', label='Cumulative F1 Score')
-                ax.set_ylim(0, 1.05)
-                ax.set_xlim(-0.05, 1.05)
-                ax.set_title(f"{class_label.capitalize()}", fontsize=16)
-                ax.xaxis.set_minor_locator(MultipleLocator(0.1))
-                ax.yaxis.set_minor_locator(MultipleLocator(0.1))
-                ax.axhline(y=0.70, color='green', linestyle='--', linewidth=1)
-                ax.grid(True)
-                ax.tick_params(axis='x', which='major', labelsize=12)
-                ax.tick_params(axis='y', which='major', labelsize=12)
-
-                if counter == 5:
-                    ax.legend(loc='upper left', fontsize=14)
-
-                if counter in [0, 3, 6]:
-                    ax.set_ylabel('F1 score', fontsize=12)
-                else:
-                    ax.set_yticklabels([])
-
-                if counter >= 6:
-                    ax.set_xlabel('Soil Fraction', fontsize=12)
-                else:
-                    ax.set_xticklabels([])
-
-                counter += 1
-
-        plt.savefig(os.path.join(self.fig_directory, f"confusion_matrix_aggregated_f1scores.png"),
-                    bbox_inches='tight', dpi=400)
-        plt.clf()
-        plt.close()
-        print('done!')
-
-    def confusion_matrix_rem(self):
-        group_dict = {'g1': 1, 'g2': 3}
-
-        for group in ['g1', 'g2']:
-            soil_fractions = envi_to_array(os.path.join(self.synthetic_rfls, 'rem', 'tetracorder_rem_simulation_fractions'))[:,:,2]
-            soil_fractions = np.round(soil_fractions, 2)
-
-            # # mineral detection from tetracorder on soil only
-            soils_mineral_id_from_tetracorder = envi_to_array(os.path.join(self.synthetic_rfls, 'rem', 'tetracorder_tetracorder_rem_simulation_soils', f'tetracorder_rem_simulation_soils_augmented_min'))[:, -1, group_dict[group]].astype(int)
-
-            # # this is sim spectra from tetracorder output w/out corrections
-            simulated_mineral_id_from_tetracorder = envi_to_array(os.path.join(self.synthetic_rfls, 'rem', 'tetracorder_tetracorder_rem_simulation_spectra',
-                                                  f'tetracorder_rem_simulation_spectra_augmented_min'))[:, :, group_dict[group]].astype(int)
-
-            truth_array = np.zeros((soil_fractions.shape[0], soil_fractions.shape[1])).astype(int)
-            truth_array[:] = soils_mineral_id_from_tetracorder[:, np.newaxis]
-            truth_array[:, 0] = envi_to_array(os.path.join(self.synthetic_rfls, 'rem', 'tetracorder_tetracorder_rem_simulation_spectra',
-                                                  f'tetracorder_rem_simulation_spectra_augmented_min'))[:, 0, group_dict[group]]
-            # aggregated confusion matrix
-            mineral_class, df_minerals_sim = spectra.get_mineral_reclassification(path_to_tetracorder_minerals=os.path.join(self.synthetic_rfls, 'rem', 'tetracorder_tetracorder_rem_simulation_spectra', 'tetracorder_rem_simulation_spectra_augmented_minerals'))
-            mineral_class.update({135: ["halloysite"], 69: ["neodymium_oxide"], 133: ["kaolinite"], 154: ['pyrophyllite'],
-                                  234: ["palygorskite"], 8: ['goethite'], 144: ['basalt-glass'], 2 : ['hematite'], 134: ['kaolinite']})
-
-
-            expanded_a = []
-            expanded_b = []
-            expanded_fractions = []
-
-            # Flatten your arrays for processing
-            flat_truth = truth_array.flatten()
-            flat_sim = simulated_mineral_id_from_tetracorder.flatten()
-            flat_frac = soil_fractions.flatten()
-
-            for t_val, s_val, frac in zip(flat_truth, flat_sim, flat_frac):
-                t_categories = mineral_class.get(t_val, ['other'])
-                s_categories = mineral_class.get(s_val, ['other'])
-                # This handles any number of entries (1, 2, 3, or more)
-                # It creates a pair for every combination
-                for t_cat, s_cat in product(t_categories, s_categories):
-                    expanded_a.append(t_cat)
-                    expanded_b.append(s_cat)
-                    expanded_fractions.append(frac)
-
-            # Convert back to arrays for your plotting logic
-            a_flat = np.array(expanded_a)
-            b_flat = np.array(expanded_b)
-            fractions_flat = np.array(expanded_fractions)
-
-            # Generate confusion matrix
-            labels = sorted(set(a_flat) | set(b_flat))  # Ensures all labels appear
-            # bins
-            bins = np.round(np.arange(0.00, 1.1, 0.05), 2)
-
-            # Formatting logic
-            if group == 'g1':
-                truth_label_size, fig_size, major_tick_label_size, places = 12, 14, 14, 1
-            else:
-                truth_label_size, fig_size, major_tick_label_size, places = 35, 40, 34, 0
-
-            ncols = len(labels)
-            nrows = len(labels)
-
-            global_max_N = 0
-            for truth_label in labels:
-                for predicted_label in labels:
-                    mask = (a_flat == truth_label) & (b_flat == predicted_label)
-                    data = fractions_flat[mask]
-                    if len(data) > 0:
-                        counts, _ = np.histogram(data, bins=bins)
-                        global_max_N = max(global_max_N, counts.max())
-
-            global_norm = colors.Normalize(vmin=0, vmax=global_max_N)
-            cmap = plt.cm.viridis
-
-            # create figure
-            fig = plt.figure(constrained_layout=True, figsize=(fig_size, fig_size))
-            gs = gridspec.GridSpec(ncols=ncols, nrows=nrows, wspace=0.05, hspace=0.10)
-
-            for _row, truth_label in enumerate(labels):
-                for _col, predicted_label in enumerate(labels):
-                    ax = fig.add_subplot(gs[_row, _col])
-
-                    mask = (a_flat == truth_label) & (b_flat == predicted_label)
-                    data = fractions_flat[mask]
-
-                    if len(data) > 0:
-                        counts, bin_edges = np.histogram(data, bins=bins)
-                        max_hist_height = counts.max()
-
-                        if len(data) > 1 and np.var(data) > 1e-9:
-                            try:
-                                kde_func = gaussian_kde(data)
-                                kde_x = np.linspace(0, 1, 500)
-                                kde_y = kde_func(kde_x)
-
-                                if kde_y.max() > 0:
-                                    scaling_factor = max_hist_height / kde_y.max()
-                                    kde_y_scaled = kde_y * scaling_factor
-
-                                    points = np.array([kde_x, kde_y_scaled]).T.reshape(-1, 1, 2)
-                                    segments = np.concatenate([points[:-1], points[1:]], axis=1)
-
-                                    segment_heights = (kde_y_scaled[:-1] + kde_y_scaled[1:]) / 2
-                                    colors_for_segments = [cmap(global_norm(h)) for h in segment_heights]
-
-                                    lc_kde = LineCollection(segments, colors=colors_for_segments,
-                                                            linewidth=4, zorder=3, capstyle='round')
-                                    ax.add_collection(lc_kde)
-                            except np.linalg.LinAlgError:
-                                pass
-                        elif len(data) > 0:
-                            val = np.mean(data)
-                            ax.vlines(val, 0, max_hist_height, colors=cmap(global_norm(max_hist_height)),
-                                      linewidth=4, alpha=0.8)
-
-                    # --- Axis & Label Styling ---
-                    ax.set_xlim(-0.05, 1.05)
-                    ax.set_ylim(0, global_max_N * 1.1)  # Unified Y-scale
-
-                    # Tick Formatting
-                    if _row == nrows - 1:
-                        ax.set_xlabel(f"{predicted_label.capitalize()}", fontsize=truth_label_size)
-                    else:
-                        ax.set_xticklabels([])
-
-                    if _col == 0:
-                        ax.set_ylabel(f"{truth_label.capitalize()}", fontsize=truth_label_size)
-                    else:
-                        ax.set_yticklabels([])  # Hide internal Y labels for cleanliness
-
-                    # Metadata Text
-                    #ax.text(0.95, 0.95, f'Total Detections={n_count}', ha='right', va='top',
-                    #        transform=ax.transAxes, fontsize=major_tick_label_size * 0.6)
-
-                    # Locators
-                    ax.xaxis.set_minor_locator(MultipleLocator(0.1))
-                    ax.xaxis.set_major_locator(MultipleLocator(0.2))
-                    ax.yaxis.set_minor_locator(MultipleLocator(100))
-                    ax.yaxis.set_major_locator(MultipleLocator(200))
-                    ax.tick_params(axis='both', which='major', labelsize=major_tick_label_size)
-
-            cbar = fig.colorbar(plt.cm.ScalarMappable(norm=global_norm, cmap=cmap),
-                                ax=fig.axes, orientation='vertical', shrink=0.8)
-            cbar.set_label('Count (N)', fontsize=truth_label_size)
-
-            plt.savefig(os.path.join(self.fig_directory, f"{group}_rem_detailed.png"),
-                        bbox_inches='tight', dpi=400)
-            plt.clf()
-            plt.close()
-            print('done!')
 
 def run_figure_workflow(base_directory):
     ems = ['soil']
@@ -1774,29 +1770,9 @@ def run_figure_workflow(base_directory):
                         axis_label_fontsize=axis_label_fontsize, fig_height=fig_height, fig_width=fig_width,
                         linewidth=linewidth, sig_figs=sig_figs, legend_text=legend_text)
 
-    tc.confusion_matrices()
-    tc.confusion_matrix_rem()
-    #tc.mineral_ref_figure()
-    #tc.fraction_soil_vs_bd()
-
-    #tc.mineral_sim_library_reference()
-    #tc.mineral_sim_spectra_reference()
-    #tc.confusion_matrices()
-    #tc.confusion_matrix_detailed()
+    #tc.classification_rates()
     #tc.f1_score_matrix_detailed()
-
-    #tc.veg_correction_fig()
-
-    #tc.slpit_bd()
-    #tc.slpit_figure()
-    #tc.slpit_figure_combined()
-    #tc.mineral_test()
-    #tc.fraction_threshold()
-
-    #tc.veg_correction_by_mineral()
-
-    #tc.tetracorder_libraries()
-    #tc.mineral_validation(x_axis='contact')
-    #tc.mineral_validation(x_axis='transect')
-    #tc.mineral_threshold()
-    #tc.bd_prime_map()
+    #tc.band_depth_mae()
+    #tc.field_table()
+    #tc.field_results()
+    tc.scene_figures()

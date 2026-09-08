@@ -1,6 +1,5 @@
 import os
 import shutil
-import time
 from utils.create_tree import create_directory
 from utils.spectra_utils import spectra
 from utils.envi import envi_to_array, get_meta, save_envi, load_band_names, augment_envi
@@ -10,11 +9,6 @@ import pandas as pd
 from p_tqdm import p_map
 from functools import partial
 from glob import glob
-import itertools
-import geopandas as gp
-from datetime import datetime
-from utils.unmix_utils import call_unmix, call_hypertrace_unmix, hypertrace_meta, create_uncertainty
-from simulation.run_hypertrace import hypertrace_workflow
 import subprocess
 from spectral.io import envi
 import isofit.core.common as isc
@@ -86,13 +80,14 @@ class Tetracorder:
         df_minerals_indentified_g1 = df_minerals_indentified.loc[df_minerals_indentified['Group'] == 1].copy()
         df_minerals_indentified_g2 = df_minerals_indentified.loc[df_minerals_indentified['Group'] == 2].copy()
 
+        df_minerals_indentified_g2.to_csv(os.path.join(self.synthetic_dir, 'tetracorder_minerals_indentified_g2.csv'))
+
         valid_g1_indices = df_minerals_indentified_g1['Index'].values
         valid_g2_indices = df_minerals_indentified_g2['Index'].values
-        valid_g2_indices = valid_g2_indices[valid_g2_indices != 228] # this removes organic dry grass
+        valid_g2_indices = valid_g2_indices[valid_g2_indices != 228] # this removes organic dry grass mixture; why is this allowed?
 
         valid_g1_indices = sorted(list(valid_g1_indices))
         valid_g2_indices = sorted(list(valid_g2_indices))
-
         valid_g1_indices.append(0)
         valid_g2_indices.append(0)
 

@@ -83,6 +83,9 @@ def main():
         save_envi(output_raster, meta_spectra, rho_em_spectra_grid)
         print(f'\t successfully saved: {output_raster}')
 
+        # append rho hat
+        rho_hat += spectra_grid * three_component_fractions_array[:,:, _em][:, :, np.newaxis]
+
         if args.tetracorder and em in ['npv', 'pv']:
             rho_hat_vf -= (rho_em_spectra_grid * f_hat[:, :, _em][:, :, np.newaxis])
 
@@ -94,11 +97,18 @@ def main():
     save_envi(output_raster, meta_spectra, rho_hat_vf)
     print(f'\t successfully saved: {output_raster}')
 
+    # normalize reflectance by fraction of soil to retrieve rho_s
+    rfl_mixed_array = rfl_mixed_array / three_component_fractions_array[:, :, 2][:, :, np.newaxis]
+    meta_spectra = get_meta(lines=rfl_mixed_array.shape[0], samples=rfl_mixed_array.shape[1], bands=wvls, wvls=True)
+    output_raster = os.path.join(args.output_directory, f"recon_rho_{basename}.hdr")
+    save_envi(output_raster, meta_spectra, rho_hat)
+
     if args.tetracorder:
         meta_spectra = get_meta(lines=rho.shape[0], samples=rho.shape[1], bands=wvls, wvls=True)
         output_raster = os.path.join(args.output_directory, f"ext_veg_{basename}_{unmix_basename}_tc.hdr")
         save_envi(output_raster, meta_spectra, rho_hat_vfs)
         print(f'\t successfully saved: {output_raster}')
+
 
 if __name__ == '__main__':
     main()

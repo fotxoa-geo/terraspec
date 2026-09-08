@@ -94,21 +94,23 @@ class spectra:
         return wl, fwhm
 
     @classmethod
-    def get_good_bands_mask(cls, wavelengths, wavelength_pairs:None):
+    def get_good_bands_mask(cls, wavelengths, wavelength_pairs=None):
         wavelengths = np.array(wavelengths)
         if wavelength_pairs is None:
-            wavelength_pairs = bad_wv_regions
-        good_bands = np.ones(len(wavelengths)).astype(bool)
+            wavelength_pairs = bad_wv_regions  # Assuming this holds bad regions
+
+        # Start with ALL bands marked as True (Good)
+        good_bands = np.ones(len(wavelengths), dtype=bool)
 
         for wvp in wavelength_pairs:
-            wvl_diff = wavelengths - wvp[0]
-            wvl_diff[wvl_diff < 0] = np.nanmax(wvl_diff)
-            lower_index = np.nanargmin(wvl_diff)
+            # Find index closest to the lower bound of the BAD region
+            lower_index = np.nanargmin(np.abs(wavelengths - wvp[0]))
+            # Find index closest to the upper bound of the BAD region
+            upper_index = np.nanargmin(np.abs(wavelengths - wvp[1]))
 
-            wvl_diff = wvp[1] - wavelengths
-            wvl_diff[wvl_diff < 0] = np.nanmax(wvl_diff)
-            upper_index = np.nanargmin(wvl_diff)
+            # Turn off ONLY this bad window
             good_bands[lower_index:upper_index + 1] = False
+
         return good_bands
 
     @classmethod
@@ -183,17 +185,17 @@ class spectra:
         return points_split_into_quadrants
 
     @classmethod
-    def pca_analysis(cls, df, spectra_starting_col:int):
+    def pca_analysis(cls, df, spectra_starting_col:int, em='soil'):
 
         # target values
-        df_select = df.loc[(df['level_1'] == 'soil')].copy()
+        df_select = df.loc[(df['level_1'] == em)].copy()
         metadata = df_select.iloc[:, :spectra_starting_col].reset_index(drop=True)
 
         # Separating out the features
         x = df_select.iloc[:, spectra_starting_col:].values
 
         # # PCA analysis for chosen em
-        pca = PCA(n_components=x.shape[1])
+        pca = PCA(n_components=min(x.shape[0], x.shape[1]))
         df_pca = pd.DataFrame(pca.fit_transform(x))
         df_pca = pd.concat([metadata, df_pca], axis=1)
 
@@ -329,7 +331,6 @@ class spectra:
         soil_spectra = np.zeros((1, columns, len(wavelengths)))
         gv_spectra = np.zeros((1, columns, len(wavelengths)))
         npv_spectra = np.zeros((1, columns, len(wavelengths)))
-
         for _col, col in enumerate(range(0, columns)):
             increment_frac = np.round(col * col_size, 2)
             npv_frac, pv_frac, soil_frac = spectra.generate_em_fractions(em=em, em_fraction=increment_frac,
@@ -352,7 +353,7 @@ class spectra:
     @classmethod
     def increment_reflectance(cls, class_names: list, simulation_table, level: str, spectral_bundles:int,
                               increment_size:float, output_directory: str, wvls, name: str, spectra_starting_col:int,
-                              endmember:str, spectral_bundle_project, new_simulation_bundles):
+                              endmember:str, spectral_bundle_project, new_simulation_bundles, target_injection=None):
 
         spec_array = spectra.create_spectral_bundles(df=simulation_table, level=level,
                                                      spectral_bundles=spectral_bundles,
@@ -390,20 +391,23 @@ class spectra:
         gv_meta = get_meta(lines=gv_grid.shape[0], samples=cols, bands=wvls, wvls=True)
         npv_meta = get_meta(lines=npv_grid.shape[0], samples=cols, bands=wvls, wvls=True)
 
-        # save index, spectra, fraction grid
-        output_files = [os.path.join(output_directory, f'{name}_index.hdr'),
-                        os.path.join(output_directory, f'{name}_spectra.hdr'),
-                        os.path.join(output_directory, f'{name}_fractions.hdr'),
-                        os.path.join(output_directory, f'{name}_soils.hdr'),
-                        os.path.join(output_directory, f'{name}_gv.hdr'),
-                        os.path.join(output_directory, f'{name}_npv.hdr')]
+        if target_injection is None:
+            # save index, spectra, fraction grid
+            output_files = [os.path.join(output_directory, f'{name}_index.hdr'),
+                            os.path.join(output_directory, f'{name}_spectra.hdr'),
+                            os.path.join(output_directory, f'{name}_fractions.hdr'),
+                            os.path.join(output_directory, f'{name}_soils.hdr'),
+                            os.path.join(output_directory, f'{name}_gv.hdr'),
+                            os.path.join(output_directory, f'{name}_npv.hdr')]
 
-        meta_docs = [index_meta, refl_meta, fraction_meta, soil_meta, gv_meta, npv_meta]
-        grids = [index_grid, spectra_grid, fraction_grid, soil_grid, gv_grid, npv_grid]
+            meta_docs = [index_meta, refl_meta, fraction_meta, soil_meta, gv_meta, npv_meta]
+            grids = [index_grid, spectra_grid, fraction_grid, soil_grid, gv_grid, npv_grid]
 
-        p_map(save_envi, output_files, meta_docs, grids, **{"desc": "\t\t saving envi files...", "ncols": 150})
-        del index_grid, spectra_grid, fraction_grid
+            p_map(save_envi, output_files, meta_docs, grids, **{"desc": "\t\t saving envi files...", "ncols": 150})
+            del index_grid, spectra_grid, fraction_grid
 
+        else:
+            return spectra_grid, fraction_grid, index_grid
 
 
     @classmethod
@@ -741,9 +745,7 @@ class spectra:
 
         # load library
         item = SPECTRAL_REFERENCE_LIBRARY[ref_library]
-        print(item)
         library = envi.open(envi_header(item), item)
-        print(library)
         library_reflectance = library.spectra.copy()
         library_records = [int(q) for q in library.metadata['record']]
 
@@ -754,23 +756,23 @@ class spectra:
 
         # This is the vegetation correction
         expert_file_selection = decoded_expert[normalized_group_name]['features']
-        print(expert_file_selection)
         valid_wavelenghts = ~np.isnan(library_reflectance[library_records.index(record), :] )
 
-        for _cont_feat, cont_feat in enumerate(expert_file_selection):
-            feature = cont_feat['continuum']
-            left_inds = np.where(np.logical_and.reduce((wavelengths >= feature[0], wavelengths <= feature[1], valid_wavelenghts)))[0]
-            right_inds = np.where(np.logical_and.reduce((wavelengths >= feature[2], wavelengths <= feature[3], valid_wavelenghts)))[0]
-
-            # calculate features start/stop
-            feature_inds = np.logical_and(wavelengths >= wavelengths[left_inds][0],
-                                          wavelengths <= wavelengths[right_inds][-1])
-
-            # x boundaries - used for all calculations
-            x1, x2 = wavelengths[feature_inds][0], wavelengths[feature_inds][-1]  # λi, λj
-
-
-            print(x1, x2)
+        return expert_file_selection, normalized_group_name, library_reflectance[library_records.index(record), :]
+        # for _cont_feat, cont_feat in enumerate(expert_file_selection):
+        #     feature = cont_feat['continuum']
+        #     left_inds = np.where(np.logical_and.reduce((wavelengths >= feature[0], wavelengths <= feature[1], valid_wavelenghts)))[0]
+        #     right_inds = np.where(np.logical_and.reduce((wavelengths >= feature[2], wavelengths <= feature[3], valid_wavelenghts)))[0]
+        #
+        #     # calculate features start/stop
+        #     feature_inds = np.logical_and(wavelengths >= wavelengths[left_inds][0],
+        #                                   wavelengths <= wavelengths[right_inds][-1])
+        #
+        #     # x boundaries - used for all calculations
+        #     x1, x2 = wavelengths[feature_inds][0], wavelengths[feature_inds][-1]  # λi, λj
+        #
+        #
+        #     print(x1, x2)
 
     @classmethod
     def mineral_group_retrival(cls, mineral_index, spectra_observed, npv_fraction=None, gv_fraction=None, pnpv=None,
@@ -1020,29 +1022,33 @@ class spectra:
         # get file type
         file_type = os.path.splitext(file)[1]
 
-        if file_type == '.asd':
-            asd = asdreader.reader(file)
-            refl = asd.reflectance * white_ref_correction
-            asd_gps = asd.get_gps()
-            latitude_ddmm, longitude_ddmm, elevation, utc_time = asd_gps[0], asd_gps[1], asd_gps[2], asd_gps[3]
+        try:
+            if file_type == '.asd':
+                asd = asdreader.reader(file)
+                refl = asd.reflectance * white_ref_correction
+                asd_gps = asd.get_gps()
+                latitude_ddmm, longitude_ddmm, elevation, utc_time = asd_gps[0], asd_gps[1], asd_gps[2], asd_gps[3]
 
-            if int(utc_time[0]) + int(utc_time[1]) + int(utc_time[2]) == 0:
-                file_time = asd.get_save_time()
-                utc_time = str(file_time[2]) + ":" + str(file_time[1]) + ":" + str(file_time[0])
-            else:
-                utc_time = str(utc_time[0]) + ":" + str(utc_time[1]) + ":" + str(utc_time[2])
+                if int(utc_time[0]) + int(utc_time[1]) + int(utc_time[2]) == 0:
+                    file_time = asd.get_save_time()
+                    utc_time = str(file_time[2]) + ":" + str(file_time[1]) + ":" + str(file_time[0])
+                else:
+                    utc_time = str(utc_time[0]) + ":" + str(utc_time[1]) + ":" + str(utc_time[2])
 
-            file_num = int(os.path.basename(file).split(".")[0].split("_")[-1])
+                file_num = int(os.path.basename(file).split(".")[0].split("_")[-1])
 
-            dd_lat, dd_long = gps_asd(latitude_ddmm=latitude_ddmm, longitude_ddmm=longitude_ddmm, file=file)
+                dd_lat, dd_long = gps_asd(latitude_ddmm=latitude_ddmm, longitude_ddmm=longitude_ddmm, file=file)
+            elif file_type == '.sed':
+                sed = sedreader.reader(file)
+                refl = sed.reflectance * white_ref_correction
+                dd_long, dd_lat, utc_time, elevation = sed.gps
+                file_num = int(os.path.basename(file).split(".")[0].split("_")[-1])
 
-        elif file_type == '.sed':
-            sed = sedreader.reader(file)
-            refl = sed.reflectance * white_ref_correction
-            dd_long, dd_lat, utc_time,elevation = sed.gps
-            file_num = int(os.path.basename(file).split(".")[0].split("_")[-1])
+            return [plot_name, file, file_num, dd_long, dd_lat, elevation, utc_time] + list(refl)
+        except Exception as e:
+            print(f"Error processing {file}: {e}")
+            return None
 
-        return [plot_name, file, file_num, dd_long, dd_lat, elevation, utc_time] + list(refl)
 
     @classmethod
     def get_asd_binary(cls, data):
