@@ -18,6 +18,7 @@ from simulation.run_hypertrace import hypertrace_workflow
 import subprocess
 from spectral.io import envi
 import isofit.core.common as isc
+from collections import Counter
 
 def tetracorder_build_menu():
     msg = f"You have entered Tetracorder build mode! " \
@@ -28,7 +29,9 @@ def tetracorder_build_menu():
     print("A... Run Tetrecorder on endmember libraries")
     print("B... Generate synthetic reflectance")
     print("C... Run RECLAIMER workflows")
-    print("D... Exit")
+    print('D... Run RECLAIMER field')
+    print('E... Run RECLAIMER EMIT')
+    print("F... Exit")
 
 
 class Tetracorder:
@@ -39,6 +42,7 @@ class Tetracorder:
         self.tetra_data_directory = os.path.join(self.base_directory, 'data')
         self.tetra_output_directory = os.path.join(self.base_directory, 'output')
         self.simulation_output_directory = os.path.join('terraspec_output', 'simulation', 'output')
+        self.slpit_output_directory = os.path.join('terraspec_output', 'slpit', 'output')
 
         # load wavelengths
         self.wvls, self.fwhm = spectra.load_wavelengths(sensor=sensor)
@@ -117,9 +121,15 @@ class Tetracorder:
         df_sim_g2 = df_sim_g2.sort_values('level_1')
         df_sim_g2.to_csv(os.path.join(self.synthetic_dir, 'tetracorder_g2' ,'df_sim_2.csv'))
         
-        print(f"Indices used G1: {sorted(list(set(indices_used_g1)))}")
-        print(f"Indices used G2: {sorted(list(set(indices_used_g2)))}")
+        
 
+        print(f"--- G1 Counts (Total: {len(indices_used_g1)}) ---")
+        for index, count in sorted(Counter(indices_used_g1).items()):
+            print(f"{index}: {count}")
+
+        print(f"\n--- G2 Counts (Total: {len(indices_used_g2)}) ---")
+        for index, count in sorted(Counter(indices_used_g2).items()):
+            print(f"{index}: {count}")
         spectra.increment_reflectance(class_names=sorted(list(df_sim.level_1.unique())), simulation_table=df_sim_g1,
                                       level='level_1', spectral_bundles=spectral_bundles, increment_size=0.05,
                                       output_directory=os.path.join(self.synthetic_dir, 'tetracorder_g1'), wvls=self.wvls,
@@ -293,8 +303,139 @@ class Tetracorder:
                         subprocess.run(sbatch_cmd, shell=True, text=True)
                     except subprocess.CalledProcessError as e:
                         print(f"Shell script failed for {rfl_img}")
-
     
+
+    def run_reclaimer_field(self):
+        slpit_files = sorted(list(glob(os.path.join(self.slpit_output_directory, 'spectral_transects', '**', '*_SLPIT_emit'), recursive=True)))
+        emit_files = sorted(list(glob(os.path.join(self.slpit_output_directory, 'spectral_transects', '**', '*_RFL_*_EXT'), recursive=True)))
+        
+        global_unmixing_library = os.path.join(self.tetra_data_directory, 'global_lib.csv')
+        global_unmixing_library_with_rock = os.path.join(self.tetra_data_directory, 'global_rock.csv')
+          
+        create_directory(os.path.join(self.tetra_output_directory, 'field'))
+        create_directory(os.path.join(self.tetra_output_directory, 'field', 'outlogs'))
+        
+        # overpass table
+        overpass_table = pd.read_csv(os.path.join('slpit', 'overpass_table.csv'))
+        overpass_table = overpass_table[overpass_table['Sensor'] == 'EMIT']
+        overpass_table['emit_format'] = (overpass_table['Overpass Date'].astype(str).str.upper().str.replace(r'[-\s:]', '', regex=True))
+        
+        # 
+        for _rfl_list, rfl_list in enumerate([slpit_files, emit_files]):
+
+            for _, rfl_img in enumerate(rfl_list):
+                
+                transect_num = os.path.basename(rfl_img).split("_")[0]
+                plot_team = os.path.basename(rfl_img).split('_')[0].split('-')[0]
+
+                if int(transect_num[-3:]) > 60:
+                    continue
+                
+                if _rfl_list == 1:
+                    emit_ext_date = os.path.basename(rfl_img).split('_')[2]
+                    ext_overpass_table = overpass_table[overpass_table['Site ID1'] == f'SPEC - {transect_num[-3:]}']
+                    valid_dates = set(ext_overpass_table['emit_format'])
+                    
+                    if emit_ext_date not in valid_dates:
+                        continue
+
+                create_directory(os.path.join(self.tetra_output_directory, 'field', transect_num))
+                out_dir = os.path.join(self.tetra_output_directory, 'field', transect_num)
+                
+                
+                unmixing_library_envi_file = os.path.splitext(global_unmixing_library)[0]
+                
+                unmixing_library_envi_rock_file = os.path.splitext(global_unmixing_library_with_rock)[0]
+
+                local_em_csv = os.path.join(os.path.dirname(rfl_img), '..', 'EMS', f'{transect_num}_EMS_emit') 
+                local_em_envi = os.path.join(os.path.dirname(rfl_img), '..', 'EMS', f'{transect_num}_EMS_emit.csv')
+
+                files_to_check = {"Output Directory": out_dir, 
+                                    "Reflectance Image": rfl_img,
+                                    "Unmixing Library (CSV)": global_unmixing_library,
+                                    "Unmixing Library (ENVI)": unmixing_library_envi_file,
+                                    "Rock Unmixing (CSV)": global_unmixing_library_with_rock,
+                                    "Rock Unmixing (ENVI)": unmixing_library_envi_rock_file,
+                                    "Local Lib": local_em_envi, 
+                                    "Local CSV": local_em_csv}
+
+                missing_files = []
+
+                for label, path in files_to_check.items():
+                    if not os.path.exists(path):
+                        missing_files.append(f"{label}: {path}")
+
+                if missing_files:
+                    print("--- ERROR: Missing Required Files ---")
+                    for msg in missing_files:
+                        print(f"  [X] {msg}")
+                        print("--------------------------------------")
+                else:
+                    # All files exist, proceed with the call
+                    try:
+                        log_file_dir = os.path.join(self.tetra_output_directory, 'field', 'outlogs')
+                        outfile = os.path.join(log_file_dir, f'RECLAIMER_{os.path.basename(rfl_img)}.out')
+                        base_call = f'sh ./tetracorder/reclaimer_field.sh {out_dir} {self.sensor} {rfl_img} {global_unmixing_library} {unmixing_library_envi_file} {local_em_envi} {local_em_csv} {global_unmixing_library_with_rock} {unmixing_library_envi_rock_file}'
+                        sbatch_cmd = f"sbatch --export=ALL -p {self.partition} -N 1 -c 1 --mem 10G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
+                        subprocess.run(sbatch_cmd, shell=True, text=True)
+                        #time.sleep(1000)
+                    except subprocess.CalledProcessError as e:
+                        print(f"Shell script failed for {rfl_img}")
+   
+    def reclaimer_emit(self):
+        emit_files = sorted(list(glob(os.path.join(self.slpit_output_directory, '..', 'gis', 'emit-data', 'products', '**', '*EMIT_L2A_RFL_*_reflectance'), recursive=True)))
+        
+        global_unmixing_library = os.path.join(self.tetra_data_directory, 'global_lib.csv')
+        global_unmixing_library_with_rock = os.path.join(self.tetra_data_directory, 'global_rock.csv')
+        
+        create_directory(os.path.join(self.tetra_output_directory, 'scenes'))
+        create_directory(os.path.join(self.tetra_output_directory, 'scenes', 'outlogs'))
+
+        for i in emit_files:
+            file_type = os.path.basename(i).split('_')[0]
+            fid = os.path.basename(i).split("_")[4]
+            
+            if file_type == 'RGB':
+                continue
+
+            create_directory(os.path.join(self.tetra_output_directory, 'scenes', fid))
+            out_dir = os.path.join(self.tetra_output_directory, 'scenes', fid)
+                
+                
+            unmixing_library_envi_file = os.path.splitext(global_unmixing_library)[0]    
+            unmixing_library_envi_rock_file = os.path.splitext(global_unmixing_library_with_rock)[0]
+
+            files_to_check = {"Output Directory": out_dir, 
+                                "Reflectance Image": i,
+                                    "Unmixing Library (CSV)": global_unmixing_library,
+                                    "Unmixing Library (ENVI)": unmixing_library_envi_file,
+                                    "Rock Unmixing (CSV)": global_unmixing_library_with_rock,
+                                    "Rock Unmixing (ENVI)": unmixing_library_envi_rock_file}
+                                    
+
+            missing_files = []
+
+            for label, path in files_to_check.items():
+                if not os.path.exists(path):
+                    missing_files.append(f"{label}: {path}")
+
+            if missing_files:
+                print("--- ERROR: Missing Required Files ---")
+                for msg in missing_files:
+                    print(f"  [X] {msg}")
+                    print("--------------------------------------")
+            else:
+                # All files exist, proceed with the call
+                try:
+                    log_file_dir = os.path.join(self.tetra_output_directory, 'scenes', 'outlogs')
+                    outfile = os.path.join(log_file_dir, f'RECLAIMER_{os.path.basename(i)}.out')
+                    base_call = f'sh ./tetracorder/reclaimer_emit.sh {out_dir} {self.sensor} {i} {global_unmixing_library} {unmixing_library_envi_file} {global_unmixing_library_with_rock} {unmixing_library_envi_rock_file}'
+                    sbatch_cmd = f"sbatch --export=ALL -p {self.partition} -N 1 -c 25 --mem 30G --output {outfile} --job-name reclaimr --wrap='{base_call}'"
+                    subprocess.run(sbatch_cmd, shell=True, text=True)
+                except subprocess.CalledProcessError as e:
+                    print(f"Shell script failed for {i}")
+
+
 def run_tetracorder_build(base_directory, sensor, dry_run, spectral_bundles, partition):
     tc = Tetracorder(base_directory=base_directory, sensor=sensor, partition=partition)
     while True:
@@ -309,6 +450,11 @@ def run_tetracorder_build(base_directory, sensor, dry_run, spectral_bundles, par
         elif user_input == 'C':
             tc.run_reclaimer_workflow()
         elif user_input == 'D':
+            tc.run_reclaimer_field()
+        elif user_input == 'E':
+            tc.reclaimer_emit()
+
+        elif user_input == 'F':
             print("Returning to Tetracorder main menu.")
             break
         else:
