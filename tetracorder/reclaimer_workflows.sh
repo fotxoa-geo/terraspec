@@ -24,7 +24,7 @@ CURRENT_DIR=$(pwd)
 echo "You are currently in: $CURRENT_DIR"
 
 # run Vegetation Extractor.py
-python ./tetracorder/vegetation_extractor.py -out_dir ${out_directory} -sns ${sensor} -veg_fracs ${veg_fractions} -rfl ${rfl_img} -unmix_lib_csv ${unmixing_library_global_csv} -unmix_lib_envi ${unmixing_library_envi} -3_comp_frac ${three_component_fractions} --tetracorder
+python ./tetracorder/vegetation_extractor.py -out_dir ${out_directory} -sns ${sensor} -veg_fracs ${veg_fractions} -rfl ${rfl_img} -unmix_lib_csv ${unmixing_library_global_csv} -unmix_lib_envi ${unmixing_library_envi} -three_comp_frac ${three_component_fractions} --tetracorder
 
 # run Tetracorder on extracted signal of vegetation
 tetracorder_out_directory=${out_directory}/${filebase_name}_${unmixing_filebase_name}_veg_ext/
