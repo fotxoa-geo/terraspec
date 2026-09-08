@@ -15,9 +15,125 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 import ast
 from sklearn.metrics import f1_score, precision_score, recall_score
 import matplotlib.ticker as ticker
-import matplotlib.colors as mcolors
 import matplotlib.cm as cm
+from matplotlib.gridspec import GridSpec
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.colors import Normalize, BoundaryNorm
 
+
+def apply_mask(img, bad_mask):
+    """Broadcasting helper to assign NaNs across 2D/3D arrays."""
+    img_masked = img.copy().astype(np.float32)
+    if img_masked.ndim == 3:
+        img_masked[bad_mask, :] = np.nan
+    else:
+        img_masked[bad_mask] = np.nan
+    return img_masked
+
+
+def get_target_ids_for_dataset(scene_path_pattern, mineral_name):
+    """
+    Finds the reflectance_minerals file recursively, parses reclassification,
+    and returns integer IDs for a target mineral string.
+    """
+    matches = glob(scene_path_pattern, recursive=True)
+    if not matches:
+        return []
+
+    mineral_class_dict, _ = spectra.get_mineral_reclassification(
+        path_to_tetracorder_minerals=matches[0]
+    )
+
+    mineral_to_ids = {}
+    for mineral_id, min_list in mineral_class_dict.items():
+        for name in min_list:
+            mineral_to_ids.setdefault(name.lower().strip(), []).append(mineral_id)
+
+    return mineral_to_ids.get(mineral_name.lower().strip(), [])
+
+
+def plot_mineral_overlay(ax, img_array, group_idx, bd_idx, target_ids, title, is_bad_pixel, cmap, norm, levels=15):
+    """
+    Plots smooth colored contours for band depths strictly over valid positive detections.
+    """
+    bad_mask = is_bad_pixel.astype(bool)
+    img_masked = apply_mask(img_array, bad_mask)
+
+    band_a = img_masked[:, :, group_idx]
+    band_b = img_masked[:, :, bd_idx]
+
+    samples_a = band_a[~np.isnan(band_a)]
+    samples_b = band_b[~np.isnan(band_b)]
+
+    if len(samples_a) > 0 and np.all(np.mod(samples_a, 1) == 0):
+        mineral_index_img = band_a
+        bd_data = band_b.copy()
+    elif len(samples_b) > 0 and np.all(np.mod(samples_b, 1) == 0):
+        mineral_index_img = band_b
+        bd_data = band_a.copy()
+    else:
+        mineral_index_img = band_a
+        bd_data = band_b.copy()
+
+    if target_ids:
+        clean_index_img = np.nan_to_num(mineral_index_img, nan=-9999).astype(np.int32)
+        target_ids_int = [int(i) for i in target_ids]
+        mineral_detected_mask = np.isin(clean_index_img, target_ids_int)
+    else:
+        mineral_detected_mask = np.zeros(mineral_index_img.shape, dtype=bool)
+
+    valid_detections_mask = mineral_detected_mask & ~bad_mask
+    n_detections = int(np.sum(valid_detections_mask))
+
+    bd_data_contour = np.where(valid_detections_mask, bd_data, np.nan)
+
+    h, w = bd_data.shape
+    x = np.arange(w)
+    y = np.arange(h)
+
+    cs = None
+    if n_detections > 0:
+        cs = ax.contourf(
+            x, y, bd_data_contour,
+            levels=levels,
+            cmap=cmap,
+            norm=norm,
+            extend='neither'
+        )
+
+    ax.invert_yaxis()
+    ax.set_title(f"{title}", fontsize=9)
+
+    # Crucial: Allow the image box to match the grid boundaries exactly
+    ax.set_aspect('auto')
+
+    return cs, valid_detections_mask, n_detections
+
+def prep_emit_rgb(rgb_img, red_idx=43, green_idx=24, blue_idx=11, stretch_percentile=(2, 98)):
+    """
+    Selects RGB bands and applies a percentile stretch.
+    Default band indices roughly correspond to:
+    Red ~ 650nm, Green ~ 560nm, Blue ~ 470nm (adjust based on your dataset's band list).
+    """
+    # Extract specific wavelength bands if image is 3D (Height, Width, Bands)
+    if rgb_img.ndim == 3 and rgb_img.shape[2] > 3:
+        rgb_data = rgb_img[:, :, [red_idx, green_idx, blue_idx]].astype(np.float32)
+    else:
+        rgb_data = rgb_img.astype(np.float32)
+
+    # Handle bad values / fill values (EMIT data often uses -9999 for background)
+    rgb_data[rgb_data < 0] = np.nan
+
+    # Calculate 2% and 98% percentiles across valid data for contrast stretch
+    p_low, p_high = np.nanpercentile(rgb_data, stretch_percentile)
+
+    # Clip values to percentile boundaries and scale to [0, 1] range for imshow
+    rgb_stretched = np.clip((rgb_data - p_low) / (p_high - p_low + 1e-8), 0, 1)
+
+    # Replace remaining NaNs (background) with 0 or 1 for rendering
+    rgb_stretched = np.nan_to_num(rgb_stretched, nan=0.0)
+
+    return rgb_stretched
 
 def calc_clean_metrics(x, y):
     """Safely calculates R2 and MAE after masking NaN values out of paired arrays."""
@@ -196,7 +312,7 @@ class tetracorder_figures:
                         bottom += data
 
                     if row_idx == 0:
-                        ax.set_title(f"{class_name.capitalize()}", fontsize=10)
+                        ax.set_title(f"{class_name.capitalize()}", fontsize=12)
 
                     if group == 'g1':
                         if col_idx == 0:
@@ -210,11 +326,11 @@ class tetracorder_figures:
 
                     if col_idx == 0:
                         if row_idx == 0:
-                            ax.set_ylabel(f"{r'$\rho$'}\nCount", fontsize=8)
+                            ax.set_ylabel(f"{r'$\rho$'}\nCount", fontsize=10)
                         elif row_idx == 1:
-                            ax.set_ylabel(f"{r'$\rho$'}'\nCount", fontsize=8)
+                            ax.set_ylabel(r"$\hat{\rho}_{vf}$" + "\nCount", fontsize=10)
                         else:
-                            ax.set_ylabel(f"{r'$\rho$'}''\nCount", fontsize=8)
+                            ax.set_ylabel(r"$\hat{\rho}_{vf}$'" + "\nCount", fontsize=10)
 
                     if group == 'g1':
                         if col_idx == 0:
@@ -324,7 +440,7 @@ class tetracorder_figures:
                         else:
                             ax.tick_params(axis='x', labelrotation=45 ,labelsize=8)
 
-                        ax.set_xlabel('Soil Fractional Cover', fontsize=8)
+                        ax.set_xlabel('Fractional Cover\n(Soil)', fontsize=10)
 
             # Grab handles from the last active axis
             handles, labels = ax.get_legend_handles_labels()
@@ -334,7 +450,7 @@ class tetracorder_figures:
                        loc='lower center',
                        bbox_to_anchor=(0.5, -0.08),  # Anchored right above the figure bottom margin
                        ncol=4,  # 2x2 layout is perfect for a 6.5" width
-                       fontsize=8,
+                       fontsize=10,
                        frameon=True,
                        facecolor='white',
                        edgecolor='gray')
@@ -361,7 +477,7 @@ class tetracorder_figures:
         axes_flat = axes.flatten()
 
         # Visual configuration variables
-        sim_labels = [f"{r'$\rho$'}", f"{r'$\rho$'}'", f"{r'$\rho$'}''"]
+        sim_labels = [f"{r'$\rho$'}", r"$\hat{\rho}_{vf}$", r"$\hat{\rho}_{vf}$'"]
 
         sim_colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
 
@@ -459,7 +575,7 @@ class tetracorder_figures:
                         ax.text(0.5, 0.5, f"Missing Data:\n{class_name}", ha='center', va='center')
 
                 # Subplot Customization & Formatting
-                ax.set_title(f"{class_name.capitalize()}", fontsize=10, fontweight='semibold')
+                ax.set_title(f"{class_name.capitalize()}", fontsize=12, fontweight='semibold')
                 ax.set_ylim(-0.05, 1.05)
                 ax.set_xlim(-0.05, 1.05)
                 ax.tick_params(axis='both', labelsize=8)
@@ -473,13 +589,13 @@ class tetracorder_figures:
 
                 # Only label the vertical axis on leftmost subplots (columns 0, 3, 6)
                 if plot_idx % 3 == 0:
-                    ax.set_ylabel("F1 Score", fontsize=9)
+                    ax.set_ylabel("F1 Score", fontsize=10)
                 else:
                     ax.set_yticks([])
 
                 # Only label horizontal axis on bottom positions or when wrapping up a group
                 if plot_idx >= 5:
-                    ax.set_xlabel('Soil Fractional Cover', fontsize=9)
+                    ax.set_xlabel('Soil Fractional Cover', fontsize=10)
 
                 plot_idx += 1
 
@@ -521,7 +637,7 @@ class tetracorder_figures:
         axes_flat = axes.flatten()
 
         # Visual configuration variables
-        sim_labels = [f"{r'$\rho$'} (Uncorrected)", f"{r'$\rho$'}' (Corrected before TC run)", f"{r'$\rho$'}'' (Corrected before TC run)", f"{r'post-$\rho$'}' (Corrected after TC Run)", f"{r'post-$\rho$'}'' (Corrected after TC Run)", f"{r'$\rho$'}''' (best case scenario; known fractions)"]
+        sim_labels = [f"{r'$\rho$'}", r"$\hat{\rho}_{vf}$ ($a\ priori$)",  r"$\hat{\rho}_{vf}$' ($a\ priori$)", f"RECLAIMER (posterior)", f"RECLAIMER' (posterior)", r'$\rho_k$ (known fractions)']
         sim_colors = ['black', 'magenta', 'orange', 'red', 'blue', 'green']
 
         plot_idx = 0  # Global tracker to index subplots across both groups
@@ -1064,7 +1180,7 @@ class tetracorder_figures:
 
 
     def field_results(self):
-        target_classes_dict = {'g1': sorted(['hematite', 'goethite']),
+        target_classes_dict = {'g1': sorted(['hematite',]),
                                'g2': sorted(['kaolinite', 'calcite', 'montmorillonite', 'illite+muscovite'])}
 
         df_field = pd.read_csv(os.path.join(self.fig_directory, 'field_results.csv'))
@@ -1083,7 +1199,7 @@ class tetracorder_figures:
             plt.rcParams['font.family'] = 'sans-serif'
             plt.rcParams['font.size'] = 8
 
-            fig, axes = plt.subplots(4, 6, figsize=(9, 5.75))
+            fig, axes = plt.subplots(4, 5, figsize=(9, 5.75))
 
             col_idx = 0
 
@@ -1160,8 +1276,8 @@ class tetracorder_figures:
                     if not df_tp.empty:
                         r2, mae = calc_clean_metrics(df_tp['cp_bd'].values, df_tp[f'{plot_type}_unc_bd'].values)
                         frac = metrics['fraction_str']  # e.g., "4/7"
-                        lbl = f"(Global) F1: {metrics['f1_score']:.2f} ({frac})\nR²: {r2:.2f}\nMAE: {mae:.2f}"
-
+                        ## lbl = f"(Global) F1: {metrics['f1_score']:.2f} ({frac})\nR²: {r2:.2f}\nMAE: {mae:.2f}"
+                        lbl = f"(U) R²: {r2:.2f} | MAE: {mae:.2f}"
                         soil_fraction = df_tp[f'{plot_type}_global_soil']
                         ax_row0.scatter(df_tp['cp_bd'], df_tp[f'{plot_type}_unc_bd'],
                                         label=lbl, c=soil_fraction, cmap=cmap,
@@ -1170,11 +1286,11 @@ class tetracorder_figures:
 
                         ax_row0.legend(**legend_kwargs)
                     # -------------------------------------------------------------
-                    # ROW 1: Corrected Data (Pre-Tetracorder)
+                    # ROW 1: Corrected Data (Pre-Tetracorder); pvfs
                     # -------------------------------------------------------------
-                    ax_row1 = axes[1, col_idx]
+                    ax_row1 = axes[2, col_idx]
                     if col_idx == 0:
-                        ax_row1.set_ylabel(f"{plot_type.upper()}\n(Pre-Tetracorder)", fontsize=8)
+                        ax_row1.set_ylabel(f"{plot_type.upper()}\n(ρ$_vfs$)", fontsize=8)
                     else:
                         ax_row1.set_yticklabels([])
                     ax_row1.set_xticklabels([])
@@ -1191,8 +1307,14 @@ class tetracorder_figures:
                             r2, mae = calc_clean_metrics(df_tp_corr['cp_bd'].values,
                                                          df_tp_corr[f'{plot_type}_{i}_bd'].values)
                             frac = metrics['fraction_str']  # e.g., "4/7"
-                            lbl = f"{i}: F1: {metrics['f1_score']:.2f} ({frac})\nR²: {r2:.2f}\nMAE: {mae:.2f}"
+                            #lbl = f"{i}: F1: {metrics['f1_score']:.2f} ({frac})\nR²: {r2:.2f}\nMAE: {mae:.2f}"
 
+                            if i == 'rock':
+                                lbl_type = "U'"
+                            else:
+                                lbl_type = 'U'
+
+                            lbl = f"({lbl_type}) R²: {r2:.2f} | MAE: {mae:.2f}"
                             soil_fraction = df_tp_corr[f'{plot_type}_{i}_soil'].values
                             ax_row1.scatter(
                                 df_tp_corr['cp_bd'], df_tp_corr[f'{plot_type}_{i}_bd'],
@@ -1202,11 +1324,11 @@ class tetracorder_figures:
 
                     ax_row1.legend(**legend_kwargs)
                     # -------------------------------------------------------------
-                    # ROW 2: Corrected Data (rho_s)
+                    # ROW 2: Corrected Data (rho_s) ; this pvf
                     # -------------------------------------------------------------
-                    ax_row2 = axes[2, col_idx]
+                    ax_row2 = axes[1, col_idx]
                     if col_idx == 0:
-                        ax_row2.set_ylabel(f"{plot_type.upper()}\n(ρ$_s$)", fontsize=8)
+                        ax_row2.set_ylabel(f"{plot_type.upper()}\n(ρ$_vf$)", fontsize=8)
                     else:
                         ax_row2.set_yticklabels([])
 
@@ -1224,9 +1346,13 @@ class tetracorder_figures:
                             r2, mae = calc_clean_metrics(df_tp_corr['cp_bd'].values,
                                                          df_tp_corr[f'{plot_type}_rho_s_{i}_bd'].values)
                             frac = metrics['fraction_str']  # e.g., "4/7"
-                            lbl = (f"{i}: F1: {metrics['f1_score']:.2f} ({frac})\n"
-                                   f"R²: {r2:.2f}\n"
-                                   f"MAE: {mae:.2f}")
+                            #lbl = (f"{i}: F1: {metrics['f1_score']:.2f} ({frac})\n" f"R²: {r2:.2f}\n" f"MAE: {mae:.2f}")
+                            if i == 'rock':
+                                lbl_type = "U'"
+                            else:
+                                lbl_type = 'U'
+
+                            lbl = f"({lbl_type}) R²: {r2:.2f} | MAE: {mae:.2f}"
                             soil_fraction = df_tp_corr[f'{plot_type}_{i}_soil'].values
                             ax_row2.scatter(
                                 df_tp_corr['cp_bd'], df_tp_corr[f'{plot_type}_rho_s_{i}_bd'],
@@ -1258,7 +1384,14 @@ class tetracorder_figures:
                             r2, mae = calc_clean_metrics(df_tp_corr['cp_bd'].values,
                                                          df_tp_corr[f'reclaimer_{plot_type}_{i}_bd_prime'].values)
                             frac = metrics['fraction_str']  # e.g., "4/7"
-                            lbl = f"{i}: F1: {metrics['f1_score']:.2f} ({frac})\nR²: {r2:.2f}\nMAE: {mae:.2f}"
+                            #lbl = f"{i}: F1: {metrics['f1_score']:.2f} ({frac})\nR²: {r2:.2f}\nMAE: {mae:.2f}"
+                            if i == 'rock':
+                                lbl_type = "U'"
+                            else:
+                                lbl_type = 'U'
+
+                            lbl = f"({lbl_type}) R²: {r2:.2f} | MAE: {mae:.2f}"
+
                             soil_fraction = df_tp_corr[f'{plot_type}_{i}_soil'].values
                             mappable = ax_row3.scatter(
                                 df_tp_corr['cp_bd'], df_tp_corr[f'reclaimer_{plot_type}_{i}_bd_prime'],
@@ -1283,6 +1416,343 @@ class tetracorder_figures:
             plt.clf()
             plt.close()
 
+    def scene_figures(self):
+        scence_directories = sorted(list(glob(os.path.join(self.output_directory, 'scenes', '**'))))
+        target_classes_dict = {
+            'g1': sorted(['hematite', 'goethite']),
+            'g2': sorted(['kaolinite', 'illite', 'calcite', 'dolomite', 'montmorillonite', 'illite+muscovite'])
+        }
+        group_dict = {'g1': 1, 'g2': 3}
+        bd_dict = {'g1': 0, 'g2': 2}
+        wvls, fwhm = spectra.load_wavelengths(sensor='emit')
+
+        dataset_types = [
+            {
+                'type': 'global',
+                'suffix': 'global',
+                'frc_key': 'glb',
+                'title_suffix': '(U)',
+                'datasets': [
+                    {"pattern": "recon_rho_*_min", "title": r"$\hat{\rho}_{vf}$", 'index_pattern': '*reflect*minerals*',
+                     'type': 'global'},
+                    {"pattern": "ext_veg_*_min", "title": r"$\hat{\rho}_{vfs}$", 'index_pattern': '*reflect*minerals*',
+                     'type': 'global'},
+                ]
+            },
+            {
+                'type': 'rock',
+                'suffix': 'rock',
+                'frc_key': 'rock',
+                'title_suffix': "(U')",
+                'datasets': [
+                    {"pattern": "recon_rho_*_min", "title": r"$\hat{\rho}'_{vf}$",
+                     'index_pattern': '*reflect*minerals*', 'type': 'rock'},
+                    {"pattern": "ext_veg_*_min", "title": r"$\hat{\rho}'_{vfs}$", 'index_pattern': '*reflect*minerals*',
+                     'type': 'rock'},
+                ]
+            }
+        ]
+
+        for scene_directory in scence_directories:
+            date = os.path.basename(scene_directory)
+            if date == 'outlogs':
+                continue
+
+            # 1. Load Bad Pixel Mask
+            mask_file = sorted(list(glob(os.path.join(self.slpit_output_directory, '..', 'gis', 'emit-data',
+                                                      'products', date, 'L2A', f'EMIT_L2A_*_mask'))))[-1]
+            mask = envi_to_array(mask_file)[:, :, -1]
+            is_bad_pixel = (mask == 1)
+
+            # 2. Load Raw Image Arrays
+            unc_img = envi_to_array(glob(os.path.join(scene_directory, 'tc_unc', '*_min'))[0])
+            rgb_file = glob(os.path.join(self.slpit_output_directory, '..', 'gis', 'emit-data',
+                                         'products', date, 'L2A', f'EMIT_L2A_*_reflectance'))[0]
+            rgb_img = envi_to_array(rgb_file)
+
+            frc_dict = {
+                'glb': envi_to_array(glob(os.path.join(scene_directory, 'emc2', f'*global_lib_*_fractional_cover'))[0]),
+                'rock': envi_to_array(
+                    glob(os.path.join(scene_directory, 'emc2', f'*global_rock_*_fractional_cover'))[0])
+            }
+
+            # 3. Apply Mask Across RGB and FRC Arrays
+            rgb_img_masked = apply_mask(rgb_img, is_bad_pixel)
+            rgb_display = prep_emit_rgb(rgb_img_masked)
+            rgb_display[is_bad_pixel] = 1.0
+
+            frc_plots = {}
+            for k, arr in frc_dict.items():
+                plot_arr = arr[:, :, :3].copy()
+                plot_arr[is_bad_pixel] = 1.0
+                frc_plots[k] = plot_arr
+
+            # 4. Load Mineral Classification for Uncorrected Data
+            mineral_class_unc, _ = spectra.get_mineral_reclassification(
+                path_to_tetracorder_minerals=glob(os.path.join(scene_directory, '**', '*_reflectance_minerals'))[0]
+            )
+
+            mineral_to_ids = {}
+            for mineral_id, min_list in mineral_class_unc.items():
+                for name in min_list:
+                    clean_name = name.lower().strip()
+                    mineral_to_ids.setdefault(clean_name, []).append(mineral_id)
+
+            # 5. Iterate Over Mineral Groups & Target Classes
+            for group in ['g1', 'g2']:
+                minerals_to_map = target_classes_dict[group]
+
+                for mineral in minerals_to_map:
+                    target_ids = mineral_to_ids.get(mineral.lower().strip())
+
+                    if not target_ids:
+                        print(f"Skipping {mineral}: No detections found in scene {date}.")
+                        continue
+
+                    current_cmap = plt.cm.viridis.copy()
+                    current_cmap.set_bad(color='white')
+
+                    for cfg in dataset_types:
+                        run_datasets = cfg['datasets']
+
+                        # --- COMPUTE GLOBAL VMIN/VMAX ---
+                        all_bd_values = []
+
+                        unc_bd = unc_img[:, :, bd_dict[group]]
+                        valid_unc_bd = unc_bd[~is_bad_pixel & ~np.isnan(unc_bd) & (unc_bd > 0)]
+                        if len(valid_unc_bd) > 0:
+                            all_bd_values.append(valid_unc_bd)
+
+                        for ds in run_datasets:
+                            f_match = glob(os.path.join(scene_directory, f'tc_{ds["type"]}', ds["pattern"]))
+                            if f_match:
+                                raw_arr = envi_to_array(f_match[0])
+                                band_a = raw_arr[:, :, group_dict[group]]
+                                band_b = raw_arr[:, :, bd_dict[group]]
+
+                                samples_a = band_a[~np.isnan(band_a)]
+                                if len(samples_a) > 0 and np.all(np.mod(samples_a, 1) == 0):
+                                    bd_img = band_b
+                                else:
+                                    bd_img = band_a
+
+                                valid_ds_bd = bd_img[~is_bad_pixel & ~np.isnan(bd_img) & (bd_img > 0)]
+                                if len(valid_ds_bd) > 0:
+                                    all_bd_values.append(valid_ds_bd)
+
+                        if len(all_bd_values) > 0:
+                            concat_vals = np.concatenate(all_bd_values)
+                            vmin = float(np.nanmin(concat_vals))
+                            vmax = float(np.nanmax(concat_vals))
+                        else:
+                            vmin, vmax = 0.0, 1.0
+
+                        shared_norm = Normalize(vmin=vmin, vmax=vmax, clip=False)
+
+                        # --- CONSTRUCT 2x4 DASHBOARD WITH INCREASED HORIZONTAL SPACING ---
+                        fig = plt.figure(figsize=(15.5, 6.5))
+                        gs = GridSpec(nrows=2, ncols=4, figure=fig, hspace=0.28, wspace=0.38)
+
+                        active_cs = None
+
+                        # ==========================================
+                        # TOP ROW: RGB & FRACTIONAL COVER (Cols 1 & 2)
+                        # ==========================================
+                        ax_rgb = fig.add_subplot(gs[0, 1])
+                        ax_rgb.imshow(rgb_display, aspect='auto')
+                        ax_rgb.set_box_aspect(1)
+                        ax_rgb.set_title(f"EMIT RGB Overview: {date}", fontsize=8, fontweight='bold', pad=4)
+
+                        ax_frc = fig.add_subplot(gs[0, 2])
+                        ax_frc.imshow(frc_plots[cfg['frc_key']], aspect='auto')
+                        ax_frc.set_box_aspect(1)
+                        ax_frc.set_title(f"Fractional Cover {cfg['title_suffix']}", fontsize=8, pad=4)
+
+                        # ==========================================
+                        # BOTTOM ROW: UNCORRECTED, CORRECTED, SPECTRA
+                        # ==========================================
+                        # 1. Uncorrected Scene (Col 0)
+                        ax_unc = fig.add_subplot(gs[1, 0])
+
+                        cs_unc, unc_detection_mask, unc_detects = plot_mineral_overlay(
+                            ax=ax_unc,
+                            img_array=unc_img,
+                            group_idx=group_dict[group],
+                            bd_idx=bd_dict[group],
+                            target_ids=target_ids,
+                            title=f"Uncorrected: {mineral.capitalize()}",
+                            is_bad_pixel=is_bad_pixel,
+                            cmap=current_cmap,
+                            norm=shared_norm,
+                            levels=15,
+                        )
+                        ax_unc.set_aspect('auto')
+                        ax_unc.set_box_aspect(1)
+                        ax_unc.set_title(f"Uncorrected: {mineral.capitalize()}", fontsize=8, pad=4)
+
+                        if cs_unc is not None:
+                            active_cs = cs_unc
+
+                        non_corrected_rfl = (
+                            rgb_img[unc_detection_mask, :]
+                            if np.any(unc_detection_mask)
+                            else None
+                        )
+
+                        # 2. Corrected Scenes (Cols 1 & 2)
+                        ds_spectrum_data = []
+
+                        for idx, ds in enumerate(run_datasets):
+                            mineral_reclass_pattern = os.path.join(scene_directory, f'tc_{ds["type"]}', '**',
+                                                                   ds["index_pattern"])
+                            target_ids_mineral = get_target_ids_for_dataset(mineral_reclass_pattern, mineral)
+                            file_match = glob(os.path.join(scene_directory, f'tc_{ds["type"]}', ds["pattern"]))
+
+                            ax_sub_map = fig.add_subplot(gs[1, idx + 1])
+
+                            if file_match:
+                                raw_array = envi_to_array(file_match[0])
+                                cs_sub, valid_detection_mask, n_detects = plot_mineral_overlay(
+                                    ax=ax_sub_map,
+                                    img_array=raw_array,
+                                    group_idx=group_dict[group],
+                                    bd_idx=bd_dict[group],
+                                    target_ids=target_ids_mineral,
+                                    title=f"{ds['title']}",
+                                    is_bad_pixel=is_bad_pixel,
+                                    cmap=current_cmap,
+                                    norm=shared_norm,
+                                    levels=15,
+                                )
+                                if cs_sub is not None:
+                                    active_cs = cs_sub
+
+                                if np.any(valid_detection_mask):
+                                    ds_spectrum_data.append({
+                                        "title": ds["title"],
+                                        "mask": valid_detection_mask,
+                                        "n": n_detects
+                                    })
+                            else:
+                                ax_sub_map.text(0.5, 0.5, "File Missing", ha="center", va="center", fontsize=6)
+
+                            ax_sub_map.set_aspect('auto')
+                            ax_sub_map.set_box_aspect(1)
+                            ax_sub_map.set_title(f"{ds['title']}", fontsize=7.5, pad=3)
+
+                        # Colorbar attached to the Uncorrected Map with tighter padding & specific label positioning
+                        divider = make_axes_locatable(ax_sub_map)
+                        cax = divider.append_axes("right", size="4%", pad=0.03)
+
+                        if active_cs is not None:
+                            cbar = fig.colorbar(
+                                active_cs,
+                                cax=cax,
+                                orientation='vertical',
+                                ticks=np.linspace(vmin, vmax, 5)
+                            )
+                        else:
+                            sm = plt.cm.ScalarMappable(norm=shared_norm, cmap=current_cmap)
+                            sm.set_array([])
+                            cbar = fig.colorbar(
+                                sm,
+                                cax=cax,
+                                orientation='vertical',
+                                ticks=np.linspace(vmin, vmax, 5)
+                            )
+
+                        cbar.set_label("Band Depth", fontsize=6.5, labelpad=2)
+                        cbar.ax.tick_params(labelsize=5.5, pad=2)
+                        cbar.ax.yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+
+                        # 3. Reflectance Spectrum Subplot (Col 3)
+                        ax_spec = fig.add_subplot(gs[1, 3])
+                        line_colors = ['#1f77b4', '#2ca02c']
+
+                        if non_corrected_rfl is not None and len(non_corrected_rfl) > 0:
+                            non_mean_rfl = np.nanmean(non_corrected_rfl, axis=0)
+                            non_mean_rfl[non_mean_rfl < 0] = np.nan
+                            non_std_rfl = np.nanstd(non_corrected_rfl, axis=0)
+
+                            ax_spec.plot(
+                                wvls,
+                                non_mean_rfl,
+                                color="red",
+                                linewidth=1.0,
+                                linestyle="--",
+                                label=f"Uncorrected (n={unc_detects})",
+                            )
+                            ax_spec.fill_between(
+                                wvls,
+                                non_mean_rfl - non_std_rfl,
+                                non_mean_rfl + non_std_rfl,
+                                color="red",
+                                alpha=0.15,
+                            )
+
+                        for idx, spec_info in enumerate(ds_spectrum_data):
+                            if idx == 0:
+                                rfl_corrected_array = envi_to_array(glob(os.path.join(self.output_directory, 'scenes', date, f'tc_{cfg['type']}', f'*ext_veg_EMIT_L2A_RFL_*_tc'))[0])
+                            else:
+                                rfl_corrected_array = envi_to_array(sorted(glob(os.path.join(self.output_directory, 'scenes', date, f'tc_{cfg['type']}', f'*recon_rho_EMIT_L2A_RFL_*_reflectance_global_*')))[0])
+
+                            detected_rfl = rfl_corrected_array[spec_info["mask"], :]
+                            mean_rfl = np.nanmean(detected_rfl, axis=0)
+                            mean_rfl[mean_rfl < 0] = np.nan
+                            std_rfl = np.nanstd(detected_rfl, axis=0)
+
+                            color = line_colors[idx % len(line_colors)]
+                            ax_spec.plot(
+                                wvls,
+                                mean_rfl,
+                                color=color,
+                                linewidth=1.0,
+                                label=f"{spec_info['title']} (n={spec_info['n']})",
+                            )
+                            ax_spec.fill_between(
+                                wvls,
+                                mean_rfl - std_rfl,
+                                mean_rfl + std_rfl,
+                                color=color,
+                                alpha=0.15,
+                            )
+
+                        ax_spec.set_xlabel("Wavelength (nm)", fontsize=7, labelpad=3)
+                        ax_spec.set_ylabel("Reflectance (%)", fontsize=7, labelpad=3)
+                        ax_spec.set_ylim(0, 1)
+                        ax_spec.grid(True, linestyle="--", alpha=0.4)
+                        ax_spec.tick_params(axis="both", labelsize=6, pad=2)
+
+                        ax_spec.legend(
+                            loc="upper right",
+                            fontsize=5.0,
+                            ncol=1,
+                            frameon=True,
+                            handlelength=1.0,
+                            borderpad=0.2,
+                        )
+
+                        # --- CLEANUP AXES TICKS & SPINES ---
+                        for ax in fig.get_axes():
+                            if ax != ax_spec and ax != cbar.ax:
+                                ax.set_xticks([])
+                                ax.set_yticks([])
+                                for spine in ax.spines.values():
+                                    spine.set_visible(True)
+                                    spine.set_color('black')
+                                    spine.set_linewidth(0.8)
+
+                        plt.savefig(
+                            os.path.join(self.fig_directory, 'scenes', f'{mineral}_{cfg["suffix"]}_{date}.png'),
+                            dpi=300,
+                            bbox_inches='tight',
+                            pad_inches=0.1
+                        )
+
+                        plt.clf()
+                        plt.close()
+
+
 def run_figure_workflow(base_directory):
     ems = ['soil']
     major_axis_fontsize = 22
@@ -1301,7 +1771,8 @@ def run_figure_workflow(base_directory):
                         linewidth=linewidth, sig_figs=sig_figs, legend_text=legend_text)
 
     #tc.classification_rates()
-   # tc.f1_score_matrix_detailed()
+    #tc.f1_score_matrix_detailed()
     #tc.band_depth_mae()
     #tc.field_table()
-    tc.field_results()
+    #tc.field_results()
+    tc.scene_figures()
