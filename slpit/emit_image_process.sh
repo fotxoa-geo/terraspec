@@ -76,13 +76,41 @@ else
     
         mkdir -p ${tetracorder_out_directory}
         echo "Created directory: $tetracorder_out_directory"
-        tetracorder/tetracorder.sh ${rfl_img} ${tetracorder_out_directory} --delete_tc_output
-    
+        ############# uncorrected 
+        tetracorder/tetracorder.sh ${rfl_img} ${tetracorder_out_directory} --emit --delete_tc_output
+        
         #ortho-rectify mineral outputs
         python slpit/ortho_tetracorder.py -tc_dir ${tetracorder_out_directory} -nc_file ${nc_file}
 
-        # push data to drive
-        #/store/shared/rclone/bin/rclone copy ${nc_fid_directory} cdrive:terraspec_output/slpit/gis/emit-data/products/${fid} -P --exclude "*.nc"
+        ############# global lib 
+        tetracorder_out_directory=${nc_fid_directory}/tetracorder_veg_ext/
+        if [ -d "$tetracorder_out_directory" ]; then
+            echo "Directory '$tetracorder_out_directory' exists. Removing..."
+            rm -rf "$tetracorder_out_directory"
+        fi
+    
+        mkdir -p ${tetracorder_out_directory}
+        echo "Created directory: $tetracorder_out_directory"
+        
+        python ./tetracorder/vegetation_extractor.py -out_dir ${tetracorder_out_directory} -sns emit -veg_fracs "${emc_out_directory}/${filebase_name}_complete_fractions" -rfl ${rfl_img} -unmix_lib_csv ${NORMALIZED_GLOBAL_LIB_PATH} -unmix_lib_envi ./terraspec_output/simulation/output/endmember_libraries/convex_hull__n_dims_4_sensor_emit_geofilter_True_unmix_library  -3_comp_frac "${emc_out_directory}/${filebase_name}_fractional_cover" --tetracorder
+        extracted_vegetation_rfl_img=${tetracorder_out_directory}/ext_veg_${filebase_name}_augmented_tc
+        
+        if [ -f ${extracted_vegetation_rfl_img} ]; then
+            echo "$extracted_vegetation_rfl_img File exists."
+
+            vegetation_extracted_basename=$(basename "$extracted_vegetation_rfl_img")
+
+            # augment rfl data and run tetracorder
+            ./tetracorder/tetracorder.sh ${extracted_vegetation_rfl_img} ${tetracorder_out_directory} --emit --delete_tc_output
+            ./tetracorder/tetracorder.sh ${tetracorder_out_directory}/recon_rho_${filebase_name}_augmented ${tetracorder_out_directory} --emit --delete_tc_output
+
+        else
+            echo "$extracted_vegetation_rfl_img File does not exist."
+        fi
+       
+
+        #ortho-rectify mineral outputs
+        python slpit/ortho_tetracorder.py -tc_dir ${tetracorder_out_directory} -nc_file ${nc_file}
     
     else
         echo "Reflectance data not detected. Skipping spectral processes!!"
