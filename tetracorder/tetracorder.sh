@@ -7,6 +7,13 @@ echo '################### Running Tetracorder ##################################
 echo ""
 filebase=`basename ${rfl_file}`
 tmp_rfl_path=/local/`basename ${rfl_file}`
+
+# Check if the path length exceeds 73 characters
+if [ ${#tmp_rfl_path} -gt 69 ]; then
+    filebase=$(echo "${filebase}" | cut -c 1-62)
+    tmp_rfl_path="/local/${filebase}"
+fi
+
 tmp_tetra_path=/local/${filebase}_tetra_output
 out_tetra_path=${out_base}${filebase}_tetra
 out_min_path=${out_base}${filebase}_min
@@ -93,6 +100,3 @@ if [ "$delete_tc_output" = true ]; then
 else
     echo "Tetracorder outputs saved!"
 fi
-
-
-
